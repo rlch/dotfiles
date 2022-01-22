@@ -104,6 +104,10 @@ require('packer').startup {
         }, ]]
       },
       {
+        '/jose-elias-alvarez/null-ls.nvim',
+        config = [[require('config.null-ls')]],
+      },
+      {
 
         'ray-x/lsp_signature.nvim',
         disable = true,
@@ -143,6 +147,7 @@ require('packer').startup {
           'hrsh7th/cmp-nvim-lsp',
           'hrsh7th/cmp-buffer',
           'hrsh7th/cmp-path',
+          'andersevenrud/cmp-tmux',
           'petertriho/cmp-git',
           'neovim/nvim-lspconfig',
           'L3MON4D3/LuaSnip',
@@ -202,6 +207,7 @@ require('packer').startup {
         end,
       },
       'rcarriga/nvim-notify',
+      'MunifTanjim/nui.nvim',
     }
 
     -- Statusline
@@ -279,8 +285,10 @@ require('packer').startup {
         config = [[require('config.npairs')]],
       },
       {
-        'b3nj5m1n/kommentary',
-        config = [[require('config.kommentary')]],
+        'numToStr/Comment.nvim',
+        config = function()
+          require('Comment').setup()
+        end,
       },
       'tpope/vim-abolish',
       'ggandor/lightspeed.nvim',
@@ -337,6 +345,7 @@ require('packer').startup {
         'lewis6991/gitsigns.nvim',
         requires = { 'plenary' },
         config = [[require('config.gitsigns')]],
+        disable = true,
       },
       {
         'sindrets/diffview.nvim',
