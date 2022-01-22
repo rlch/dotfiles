@@ -1,0 +1,85 @@
+# Navigation
+alt - h : yabai -m window --focus west  || yabai -m display --focus west
+alt - j : yabai -m window --focus south || yabai -m display --focus south
+alt - k : yabai -m window --focus north || yabai -m display --focus north
+alt - l : yabai -m window --focus east  || yabai -m display --focus east
+
+alt - c : yabai -m space --focus coding
+alt - s : yabai -m space --focus social
+alt - m : yabai -m space --focus music
+alt - b : yabai -m space --focus browser
+alt - 1 : yabai -m space --focus misc
+
+alt - n : yabai -m space --focus next
+alt - p : yabai -m space --focus prev
+shift + alt - c : yabai -m space --create
+shift + alt - x : yabai -m space --destroy
+
+# Moving windows
+alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m display --focus west; yabai -m window --warp last; end
+alt + shift - j : yabai -m window --swap south || begin; yabai -m window --display south; yabai -m display --focus south; end
+alt + shift - k : yabai -m window --swap north || begin; yabai -m window --display north; yabai -m display --focus north; end
+alt + shift - l : yabai -m window --swap east  || begin; yabai -m window --display east; yabai -m display --focus east; yabai -m window --warp first; end
+
+# Moving spaces
+shift + alt - n : yabai -m window --space next;   yabai -m space --focus next
+shift + alt - p : yabai -m window --space prev;   yabai -m space --focus prev
+shift + alt + lctrl - n : yabai -m space --move next
+shift + alt + lctrl - p : yabai -m space --move prev
+
+
+shift + alt - r : yabai -m window --space recent; yabai -m space --focus recent
+shift + alt - 1 : yabai -m window --space left;   yabai -m space --focus left
+shift + alt - 2 : yabai -m window --space right;  yabai -m space --focus right
+shift + alt - 3 : yabai -m window --space music;  yabai -m space --focus music
+shift + alt - 4 : yabai -m window --space social; yabai -m space --focus social
+
+shift + alt - c : yabai -m window --space coding;   yabai -m space --focus coding;
+shift + alt - s : yabai -m window --space social;   yabai -m space --focus social;
+shift + alt - m : yabai -m window --space music;    yabai -m space --focus music;
+shift + alt - b : yabai -m window --space browser;  yabai -m space --focus browser;
+shift + alt - 1 : yabai -m window --space misc;     yabai -m space --focus misc;
+
+# Resize windows
+lctrl + alt - h : yabai -m window --resize left:-50:0; \
+                  yabai -m window --resize right:-50:0
+lctrl + alt - j : yabai -m window --resize bottom:0:50; \
+                  yabai -m window --resize top:0:50
+lctrl + alt - k : yabai -m window --resize top:0:-50; \
+                  yabai -m window --resize bottom:0:-50
+lctrl + alt - l : yabai -m window --resize right:50:0; \
+                  yabai -m window --resize left:50:0
+
+# Equalize size of windows
+lctrl + alt - e : yabai -m space --balance
+
+# Enable / Disable gaps in current workspace
+lctrl + alt - g : yabai -m space --toggle padding; yabai -m space --toggle gap
+
+# Rotate windows clockwise and anticlockwise
+alt - r         : yabai -m space --rotate 270
+shift + alt - r : yabai -m space --rotate 90
+
+# Rotate on X and Y Axis
+alt - x : yabai -m space --mirror x-axis
+alt - y : yabai -m space --mirror y-axis
+
+# Set insertion point for focused container
+shift + lctrl + alt - h : yabai -m window --insert west
+shift + lctrl + alt - j : yabai -m window --insert south
+shift + lctrl + alt - k : yabai -m window --insert north
+shift + lctrl + alt - l : yabai -m window --insert east
+
+# Float / Unfloat window
+shift + alt - space : yabai -m window --toggle float
+
+# Restart Yabai
+# shift + lctrl + alt - r : \
+#     launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
+shift + lctrl + alt - r : \
+      brew services restart yabai; \
+      brew services restart skhd
+
+# Make window native fullscreen
+alt - f         : yabai -m window --toggle zoom-fullscreen
+ctrl + alt - f  : yabai -m window --toggle native-fullscreen

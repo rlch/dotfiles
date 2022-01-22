@@ -1,0 +1,400 @@
+Time	Sum	Command
+31	5635	> __fish_on_interactive
+319	5599	-> __fish_config_interactive
+718	727	--> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/__fish_config_interactive.fish
+9	9	---> function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"...
+1	18	--> if test $__fish_initialized -lt 3000...
+17	17	---> test $__fish_initialized -lt 3000
+0	5	--> if set -q __fish_config_interactive_done...
+5	5	---> set -q __fish_config_interactive_done
+4	4	--> set -g __fish_config_interactive_done
+3	3	--> set -g __fish_active_key_bindings
+6	6	--> function __init_uvar -d "Sets a universal variable if it's not already set"...
+1	4	--> if test $__fish_initialized -lt 3100...
+3	3	---> test $__fish_initialized -lt 3100
+10	37	--> if not set -q FISH_UNIT_TESTS_RUNNING...
+3	3	---> not set -q FISH_UNIT_TESTS_RUNNING
+6	6	---> set -l script $__fish_data_dir/tools/create_manpage_completions.py
+0	18	---> if not test -d $__fish_user_data_dir/generated_completions...
+18	18	----> not test -d $__fish_user_data_dir/generated_completions
+5	979	--> if status --is-interactive...
+5	5	---> status --is-interactive
+171	451	---> functions -q fish_greeting
+277	280	----> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/fish_greeting.fish
+3	3	-----> function fish_greeting...
+13	518	---> fish_greeting
+7	474	----> if not set -q fish_greeting...
+4	4	-----> not set -q fish_greeting
+78	156	-----> set -l line1 (_ 'Welcome to fish, the friendly interactive shell')
+78	78	------> _ 'Welcome to fish, the friendly interactive shell'
+75	300	-----> set -l line2 \n(printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
+129	225	------> printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal)
+8	8	-------> _ 'Type %shelp%s for instructions on how to use fish'
+82	82	-------> set_color green
+6	6	-------> set_color normal
+7	7	-----> set -g fish_greeting "$line1$line2"
+0	3	----> if set -q fish_private_mode...
+3	3	-----> set -q fish_private_mode
+5	5	----> test -n "$fish_greeting"
+23	23	----> echo $fish_greeting
+1	21	--> if test -d /etc/init.d...
+20	20	---> test -d /etc/init.d
+12	12	--> complete -c [ --wraps test
+4	4	--> complete -c ! --wraps not
+276	382	--> complete -c(builtin -n | string match -rv '(\.|:|source|cd|contains|count|echo|exec|printf|random|realpath|set|\\[|test|for)') --no-files
+106	106	---> builtin -n | string match -rv '(\.|:|source|cd|contains|count|echo|exec|printf|random|realpath|set|\\[|test|for)'
+15	15	--> function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings...
+19	2827	--> __fish_reload_key_bindings
+15	23	---> __init_uvar fish_key_bindings fish_default_key_bindings
+2	8	----> if not set --query $argv[1]...
+6	6	-----> not set --query $argv[1]
+2	13	---> if test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"...
+11	11	----> test "$fish_key_bindings" = "$__fish_active_key_bindings" -a -n "$fish_key_bindings"
+1	583	---> if not functions -q "$fish_key_bindings"...
+148	582	----> not functions -q "$fish_key_bindings"
+429	434	-----> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/fish_default_key_bindings.fish
+5	5	------> function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fish"...
+6	6	---> set -g __fish_active_key_bindings "$fish_key_bindings"
+3	3	---> set -g fish_bind_mode default
+3	1893	---> if test "$fish_key_bindings" = fish_default_key_bindings...
+4	4	----> test "$fish_key_bindings" = fish_default_key_bindings
+57	1886	----> fish_default_key_bindings 2>/dev/null
+2	11	-----> if contains -- -h $argv...
+6	6	------> contains -- -h $argv
+3	3	------> contains -- --help $argv
+4	69	-----> if not set -q argv[1]...
+2	2	------> not set -q argv[1]
+59	59	------> bind --erase --all --preset
+0	4	------> if test "$fish_key_bindings" != fish_default_key_bindings...
+4	4	-------> test "$fish_key_bindings" != fish_default_key_bindings
+2	9	-----> if not contains -- -s $argv...
+4	4	------> not contains -- -s $argv
+3	3	------> set argv -s $argv
+167	1475	-----> __fish_shared_key_bindings $argv
+541	554	------> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/__fish_shared_key_bindings.fish
+6	6	-------> function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mode"...
+5	5	-------> function __fish_commandline_insert_escaped --description 'Insert the first arg escaped if a second arg is given'...
+1	1	-------> function __fish_start_bracketed_paste...
+1	1	-------> function __fish_stop_bracketed_paste...
+3	14	------> if contains -- -h $argv...
+7	7	-------> contains -- -h $argv
+4	4	-------> contains -- --help $argv
+6	6	------> bind --preset $argv \cy yank
+5	5	------> bind --preset $argv \ey yank-pop
+6	6	------> bind --preset $argv -k right forward-char
+5	5	------> bind --preset $argv -k left backward-char
+5	5	------> bind --preset $argv \e\[C forward-char
+5	5	------> bind --preset $argv \e\[D backward-char
+5	5	------> bind --preset $argv \eOC forward-char
+5	5	------> bind --preset $argv \eOD backward-char
+5	5	------> bind --preset $argv \e\[1\;5C forward-word
+5	5	------> bind --preset $argv \e\[1\;5D backward-word
+6	6	------> bind --preset $argv -k ppage beginning-of-history
+4	4	------> bind --preset $argv -k npage end-of-history
+4	4	------> bind --preset $argv \cx fish_clipboard_copy
+4	4	------> bind --preset $argv \cv fish_clipboard_paste
+4	4	------> bind --preset $argv \e cancel
+5	5	------> bind --preset $argv \t complete
+5	5	------> bind --preset $argv \cs pager-toggle-search
+5	5	------> bind --preset $argv --key btab complete-and-search
+6	6	------> bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
+5	5	------> bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"
+5	5	------> bind --preset $argv -k down down-or-search
+6	6	------> bind --preset $argv -k up up-or-search
+5	5	------> bind --preset $argv \e\[A up-or-search
+5	5	------> bind --preset $argv \e\[B down-or-search
+4	4	------> bind --preset $argv \eOA up-or-search
+4	4	------> bind --preset $argv \eOB down-or-search
+5	5	------> bind --preset $argv -k sright forward-bigword
+5	5	------> bind --preset $argv -k sleft backward-bigword
+5	5	------> bind --preset $argv \e\eOC nextd-or-forward-word
+5	5	------> bind --preset $argv \e\eOD prevd-or-backward-word
+4	4	------> bind --preset $argv \e\e\[C nextd-or-forward-word
+4	4	------> bind --preset $argv \e\e\[D prevd-or-backward-word
+4	4	------> bind --preset $argv \eO3C nextd-or-forward-word
+4	4	------> bind --preset $argv \eO3D prevd-or-backward-word
+5	5	------> bind --preset $argv \e\[3C nextd-or-forward-word
+5	5	------> bind --preset $argv \e\[3D prevd-or-backward-word
+5	5	------> bind --preset $argv \e\[1\;3C nextd-or-forward-word
+5	5	------> bind --preset $argv \e\[1\;3D prevd-or-backward-word
+5	5	------> bind --preset $argv \e\[1\;9C nextd-or-forward-word
+5	5	------> bind --preset $argv \e\[1\;9D prevd-or-backward-word
+5	5	------> bind --preset $argv \e\eOA history-token-search-backward
+6	6	------> bind --preset $argv \e\eOB history-token-search-forward
+6	6	------> bind --preset $argv \e\e\[A history-token-search-backward
+6	6	------> bind --preset $argv \e\e\[B history-token-search-forward
+5	5	------> bind --preset $argv \eO3A history-token-search-backward
+6	6	------> bind --preset $argv \eO3B history-token-search-forward
+5	5	------> bind --preset $argv \e\[3A history-token-search-backward
+6	6	------> bind --preset $argv \e\[3B history-token-search-forward
+5	5	------> bind --preset $argv \e\[1\;3A history-token-search-backward
+5	5	------> bind --preset $argv \e\[1\;3B history-token-search-forward
+5	5	------> bind --preset $argv \e\[1\;9A history-token-search-backward
+5	5	------> bind --preset $argv \e\[1\;9B history-token-search-forward
+4	4	------> bind --preset $argv \e. history-token-search-backward
+4	4	------> bind --preset $argv \el __fish_list_current_token
+4	4	------> bind --preset $argv \eo __fish_preview_current_file
+4	4	------> bind --preset $argv \ew __fish_whatis_current_token
+6	6	------> bind --preset $argv \cl 'echo -n (clear | string replace \e\[3J ""); commandline -f repaint'
+5	5	------> bind --preset $argv \cc cancel-commandline
+4	4	------> bind --preset $argv \cu backward-kill-line
+5	5	------> bind --preset $argv \cw backward-kill-path-component
+5	5	------> bind --preset $argv \e\[F end-of-line
+5	5	------> bind --preset $argv \e\[H beginning-of-line
+6	6	------> bind --preset $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
+4	4	------> bind --preset $argv \cd delete-or-exit
+5	5	------> bind --preset $argv \es "fish_commandline_prepend sudo"
+5	5	------> bind --preset $argv -k f1 __fish_man_page
+5	5	------> bind --preset $argv \eh __fish_man_page
+5	5	------> bind --preset $argv \ep __fish_paginate
+5	5	------> bind --preset $argv \e\# __fish_toggle_comment_commandline
+5	5	------> bind --preset $argv \ee edit_command_buffer
+5	5	------> bind --preset $argv \ev edit_command_buffer
+79	157	------> for mode in (bind --list-modes | string match -v paste)...
+60	60	-------> bind --list-modes | string match -v paste
+8	8	-------> bind --preset -M $mode \e\[I 'emit fish_focus_in'
+5	5	-------> bind --preset -M $mode \e\[O false
+5	5	-------> bind --preset -M $mode \e\[\?1004h false
+119	200	------> for mode in (bind --list-modes | string match -v paste)...
+71	71	-------> bind --list-modes | string match -v paste
+10	10	-------> bind --preset -M $mode -m paste \e\[200~ __fish_start_bracketed_paste
+7	7	------> bind --preset -M paste \e\[201~ __fish_stop_bracketed_paste
+5	5	------> bind --preset -M paste "" self-insert
+5	5	------> bind --preset -M paste \r "commandline -i \n"
+5	5	------> bind --preset -M paste "'" "__fish_commandline_insert_escaped \' \$__fish_paste_quoted"
+5	5	------> bind --preset -M paste \\ "__fish_commandline_insert_escaped \\\ \$__fish_paste_quoted"
+5	5	------> bind --preset -M paste " " self-insert-notfirst
+6	6	-----> bind --preset $argv "" self-insert
+7	7	-----> bind --preset $argv " " self-insert expand-abbr
+6	6	-----> bind --preset $argv ";" self-insert expand-abbr
+6	6	-----> bind --preset $argv "|" self-insert expand-abbr
+6	6	-----> bind --preset $argv "&" self-insert expand-abbr
+6	6	-----> bind --preset $argv "^" self-insert expand-abbr
+6	6	-----> bind --preset $argv ">" self-insert expand-abbr
+5	5	-----> bind --preset $argv "<" self-insert expand-abbr
+5	5	-----> bind --preset $argv ")" self-insert expand-abbr
+6	6	-----> bind --preset $argv -k nul 'commandline -i " "'
+4	4	-----> bind --preset $argv \n execute
+5	5	-----> bind --preset $argv \r execute
+5	5	-----> bind --preset $argv \ck kill-line
+6	6	-----> bind --preset $argv \eOC forward-char
+6	6	-----> bind --preset $argv \eOD backward-char
+6	6	-----> bind --preset $argv \e\[C forward-char
+6	6	-----> bind --preset $argv \e\[D backward-char
+7	7	-----> bind --preset $argv -k right forward-char
+6	6	-----> bind --preset $argv -k left backward-char
+5	5	-----> bind --preset $argv -k dc delete-char
+5	5	-----> bind --preset $argv -k backspace backward-delete-char
+4	4	-----> bind --preset $argv \x7f backward-delete-char
+5	5	-----> bind --preset $argv \e\[1~ beginning-of-line
+5	5	-----> bind --preset $argv \e\[3~ delete-char
+5	5	-----> bind --preset $argv \e\[4~ end-of-line
+4	4	-----> bind --preset $argv -k home beginning-of-line
+4	4	-----> bind --preset $argv -k end end-of-line
+5	5	-----> bind --preset $argv \e\[3\;2~ backward-delete-char
+4	4	-----> bind --preset $argv \ca beginning-of-line
+4	4	-----> bind --preset $argv \ce end-of-line
+4	4	-----> bind --preset $argv \ch backward-delete-char
+5	5	-----> bind --preset $argv \cp up-or-search
+5	5	-----> bind --preset $argv \cn down-or-search
+5	5	-----> bind --preset $argv \cf forward-char
+5	5	-----> bind --preset $argv \cb backward-char
+5	5	-----> bind --preset $argv \ct transpose-chars
+5	5	-----> bind --preset $argv \c_ undo
+4	4	-----> bind --preset $argv \cz undo
+4	4	-----> bind --preset $argv \e/ redo
+4	4	-----> bind --preset $argv \et transpose-words
+5	5	-----> bind --preset $argv \eu upcase-word
+5	5	-----> bind --preset $argv \ec capitalize-word
+5	5	-----> bind --preset $argv \e\x7f backward-kill-word
+5	5	-----> bind --preset $argv \e\b backward-kill-word
+5	5	-----> bind --preset $argv \eb backward-word
+5	5	-----> bind --preset $argv \ef forward-word
+5	5	-----> bind --preset $argv \e\< beginning-of-buffer
+5	5	-----> bind --preset $argv \e\> end-of-buffer
+5	5	-----> bind --preset $argv \ed kill-word
+6	6	-----> bind --preset $argv \cr 'commandline | string length -q; and commandline -f history-search-backward'
+8	8	-----> switch "$TERM"...
+3	287	---> if functions --query fish_user_key_bindings >/dev/null...
+31	31	----> functions --query fish_user_key_bindings >/dev/null
+20	253	----> fish_user_key_bindings 2>/dev/null
+24	24	-----> test -f $OMF_CONFIG/theme
+24	24	-----> read -l theme < $OMF_CONFIG/theme
+8	8	-----> test -e $OMF_CONFIG/key_bindings.fish
+155	155	-----> set -l key_bindings {$OMF_CONFIG,$OMF_PATH}/pkg/*/key_bindings.fish \
+                      {$OMF_CONFIG,$OMF_PATH}/themes*/$theme/key_bindings.fish
+6	6	-----> for file in $key_bindings...
+5	5	-----> functions -q __original_fish_user_key_bindings
+5	11	-----> __original_fish_user_key_bindings
+6	6	------> bind \cr peco_select_history
+4	43	--> if not set -q FISH_UNIT_TESTS_RUNNING...
+4	4	---> not set -q FISH_UNIT_TESTS_RUNNING
+4	4	---> function __fish_enable_bracketed_paste --on-event fish_prompt --on-event fish_read...
+6	6	---> function __fish_disable_bracketed_paste --on-event fish_preexec --on-event fish_exit...
+6	25	---> __fish_enable_bracketed_paste
+19	19	----> printf "\e[?2004h"
+5	11	--> if set -q TMUX...
+2	2	---> set -q TMUX
+1	1	---> not set -q FISH_UNIT_TESTS_RUNNING
+2	2	---> function __fish_enable_focus --on-event fish_postexec...
+1	1	---> function __fish_disable_focus --on-event fish_preexec...
+3	26	--> if not set -q fish_handle_reflow...
+2	2	---> not set -q fish_handle_reflow
+3	21	---> if set -q VTE_VERSION...
+2	2	----> set -q VTE_VERSION
+6	6	----> string match -q -- 'alacritty*' $TERM
+5	5	----> string match -q -- '*kitty' $TERM
+2	2	----> set -q KONSOLE_VERSION
+3	3	----> set -g fish_handle_reflow 1
+7	7	--> function __fish_winch_handler --on-signal WINCH -d "Repaint screen when window changes size"...
+1	110	--> if not set -q FISH_UNIT_TESTS_RUNNING...
+3	3	---> not set -q FISH_UNIT_TESTS_RUNNING
+90	106	---> test 0"$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = Apple_Terminal -a (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309 -o "$TERM_PROGRAM" = WezTerm -o "$TERM" = foot
+16	16	----> string match -r '\d+' 0"$TERM_PROGRAM_VERSION"
+23	23	--> test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/
+7	7	--> test -e $__fish_config_dir/config.fish
+9	9	--> set __fish_initialized 3100
+5	5	-> functions -e __fish_on_interactive
+243	243	> source /Users/rjm/.config/fish/functions/fish_mode_prompt.fish
+343	8861	> source /Users/rjm/.config/fish/functions/fish_prompt.fish
+5	5	-> function fish_prompt...
+5	5	-> status is-interactive
+111	8475	-> _tide_remove_unusable_items
+202	205	--> source /Users/rjm/.config/fish/functions/_tide_remove_unusable_items.fish
+3	3	---> function _tide_remove_unusable_items...
+82	8159	--> for item in chruby git go kubectl node php rustc virtual_env...
+9	9	---> set -l cli_names $item
+2	2	---> switch $item...
+9	1915	---> if not type --query $cli_names...
+228	228	----> not type --query $cli_names
+1077	1509	----> _tide_find_and_remove $item tide_left_prompt_items
+301	305	-----> source /Users/rjm/.config/fish/functions/_tide_find_and_remove.fish
+4	4	------> function _tide_find_and_remove -a name list --no-scope-shadowing...
+111	127	-----> set -l index (contains --index $name $$list)
+16	16	------> contains --index $name $$list
+51	169	----> _tide_find_and_remove $item tide_right_prompt_items
+81	118	-----> set -l index (contains --index $name $$list)
+37	37	------> contains --index $name $$list
+13	13	---> set -l cli_names $item
+10	10	---> switch $item...
+5	933	---> if not type --query $cli_names...
+928	928	----> not type --query $cli_names
+19	19	---> set -l cli_names $item
+18	18	---> switch $item...
+15	1140	---> if not type --query $cli_names...
+512	512	----> not type --query $cli_names
+45	235	----> _tide_find_and_remove $item tide_left_prompt_items
+158	190	-----> set -l index (contains --index $name $$list)
+32	32	------> contains --index $name $$list
+18	378	----> _tide_find_and_remove $item tide_right_prompt_items
+347	360	-----> set -l index (contains --index $name $$list)
+13	13	------> contains --index $name $$list
+6	6	---> set -l cli_names $item
+5	5	---> switch $item...
+7	923	---> if not type --query $cli_names...
+272	272	----> not type --query $cli_names
+25	476	----> _tide_find_and_remove $item tide_left_prompt_items
+440	451	-----> set -l index (contains --index $name $$list)
+11	11	------> contains --index $name $$list
+54	168	----> _tide_find_and_remove $item tide_right_prompt_items
+81	114	-----> set -l index (contains --index $name $$list)
+33	33	------> contains --index $name $$list
+10	10	---> set -l cli_names $item
+7	7	---> switch $item...
+4	630	---> if not type --query $cli_names...
+626	626	----> not type --query $cli_names
+12	12	---> set -l cli_names $item
+4	4	---> switch $item...
+7	1099	---> if not type --query $cli_names...
+164	164	----> not type --query $cli_names
+27	699	----> _tide_find_and_remove $item tide_left_prompt_items
+661	672	-----> set -l index (contains --index $name $$list)
+11	11	------> contains --index $name $$list
+48	229	----> _tide_find_and_remove $item tide_right_prompt_items
+148	181	-----> set -l index (contains --index $name $$list)
+33	33	------> contains --index $name $$list
+13	13	---> set -l cli_names $item
+9	9	---> switch $item...
+8	709	---> if not type --query $cli_names...
+701	701	----> not type --query $cli_names
+18	18	---> set -l cli_names $item
+7	10	---> switch $item...
+3	3	----> set cli_names python python3
+3	563	---> if not type --query $cli_names...
+560	560	----> not type --query $cli_names
+14	14	-> set -g _tide_prompt_var _tide_prompt_$fish_pid
+11	11	-> function _tide_refresh_prompt --on-variable $_tide_prompt_var...
+3	3	-> function fish_prompt...
+2	2	-> function fish_right_prompt...
+3	3	-> function _tide_on_fish_exit --on-event fish_exit...
+158	4144	> fish_prompt
+72	3945	-> if not set -e _tide_self_repainting...
+17	17	--> not set -e _tide_self_repainting
+247	247	--> jobs --query
+916	916	--> fish --command "_tide_jobs_status=$status CMD_DURATION=$CMD_DURATION COLUMNS=$COLUMNS \
+            fish_bind_mode=$fish_bind_mode set -U $_tide_prompt_var (_tide_prompt)" &
+9	9	--> builtin disown
+2627	2627	--> command kill $_tide_last_pid 2>/dev/null
+57	57	--> set -g _tide_last_pid $last_pid
+24	24	-> test "$tide_prompt_add_newline_before" = true
+17	17	-> string unescape $$_tide_prompt_var[1][2..]
+18	33	> fish_right_prompt
+15	15	-> string unescape $$_tide_prompt_var[1][1]
+366	372	> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/fish_title.fish
+6	6	-> function fish_title...
+21	731	> fish_title
+8	710	-> if not set -q INSIDE_EMACS...
+11	11	--> not set -q INSIDE_EMACS
+166	691	--> echo (set -q argv[1] && echo $argv[1] || status current-command) (__fish_pwd)
+7	7	---> set -q argv[1]
+9	9	---> status current-command
+188	509	---> __fish_pwd
+208	213	----> source /opt/homebrew/Cellar/fish/3.3.1/share/fish/functions/__fish_pwd.fish
+5	5	-----> function __fish_pwd --description "Show current path"...
+9	108	----> if status test-feature regex-easyesc...
+13	13	-----> status test-feature regex-easyesc
+86	86	-----> string replace -r '^/cygdrive/(.)?' '\\\U$1:' -- $PWD
+34	143	> _tide_refresh_prompt VARIABLE SET _tide_prompt_83635
+11	11	-> set -g _tide_self_repainting
+98	98	-> commandline --function repaint
+11	55	> fish_prompt
+15	20	-> if not set -e _tide_self_repainting...
+5	5	--> not set -e _tide_self_repainting
+7	7	-> test "$tide_prompt_add_newline_before" = true
+17	17	-> string unescape $$_tide_prompt_var[1][2..]
+48	72	> fish_right_prompt
+24	24	-> string unescape $$_tide_prompt_var[1][1]
+38	821	> fish_title
+18	783	-> if not set -q INSIDE_EMACS...
+26	26	--> not set -q INSIDE_EMACS
+572	739	--> echo (set -q argv[1] && echo $argv[1] || status current-command) (__fish_pwd)
+9	9	---> set -q argv[1]
+14	14	---> status current-command
+29	144	---> __fish_pwd
+27	115	----> if status test-feature regex-easyesc...
+13	13	-----> status test-feature regex-easyesc
+75	75	-----> string replace -r '^/cygdrive/(.)?' '\\\U$1:' -- $PWD
+22	40	> __fish_disable_bracketed_paste exit
+18	18	-> printf "\e[?2004l"
+4	13	> __fish_disable_focus exit
+9	9	-> echo -n \e\[\?1004l
+16	235	> fish_title exit
+11	219	-> if not set -q INSIDE_EMACS...
+6	6	--> not set -q INSIDE_EMACS
+150	202	--> echo (set -q argv[1] && echo $argv[1] || status current-command) (__fish_pwd)
+4	4	---> set -q argv[1]
+6	6	---> echo $argv[1]
+11	42	---> __fish_pwd
+3	31	----> if status test-feature regex-easyesc...
+7	7	-----> status test-feature regex-easyesc
+21	21	-----> string replace -r '^/cygdrive/(.)?' '\\\U$1:' -- $PWD
+178	178	> exit
+20	38	> __fish_enable_focus exit
+18	18	-> echo -n \e\[\?1004h
+11	34	> __fish_disable_bracketed_paste
+23	23	-> printf "\e[?2004l"
+14	6436	> _tide_on_fish_exit
+6375	6422	-> set -e $_tide_prompt_var
+22	47	--> _tide_refresh_prompt VARIABLE ERASE _tide_prompt_83635
+11	11	---> set -g _tide_self_repainting
+14	14	---> commandline --function repaint

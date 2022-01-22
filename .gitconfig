@@ -1,0 +1,15 @@
+[user]
+	name = RJM
+	email = rjmbowie@gmail.com
+[credential]
+	helper = osxkeychain
+[init]
+	defaultBranch = master
+[mergetool "nvim"]
+  cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
+[mergetool]
+  prompt = false
+[merge]
+  tool = nvim
+[pull]
+	rebase = false
