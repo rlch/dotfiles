@@ -16,6 +16,7 @@ local source_mapping = {
   nvim_lua = '[Lua]',
   path = '[Path]',
   luasnip = '[Snippet]',
+  tmux = '[tmux]',
 }
 
 local function feed(key, mode)
@@ -46,10 +47,7 @@ cmp.setup {
       else
         feed '<Plug>(Tabout)'
       end
-    end, {
-      'i',
-      'c',
-    }),
+    end, { 'i', 'c' }),
     ['<S-Tab>'] = cmp.mapping(function(fallback)
       if luasnip.jumpable(-1) then
         luasnip.jump(-1)
@@ -58,10 +56,7 @@ cmp.setup {
       else
         feed '<Plug>(TaboutBack)'
       end
-    end, {
-      'i',
-      'c',
-    }),
+    end, { 'i', 'c' }),
   },
   sources = {
     { name = 'nvim_lsp' },
@@ -69,17 +64,12 @@ cmp.setup {
     { name = 'neorg' },
     { name = 'buffer' },
     { name = 'path' },
+    { name = 'tmux' },
   },
   formatting = {
     format = function(entry, vim_item)
-      vim_item.kind = lspkind.presets.default[vim_item.kind]
       local menu = source_mapping[entry.source.name]
-      --[[ if entry.source.name == 'cmp_tabnine' then
-        if entry.completion_item.data ~= nil and entry.completion_item.data.detail ~= nil then
-          menu = entry.completion_item.data.detail .. ' ' .. menu
-        end
-        vim_item.kind = ''
-      end ]]
+      vim_item.kind = lspkind.presets.default[vim_item.kind]
       vim_item.menu = menu
       return vim_item
     end,

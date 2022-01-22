@@ -1,8 +1,8 @@
-require'bufferline'.setup {
+require('bufferline').setup {
   options = {
-    close_command = "bdelete! %d",
-    right_mouse_command = "bdelete! %d",
-    left_mouse_command = "buffer %d",
+    close_command = 'bdelete! %d',
+    right_mouse_command = 'bdelete! %d',
+    left_mouse_command = 'buffer %d',
     middle_mouse_command = nil,
     -- NOTE: this plugin is designed with this icon in mind,
     -- and so changing this is NOT recommended, this is intended
@@ -17,23 +17,23 @@ require'bufferline'.setup {
     --- Please note some names can/will break the
     --- bufferline so use this at your discretion knowing that it has
     --- some limitations that will *NOT* be fixed.
-    name_formatter = function(buf)  -- buf contains a "name", "path" and "bufnr"
+    name_formatter = function(buf) -- buf contains a "name", "path" and "bufnr"
       -- remove extension from markdown files for example
-      if buf.name:match('%.md') then
+      if buf.name:match '%.md' then
         return vim.fn.fnamemodify(buf.name, ':t:r')
       end
     end,
     max_name_length = 18,
     max_prefix_length = 15, -- prefix used when a buffer is de-duplicated
     tab_size = 18,
-    diagnostics = "nvim_lsp",
+    diagnostics = 'nvim_lsp',
     diagnostics_update_in_insert = false,
-    diagnostics_indicator = function(count, level, diagnostics_dict, context)
-      return "("..count..")"
+    diagnostics_indicator = function(count, _, _, _)
+      return '(' .. count .. ')'
     end,
     offsets = {
-      { filetype = "NvimTree", text = "Files", text_align = "center" },
-      { filetype = "Flutter Outline", text = "Flutter Outline", text_align = "center" },
+      { filetype = 'NvimTree', text = 'Files', text_align = 'center' },
+      { filetype = 'Flutter Outline', text = 'Flutter Outline', text_align = 'center' },
     },
     show_buffer_icons = true,
     show_buffer_close_icons = true,
@@ -42,54 +42,54 @@ require'bufferline'.setup {
     persist_buffer_sort = true,
     groups = {
       options = {
-        toggle_hidden_on_enter = true -- when you re-enter a hidden group this options re-opens that group so the buffer is visible
+        toggle_hidden_on_enter = true, -- when you re-enter a hidden group this options re-opens that group so the buffer is visible
       },
       items = {
         {
-          name = "Tests", -- Mandatory
-          highlight = {gui = "underline", guisp = "blue"}, -- Optional
+          name = 'Tests', -- Mandatory
+          highlight = { gui = 'underline', guisp = 'blue' }, -- Optional
           priority = 2, -- determines where it will appear relative to other groups (Optional)
-          icon = "", -- Optional
+          icon = '', -- Optional
           matcher = function(buf) -- Mandatory
-            return buf.filename:match('%_test') or buf.filename:match('%_spec')
+            return buf.filename:match '%_test' or buf.filename:match '%_spec'
           end,
         },
         {
-          name = "Docs",
-          highlight = {gui = "undercurl", guisp = "green"},
-          auto_close = false,  -- whether or not close this group if it doesn't contain the current buffer
+          name = 'Docs',
+          highlight = { gui = 'undercurl', guisp = 'green' },
+          auto_close = false, -- whether or not close this group if it doesn't contain the current buffer
           matcher = function(buf)
-            return buf.filename:match('%.md') or buf.filename:match('%.txt')
+            return buf.filename:match '%.md' or buf.filename:match '%.txt'
           end,
           --[[ separator = { -- Optional
             style = require('bufferline.groups').separator.tab
           }, ]]
         },
         {
-          name = "Screens",
+          name = 'Screens',
           -- highlight = {gui = "undercurl", guisp = "green"},
-          auto_close = false,  -- whether or not close this group if it doesn't contain the current buffer
+          auto_close = false, -- whether or not close this group if it doesn't contain the current buffer
           matcher = function(buf)
-            return buf.path:match('screens/')
+            return buf.path:match 'screens/'
           end,
         },
         {
-          name = "Widgets",
+          name = 'Widgets',
           -- highlight = {gui = "undercurl", guisp = "green"},
-          auto_close = false,  -- whether or not close this group if it doesn't contain the current buffer
+          auto_close = false, -- whether or not close this group if it doesn't contain the current buffer
           matcher = function(buf)
-            return buf.path:match('widgets/')
+            return buf.path:match 'widgets/'
           end,
         },
         {
-          name = "CF",
+          name = 'CF',
           -- highlight = {gui = "undercurl", guisp = "green"},
-          auto_close = false,  -- whether or not close this group if it doesn't contain the current buffer
+          auto_close = false, -- whether or not close this group if it doesn't contain the current buffer
           matcher = function(buf)
-            return buf.path:match('functions/')
+            return buf.path:match 'functions/'
           end,
         },
-      }
+      },
     },
     custom_filter = function(buf_number)
       local name = vim.fn.bufname(buf_number)
@@ -103,5 +103,5 @@ require'bufferline'.setup {
     --[[ sort_by = function(buffer_a, buffer_b)
       return buffer_a.modified > buffer_b.modified
     end ]]
-  }
+  },
 }

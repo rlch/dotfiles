@@ -37,7 +37,7 @@ lsp_status.register_progress() ]]
   status_symbol = '',
 } ]]
 
-HOME = vim.fn.expand '$HOME'
+local HOME = vim.fn.expand '$HOME'
 local platform = ''
 if vim.fn.has 'mac' == 1 then
   platform = 'macOS'
@@ -95,13 +95,6 @@ conf.tsserver.setup {
 
 conf.sumneko_lua.setup {
   cmd = { sumneko_binary, '-E', sumneko_root_path .. '/main.lua' },
-  commands = {
-    Format = {
-      function()
-        require('stylua-nvim').format_file()
-      end,
-    },
-  },
   settings = {
     Lua = {
       runtime = {

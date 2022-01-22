@@ -1,8 +1,17 @@
 local g = vim.g
-g.mapleader = [[ ]]
-
 local cmd = vim.cmd
 local o_s = vim.o
+
+g.os = vim.loop.os_uname().sysname
+g.open_command = g.os == 'Darwin' and 'open' or 'xdg-open'
+
+--------------
+-- Settings --
+--------------
+
+g.mapleader = [[ ]]
+g.termguicolors = true
+vim.opt.termguicolors = true
 
 local function opt(o, v, scopes)
   scopes = scopes or { o_s }
@@ -67,11 +76,8 @@ au BufWritePre * lua vim.lsp.buf.formatting()
 autocmd BufNewFile,BufRead,FileType * setlocal formatoptions-=o
 ]]
 
-g.termguicolors = true
-vim.opt.termguicolors = true
-
 local ok, reload = pcall(require, 'plenary.reload')
-RELOAD = ok and reload.reload_module or function(...)
+local RELOAD = ok and reload.reload_module or function(...)
   return ...
 end
 function R(name)
