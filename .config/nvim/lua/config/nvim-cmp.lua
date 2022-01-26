@@ -42,19 +42,15 @@ cmp.setup {
     ['<Tab>'] = cmp.mapping(function(fallback)
       if luasnip.expand_or_locally_jumpable() then
         luasnip.expand_or_jump()
-      elseif api.nvim_get_mode().mode == 'c' then
-        fallback()
       else
-        feed '<Plug>(Tabout)'
+        fallback()
       end
     end, { 'i', 'c' }),
     ['<S-Tab>'] = cmp.mapping(function(fallback)
       if luasnip.jumpable(-1) then
         luasnip.jump(-1)
-      elseif api.nvim_get_mode().mode == 'c' then
-        fallback()
       else
-        feed '<Plug>(TaboutBack)'
+        fallback()
       end
     end, { 'i', 'c' }),
   },

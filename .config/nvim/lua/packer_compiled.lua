@@ -93,6 +93,11 @@ _G.packer_plugins = {
     path = "/Users/rjm/.local/share/nvim/site/pack/packer/start/auto-session",
     url = "https://github.com/rmagatti/auto-session"
   },
+  cmp = {
+    after = { "tabout.nvim" },
+    loaded = true,
+    only_config = true
+  },
   ["cmp-buffer"] = {
     loaded = true,
     path = "/Users/rjm/.local/share/nvim/site/pack/packer/start/cmp-buffer",
@@ -229,11 +234,6 @@ _G.packer_plugins = {
     path = "/Users/rjm/.local/share/nvim/site/pack/packer/start/nvim-autopairs",
     url = "https://github.com/windwp/nvim-autopairs"
   },
-  ["nvim-cmp"] = {
-    after = { "tabout.nvim" },
-    loaded = true,
-    only_config = true
-  },
   ["nvim-colorizer.lua"] = {
     config = { "\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14colorizer\frequire\0" },
     loaded = true,
@@ -329,6 +329,11 @@ _G.packer_plugins = {
     url = "https://github.com/simrat39/rust-tools.nvim",
     wants = { "popup", "plenary", "nvim-telescope/telescope.nvim" }
   },
+  sniprun = {
+    loaded = true,
+    path = "/Users/rjm/.local/share/nvim/site/pack/packer/start/sniprun",
+    url = "https://github.com/michaelb/sniprun"
+  },
   ["stabilize.nvim"] = {
     config = { "\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14stabilize\frequire\0" },
     loaded = true,
@@ -341,7 +346,7 @@ _G.packer_plugins = {
     url = "https://github.com/ckipp01/stylua-nvim"
   },
   ["tabout.nvim"] = {
-    config = { "\27LJ\2\n½\2\0\0\5\0\v\0\0216\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0004\3\a\0005\4\4\0>\4\1\0035\4\5\0>\4\2\0035\4\6\0>\4\3\0035\4\a\0>\4\4\0035\4\b\0>\4\5\0035\4\t\0>\4\6\3=\3\n\2B\0\2\1K\0\1\0\ftabouts\1\0\2\topen\6{\nclose\6}\1\0\2\topen\6[\nclose\6]\1\0\2\topen\6(\nclose\6)\1\0\2\topen\6`\nclose\6`\1\0\2\topen\6\"\nclose\6\"\1\0\2\topen\6'\nclose\6'\1\0\6\vtabkey\5\21ignore_beginning\2\15completion\1\21act_as_shift_tab\2\15act_as_tab\2\21backwards_tabkey\5\nsetup\vtabout\frequire\0" },
+    config = { "\27LJ\2\nÉ\2\0\0\5\0\v\0\0216\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0004\3\a\0005\4\4\0>\4\1\0035\4\5\0>\4\2\0035\4\6\0>\4\3\0035\4\a\0>\4\4\0035\4\b\0>\4\5\0035\4\t\0>\4\6\3=\3\n\2B\0\2\1K\0\1\0\ftabouts\1\0\2\topen\6{\nclose\6}\1\0\2\topen\6[\nclose\6]\1\0\2\topen\6(\nclose\6)\1\0\2\topen\6`\nclose\6`\1\0\2\topen\6\"\nclose\6\"\1\0\2\topen\6'\nclose\6'\1\0\6\vtabkey\n<Tab>\21ignore_beginning\2\15completion\1\21act_as_shift_tab\2\15act_as_tab\2\21backwards_tabkey\f<S-Tab>\nsetup\vtabout\frequire\0" },
     load_after = {},
     loaded = true,
     needs_bufread = false,
@@ -444,102 +449,78 @@ time([[Defining packer_plugins]], false)
 time([[Setup for markdown-preview.nvim]], true)
 try_loadstring("\27LJ\2\n=\0\0\2\0\4\0\0056\0\0\0009\0\1\0005\1\3\0=\1\2\0K\0\1\0\1\2\0\0\rmarkdown\19mkdp_filetypes\6g\bvim\0", "setup", "markdown-preview.nvim")
 time([[Setup for markdown-preview.nvim]], false)
--- Config for: nvim-tree.lua
-time([[Config for nvim-tree.lua]], true)
-require('config.nvim-tree')
-time([[Config for nvim-tree.lua]], false)
--- Config for: lspsaga
-time([[Config for lspsaga]], true)
-require('config.lspsaga')
-time([[Config for lspsaga]], false)
--- Config for: dart-vim-plugin
-time([[Config for dart-vim-plugin]], true)
-require('config.dart-vim-plugin')
-time([[Config for dart-vim-plugin]], false)
--- Config for: nvim-spectre
-time([[Config for nvim-spectre]], true)
-try_loadstring("\27LJ\2\n9\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\fspectre\frequire\0", "config", "nvim-spectre")
-time([[Config for nvim-spectre]], false)
 -- Config for: copilot.vim
 time([[Config for copilot.vim]], true)
 require('config.copilot')
 time([[Config for copilot.vim]], false)
--- Config for: stabilize.nvim
-time([[Config for stabilize.nvim]], true)
-try_loadstring("\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14stabilize\frequire\0", "config", "stabilize.nvim")
-time([[Config for stabilize.nvim]], false)
--- Config for: nvim-cmp
-time([[Config for nvim-cmp]], true)
-require('config.nvim-cmp')
-time([[Config for nvim-cmp]], false)
--- Config for: telescope.nvim
-time([[Config for telescope.nvim]], true)
-require('config.telescope')
-time([[Config for telescope.nvim]], false)
--- Config for: rust-tools.nvim
-time([[Config for rust-tools.nvim]], true)
-require('config.rust-tools')
-time([[Config for rust-tools.nvim]], false)
 -- Config for: auto-session
 time([[Config for auto-session]], true)
 try_loadstring("\27LJ\2\n«\1\0\0\t\0\v\0\0176\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\t\0'\3\3\0\18\5\3\0009\3\4\0036\6\5\0009\6\6\0069\6\a\6'\b\b\0B\6\2\0A\3\1\2=\3\n\2B\0\2\1K\0\1\0\26auto_session_root_dir\1\0\0\tdata\fstdpath\afn\bvim\vformat\21%s/session/auto/\nsetup\17auto-session\frequire\0", "config", "auto-session")
 time([[Config for auto-session]], false)
--- Config for: nvim-lspconfig
-time([[Config for nvim-lspconfig]], true)
-require('config.lsp-config')
-time([[Config for nvim-lspconfig]], false)
--- Config for: renamer.nvim
-time([[Config for renamer.nvim]], true)
-require('config.renamer')
-time([[Config for renamer.nvim]], false)
--- Config for: trouble.nvim
-time([[Config for trouble.nvim]], true)
-require('config.trouble')
-time([[Config for trouble.nvim]], false)
--- Config for: nvim-treesitter
-time([[Config for nvim-treesitter]], true)
-require('config.nvim-treesitter')
-time([[Config for nvim-treesitter]], false)
--- Config for: nvim-autopairs
-time([[Config for nvim-autopairs]], true)
-require('config.npairs')
-time([[Config for nvim-autopairs]], false)
--- Config for: github-notifications.nvim
-time([[Config for github-notifications.nvim]], true)
-require('config.github-notifications')
-time([[Config for github-notifications.nvim]], false)
--- Config for: nvim-dap
-time([[Config for nvim-dap]], true)
-require('config.dap')
-time([[Config for nvim-dap]], false)
--- Config for: nvim-neoclip.lua
-time([[Config for nvim-neoclip.lua]], true)
-try_loadstring("\27LJ\2\nf\0\0\3\0\5\0\f6\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\0016\0\0\0'\2\3\0B\0\2\0029\0\4\0'\2\1\0B\0\2\1K\0\1\0\19load_extension\14telescope\nsetup\fneoclip\frequire\0", "config", "nvim-neoclip.lua")
-time([[Config for nvim-neoclip.lua]], false)
--- Config for: vim-autoswap
-time([[Config for vim-autoswap]], true)
-require('config.autoswap')
-time([[Config for vim-autoswap]], false)
--- Config for: nvim-colorizer.lua
-time([[Config for nvim-colorizer.lua]], true)
-try_loadstring("\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14colorizer\frequire\0", "config", "nvim-colorizer.lua")
-time([[Config for nvim-colorizer.lua]], false)
+-- Config for: lspsaga
+time([[Config for lspsaga]], true)
+require('config.lspsaga')
+time([[Config for lspsaga]], false)
+-- Config for: rust-tools.nvim
+time([[Config for rust-tools.nvim]], true)
+require('config.rust-tools')
+time([[Config for rust-tools.nvim]], false)
+-- Config for: project.nvim
+time([[Config for project.nvim]], true)
+require('config.project')
+time([[Config for project.nvim]], false)
 -- Config for: vim-markdown
 time([[Config for vim-markdown]], true)
 try_loadstring("\27LJ\2\n\1\0\0\2\0\5\0\r6\0\0\0009\0\1\0)\1\1\0=\1\2\0006\0\0\0009\0\1\0)\1\1\0=\1\3\0006\0\0\0009\0\1\0)\1\2\0=\1\4\0K\0\1\0&vim_markdown_new_list_item_indent\31vim_markdown_strikethrough\22vim_markdown_math\6g\bvim\0", "config", "vim-markdown")
 time([[Config for vim-markdown]], false)
--- Config for: flutter-tools.nvim
-time([[Config for flutter-tools.nvim]], true)
-require('config.flutter-tools')
-time([[Config for flutter-tools.nvim]], false)
+-- Config for: renamer.nvim
+time([[Config for renamer.nvim]], true)
+require('config.renamer')
+time([[Config for renamer.nvim]], false)
+-- Config for: stabilize.nvim
+time([[Config for stabilize.nvim]], true)
+try_loadstring("\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14stabilize\frequire\0", "config", "stabilize.nvim")
+time([[Config for stabilize.nvim]], false)
 -- Config for: nest.nvim
 time([[Config for nest.nvim]], true)
 try_loadstring("\27LJ\2\n'\0\0\3\0\2\0\0046\0\0\0'\2\1\0B\0\2\1K\0\1\0\fkeymaps\frequire\0", "config", "nest.nvim")
 time([[Config for nest.nvim]], false)
+-- Config for: telescope.nvim
+time([[Config for telescope.nvim]], true)
+require('config.telescope')
+time([[Config for telescope.nvim]], false)
 -- Config for: colorscheme
 time([[Config for colorscheme]], true)
 require('config.colorscheme')
 time([[Config for colorscheme]], false)
+-- Config for: nvim-treesitter
+time([[Config for nvim-treesitter]], true)
+require('config.nvim-treesitter')
+time([[Config for nvim-treesitter]], false)
+-- Config for: github-notifications.nvim
+time([[Config for github-notifications.nvim]], true)
+require('config.github-notifications')
+time([[Config for github-notifications.nvim]], false)
+-- Config for: cmp
+time([[Config for cmp]], true)
+require('config.nvim-cmp')
+time([[Config for cmp]], false)
+-- Config for: nvim-dap
+time([[Config for nvim-dap]], true)
+require('config.dap')
+time([[Config for nvim-dap]], false)
+-- Config for: trouble.nvim
+time([[Config for trouble.nvim]], true)
+require('config.trouble')
+time([[Config for trouble.nvim]], false)
+-- Config for: nvim-colorizer.lua
+time([[Config for nvim-colorizer.lua]], true)
+try_loadstring("\27LJ\2\n7\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\14colorizer\frequire\0", "config", "nvim-colorizer.lua")
+time([[Config for nvim-colorizer.lua]], false)
+-- Config for: nvim-lspconfig
+time([[Config for nvim-lspconfig]], true)
+require('config.lsp-config')
+time([[Config for nvim-lspconfig]], false)
 -- Config for: null-ls.nvim
 time([[Config for null-ls.nvim]], true)
 require('config.null-ls')
@@ -548,34 +529,58 @@ time([[Config for null-ls.nvim]], false)
 time([[Config for LuaSnip]], true)
 require('config.luasnip')
 time([[Config for LuaSnip]], false)
--- Config for: CamelCaseMotion
-time([[Config for CamelCaseMotion]], true)
-require('config.camelcasemotion')
-time([[Config for CamelCaseMotion]], false)
--- Config for: project.nvim
-time([[Config for project.nvim]], true)
-require('config.project')
-time([[Config for project.nvim]], false)
+-- Config for: vim-autoswap
+time([[Config for vim-autoswap]], true)
+require('config.autoswap')
+time([[Config for vim-autoswap]], false)
+-- Config for: nvim-neoclip.lua
+time([[Config for nvim-neoclip.lua]], true)
+try_loadstring("\27LJ\2\nf\0\0\3\0\5\0\f6\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\0016\0\0\0'\2\3\0B\0\2\0029\0\4\0'\2\1\0B\0\2\1K\0\1\0\19load_extension\14telescope\nsetup\fneoclip\frequire\0", "config", "nvim-neoclip.lua")
+time([[Config for nvim-neoclip.lua]], false)
 -- Config for: Comment.nvim
 time([[Config for Comment.nvim]], true)
 try_loadstring("\27LJ\2\n5\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\fComment\frequire\0", "config", "Comment.nvim")
 time([[Config for Comment.nvim]], false)
+-- Config for: nvim-autopairs
+time([[Config for nvim-autopairs]], true)
+require('config.npairs')
+time([[Config for nvim-autopairs]], false)
+-- Config for: nvim-tree.lua
+time([[Config for nvim-tree.lua]], true)
+require('config.nvim-tree')
+time([[Config for nvim-tree.lua]], false)
+-- Config for: CamelCaseMotion
+time([[Config for CamelCaseMotion]], true)
+require('config.camelcasemotion')
+time([[Config for CamelCaseMotion]], false)
+-- Config for: dart-vim-plugin
+time([[Config for dart-vim-plugin]], true)
+require('config.dart-vim-plugin')
+time([[Config for dart-vim-plugin]], false)
+-- Config for: nvim-spectre
+time([[Config for nvim-spectre]], true)
+try_loadstring("\27LJ\2\n9\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\fspectre\frequire\0", "config", "nvim-spectre")
+time([[Config for nvim-spectre]], false)
+-- Config for: flutter-tools.nvim
+time([[Config for flutter-tools.nvim]], true)
+require('config.flutter-tools')
+time([[Config for flutter-tools.nvim]], false)
 -- Load plugins in order defined by `after`
 time([[Sequenced loading]], true)
-vim.cmd [[ packadd tabout.nvim ]]
+vim.cmd [[ packadd neorg ]]
 
--- Config for: tabout.nvim
-try_loadstring("\27LJ\2\n½\2\0\0\5\0\v\0\0216\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0004\3\a\0005\4\4\0>\4\1\0035\4\5\0>\4\2\0035\4\6\0>\4\3\0035\4\a\0>\4\4\0035\4\b\0>\4\5\0035\4\t\0>\4\6\3=\3\n\2B\0\2\1K\0\1\0\ftabouts\1\0\2\topen\6{\nclose\6}\1\0\2\topen\6[\nclose\6]\1\0\2\topen\6(\nclose\6)\1\0\2\topen\6`\nclose\6`\1\0\2\topen\6\"\nclose\6\"\1\0\2\topen\6'\nclose\6'\1\0\6\vtabkey\5\21ignore_beginning\2\15completion\1\21act_as_shift_tab\2\15act_as_tab\2\21backwards_tabkey\5\nsetup\vtabout\frequire\0", "config", "tabout.nvim")
+-- Config for: neorg
+require('config.neorg')
 
 vim.cmd [[ packadd lualine.nvim ]]
 
 -- Config for: lualine.nvim
 require('config.lualine')
 
-vim.cmd [[ packadd neorg ]]
+vim.cmd [[ packadd tabout.nvim ]]
 
--- Config for: neorg
-require('config.neorg')
+-- Config for: tabout.nvim
+try_loadstring("\27LJ\2\nÉ\2\0\0\5\0\v\0\0216\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0004\3\a\0005\4\4\0>\4\1\0035\4\5\0>\4\2\0035\4\6\0>\4\3\0035\4\a\0>\4\4\0035\4\b\0>\4\5\0035\4\t\0>\4\6\3=\3\n\2B\0\2\1K\0\1\0\ftabouts\1\0\2\topen\6{\nclose\6}\1\0\2\topen\6[\nclose\6]\1\0\2\topen\6(\nclose\6)\1\0\2\topen\6`\nclose\6`\1\0\2\topen\6\"\nclose\6\"\1\0\2\topen\6'\nclose\6'\1\0\6\vtabkey\n<Tab>\21ignore_beginning\2\15completion\1\21act_as_shift_tab\2\15act_as_tab\2\21backwards_tabkey\f<S-Tab>\nsetup\vtabout\frequire\0", "config", "tabout.nvim")
 
 time([[Sequenced loading]], false)
 

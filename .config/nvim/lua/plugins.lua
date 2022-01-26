@@ -62,6 +62,31 @@ require('packer').startup {
       },
     }
 
+    -- Autocomplete
+    use {
+      {
+        'hrsh7th/nvim-cmp',
+        config = [[require('config.nvim-cmp')]],
+        requires = {
+          'saadparwaiz1/cmp_luasnip',
+          'hrsh7th/cmp-nvim-lsp',
+          'hrsh7th/cmp-buffer',
+          'hrsh7th/cmp-path',
+          'andersevenrud/cmp-tmux',
+          'petertriho/cmp-git',
+          'neovim/nvim-lspconfig',
+          'L3MON4D3/LuaSnip',
+          'windwp/nvim-autopairs',
+          'onsails/lspkind-nvim',
+        },
+        as = 'cmp',
+      },
+      {
+        'github/copilot.vim',
+        config = [[require('config.copilot')]],
+      },
+    }
+
     -- Dart / Flutter
     use {
       {
@@ -71,7 +96,7 @@ require('packer').startup {
       {
         dev_dir .. 'flutter-tools.nvim',
         config = [[require('config.flutter-tools')]],
-        requires = 'hrsh7th/nvim-cmp',
+        requires = 'cmp',
       },
       {
         'akinsho/dependency-assist.nvim',
@@ -128,6 +153,17 @@ require('packer').startup {
         'folke/trouble.nvim',
         config = [[require('config.trouble')]],
       },
+      use {
+        'michaelb/sniprun',
+        run = 'bash ./install.sh',
+      },
+      use {
+        'j-hui/fidget.nvim',
+        config = function()
+          require('fidget').setup()
+        end,
+        disable = true,
+      },
     }
 
     -- Snippets
@@ -135,30 +171,6 @@ require('packer').startup {
       'L3MON4D3/LuaSnip',
       config = [[require('config.luasnip')]],
       requires = dev_dir .. 'friendly-snippets',
-    }
-
-    -- Autocomplete
-    use {
-      {
-        'hrsh7th/nvim-cmp',
-        config = [[require('config.nvim-cmp')]],
-        requires = {
-          'saadparwaiz1/cmp_luasnip',
-          'hrsh7th/cmp-nvim-lsp',
-          'hrsh7th/cmp-buffer',
-          'hrsh7th/cmp-path',
-          'andersevenrud/cmp-tmux',
-          'petertriho/cmp-git',
-          'neovim/nvim-lspconfig',
-          'L3MON4D3/LuaSnip',
-          'windwp/nvim-autopairs',
-          'onsails/lspkind-nvim',
-        },
-      },
-      {
-        'github/copilot.vim',
-        config = [[require('config.copilot')]],
-      },
     }
 
     -- Tests
@@ -252,8 +264,8 @@ require('packer').startup {
         'abecodes/tabout.nvim',
         config = function()
           require('tabout').setup {
-            tabkey = '',
-            backwards_tabkey = '',
+            tabkey = '<Tab>',
+            backwards_tabkey = '<S-Tab>',
             act_as_tab = true,
             act_as_shift_tab = true,
             completion = false,
@@ -269,7 +281,7 @@ require('packer').startup {
           }
         end,
         wants = { 'nvim-treesitter' },
-        after = { 'nvim-cmp' },
+        after = { 'cmp' },
       },
       {
         'akinsho/bufferline.nvim',
