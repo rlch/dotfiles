@@ -76,20 +76,26 @@ conf.pyright.setup {
   capabilities = capabilities,
 }
 
-conf.jsonls.setup {
-  commands = {
-    Format = {
-      function()
-        vim.lsp.buf.range_formatting({}, { 0, 0 }, { vim.fn.line '$', 0 })
-      end,
-    },
-  },
-  -- on_attach = lsp_status.on_attach,
-  capabilities = capabilities,
-}
+-- conf.jsonls.setup {
+--   commands = {
+--     Format = {
+--       function()
+--         vim.lsp.buf.range_formatting({}, { 0, 0 }, { vim.fn.line '$', 0 })
+--       end,
+--     },
+--   },
+--   on_attach = function(client)
+--     client.resolved_capabilities.document_formatting = false
+--     client.resolved_capabilities.document_range_formatting = false
+--   end,
+--   capabilities = capabilities,
+-- }
 
 conf.tsserver.setup {
-  -- on_attach = lsp_status.on_attach,
+  on_attach = function(client)
+    client.resolved_capabilities.document_formatting = false
+    client.resolved_capabilities.document_range_formatting = false
+  end,
   capabilities = capabilities,
 }
 
