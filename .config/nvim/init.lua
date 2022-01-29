@@ -66,6 +66,8 @@ cmd [[command! PackerSync packadd packer.nvim | lua require('plugins').sync()]]
 cmd [[command! PackerClean packadd packer.nvim | lua require('plugins').clean()]]
 cmd [[command! PackerCompile packadd packer.nvim | lua require('plugins').compile()]]
 
+vim.api.nvim_exec([[ autocmd BufWritePre *.go :silent! lua require('go.format').goimport() ]], false)
+
 cmd [[
 augroup packer_user_config
 autocmd!

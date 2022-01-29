@@ -119,6 +119,14 @@ require('packer').startup {
       config = [[require('config.rust-tools')]],
     }
 
+    -- Go
+    use {
+      'ray-x/go.nvim',
+      config = function()
+        require('go').setup()
+      end,
+    }
+
     -- LSP
     use {
       {
@@ -129,11 +137,10 @@ require('packer').startup {
         }, ]]
       },
       {
-        '/jose-elias-alvarez/null-ls.nvim',
+        'jose-elias-alvarez/null-ls.nvim',
         config = [[require('config.null-ls')]],
       },
       {
-
         'ray-x/lsp_signature.nvim',
         disable = true,
       },
@@ -192,7 +199,6 @@ require('packer').startup {
         config = function()
           require('bufresize').setup()
         end,
-        disable = true,
       },
       {
         'norcalli/nvim-colorizer.lua',
@@ -303,7 +309,6 @@ require('packer').startup {
         end,
       },
       'tpope/vim-abolish',
-      'ggandor/lightspeed.nvim',
     }
 
     -- Diagnostics & utilities
@@ -316,6 +321,17 @@ require('packer').startup {
     -- Project management
     use {
       {
+        'nvim-neo-tree/neo-tree.nvim',
+        branch = 'v1.x',
+        requires = {
+          'nvim-lua/plenary.nvim',
+          'kyazdani42/nvim-web-devicons', -- not strictly required, but recommended
+          'MunifTanjim/nui.nvim',
+        },
+        config = [[require('config.neotree')]],
+        disable = true,
+      },
+      {
         'kyazdani42/nvim-tree.lua',
         requires = 'kyazdani42/nvim-web-devicons',
         config = [[require('config.nvim-tree')]],
@@ -327,12 +343,15 @@ require('packer').startup {
             auto_session_root_dir = ('%s/session/auto/'):format(vim.fn.stdpath 'data'),
           }
         end,
+        disable = true,
       },
       {
         'nvim-neorg/neorg',
         config = [[require('config.neorg')]],
         requires = 'plenary',
         after = 'nvim-treesitter',
+        branch = 'main',
+        disable = true,
       },
       {
         dev_dir .. 'project.nvim',

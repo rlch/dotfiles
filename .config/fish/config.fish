@@ -3,7 +3,9 @@ if status is-interactive
 end
 
 ulimit -n 10240
-set -x PATH $PATH $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin
+
+set -x GOPATH $HOME/go
+set -x PATH $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
 

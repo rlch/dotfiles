@@ -134,6 +134,8 @@ conf.omnisharp.setup {
   capabilities = capabilities,
 }
 
+require('lspconfig').gopls.setup {}
+
 --[[ conf.efm.setup {
     init_options = {documentFormatting = true},
     filetypes = {"lua"},
