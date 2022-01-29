@@ -60,11 +60,14 @@ nest.applyKeymaps {
               { 'd', '<cmd>Telescope diagnostics<cr>' },
               { 'f', '<cmd>Telescope find_files<cr>' },
               { 'F', '<cmd>Telescope flutter commands<cr>' },
-              { 'g', {
-                {'b', '<cmd>Telescope git_branches<cr>'},
-                {'c', '<cmd>Telescope git_commits<cr>'},
-                {'s', '<cmd>Telescope git_status<cr>'},
-              }},
+              {
+                'g',
+                {
+                  { 'b', '<cmd>Telescope git_branches<cr>' },
+                  { 'c', '<cmd>Telescope git_commits<cr>' },
+                  { 's', '<cmd>Telescope git_status<cr>' },
+                },
+              },
               { 'h', '<cmd>Telescope resume<cr>' },
               { 'H', '<cmd>Telescope help_tags<cr>' },
               { 'n', '<cmd>lua require("github-notifications.menu").notifications()<CR>' },
@@ -153,7 +156,6 @@ nest.applyKeymaps {
           {
             'r',
             {
-              { 'o', '<cmd>NvimTreeToggle<CR><cmd>NvimTreeToggle<CR>' },
               { 'sb', '<cmd>RustStartStandaloneServerForBuffer<cr>' },
             },
           },
