@@ -1,3 +1,4 @@
+---
 session_name: Tutero
 windows:
   - window_name: app
@@ -7,11 +8,11 @@ windows:
       - cd ~/Coding/Tutero/app/ && clear
     panes:
       - shell_command:
-        - sleep 0.1
-        - clear
-        - v .
+          - sleep 0.1
+          - clear
+          - v .
         focus: true
       - shell_command:
-        - tmux select-layout main-vertical
-        - tmux resize-pane -x 60
-        - git status
+          - tmux select-layout main-vertical
+          - tmux resize-pane -x 60
+          - git status
