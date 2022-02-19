@@ -63,6 +63,12 @@ require('flutter-tools').setup {
     auto_open = false, -- if true this will open the outline automatically when it is first populated
   },
   lsp = {
+    color = {
+      enabled = true,
+      background = false,
+      virtual_text = true, -- show the highlight using virtual text
+      virtual_text_str = '■', -- the virtual text character to highlight
+    },
     -- on_attach = my_custom_on_attach,
     --- OR you can specify a function to deactivate or change or control how the config is created
     --[[ capabilities = function(config)
