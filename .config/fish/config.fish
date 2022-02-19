@@ -33,6 +33,8 @@ set -x MANPAGER 'nvim +Man!'
 set -x MAXWIDTH 999
 
 starship init fish | source
-pyenv init - | source
+source (pyenv init --path | psub)
 
 source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
+
+[ -f /opt/homebrew/share/autojump/autojump.fish ]; and source /opt/homebrew/share/autojump/autojump.fish
