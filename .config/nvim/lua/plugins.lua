@@ -9,7 +9,7 @@ local dev_dir = require 'utils.platform-depend' {
 local PACKER_COMPILED_PATH = fn.stdpath 'config' .. '/lua/packer_compiled.lua'
 
 if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH) then
-  require 'impatient'
+  -- require 'impatient'
   require 'packer_compiled'
   vim.g.packer_compiled_loaded = true
 end
@@ -39,9 +39,15 @@ require('packer').startup {
 
     -- Fuzzy finder
     use {
-      dev_dir .. 'telescope.nvim',
-      requires = 'plenary',
-      config = [[require('config.telescope')]],
+      { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make' },
+      {
+        'nvim-telescope/telescope.nvim',
+        requires = {
+          'plenary',
+          'nvim-telescope/telescope-fzf-native.nvim',
+        },
+        config = [[require('config.telescope')]],
+      },
     }
 
     -- Treesitter
@@ -94,7 +100,7 @@ require('packer').startup {
         config = [[require('config.dart-vim-plugin')]],
       },
       {
-        dev_dir .. 'flutter-tools.nvim',
+        'akinsho/flutter-tools.nvim',
         config = [[require('config.flutter-tools')]],
         requires = 'cmp',
       },
@@ -177,7 +183,7 @@ require('packer').startup {
     use {
       'L3MON4D3/LuaSnip',
       config = [[require('config.luasnip')]],
-      requires = dev_dir .. 'friendly-snippets',
+      requires = 'rafamadriz/friendly-snippets',
     }
 
     -- Tests
@@ -197,13 +203,23 @@ require('packer').startup {
       {
         'kwkarlwang/bufresize.nvim',
         config = function()
-          require('bufresize').setup()
+          require('bufresize').setup {}
+        end,
+      },
+      {
+        'chrisbra/Colorizer',
+        config = function()
+          vim.g.colorizer_auto_filetype = 'log'
+          vim.g.colorizer_disable_bufleave = 1
         end,
       },
       {
         'norcalli/nvim-colorizer.lua',
         config = function()
-          require('colorizer').setup()
+          require('colorizer').setup {
+            '*',
+            '!dart',
+          }
         end,
       },
       -- {
@@ -332,7 +348,7 @@ require('packer').startup {
         disable = true,
       },
       {
-        'kyazdani42/nvim-tree.lua',
+        dev_dir .. 'nvim-tree.lua',
         requires = 'kyazdani42/nvim-web-devicons',
         config = [[require('config.nvim-tree')]],
       },
@@ -354,7 +370,7 @@ require('packer').startup {
         disable = true,
       },
       {
-        dev_dir .. 'project.nvim',
+        'ahmedkhalf/project.nvim',
         config = [[require('config.project')]],
         requires = {
           'nvim-telescope/telescope.nvim',

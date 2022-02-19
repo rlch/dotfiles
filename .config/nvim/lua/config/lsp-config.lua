@@ -92,9 +92,9 @@ conf.pyright.setup {
 -- }
 
 conf.tsserver.setup {
-  on_attach = function(client)
-    client.resolved_capabilities.document_formatting = false
-    client.resolved_capabilities.document_range_formatting = false
+  on_attach = function(_)
+    -- client.resolved_capabilities.document_formatting = false
+    -- client.resolved_capabilities.document_range_formatting = false
   end,
   capabilities = capabilities,
 }

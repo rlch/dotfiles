@@ -1,4 +1,3 @@
-local api = vim.api
 local cmp = require 'cmp'
 local lspkind = require 'lspkind'
 local luasnip = require 'luasnip'
@@ -6,22 +5,14 @@ local luasnip = require 'luasnip'
 local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
 cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done { map_char = { tex = '' } })
 
-local function t(str)
-  return api.nvim_replace_termcodes(str, true, true, true)
-end
-
 local source_mapping = {
   buffer = '[Buffer]',
   nvim_lsp = '[LSP]',
   nvim_lua = '[Lua]',
   path = '[Path]',
-  luasnip = '[Snippet]',
+  luasnip = '[Snip]',
   tmux = '[tmux]',
 }
-
-local function feed(key, mode)
-  api.nvim_feedkeys(t(key), mode or '', true)
-end
 
 vim.o.completeopt = 'menu,menuone,noselect'
 
@@ -39,18 +30,14 @@ cmp.setup {
     ['<CR>'] = cmp.mapping.confirm { select = true },
     ['<C-N>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
     ['<C-P>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
-    ['<Tab>'] = cmp.mapping(function(fallback)
-      if luasnip.expand_or_locally_jumpable() then
+    ['<C-j>'] = cmp.mapping(function(_)
+      if luasnip.expand_or_jumpable() then
         luasnip.expand_or_jump()
-      else
-        fallback()
       end
     end, { 'i', 'c' }),
-    ['<S-Tab>'] = cmp.mapping(function(fallback)
+    ['<C-k>'] = cmp.mapping(function(_)
       if luasnip.jumpable(-1) then
         luasnip.jump(-1)
-      else
-        fallback()
       end
     end, { 'i', 'c' }),
   },

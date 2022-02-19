@@ -2,6 +2,7 @@ local g = vim.g
 local tree_cb = require('nvim-tree.config').nvim_tree_callback
 
 g.nvim_tree_respect_buf_cwd = 1
+g.nvim_tree_preserve_window_proportions = 0
 
 require('nvim-tree').setup {
   diagnostics = {
@@ -54,6 +55,7 @@ g.nvim_tree_special_files = {
   Makefile = true,
   ['README.md'] = true,
   ['readme.md'] = true,
+  ['go.mod'] = true,
 }
 
 vim.cmd [[highlight NvimTreeSpecialFile guifg=#d8a657 gui=bold]]

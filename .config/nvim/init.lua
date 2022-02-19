@@ -68,14 +68,17 @@ cmd [[command! PackerCompile packadd packer.nvim | lua require('plugins').compil
 
 vim.api.nvim_exec([[ autocmd BufWritePre *.go :silent! lua require('go.format').goimport() ]], false)
 
+-- au BufWritePre * lua vim.lsp.buf.formatting()
+
 cmd [[
 augroup packer_user_config
 autocmd!
 autocmd BufWritePost plugins.lua so % | PackerCompile
 augroup end
 
-au BufWritePre * lua vim.lsp.buf.formatting()
 autocmd BufNewFile,BufRead,FileType * setlocal formatoptions-=o
+
+autocmd BufNewFile,BufRead,BufEnter,BufLeave,WinEnter,WinLeave,WinNew,TextChanged __FLUTTER_DEV_LOG__ ColorHighlight
 ]]
 
 local ok, reload = pcall(require, 'plenary.reload')
