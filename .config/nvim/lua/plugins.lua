@@ -102,7 +102,7 @@ require('packer').startup {
       {
         'akinsho/flutter-tools.nvim',
         config = [[require('config.flutter-tools')]],
-        requires = 'cmp',
+        requires = { 'cmp', 'neovim/nvim-lspconfig' },
       },
       {
         'akinsho/dependency-assist.nvim',
@@ -116,6 +116,7 @@ require('packer').startup {
     -- Rust
     use {
       'simrat39/rust-tools.nvim',
+      -- 'matze/rust-tools.nvim',
       requires = 'neovim/nvim-lspconfig',
       wants = {
         'popup',
@@ -123,6 +124,36 @@ require('packer').startup {
         'nvim-telescope/telescope.nvim',
       },
       config = [[require('config.rust-tools')]],
+    }
+
+    -- Lisp
+    use {
+      {
+        'Olical/conjure',
+        config = function()
+          vim.cmd [[
+            let g:conjure#filetypes = [
+            \'clojure',
+            \'fennel',
+            \'janet',
+            \'racket',
+            \'scheme',
+            \'scm',
+            \'hy',
+            \'lisp'
+            \]
+            let g:conjure#client#fennel#aniseed#aniseed_module_prefix = "aniseed."
+          ]]
+        end,
+      },
+      {
+        'Olical/aniseed',
+        config = function()
+          vim.cmd [[
+            let g:aniseed#env = v:true
+          ]]
+        end,
+      },
     }
 
     -- Go
@@ -138,10 +169,12 @@ require('packer').startup {
       {
         'neovim/nvim-lspconfig',
         config = [[require('config.lsp-config')]],
-        --[[ requires = {
+        requires = {
           'nvim-lua/lsp-status.nvim',
-        }, ]]
+          'RRethy/vim-illuminate',
+        },
       },
+      'jose-elias-alvarez/nvim-lsp-ts-utils',
       {
         'jose-elias-alvarez/null-ls.nvim',
         config = [[require('config.null-ls')]],
@@ -166,16 +199,23 @@ require('packer').startup {
         'folke/trouble.nvim',
         config = [[require('config.trouble')]],
       },
-      use {
+      {
         'michaelb/sniprun',
         run = 'bash ./install.sh',
       },
-      use {
+      {
         'j-hui/fidget.nvim',
         config = function()
           require('fidget').setup()
         end,
         disable = true,
+      },
+      {
+        'narutoxy/dim.lua',
+        requires = { 'nvim-treesitter/nvim-treesitter', 'neovim/nvim-lspconfig' },
+        config = function()
+          require('dim').setup {}
+        end,
       },
     }
 
@@ -195,11 +235,7 @@ require('packer').startup {
     -- UI + Highlighting
     use {
       dev_dir .. 'lsp-fastaction.nvim',
-      {
-        'tami5/lspsaga.nvim',
-        as = 'lspsaga',
-        config = [[require('config.lspsaga')]],
-      },
+      'tami5/lspsaga.nvim',
       {
         'kwkarlwang/bufresize.nvim',
         config = function()
@@ -249,6 +285,9 @@ require('packer').startup {
       'nvim-lualine/lualine.nvim',
       config = [[require('config.lualine')]],
       after = 'colorscheme',
+      requires = {
+        'nvim-lua/lsp-status.nvim',
+      },
     }
 
     -- Markdown
@@ -274,24 +313,35 @@ require('packer').startup {
       'vim-pandoc/vim-pandoc-syntax',
     }
 
+    -- Text Objects
+    use {
+      'Matt-A-Bennett/vim-surround-funk',
+    }
+
     -- Traversal & motion
     use {
+      {
+        'monaqa/dial.nvim',
+        config = [[require('config.dial')]],
+      },
       'simeji/winresizer',
       {
         'bkad/CamelCaseMotion',
         config = [[require('config.camelcasemotion')]],
       },
       'tpope/vim-surround',
+      'tpope/vim-repeat',
       {
         'abecodes/tabout.nvim',
+        disable = true,
         config = function()
           require('tabout').setup {
-            tabkey = '<Tab>',
-            backwards_tabkey = '<S-Tab>',
-            act_as_tab = true,
-            act_as_shift_tab = true,
-            completion = false,
-            ignore_beginning = true,
+            tabkey = '',
+            backwards_tabkey = '',
+            -- act_as_tab = true,
+            -- act_as_shift_tab = true,
+            completion = true,
+            -- ignore_beginning = true,
             tabouts = {
               { open = "'", close = "'" },
               { open = '"', close = '"' },
@@ -319,12 +369,27 @@ require('packer').startup {
         config = [[require('config.npairs')]],
       },
       {
+        'jbgutierrez/vim-better-comments',
+        after = 'colorscheme',
+      },
+      {
         'numToStr/Comment.nvim',
         config = function()
           require('Comment').setup()
         end,
       },
       'tpope/vim-abolish',
+      {
+        'rlane/pounce.nvim',
+        config = function()
+          require('pounce').setup {
+            accept_keys = 'JFKDLSAHGNUVRBYTMICEOXWPQZ',
+            accept_best_key = '<enter>',
+            multi_window = true,
+            debug = false,
+          }
+        end,
+      },
     }
 
     -- Diagnostics & utilities
@@ -400,7 +465,8 @@ require('packer').startup {
         config = [[require('config.diffview')]],
         disable = true,
       },
-      { 'tpope/vim-fugitive' },
+      'tpope/vim-fugitive',
+      'rhysd/conflict-marker.vim',
     }
     -- Configuration
     use {

@@ -1,21 +1,15 @@
 local flutter_utils = require 'utils.flutter'
 
---[[ local lsp_status = require 'lsp-status'
-lsp_status.register_progress() ]]
+local illuminate = require 'illuminate'
+local lsp_status = require 'lsp-status'
+
+local default_on_attach = function(client, _)
+  illuminate.on_attach(client)
+  lsp_status.on_attach(client)
+end
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
-capabilities.textDocument.completion.completionItem.snippetSupport = true
-capabilities.textDocument.completion.completionItem.resolveSupport = {
-  properties = {
-    'documentation',
-    'detail',
-    'additionalTextEdits',
-  },
-}
---[[ local on_capabilities = function(config)
-  config.capabiltiies = vim.tbl_extend('keep', config.capabilities or {}, lsp_status.capabilities)
-  return config
-end ]]
+capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
 
 require('flutter-tools').setup {
   ui = {
@@ -69,35 +63,21 @@ require('flutter-tools').setup {
       virtual_text = true, -- show the highlight using virtual text
       virtual_text_str = '■', -- the virtual text character to highlight
     },
-    -- on_attach = my_custom_on_attach,
-    --- OR you can specify a function to deactivate or change or control how the config is created
-    --[[ capabilities = function(config)
-      config.specificThingIDontWant = false
-      return config
-    end, ]]
     capabilities = capabilities,
-    on_attach = function(_, _)
-      -- lsp_status.on_attach(client, bufnr)
-      --[[ require('lsp_signature').on_attach({
-        bind = true,
-        handler_opts = {
-          border = 'single',
-        },
-        hint_enable = false,
-        hint_prefix = ': ',
-        toggle_key = '<M-x>',
-        timer_interval = '50',
-      }, bufnr) ]]
-    end,
+    on_attach = default_on_attach,
     settings = {
       showTodos = false,
       completeFunctionCalls = true,
       lineLength = flutter_utils.get_line_length(),
+      automaticCommentSlashes = 'all',
       renameFilesWithClasses = 'always',
       analysisExcludedFolders = {
-        vim.fn.expand '$HOME/.pub-cache',
-        vim.fn.expand '$HOME/fvm/default',
-        vim.fn.expand '$HOME/fvm/versions',
+        vim.fn.expand '$HOME/.pub-cache/',
+        vim.fn.expand '$HOME/fvm/*/packages/',
+        vim.fn.expand '$HOME/fvm/*/.pub-cache/',
+        vim.fn.expand '$HOME/.pub-cache/*',
+        vim.fn.expand '$HOME/fvm/*/packages/*',
+        vim.fn.expand '$HOME/fvm/*/.pub-cache/*',
       },
     },
   },

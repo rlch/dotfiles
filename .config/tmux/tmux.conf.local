@@ -312,6 +312,7 @@ unbind C-s
 unbind C-b
 set -g prefix C-s
 bind C-s send-prefix
+bind p send-keys clear\; send-keys 'Enter'
 
 # move status line to top
 set -g status-position bottom
@@ -327,4 +328,3 @@ tmux_conf_update_plugins_on_launch=true
 #   - true (default)
 #   - false
 tmux_conf_update_plugins_on_reload=true
-

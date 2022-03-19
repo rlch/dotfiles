@@ -1,26 +1,33 @@
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
+local lsp_status = require 'lsp-status'
+local illuminate = require 'illuminate'
+
+local default_on_attach = function(client, _)
+  illuminate.on_attach(client)
+  lsp_status.on_attach(client)
+end
+
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
 
 require('rust-tools').setup {
   server = {
+    on_attach = default_on_attach,
     capabilities = capabilities,
-    on_attach = function(_, _)
-      --[[ require "lsp_signature".setup({
-        bind = true,
-        handler_opts = {
-          border = "single"
-        },
-        hint_enable = false,
-        doc_lines = 3,
-        max_width = 100,
-        -- use_lspsaga = true,
-      }, bufnr) ]]
-    end,
+    standalone = true,
     settings = {
       ['rust-analyzer'] = {
+        procMacro = {
+          enable = true,
+        },
         checkOnSave = {
           enable = true,
           command = 'clippy',
+        },
+        diagnostics = {
+          enable = true,
+          disabled = { 'unresolved-proc-macro', 'missing-unsafe' },
+          enableExperimental = true,
+          warningsAsHint = {},
         },
       },
     },

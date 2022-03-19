@@ -1,20 +1,29 @@
 local nest = require 'nest'
 
 nest.applyKeymaps {
-  { mode = 'n', options = { noremap = true }, { ';', ':' } },
+  {
+    mode = 'n',
+    options = { noremap = true },
+    {
+      { ';', ':' },
+      { '<C-n>', '<cmd>lua require"illuminate".next_reference{wrap=true}<cr>' },
+      { '<C-p>', '<cmd>lua require"illuminate".next_reference{reverse=true,wrap=true}<cr>' },
+    },
+  },
   { mode = 'v', options = { noremap = true }, { ';', ':' } },
   {
     mode = 'n',
     options = { noremap = true },
     {
+      -- { '<Tab>', '>>' },
+      { '<S-Tab>', '<<' },
       {
         'g',
         {
-          { 'b', '<cmd>BufferLinePick<CR>' },
           { 'd', '<cmd>lua vim.lsp.buf.definition()<cr>' },
           { 'D', '<cmd>lua vim.lsp.buf.declaration()<cr>' },
           { 'i', '<cmd>lua vim.lsp.buf.implementation()<cr>' },
-          { 'r', '<cmd>lua require("renamer").rename()<cr>' },
+          { 'r', '<cmd>lua vim.lsp.buf.rename()<cr>' },
         },
         options = { silent = true },
       },
@@ -36,12 +45,6 @@ nest.applyKeymaps {
               },
               { 'x', '<cmd>lua require"dapui".close()<cr>' },
               { 'c', '<cmd>lua require"dap".continue()<cr>' },
-              {
-                { 'h', '<cmd>lua require"lspsaga.diagnostic".show_line_diagnostics()<cr>' },
-                { 'k', '<cmd>:Lspsaga diagnostic_jump_prev<CR>' },
-                { 'j', '<cmd>:Lspsaga diagnostic_jump_next<CR>' },
-                options = { silent = true },
-              },
               { 'l', '<cmd>lua require"dap".run_last()<cr>' },
               { 'o', '<cmd>lua require"dapui".open()<cr>' },
               { 'r', '<cmd>lua require"dap".repl.open()<cr>' },
@@ -186,13 +189,25 @@ nest.applyKeymaps {
           { '<leader>', '<cmd>noh<cr><cr>' },
         },
       },
-      { '<C-f>', '<cmd>lua require("lspsaga.action").smart_scroll_with_saga(1)<cr>' },
-      { '<C-b>', '<cmd>lua require("lspsaga.action").smart_scroll_with_saga(-1)<cr>' },
+      -- { '<C-f>', '<cmd>lua require("lspsaga.action").smart_scroll_with_saga(1)<cr>' },
+      -- { '<C-b>', '<cmd>lua require("lspsaga.action").smart_scroll_with_saga(-1)<cr>' },
+      { 's', '<cmd>Pounce<cr>' },
+      { 'S', '<cmd>PounceRepeat<cr>' },
     },
+  },
+  {
+    mode = 'i',
+    options = { noremap = true },
+    { '<Tab>', '<C-i>' },
+    { '<S-Tab>', '<C-d>' },
   },
   {
     mode = 'v',
     options = { noremap = true },
+    { '<Tab>', '>gv' },
+    { '<S-Tab>', '<gv' },
+    { '>', '>gv' },
+    { '<', '<gv' },
     {
       {
         '<leader>',
@@ -203,6 +218,25 @@ nest.applyKeymaps {
       },
       { 'J', ":m '>+1<cr>gv=gv" },
       { 'K', ":m '<-2<cr>gv=gv" },
+      { 's', '<cmd>Pounce<cr>' },
+    },
+  },
+  {
+    mode = 'v',
+    options = { noremap = true },
+    { '<Tab>', '>' },
+    { '<S-Tab>', '<' },
+    {
+      {
+        '<leader>',
+        {
+          { 'a', '<cmd>C-U>lua require("lsp-fastaction").range_code_action()<cr>' },
+          { 's', '<cmd>lua require("spectre").open_visual()<cr>' },
+        },
+      },
+      { 'J', ":m '>+1<cr>gv=gv" },
+      { 'K', ":m '<-2<cr>gv=gv" },
+      { 's', '<cmd>Pounce<cr>' },
     },
   },
   {
@@ -217,7 +251,8 @@ nest.applyKeymaps {
         },
       },
       { 'gx', 'viW"ay:!open <C-R>a &<cr>' },
-      { 'K', '<cmd>lua require("lspsaga.hover").render_hover_doc()<cr>' },
+      -- { 'K', '<cmd>lua require("lspsaga.hover").render_hover_doc()<cr>' },
+      { 'K', '<cmd>lua vim.lsp.buf.hover()<cr>' },
       { 'H', '^', mode = 'nv' },
       { 'L', '$', mode = 'nv' },
       { 'Q', '@q' },

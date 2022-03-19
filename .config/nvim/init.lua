@@ -1,5 +1,4 @@
 local g = vim.g
-local cmd = vim.cmd
 local o_s = vim.o
 
 g.os = vim.loop.os_uname().sysname
@@ -10,6 +9,7 @@ g.open_command = g.os == 'Darwin' and 'open' or 'xdg-open'
 --------------
 
 g.mapleader = [[ ]]
+g.localmapleader = [[\\]]
 g.termguicolors = true
 vim.opt.termguicolors = true
 
@@ -47,30 +47,37 @@ opt('autoread', true)
 opt('wrap', false)
 opt('termguicolors', true)
 
-cmd [[ 
-  set shell=/bin/bash
-  set iskeyword+=-
-  set formatoptions+=t
-  set formatoptions-=o
-  set t_Co=256
-  set nu rnu
-  set nowritebackup
-  set noea
-  set title titlestring=
-  filetype plugin on
+vim.cmd [[ 
+set updatetime=300
+set shell=/bin/bash
+set iskeyword+=-
+set formatoptions+=tr
+set formatoptions-=o
+set t_Co=256
+set nu rnu
+set nowritebackup
+set noea
+set title titlestring=
+filetype plugin on
+tnoremap <Esc> <C-\\><C-n>
 ]]
 
-cmd [[command! PackerInstall packadd packer.nvim | lua require('plugins').install()]]
-cmd [[command! PackerUpdate packadd packer.nvim | lua require('plugins').update()]]
-cmd [[command! PackerSync packadd packer.nvim | lua require('plugins').sync()]]
-cmd [[command! PackerClean packadd packer.nvim | lua require('plugins').clean()]]
-cmd [[command! PackerCompile packadd packer.nvim | lua require('plugins').compile()]]
+vim.cmd [[
+command! PackerInstall packadd packer.nvim | lua require('plugins').install()
+command! PackerUpdate packadd packer.nvim | lua require('plugins').update()
+command! PackerSync packadd packer.nvim | lua require('plugins').sync()
+command! PackerClean packadd packer.nvim | lua require('plugins').clean()
+command! PackerCompile packadd packer.nvim | lua require('plugins').compile()
+]]
 
-vim.api.nvim_exec([[ autocmd BufWritePre *.go :silent! lua require('go.format').goimport() ]], false)
+vim.api.nvim_exec([[  ]], false)
+vim.cmd [[
+autocmd BufWritePre *.go :silent! lua require('go.format').goimport()
+]]
 
 -- au BufWritePre * lua vim.lsp.buf.formatting()
 
-cmd [[
+vim.cmd [[
 augroup packer_user_config
 autocmd!
 autocmd BufWritePost plugins.lua so % | PackerCompile
@@ -78,7 +85,7 @@ augroup end
 
 autocmd BufNewFile,BufRead,FileType * setlocal formatoptions-=o
 
-autocmd BufNewFile,BufRead,BufEnter,BufLeave,WinEnter,WinLeave,WinNew,TextChanged __FLUTTER_DEV_LOG__ ColorHighlight
+autocmd FileType __FLUTTER_DEV_LOG__ ColorHighlight
 ]]
 
 local ok, reload = pcall(require, 'plenary.reload')

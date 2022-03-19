@@ -43,9 +43,9 @@ require('lualine').setup {
       },
     }, ]]
     lualine_x = {
-      --[[ function()
+      function()
         return require('lsp-status').status()
-      end, ]]
+      end,
       'filetype',
     },
     lualine_y = { 'progress' },
@@ -59,9 +59,9 @@ require('lualine').setup {
     lualine_y = {},
     lualine_z = {},
   },
-  --[[ tabline = {
-    lualine_b = {'filename'},
-    lualine_c = {'filetype'},
-  }, ]]
+  -- tabline = {
+  --   lualine_b = {'filename'},
+  --,   lualine_c = {'filetype'},
+  -- },
   extensions = {},
 }

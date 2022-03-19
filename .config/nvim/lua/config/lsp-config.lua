@@ -1,8 +1,16 @@
 local conf = require 'lspconfig'
---[[ local lsp_status = require 'lsp-status'
-lsp_status.register_progress() ]]
 
---[[ lsp_status.config {
+vim.cmd [[
+nnoremap <silent> <leader>dh <cmd>lua vim.diagnostic.open_float(nil, { focusable = false, width = 50 })<CR>
+nnoremap <silent> <leader>dk <cmd>lua vim.diagnostic.goto_prev()<CR>
+nnoremap <silent> <leader>dj <cmd>lua vim.diagnostic.goto_next()<CR>
+]]
+
+local lsp_status = require 'lsp-status'
+local illuminate = require 'illuminate'
+lsp_status.register_progress()
+
+lsp_status.config {
   kind_labels = {
     Text = '',
     Method = '',
@@ -35,7 +43,15 @@ lsp_status.register_progress() ]]
   indicator_info = '',
   indicator_hint = '',
   status_symbol = '',
-} ]]
+}
+
+local default_on_attach = function(client, _)
+  lsp_status.on_attach(client)
+  illuminate.on_attach(client)
+end
+
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
 
 local HOME = vim.fn.expand '$HOME'
 local platform = ''
@@ -49,15 +65,6 @@ local sumneko_root_path = HOME .. '/.config/lua-language-server'
 local sumneko_binary = HOME .. '/.config/lua-language-server/bin/' .. platform .. '/lua-language-server'
 local omnisharp_bin = HOME .. '/.config/omnisharp/run'
 
---[[ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-  vim.lsp.diagnostic.on_publish_diagnostics, {
-    update_in_insert = true,
-  }
-) ]]
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
--- capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
-
 conf.yamlls.setup {
   settings = {
     yaml = {
@@ -67,12 +74,12 @@ conf.yamlls.setup {
       },
     },
   },
-  -- on_attach = lsp_status.on_attach,
+  on_attach = default_on_attach,
   capabilities = capabilities,
 }
 
 conf.pyright.setup {
-  -- on_attach = lsp_status.on_attach,
+  on_attach = default_on_attach,
   capabilities = capabilities,
 }
 
@@ -92,11 +99,14 @@ conf.pyright.setup {
 -- }
 
 conf.tsserver.setup {
-  on_attach = function(_)
-    -- client.resolved_capabilities.document_formatting = false
-    -- client.resolved_capabilities.document_range_formatting = false
-  end,
   capabilities = capabilities,
+  on_attach = function(client, _)
+    require('nvim-lsp-ts-utils').setup {
+      filter_out_diagnostics_by_code = { 80001, 7016 },
+    }
+    require('nvim-lsp-ts-utils').setup_client(client)
+    default_on_attach(client)
+  end,
 }
 
 conf.sumneko_lua.setup {
@@ -122,7 +132,7 @@ conf.sumneko_lua.setup {
       },
     },
   },
-  -- on_attach = lsp_status.on_attach,
+  on_attach = default_on_attach,
   capabilities = capabilities,
 }
 
@@ -130,11 +140,13 @@ local pid = vim.fn.getpid()
 conf.omnisharp.setup {
   cmd = { omnisharp_bin, '--languageserver', '--hostPID', tostring(pid) },
   root_dir = conf.util.root_pattern('*.csproj', '*.sln'),
-  -- on_attach = lsp_status.on_attach,
+  on_attach = default_on_attach,
   capabilities = capabilities,
 }
 
-require('lspconfig').gopls.setup {}
+conf.clojure_lsp.setup {}
+conf.gopls.setup {}
+conf.taplo.setup {}
 
 --[[ conf.efm.setup {
     init_options = {documentFormatting = true},
@@ -150,8 +162,4 @@ require('lspconfig').gopls.setup {}
             }
         }
     }
-} ]]
-
---[[ conf.rust_analyzer.setup {
-  capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 } ]]

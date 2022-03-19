@@ -20,6 +20,7 @@ alias luamake=/Users/rjm/.config/nvim/lua-language-server/3rd/luamake/luamake
 alias intel="arch -x86_64"
 
 if type -q exa
+  alias l "exa -l -g --icons"
   alias ll "exa -l -g --icons"
   alias lla "ll -a"
 end
