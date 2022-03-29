@@ -55,5 +55,36 @@ local default = {
   },
 }
 
+local ts_map = function(key, cmd)
+  vim.api.nvim_set_keymap('n', '<leader>f' .. key, '<cmd>Telescope ' .. cmd .. '<cr>', { noremap = true })
+end
+
+ts_map('a', 'lsp_code_actions')
+ts_map('b', 'buffers')
+ts_map('c', 'neoclip')
+ts_map('d', 'diagnostics')
+ts_map('f', 'find_files')
+ts_map('F', 'flutter commands')
+ts_map('gb', 'git_branches')
+ts_map('gc', 'git_commits')
+ts_map('gs', 'git_status')
+ts_map('h', 'resume')
+ts_map('H', 'help_tags')
+ts_map('p', 'projects')
+ts_map('r', 'grep_string')
+ts_map('s', 'live_grep')
+vim.api.nvim_set_keymap(
+  'n',
+  '<leader>fn',
+  '<cmd>lua require("github-notifications.menu").notifications()<cr>',
+  { noremap = true }
+)
+-- vim.api.nvim_set_keymap(
+--   'n',
+--   '<leader>ff',
+--   '<cmd>lua require("telescope.builtin").find_files({})<cr>',
+--   { noremap = true }
+-- )
+
 telescope.setup(default)
 telescope.load_extension 'fzf'

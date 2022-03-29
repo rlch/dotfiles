@@ -43,9 +43,9 @@ require('lualine').setup {
       },
     }, ]]
     lualine_x = {
-      function()
-        return require('lsp-status').status()
-      end,
+      -- function()
+      --   return require('lsp-status').status()
+      -- end,
       'filetype',
     },
     lualine_y = { 'progress' },

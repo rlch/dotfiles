@@ -1,15 +1,15 @@
 local flutter_utils = require 'utils.flutter'
 
 local illuminate = require 'illuminate'
-local lsp_status = require 'lsp-status'
+-- local lsp_status = require 'lsp-status'
 
 local default_on_attach = function(client, _)
   illuminate.on_attach(client)
-  lsp_status.on_attach(client)
+  -- lsp_status.on_attach(client)
 end
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
-capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
+-- capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
 
 require('flutter-tools').setup {
   ui = {
@@ -73,11 +73,10 @@ require('flutter-tools').setup {
       renameFilesWithClasses = 'always',
       analysisExcludedFolders = {
         vim.fn.expand '$HOME/.pub-cache/',
-        vim.fn.expand '$HOME/fvm/*/packages/',
-        vim.fn.expand '$HOME/fvm/*/.pub-cache/',
+        vim.fn.expand '$HOME/fvm/versions/*',
+        vim.fn.expand '$HOME/fvm/versions/*/packages/*',
         vim.fn.expand '$HOME/.pub-cache/*',
-        vim.fn.expand '$HOME/fvm/*/packages/*',
-        vim.fn.expand '$HOME/fvm/*/.pub-cache/*',
+        vim.fn.expand '$HOME/fvm/*/.pub-cache/hosted/*',
       },
     },
   },

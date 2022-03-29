@@ -58,8 +58,8 @@ set nu rnu
 set nowritebackup
 set noea
 set title titlestring=
+
 filetype plugin on
-tnoremap <Esc> <C-\\><C-n>
 ]]
 
 vim.cmd [[
@@ -68,11 +68,7 @@ command! PackerUpdate packadd packer.nvim | lua require('plugins').update()
 command! PackerSync packadd packer.nvim | lua require('plugins').sync()
 command! PackerClean packadd packer.nvim | lua require('plugins').clean()
 command! PackerCompile packadd packer.nvim | lua require('plugins').compile()
-]]
-
-vim.api.nvim_exec([[  ]], false)
-vim.cmd [[
-autocmd BufWritePre *.go :silent! lua require('go.format').goimport()
+" autocmd BufWritePre *.go :silent! lua require('go.format').goimport()
 ]]
 
 -- au BufWritePre * lua vim.lsp.buf.formatting()
@@ -84,8 +80,7 @@ autocmd BufWritePost plugins.lua so % | PackerCompile
 augroup end
 
 autocmd BufNewFile,BufRead,FileType * setlocal formatoptions-=o
-
-autocmd FileType __FLUTTER_DEV_LOG__ ColorHighlight
+autocmd FileType,TextChanged __FLUTTER_DEV_LOG__ ColorHighlight
 ]]
 
 local ok, reload = pcall(require, 'plenary.reload')

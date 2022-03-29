@@ -15,6 +15,8 @@ local default = {
     word = false,
     cyclic = true,
   },
+  augend.constant.alias.alpha,
+  augend.constant.alias.Alpha,
 }
 
 require('dial.config').augends:register_group {

@@ -6,52 +6,52 @@ nnoremap <silent> <leader>dk <cmd>lua vim.diagnostic.goto_prev()<CR>
 nnoremap <silent> <leader>dj <cmd>lua vim.diagnostic.goto_next()<CR>
 ]]
 
-local lsp_status = require 'lsp-status'
+-- local lsp_status = require 'lsp-status'
 local illuminate = require 'illuminate'
-lsp_status.register_progress()
+-- lsp_status.register_progress()
 
-lsp_status.config {
-  kind_labels = {
-    Text = '',
-    Method = '',
-    Function = '',
-    Constructor = '',
-    Field = 'ﰠ',
-    Variable = '',
-    Class = '',
-    Interface = '',
-    Module = '',
-    Property = 'ﰠ',
-    Unit = '塞',
-    Value = '',
-    Enum = '',
-    Keyword = '',
-    Snippet = '',
-    Color = '',
-    File = '',
-    Reference = '',
-    Folder = '',
-    EnumMember = '',
-    Constant = '',
-    Struct = 'פּ',
-    Event = '',
-    Operator = '',
-    TypeParameter = '',
-  },
-  indicator_errors = '',
-  indicator_warnings = '',
-  indicator_info = '',
-  indicator_hint = '',
-  status_symbol = '',
-}
+-- lsp_status.config {
+--   kind_labels = {
+--     Text = '',
+--     Method = '',
+--     Function = '',
+--     Constructor = '',
+--     Field = 'ﰠ',
+--     Variable = '',
+--     Class = '',
+--     Interface = '',
+--     Module = '',
+--     Property = 'ﰠ',
+--     Unit = '塞',
+--     Value = '',
+--     Enum = '',
+--     Keyword = '',
+--     Snippet = '',
+--     Color = '',
+--     File = '',
+--     Reference = '',
+--     Folder = '',
+--     EnumMember = '',
+--     Constant = '',
+--     Struct = 'פּ',
+--     Event = '',
+--     Operator = '',
+--     TypeParameter = '',
+--   },
+--   indicator_errors = '',
+--   indicator_warnings = '',
+--   indicator_info = '',
+--   indicator_hint = '',
+--   status_symbol = '',
+-- }
 
 local default_on_attach = function(client, _)
-  lsp_status.on_attach(client)
+  -- lsp_status.on_attach(client)
   illuminate.on_attach(client)
 end
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
-capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
+-- capabilities = vim.tbl_extend('keep', capabilities, lsp_status.capabilities)
 
 local HOME = vim.fn.expand '$HOME'
 local platform = ''

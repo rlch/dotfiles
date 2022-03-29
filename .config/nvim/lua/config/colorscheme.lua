@@ -5,23 +5,18 @@ g.gruvbox_material_palette = 'original'
 
 g.everforest_background = 'hard'
 g.sonokai_style = 'atlantis'
+vim.g.nord_contrast = true
+vim.g.nord_borders = true
 
 vim.cmd 'colorscheme everforest'
-vim.cmd [[
-highlight ErrorBetterComments guifg=#e67e80
-highlight HighlightBetterComments guifg=#83c092
-highlight QuestionBetterComments guifg=#d699b6
-highlight StrikeoutBetterComments guifg=#7a8478
-highlight TodoBetterComments guifg=#e69875
-]]
 
 local signs = {
-  Error = ' ',
-  Warning = ' ',
-  Warn = ' ',
-  Hint = ' ',
-  Information = ' ',
-  Info = ' ',
+  Error = '',
+  Warning = '',
+  Warn = '',
+  Hint = '',
+  Information = '',
+  Info = '',
 }
 
 for type, icon in pairs(signs) do

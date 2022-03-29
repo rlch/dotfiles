@@ -1,4 +1,6 @@
 local fn = vim.fn
+local packer = require 'packer'
+local use = packer.use
 
 local dev_dir = require 'utils.platform-depend' {
   macos = '~/Coding/Personal/',
@@ -9,15 +11,13 @@ local dev_dir = require 'utils.platform-depend' {
 local PACKER_COMPILED_PATH = fn.stdpath 'config' .. '/lua/packer_compiled.lua'
 
 if not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH) then
-  -- require 'impatient'
+  require 'impatient'
   require 'packer_compiled'
   vim.g.packer_compiled_loaded = true
 end
 
--- require 'impatient'
-
 require('packer').startup {
-  function(use)
+  function()
     -- Packer
     use {
       'wbthomason/packer.nvim',
@@ -78,18 +78,22 @@ require('packer').startup {
           'hrsh7th/cmp-nvim-lsp',
           'hrsh7th/cmp-buffer',
           'hrsh7th/cmp-path',
+          'hrsh7th/cmp-cmdline',
+          'hrsh7th/cmp-nvim-lsp-document-symbol',
+          'lukas-reineke/cmp-rg',
           'andersevenrud/cmp-tmux',
           'petertriho/cmp-git',
-          'neovim/nvim-lspconfig',
+          'nvim-lspconfig',
           'L3MON4D3/LuaSnip',
           'windwp/nvim-autopairs',
           'onsails/lspkind-nvim',
         },
-        as = 'cmp',
       },
       {
         'github/copilot.vim',
         config = [[require('config.copilot')]],
+        disable = true,
+        -- event = { 'InsertEnter' },
       },
     }
 
@@ -98,11 +102,13 @@ require('packer').startup {
       {
         'rlch/dart-vim-plugin',
         config = [[require('config.dart-vim-plugin')]],
+        after = 'flutter-tools.nvim',
       },
       {
-        'akinsho/flutter-tools.nvim',
+        dev_dir .. 'flutter-tools.nvim',
         config = [[require('config.flutter-tools')]],
-        requires = { 'cmp', 'neovim/nvim-lspconfig' },
+        requires = { 'nvim-cmp', 'nvim-lspconfig' },
+        -- ft = { 'dart' },
       },
       {
         'akinsho/dependency-assist.nvim',
@@ -116,18 +122,27 @@ require('packer').startup {
     -- Rust
     use {
       'simrat39/rust-tools.nvim',
-      -- 'matze/rust-tools.nvim',
-      requires = 'neovim/nvim-lspconfig',
+      requires = { 'nvim-lspconfig', 'nvim-cmp' },
       wants = {
         'popup',
         'plenary',
         'nvim-telescope/telescope.nvim',
       },
       config = [[require('config.rust-tools')]],
+      -- ft = { 'rust', 'rs' },
     }
 
     -- Lisp
     use {
+      {
+        'Olical/aniseed',
+        config = function()
+          vim.cmd [[
+            let g:aniseed#env = v:true
+          ]]
+        end,
+        -- ft = { 'clojure', 'scm', 'scheme', 'hy', 'lisp', 'fennel', 'janet', 'racket' },
+      },
       {
         'Olical/conjure',
         config = function()
@@ -145,14 +160,7 @@ require('packer').startup {
             let g:conjure#client#fennel#aniseed#aniseed_module_prefix = "aniseed."
           ]]
         end,
-      },
-      {
-        'Olical/aniseed',
-        config = function()
-          vim.cmd [[
-            let g:aniseed#env = v:true
-          ]]
-        end,
+        after = 'aniseed',
       },
     }
 
@@ -162,6 +170,7 @@ require('packer').startup {
       config = function()
         require('go').setup()
       end,
+      -- ft = { 'go' },
     }
 
     -- LSP
@@ -170,38 +179,31 @@ require('packer').startup {
         'neovim/nvim-lspconfig',
         config = [[require('config.lsp-config')]],
         requires = {
-          'nvim-lua/lsp-status.nvim',
           'RRethy/vim-illuminate',
+          'jose-elias-alvarez/nvim-lsp-ts-utils',
         },
       },
-      'jose-elias-alvarez/nvim-lsp-ts-utils',
+      'RRethy/vim-illuminate',
       {
         'jose-elias-alvarez/null-ls.nvim',
         config = [[require('config.null-ls')]],
+        -- event = { 'BufEnter' },
       },
-      {
-        'ray-x/lsp_signature.nvim',
-        disable = true,
-      },
-      'rcarriga/nvim-dap-ui',
       {
         'mfussenegger/nvim-dap',
         config = [[require('config.dap')]],
+        requires = {
+          'rcarriga/nvim-dap-ui',
+        },
       },
       {
-        'filipdutescu/renamer.nvim',
-        branch = 'master',
-        requires = 'plenary',
-        config = [[require('config.renamer')]],
+        'ckipp01/stylua-nvim',
+        -- ft = { 'lua' },
       },
-      'ckipp01/stylua-nvim',
       {
         'folke/trouble.nvim',
         config = [[require('config.trouble')]],
-      },
-      {
-        'michaelb/sniprun',
-        run = 'bash ./install.sh',
+        -- event = 'BufEnter',
       },
       {
         'j-hui/fidget.nvim',
@@ -212,7 +214,8 @@ require('packer').startup {
       },
       {
         'narutoxy/dim.lua',
-        requires = { 'nvim-treesitter/nvim-treesitter', 'neovim/nvim-lspconfig' },
+        requires = { 'nvim-treesitter/nvim-treesitter' },
+        after = 'nvim-lspconfig',
         config = function()
           require('dim').setup {}
         end,
@@ -223,6 +226,7 @@ require('packer').startup {
     use {
       'L3MON4D3/LuaSnip',
       config = [[require('config.luasnip')]],
+      -- event = 'InsertCharPre',
       requires = 'rafamadriz/friendly-snippets',
     }
 
@@ -230,12 +234,34 @@ require('packer').startup {
     use {
       'vim-test/vim-test',
       { 'rcarriga/vim-ultest', run = ':UpdateRemotePlugins' },
+      -- cmd = {
+      --   'UltestDebugNearest',
+      --   'UltestDebug',
+      --   'Ultest',
+      --   'UltestOutput',
+      --   'UltestNearest',
+      --   'UltestSummary!',
+      --   'UltestStopNearest',
+      --   'UltestStop',
+      -- },
     }
 
     -- UI + Highlighting
     use {
-      dev_dir .. 'lsp-fastaction.nvim',
-      'tami5/lspsaga.nvim',
+      {
+        dev_dir .. 'lsp-fastaction.nvim',
+        after = 'nvim-lspconfig',
+      },
+      {
+        'stevearc/dressing.nvim',
+        config = function()
+          require('dressing').setup {
+            input = {
+              winblend = 0,
+            },
+          }
+        end,
+      },
       {
         'kwkarlwang/bufresize.nvim',
         config = function()
@@ -244,6 +270,7 @@ require('packer').startup {
       },
       {
         'chrisbra/Colorizer',
+        -- ft = 'log',
         config = function()
           vim.g.colorizer_auto_filetype = 'log'
           vim.g.colorizer_disable_bufleave = 1
@@ -251,6 +278,7 @@ require('packer').startup {
       },
       {
         'norcalli/nvim-colorizer.lua',
+        -- event = 'BufEnter',
         config = function()
           require('colorizer').setup {
             '*',
@@ -258,26 +286,21 @@ require('packer').startup {
           }
         end,
       },
-      -- {
-      --   'sainnhe/gruvbox-material',
-      --   as = 'colorscheme',
-      --   config = [[require('config.colorscheme')]],
-      --   disable = true,
-      -- },
       {
         'sainnhe/everforest',
         as = 'colorscheme',
         config = [[require('config.colorscheme')]],
       },
-      'mtdl9/vim-log-highlighting',
+      {
+        'mtdl9/vim-log-highlighting',
+        -- ft = 'log',
+      },
       {
         'luukvbaal/stabilize.nvim',
         config = function()
           require('stabilize').setup()
         end,
       },
-      'rcarriga/nvim-notify',
-      'MunifTanjim/nui.nvim',
     }
 
     -- Statusline
@@ -286,20 +309,19 @@ require('packer').startup {
       config = [[require('config.lualine')]],
       after = 'colorscheme',
       requires = {
-        'nvim-lua/lsp-status.nvim',
+        -- 'nvim-lua/lsp-status.nvim',
       },
     }
 
     -- Markdown
     use {
-      'godlygeek/tabular',
       {
         'iamcco/markdown-preview.nvim',
         run = 'cd app && npm install',
         setup = function()
           vim.g.mkdp_filetypes = { 'markdown' }
         end,
-        ft = { 'markdown' },
+        -- ft = { 'markdown' },
       },
       use {
         'plasticboy/vim-markdown',
@@ -308,14 +330,16 @@ require('packer').startup {
           vim.g.vim_markdown_strikethrough = 1
           vim.g.vim_markdown_new_list_item_indent = 2
         end,
+        ft = { 'markdown' },
       },
-      'vim-pandoc/vim-pandoc',
-      'vim-pandoc/vim-pandoc-syntax',
-    }
-
-    -- Text Objects
-    use {
-      'Matt-A-Bennett/vim-surround-funk',
+      {
+        'vim-pandoc/vim-pandoc',
+        ft = { 'markdown' },
+      },
+      {
+        'vim-pandoc/vim-pandoc-syntax',
+        ft = { 'markdown' },
+      },
     }
 
     -- Traversal & motion
@@ -353,7 +377,7 @@ require('packer').startup {
           }
         end,
         wants = { 'nvim-treesitter' },
-        after = { 'cmp' },
+        after = { 'nvim-cmp' },
       },
       {
         'akinsho/bufferline.nvim',
@@ -367,9 +391,10 @@ require('packer').startup {
       {
         'windwp/nvim-autopairs',
         config = [[require('config.npairs')]],
+        after = 'nvim-cmp',
       },
       {
-        'jbgutierrez/vim-better-comments',
+        'folke/todo-comments.nvim',
         after = 'colorscheme',
       },
       {
@@ -377,6 +402,7 @@ require('packer').startup {
         config = function()
           require('Comment').setup()
         end,
+        -- event = 'InsertEnter',
       },
       'tpope/vim-abolish',
       {
@@ -389,41 +415,41 @@ require('packer').startup {
             debug = false,
           }
         end,
+        -- event = 'BufEnter',
       },
     }
 
     -- Diagnostics & utilities
     use {
-      'dstein64/vim-startuptime',
-      cmd = 'StartupTime',
-      config = [[require('config.startuptime')]],
+      {
+        'dstein64/vim-startuptime',
+        cmd = 'StartupTime',
+        config = [[require('config.startuptime')]],
+      },
+      {
+        'akinsho/toggleterm.nvim',
+        config = [[require('config.toggleterm')]],
+        disable = true,
+        -- event = 'BufEnter',
+      },
     }
 
     -- Project management
     use {
       {
         'nvim-neo-tree/neo-tree.nvim',
-        branch = 'v1.x',
+        branch = 'v2.x',
         requires = {
           'nvim-lua/plenary.nvim',
           'kyazdani42/nvim-web-devicons', -- not strictly required, but recommended
           'MunifTanjim/nui.nvim',
         },
         config = [[require('config.neotree')]],
-        disable = true,
       },
       {
         dev_dir .. 'nvim-tree.lua',
         requires = 'kyazdani42/nvim-web-devicons',
         config = [[require('config.nvim-tree')]],
-      },
-      {
-        'rmagatti/auto-session',
-        config = function()
-          require('auto-session').setup {
-            auto_session_root_dir = ('%s/session/auto/'):format(vim.fn.stdpath 'data'),
-          }
-        end,
         disable = true,
       },
       {
@@ -456,17 +482,38 @@ require('packer').startup {
       {
         'lewis6991/gitsigns.nvim',
         requires = { 'plenary' },
-        config = [[require('config.gitsigns')]],
-        disable = true,
-      },
-      {
-        'sindrets/diffview.nvim',
-        requires = 'plenary',
-        config = [[require('config.diffview')]],
-        disable = true,
+        config = function()
+          vim.wo.signcolumn = 'auto:1'
+          require('gitsigns').setup()
+        end,
+        event = 'BufEnter',
       },
       'tpope/vim-fugitive',
-      'rhysd/conflict-marker.vim',
+      {
+        'TimUntersberger/neogit',
+        requires = {
+          'sindrets/diffview.nvim',
+          'nvim-lua/plenary.nvim',
+        },
+        config = [[require('config.neogit')]],
+      },
+      use {
+        'akinsho/git-conflict.nvim',
+        config = function()
+          vim.cmd [[
+          highlight ConflictMarkerOurs guibg=#2e5049
+          highlight ConflictMarkerTheirs guibg=#344f69
+          ]]
+          require('git-conflict').setup {
+            disable_diagnostics = true,
+            highlights = {
+              current = 'ConflictMarkerOurs',
+              incoming = 'ConflictMarkerTheirs',
+            },
+          }
+        end,
+        event = 'BufEnter',
+      },
     }
     -- Configuration
     use {
@@ -504,6 +551,7 @@ require('packer').startup {
         'plenary',
         'nvim-lualine/lualine.nvim',
         'nvim-telescope/telescope.nvim',
+        'rcarriga/nvim-notify',
       },
     }
   end,

@@ -30,7 +30,7 @@ nest.applyKeymaps {
       {
         '<leader>',
         {
-          { 'o', '<cmd>NvimTreeFocus<CR>' },
+          -- { 'o', '<cmd>NvimTreeFocus<CR>' },
           {
             'd',
             {
@@ -54,32 +54,32 @@ nest.applyKeymaps {
               { 't', '<cmd>lua require"dapui".toggle()<cr>' },
             },
           },
-          {
-            'f',
-            {
-              { 'a', '<cmd>Telescope lsp_code_actions<cr>' },
-              { 'b', '<cmd>Telescope buffers<cr>' },
-              { 'c', '<cmd>Telescope neoclip<CR>' },
-              { 'd', '<cmd>Telescope diagnostics<cr>' },
-              { 'f', '<cmd>Telescope find_files<cr>' },
-              { 'F', '<cmd>Telescope flutter commands<cr>' },
-              {
-                'g',
-                {
-                  { 'b', '<cmd>Telescope git_branches<cr>' },
-                  { 'c', '<cmd>Telescope git_commits<cr>' },
-                  { 's', '<cmd>Telescope git_status<cr>' },
-                },
-              },
-              { 'h', '<cmd>Telescope resume<cr>' },
-              { 'H', '<cmd>Telescope help_tags<cr>' },
-              { 'n', '<cmd>lua require("github-notifications.menu").notifications()<CR>' },
-              { 'p', '<cmd>Telescope projects<CR>' },
-              -- { 'r', '<cmd>Telescope lsp_references<cr>' },
-              { 'r', '<cmd>Telescope grep_string<cr>' },
-              { 's', '<cmd>Telescope live_grep<cr>' },
-            },
-          },
+          -- {
+          --   'f',
+          --   {
+          --     { 'a', '<cmd>Telescope lsp_code_actions<cr>' },
+          --     { 'b', '<cmd>Telescope buffers<cr>' },
+          --     { 'c', '<cmd>Telescope neoclip<CR>' },
+          --     { 'd', '<cmd>Telescope diagnostics<cr>' },
+          --     { 'f', '<cmd>Telescope find_files<cr>' },
+          --     { 'F', '<cmd>Telescope flutter commands<cr>' },
+          --     {
+          --       'g',
+          --       {
+          --         { 'b', '<cmd>Telescope git_branches<cr>' },
+          --         { 'c', '<cmd>Telescope git_commits<cr>' },
+          --         { 's', '<cmd>Telescope git_status<cr>' },
+          --       },
+          --     },
+          --     { 'h', '<cmd>Telescope resume<cr>' },
+          --     { 'H', '<cmd>Telescope help_tags<cr>' },
+          --     { 'n', '<cmd>lua require("github-notifications.menu").notifications()<CR>' },
+          --     { 'p', '<cmd>Telescope projects<CR>' },
+          --     -- { 'r', '<cmd>Telescope lsp_references<cr>' },
+          --     { 'r', '<cmd>Telescope grep_string<cr>' },
+          --     { 's', '<cmd>Telescope live_grep<cr>' },
+          --   },
+          -- },
           {
             'F',
             {
@@ -120,10 +120,13 @@ nest.applyKeymaps {
           {
             'g',
             {
+              { 'o', '<cmd>Neogit<cr>' },
+              { 's', '<cmd>Neogit kind=split<CR>' },
+              { 'v', '<cmd>Neogit kind=vsplit<CR>' },
+              { 'c', '<cmd>Neogit commit<CR>' },
               { 'B', '<cmd>G blame<cr>' },
-              { 's', '<cmd>vertical G<CR>' },
-              { 'c', '<cmd>G commit<CR>' },
               { 'f', '<cmd>G pull<CR>' },
+              { 'g', '<cmd>G pull<CR>' },
               { 'p', '<cmd>G push<CR>' },
               { 'h', '<cmd>diffget //2<CR>' },
               { 'l', '<cmd>diffget //3<CR>' },
@@ -174,7 +177,7 @@ nest.applyKeymaps {
           {
             't',
             {
-              { 'o', '<cmd>NvimTreeToggle<CR>' },
+              -- { 'o', '<cmd>NvimTreeToggle<CR>' },
               { 't', '<cmd>TroubleToggle workspace_diagnostics<CR>' },
               { 'd', '<cmd>UltestDebugNearest<cr>' },
               { 'D', '<cmd>UltestDebug<cr>' },

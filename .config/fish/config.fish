@@ -21,6 +21,7 @@ alias intel="arch -x86_64"
 
 if type -q exa
   alias l "exa -l -g --icons"
+  alias la "l -a"
   alias ll "exa -l -g --icons"
   alias lla "ll -a"
 end
@@ -35,6 +36,7 @@ set -x MAXWIDTH 999
 
 starship init fish | source
 source (pyenv init --path | psub)
+for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}'); eval $i; end
 
 source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
 
