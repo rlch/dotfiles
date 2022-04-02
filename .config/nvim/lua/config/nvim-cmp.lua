@@ -1,9 +1,6 @@
 local cmp = require 'cmp'
 local lspkind = require 'lspkind'
-local luasnip = require 'luasnip'
-
-local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
-cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done { map_char = { tex = '' } })
+local has_snip, luasnip = pcall(require, 'luasnip')
 
 local source_mapping = {
   buffer = '[Buf]',
@@ -17,6 +14,10 @@ local source_mapping = {
   rg = '[rg]',
 }
 
+if has_snip then
+  source_mapping['luasnip'] = '[Snip]'
+end
+
 vim.o.completeopt = 'menu,menuone,noselect'
 local has_words_before = function()
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -26,7 +27,9 @@ end
 cmp.setup {
   snippet = {
     expand = function(args)
-      require('luasnip').lsp_expand(args.body)
+      if has_snip then
+        require('luasnip').lsp_expand(args.body)
+      end
     end,
   },
   mapping = {
@@ -38,7 +41,7 @@ cmp.setup {
     ['<C-N>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
     ['<C-P>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
     ['<Tab>'] = cmp.mapping(function(fallback)
-      if luasnip.expand_or_jumpable() then
+      if has_snip and luasnip.expand_or_jumpable() then
         luasnip.expand_or_jump()
       elseif has_words_before() then
         cmp.complete()
@@ -47,19 +50,19 @@ cmp.setup {
       end
     end, { 'i', 'c' }),
     ['<S-Tab>'] = cmp.mapping(function(fallback)
-      if luasnip.jumpable(-1) then
+      if has_snip and luasnip.jumpable(-1) then
         luasnip.jump(-1)
       else
         fallback()
       end
     end, { 'i', 'c' }),
     ['<C-j>'] = cmp.mapping(function(_)
-      if luasnip.expand_or_jumpable() then
+      if has_snip and luasnip.expand_or_locally_jumpable() then
         luasnip.expand_or_jump()
       end
     end, { 'i', 'c' }),
     ['<C-k>'] = cmp.mapping(function(_)
-      if luasnip.jumpable(-1) then
+      if has_snip and luasnip.jumpable(-1) then
         luasnip.jump(-1)
       end
     end, { 'i', 'c' }),

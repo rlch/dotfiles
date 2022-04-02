@@ -84,7 +84,7 @@ require('nvim-tree').setup {
     enable = true,
     update_cwd = true,
   },
-  -- update_to_buf_dir = { enable = true },
+  update_to_buf_dir = { enable = true }, -- ?
 }
 
 g.nvim_tree_show_icons = {

@@ -41,3 +41,9 @@ for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}')
 source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
 
 [ -f /opt/homebrew/share/autojump/autojump.fish ]; and source /opt/homebrew/share/autojump/autojump.fish
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+# eval /Users/rjm/miniforge3/bin/conda "shell.fish" "hook" $argv | source
+# <<< conda initialize <<<
+

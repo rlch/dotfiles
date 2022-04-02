@@ -12,7 +12,8 @@ local sources = {
   null_ls.builtins.diagnostics.stylelint,
   -- null_ls.builtins.diagnostics.selene,
   null_ls.builtins.diagnostics.pylint,
-  null_ls.builtins.formatting.fnlfmt
+  null_ls.builtins.formatting.fnlfmt,
+  null_ls.builtins.formatting.black,
 }
 
 null_ls.setup { sources = sources }

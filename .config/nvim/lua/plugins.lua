@@ -59,13 +59,6 @@ require('packer').startup {
         as = 'nvim-treesitter',
       },
       'nvim-treesitter/playground',
-      {
-        'lewis6991/spellsitter.nvim',
-        config = function()
-          require('spellsitter').setup()
-        end,
-        disable = true,
-      },
     }
 
     -- Autocomplete
@@ -92,7 +85,6 @@ require('packer').startup {
       {
         'github/copilot.vim',
         config = [[require('config.copilot')]],
-        disable = true,
         -- event = { 'InsertEnter' },
       },
     }
@@ -100,7 +92,7 @@ require('packer').startup {
     -- Dart / Flutter
     use {
       {
-        'rlch/dart-vim-plugin',
+        'dart-lang/dart-vim-plugin',
         config = [[require('config.dart-vim-plugin')]],
         after = 'flutter-tools.nvim',
       },
@@ -109,13 +101,6 @@ require('packer').startup {
         config = [[require('config.flutter-tools')]],
         requires = { 'nvim-cmp', 'nvim-lspconfig' },
         -- ft = { 'dart' },
-      },
-      {
-        'akinsho/dependency-assist.nvim',
-        config = function()
-          require('dependency_assist').setup {}
-        end,
-        disable = true,
       },
     }
 
@@ -141,7 +126,7 @@ require('packer').startup {
             let g:aniseed#env = v:true
           ]]
         end,
-        -- ft = { 'clojure', 'scm', 'scheme', 'hy', 'lisp', 'fennel', 'janet', 'racket' },
+        ft = { 'clojure', 'scm', 'scheme', 'hy', 'lisp', 'fennel', 'janet', 'racket' },
       },
       {
         'Olical/conjure',
@@ -158,9 +143,11 @@ require('packer').startup {
             \'lisp'
             \]
             let g:conjure#client#fennel#aniseed#aniseed_module_prefix = "aniseed."
+            let g:conjure#filetype#fennel = "conjure.client.fennel.stdio"
           ]]
         end,
         after = 'aniseed',
+        requires = 'bakpakin/fennel.vim'
       },
     }
 
@@ -170,7 +157,7 @@ require('packer').startup {
       config = function()
         require('go').setup()
       end,
-      -- ft = { 'go' },
+      ft = { 'go' },
     }
 
     -- LSP
@@ -198,7 +185,7 @@ require('packer').startup {
       },
       {
         'ckipp01/stylua-nvim',
-        -- ft = { 'lua' },
+        ft = { 'lua' },
       },
       {
         'folke/trouble.nvim',
@@ -232,18 +219,9 @@ require('packer').startup {
 
     -- Tests
     use {
-      'vim-test/vim-test',
-      { 'rcarriga/vim-ultest', run = ':UpdateRemotePlugins' },
-      -- cmd = {
-      --   'UltestDebugNearest',
-      --   'UltestDebug',
-      --   'Ultest',
-      --   'UltestOutput',
-      --   'UltestNearest',
-      --   'UltestSummary!',
-      --   'UltestStopNearest',
-      --   'UltestStop',
-      -- },
+      'rcarriga/vim-ultest',
+      run = ':UpdateRemotePlugins',
+      requires = 'vim-test/vim-test',
     }
 
     -- UI + Highlighting
@@ -251,6 +229,36 @@ require('packer').startup {
       {
         dev_dir .. 'lsp-fastaction.nvim',
         after = 'nvim-lspconfig',
+        config = function()
+          require('lsp-fastaction').setup {
+            hide_cursor = true,
+            action_data = {
+              ['dart'] = {
+                { pattern = 'import library', key = 'i', order = 1 },
+                { pattern = 'wrap with widget', key = 'w', order = 2 },
+                { pattern = 'wrap with column', key = 'c', order = 3 },
+                { pattern = 'wrap with row', key = 'r', order = 3 },
+                { pattern = 'wrap with sizedbox', key = 's', order = 3 },
+                { pattern = 'wrap with container', key = 'C', order = 4 },
+                { pattern = 'wrap with center', key = 'E', order = 4 },
+                { pattern = 'padding', key = 'p', order = 4 },
+                { pattern = 'wrap with builder', key = 'b', order = 5 },
+                { pattern = 'wrap with streambuilder', key = 'S', order = 5 },
+                { pattern = 'remove', key = 'd', order = 5 },
+
+                -- range
+                { pattern = "surround with %'if'", key = 'i', order = 2 },
+                { pattern = 'try%-catch', key = 't', order = 2 },
+                { pattern = 'for%-in', key = 'f', order = 2 },
+                { pattern = 'setstate', key = 's', order = 2 },
+              },
+              ['typescript'] = {
+                { pattern = 'to existing import declaration', key = 'a', order = 2 },
+                { pattern = 'from module', key = 'i', order = 1 },
+              },
+            },
+          }
+        end,
       },
       {
         'stevearc/dressing.nvim',
@@ -333,10 +341,6 @@ require('packer').startup {
         ft = { 'markdown' },
       },
       {
-        'vim-pandoc/vim-pandoc',
-        ft = { 'markdown' },
-      },
-      {
         'vim-pandoc/vim-pandoc-syntax',
         ft = { 'markdown' },
       },
@@ -355,39 +359,30 @@ require('packer').startup {
       },
       'tpope/vim-surround',
       'tpope/vim-repeat',
-      {
-        'abecodes/tabout.nvim',
-        disable = true,
-        config = function()
-          require('tabout').setup {
-            tabkey = '',
-            backwards_tabkey = '',
-            -- act_as_tab = true,
-            -- act_as_shift_tab = true,
-            completion = true,
-            -- ignore_beginning = true,
-            tabouts = {
-              { open = "'", close = "'" },
-              { open = '"', close = '"' },
-              { open = '`', close = '`' },
-              { open = '(', close = ')' },
-              { open = '[', close = ']' },
-              { open = '{', close = '}' },
-            },
-          }
-        end,
-        wants = { 'nvim-treesitter' },
-        after = { 'nvim-cmp' },
-      },
-      {
-        'akinsho/bufferline.nvim',
-        requires = {
-          'kyazdani42/nvim-web-devicons',
-          'famiu/bufdelete.nvim',
-        },
-        config = [[require('config.bufferline')]],
-        disable = true,
-      },
+      -- {
+      --   'abecodes/tabout.nvim',
+      --   disable = true,
+      --   config = function()
+      --     require('tabout').setup {
+      --       tabkey = '',
+      --       backwards_tabkey = '',
+      --       -- act_as_tab = true,
+      --       -- act_as_shift_tab = true,
+      --       completion = true,
+      --       -- ignore_beginning = true,
+      --       tabouts = {
+      --         { open = "'", close = "'" },
+      --         { open = '"', close = '"' },
+      --         { open = '`', close = '`' },
+      --         { open = '(', close = ')' },
+      --         { open = '[', close = ']' },
+      --         { open = '{', close = '}' },
+      --       },
+      --     }
+      --   end,
+      --   wants = { 'nvim-treesitter' },
+      --   after = { 'nvim-cmp' },
+      -- },
       {
         'windwp/nvim-autopairs',
         config = [[require('config.npairs')]],
@@ -402,9 +397,11 @@ require('packer').startup {
         config = function()
           require('Comment').setup()
         end,
-        -- event = 'InsertEnter',
+        event = 'InsertEnter',
       },
-      'tpope/vim-abolish',
+      {
+        'tpope/vim-abolish',
+      },
       {
         'rlane/pounce.nvim',
         config = function()
@@ -415,7 +412,7 @@ require('packer').startup {
             debug = false,
           }
         end,
-        -- event = 'BufEnter',
+        event = 'BufEnter',
       },
     }
 
@@ -436,29 +433,19 @@ require('packer').startup {
 
     -- Project management
     use {
+      -- {
+      --   dev_dir .. 'neo-tree.nvim',
+      --   branch = 'v2.x',
+      --   requires = {
+      --     'nvim-lua/plenary.nvim',
+      --     'kyazdani42/nvim-web-devicons', -- not strictly required, but recommended
+      --     'MunifTanjim/nui.nvim',
+      --   },
+      --   config = [[require('config.neotree')]],
+      -- },
       {
-        'nvim-neo-tree/neo-tree.nvim',
-        branch = 'v2.x',
-        requires = {
-          'nvim-lua/plenary.nvim',
-          'kyazdani42/nvim-web-devicons', -- not strictly required, but recommended
-          'MunifTanjim/nui.nvim',
-        },
-        config = [[require('config.neotree')]],
-      },
-      {
-        dev_dir .. 'nvim-tree.lua',
-        requires = 'kyazdani42/nvim-web-devicons',
+        'kyazdani42/nvim-tree.lua',
         config = [[require('config.nvim-tree')]],
-        disable = true,
-      },
-      {
-        'nvim-neorg/neorg',
-        config = [[require('config.neorg')]],
-        requires = 'plenary',
-        after = 'nvim-treesitter',
-        branch = 'main',
-        disable = true,
       },
       {
         'ahmedkhalf/project.nvim',
@@ -473,7 +460,9 @@ require('packer').startup {
       },
       {
         'gioele/vim-autoswap',
-        config = [[require('config.autoswap')]],
+        config = function()
+          vim.g.autoswap_detect_tmux = 1
+        end,
       },
     }
 
@@ -486,9 +475,11 @@ require('packer').startup {
           vim.wo.signcolumn = 'auto:1'
           require('gitsigns').setup()
         end,
-        event = 'BufEnter',
+        -- event = 'BufEnter',
       },
-      'tpope/vim-fugitive',
+      {
+        'tpope/vim-fugitive',
+      },
       {
         'TimUntersberger/neogit',
         requires = {
@@ -496,11 +487,12 @@ require('packer').startup {
           'nvim-lua/plenary.nvim',
         },
         config = [[require('config.neogit')]],
+        -- event = 'BufEnter', disable = true,
       },
       use {
         'akinsho/git-conflict.nvim',
         config = function()
-          vim.cmd [[
+          vim.cmd[[
           highlight ConflictMarkerOurs guibg=#2e5049
           highlight ConflictMarkerTheirs guibg=#344f69
           ]]
@@ -517,7 +509,9 @@ require('packer').startup {
     }
     -- Configuration
     use {
-      'folke/which-key.nvim',
+      {
+        'folke/which-key.nvim',
+      },
       {
         'LionC/nest.nvim',
         config = function()

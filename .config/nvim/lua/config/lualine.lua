@@ -1,14 +1,3 @@
--- local tokyonight = require'lualine.themes.tokyonight'
--- local config = require("tokyonight.config")
--- local colors = require("tokyonight.colors").setup(config)
-
---[[ tokyonight.normal.c.bg = colors.bg
-tokyonight.inactive = {
-  a = { bg = colors.bg, fg = colors.blue },
-  b = { bg = colors.bg, fg = colors.fg_gutter, gui = "bold" },
-  c = { bg = colors.bg, fg = colors.fg_gutter },
-} ]]
-
 require('plenary.reload').reload_module('lualine', true)
 require('lualine').setup {
   options = {

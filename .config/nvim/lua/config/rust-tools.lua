@@ -1,8 +1,10 @@
 -- local lsp_status = require 'lsp-status'
-local illuminate = require 'illuminate'
+local illuminate_ok, illuminate = pcall(require, 'illuminate')
 
 local default_on_attach = function(client, _)
-  illuminate.on_attach(client)
+  if illuminate_ok then
+    illuminate.on_attach(client)
+  end
   -- lsp_status.on_attach(client)
 end
 

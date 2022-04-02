@@ -4,6 +4,7 @@ require('neo-tree').setup {
   close_if_last_window = false, -- Close Neo-tree if it is the last window left in the tab
   popup_border_style = 'rounded',
   enable_git_status = true,
+  git_status_async = true,
   enable_diagnostics = true,
   default_component_configs = {
     indent = {
@@ -83,7 +84,7 @@ require('neo-tree').setup {
     filtered_items = {
       visible = false, -- when true, they will just be displayed differently than normal items
       hide_dotfiles = true,
-      hide_gitignored = true,
+      hide_gitignored = false,
       hide_by_name = {
         '.DS_Store',
         'thumbs.db',

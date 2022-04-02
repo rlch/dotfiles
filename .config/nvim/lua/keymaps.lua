@@ -30,7 +30,7 @@ nest.applyKeymaps {
       {
         '<leader>',
         {
-          -- { 'o', '<cmd>NvimTreeFocus<CR>' },
+          { 'o', '<cmd>NvimTreeFocus<CR>' },
           {
             'd',
             {
@@ -177,7 +177,7 @@ nest.applyKeymaps {
           {
             't',
             {
-              -- { 'o', '<cmd>NvimTreeToggle<CR>' },
+              { 'o', '<cmd>NvimTreeToggle<CR>' },
               { 't', '<cmd>TroubleToggle workspace_diagnostics<CR>' },
               { 'd', '<cmd>UltestDebugNearest<cr>' },
               { 'D', '<cmd>UltestDebug<cr>' },
