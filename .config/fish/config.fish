@@ -5,13 +5,15 @@ end
 ulimit -n 10240
 
 set -x GOPATH $HOME/go
-set -x PATH $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin
+set -x PATH $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
+set fish_greeting
 
 alias t="tmux"
 alias tp="tmuxp"
 alias v="nvim"
+alias vd="nvim ."
 alias g="gitui"
 alias cb=clipboard
 alias dotfiles='/usr/bin/git --git-dir=/Users/rjm/.dotfiles/ --work-tree=/Users/rjm'

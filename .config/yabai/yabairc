@@ -81,3 +81,4 @@ yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manag
 yabai -m rule --add label="Firefox" app="^Firefox$" opacity=1.0
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="Kitty" app="^kitty$" native-fullscreen=on space=^1
+yabai -m rule --add label="RuneMate" app="^RuneMate" manage=off
