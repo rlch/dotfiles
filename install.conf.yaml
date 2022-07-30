@@ -1,0 +1,38 @@
+- defaults:
+    link:
+      relink: true
+      create: true
+      force: true
+- clean: ["~"]
+- create:
+    - ~/.config/
+    - ~/Coding/
+    - ~/Coding/Playground
+    - ~/Coding/Personal
+    - ~/Coding/Tutero
+- link:
+    ~/.gitconfig:
+    ~/.ssh/config:
+      path: ssh/config
+    ~/.tmux.conf:
+    ~/.config/nvim:
+      path: config/nvim
+    ~/.config/fish:
+      path: config/fish
+    ~/.config/yabai:
+      path: config/yabai
+    ~/.config/skhd:
+      path: config/skhd
+    ~/.config/tridactyl:
+      path: config/tridactyl
+    ~/.config/tmux:
+      path: config/tmux
+    ~/.config/kitty:
+      path: config/kitty
+    ~/.config/gitui:
+      path: config/gitui
+    ~/.config/starship.toml:
+      path: config/starship.toml
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+    - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local

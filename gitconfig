@@ -1,0 +1,17 @@
+[user]
+	name = RJM
+	email = rjmbowie@gmail.com
+[credential]
+	helper = osxkeychain
+[init]
+	defaultBranch = main
+[mergetool "nvim"]
+  cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
+[mergetool]
+  prompt = false
+[merge]
+  tool = nvim
+[pull]
+	rebase = false
+[url "https://rlch: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@github.com"]
+	insteadOf = https://github.com
