@@ -1,5 +1,7 @@
 local conf = require "lspconfig"
 local illuminate_ok, illuminate = pcall(require, "illuminate")
+local navic_ok, navic = pcall(require, "nvim-navic")
+local inlay_ok, inlay = pcall(require, "lsp-inlayhints")
 
 if illuminate_ok then
   map("n", "<C-n>", function()
@@ -10,9 +12,16 @@ if illuminate_ok then
   end)
 end
 
-R.lsp.on_attach = function(client, _)
+R.lsp.on_attach = function(client, bufnr)
   if illuminate_ok then
     illuminate.on_attach(client)
+  end
+  if navic_ok then
+    navic.attach(client, bufnr)
+  end
+  if inlay_ok then
+    vim.api.nvim_set_hl(0, "LspInlayHint", { default = true, link = "Comment" })
+    inlay.on_attach(bufnr, client)
   end
 end
 

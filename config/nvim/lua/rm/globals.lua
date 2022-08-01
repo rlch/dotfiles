@@ -4,82 +4,88 @@ local fmt = string.format
 R = {
   icons = {
     signs = {
-      Error = '',
-      Warning = '',
-      Warn = '',
-      Hint = '',
-      Information = '',
-      Info = '',
+      Error = "",
+      Warning = "",
+      Warn = "",
+      Hint = "",
+      Information = "",
+      Info = "",
     },
     git_status = {
       -- Change type
-      added = '✚',
-      deleted = '✖',
-      modified = '',
-      renamed = '➜',
+      added = "✚",
+      deleted = "✖",
+      modified = "",
+      renamed = "➜",
       -- Status type
-      untracked = '★',
-      ignored = '◌',
-      unstaged = '',
-      staged = '✓',
-      conflict = '',
+      untracked = "★",
+      ignored = "◌",
+      unstaged = "",
+      staged = "✓",
+      conflict = "",
     },
     lsp = {
-      Text = '',
-      Method = '',
-      Function = '',
-      Constructor = '',
-      Field = 'ﰠ',
-      Variable = '',
-      Class = 'ﴯ',
-      Interface = '',
-      Module = '',
-      Property = 'ﰠ',
-      Unit = '塞',
-      Value = '',
-      Enum = '',
-      Keyword = '',
-      Snippet = '',
-      Color = '',
-      File = '',
-      Reference = '',
-      Folder = '',
-      EnumMember = '',
-      Constant = '',
-      Struct = 'פּ',
-      Event = '',
-      Operator = '',
-      TypeParameter = '',
+      Array = "",
+      Boolean = "",
+      Class = "ﴯ",
+      Color = "",
+      Constant = "",
+      Constructor = "",
+      Enum = "",
+      EnumMember = "",
+      Event = "",
+      Field = "ﰠ",
+      File = "",
+      Folder = "",
+      Function = "",
+      Interface = "",
+      Key = "",
+      Keyword = "",
+      Method = "",
+      Module = "",
+      Number = "",
+      Null = "",
+      Object = "",
+      Operator = "",
+      Property = "ﰠ",
+      Reference = "",
+      Snippet = "",
+      Struct = "",
+      Text = "",
+      TypeParameter = "",
+      Unit = "塞",
+      Value = "",
+      Variable = "",
     },
     ui = {
-      ArrowClosed = '',
-      ArrowOpen = '',
-      Lock = '',
-      Circle = '',
-      Close = '',
-      NewFile = '',
-      Search = '',
-      Lightbulb = '',
-      Project = '',
-      Dashboard = '',
-      History = '',
-      Comment = '',
-      Code = '',
-      Telescope = '',
-      Gear = '',
-      Package = '',
-      List = '',
-      SignIn = '',
-      SignOut = '',
-      Check = '',
-      Fire = '',
-      Note = '',
-      BookMark = '',
-      Pencil = '',
-      ChevronRight = '',
-      Table = '',
-      Calendar = '',
-      CloudDownload = '',
+      ArrowClosed = "",
+      ArrowOpen = "",
+      Lock = "",
+      Circle = "",
+      Close = "",
+      NewFile = "",
+      Search = "",
+      Lightbulb = "",
+      Project = "",
+      Dashboard = "",
+      History = "",
+      Comment = "",
+      Code = "",
+      Telescope = "",
+      Gear = "",
+      Package = "",
+      List = "",
+      SignIn = "",
+      SignOut = "",
+      Check = "",
+      Fire = "",
+      Note = "",
+      BookMark = "",
+      Pencil = "",
+      ChevronRight = "",
+      Table = "",
+      Calendar = "",
+      CloudDownload = "",
     },
   },
   -- Utilty functions + variables for LSP config
@@ -93,7 +99,7 @@ R = {
 command = function(name, rhs, modifiers)
   modifiers = modifiers or {}
   local nargs = modifiers and modifiers.nargs or 0
-  vim.cmd(fmt('command! -nargs=%s %s %s', nargs, name, rhs))
+  vim.cmd(fmt("command! -nargs=%s %s %s", nargs, name, rhs))
 end
 
 -- Debugging --
@@ -109,7 +115,7 @@ end
 
 ---@param expr string
 local function _to_exec(expr)
-  return '<cmd>' .. expr .. '<cr>'
+  return "<cmd>" .. expr .. "<cr>"
 end
 
 ---@param mode Mode
@@ -117,7 +123,7 @@ end
 ---@param rhs RHS
 ---@param opts table
 map = function(mode, lhs, rhs, opts)
-  if type(opts) ~= 'table' then
+  if type(opts) ~= "table" then
     opts = {}
   end
 
@@ -141,7 +147,7 @@ remap = function(mode, lhs, rhs, opts)
     mode,
     lhs,
     rhs,
-    vim.tbl_extend('keep', { remap = true }, opts or {})
+    vim.tbl_extend("keep", { remap = true }, opts or {})
   )
 end
 

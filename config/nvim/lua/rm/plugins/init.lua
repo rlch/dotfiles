@@ -1,6 +1,7 @@
 local packer = require "packer"
 
 ---@param args table
+---@diagnostic disable-next-line: unused-local, unused-function
 local use_local = function(args)
   args[1] = "~/Coding/Personal/" .. args[1]
   return packer.use(args)
@@ -138,6 +139,8 @@ return packer.startup {
         config = module "lsp.lspconfig",
         requires = {
           "RRethy/vim-illuminate",
+          "nvim-navic",
+          "lvimuser/lsp-inlayhints.nvim",
           "jose-elias-alvarez/nvim-lsp-ts-utils",
         },
       },
@@ -177,9 +180,38 @@ return packer.startup {
         end,
       },
       {
-        "rlch/nvim-gps",
-        requires = "nvim-treesitter/nvim-treesitter",
-        config = module "lsp.gps",
+        "SmiteshP/nvim-navic",
+        config = module "lsp.navic",
+      },
+      {
+        "lvimuser/lsp-inlayhints.nvim",
+        requires = "neovim/nvim-lspconfig",
+        config = function()
+          require("lsp-inlayhints").setup {
+            inlay_hints = {
+              parameter_hints = {
+                show = true,
+                prefix = "<- ",
+                separator = ", ",
+                remove_colon_start = false,
+                remove_colon_end = true,
+              },
+              type_hints = {
+                show = true,
+                prefix = "",
+                separator = ", ",
+                remove_colon_start = false,
+                remove_colon_end = false,
+              },
+              labels_separator = "  ",
+              max_len_align = false,
+              max_len_align_padding = 1,
+              right_align = false,
+              right_align_padding = 7,
+              highlight = "LspInlayHint",
+            },
+          }
+        end,
       },
       -- Tests
       use {
@@ -197,8 +229,8 @@ return packer.startup {
       },
     }
 
-    use_local {
-      "lsp-fastaction.nvim",
+    use {
+      "rlch/lsp-fastaction.nvim",
       requires = "neovim/nvim-lspconfig",
       config = module "lsp.fastaction",
     }
@@ -288,11 +320,12 @@ return packer.startup {
       -- File-tree
       {
         "nvim-neo-tree/neo-tree.nvim",
-        branch = "main",
+        branch = "v2.x",
         requires = {
           "nvim-lua/plenary.nvim",
           "kyazdani42/nvim-web-devicons",
           "MunifTanjim/nui.nvim",
+          "mrbjarksen/neo-tree-diagnostics.nvim",
         },
         config = module "workflow.neo-tree",
       },
@@ -423,8 +456,9 @@ return packer.startup {
       },
     }
 
-    use_local {
-      "github-notifications.nvim",
+    use {
+      "rlch/github-notifications.nvim",
+      branch = "hooks",
       config = module "git.notifications",
       requires = {
         "nvim-lua/plenary.nvim",

@@ -12,6 +12,6 @@
 [merge]
   tool = nvim
 [pull]
-	rebase = false
-[url "https://rlch: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@github.com"]
-	insteadOf = https://github.com
+	rebase = true
+;[url "https://rlch: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@github.com"]
+;	insteadOf = https://github.com
