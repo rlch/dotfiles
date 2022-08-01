@@ -1,3 +1,9 @@
+local notification_line = {}
+local ok, ghn = pcall(require, 'github-notifications')
+if ok then
+  notification_line = { 'branch', require('github-notifications').statusline_notification_count }
+end
+
 require('plenary.reload').reload_module('lualine', true)
 require('lualine').setup {
   options = {
@@ -9,7 +15,7 @@ require('lualine').setup {
   },
   sections = {
     lualine_a = { 'mode' },
-    lualine_b = { 'branch', require('github-notifications').statusline_notification_count },
+    lualine_b = notification_line,
     lualine_c = {
       {
         'filename',

@@ -10,6 +10,24 @@
     - ~/Coding/Playground
     - ~/Coding/Personal
     - ~/Coding/Tutero
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+    - [xcode-select --version | grep -q "version .*" && echo "xcode-select --install", Checking if Xcode Command Line Tools are installed]
+    - 
+      command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      stdin: true
+      stdout: true
+      quiet: true
+      description: Installing homebrew
+    - [brew tap Homebrew/bundle, Setup brew bundle]
+    - [brew bundle, Installing homebrew dependencies]
+    - [chsh -s /opt/homebrew/bin/fish, Making fish the default shell]
+    - 
+      command: nvim --version || ./build_neovim.sh
+      stdin: true
+      stdout: true
+      quiet: true
+      description: Building neovim
 - link:
     ~/.gitconfig:
     ~/.ssh/config:
@@ -34,5 +52,5 @@
     ~/.config/starship.toml:
       path: config/starship.toml
 - shell:
-    - [git submodule update --init --recursive, Installing submodules]
-    - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local
+    - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
+    - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true

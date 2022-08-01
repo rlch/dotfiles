@@ -509,6 +509,10 @@ return packer.startup {
         end,
       },
     }
+
+    if packer_bootstrap then
+      require('packer').sync()
+    end
   end,
   log = { level = "info" },
   config = {
