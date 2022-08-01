@@ -7,8 +7,13 @@ brew "starship"
 brew "pyenv"
 brew "kubectl"
 brew "luarocks"
+brew "node"
+cask "the-unarchiver"
 
-# Neovim dependencies
+tap "homebrew/cask-fonts"
+cask "font-jetbrains-mono-nerd-font"
+
+# Neovim build dependencies
 brew "ninja" 
 brew "libtool" 
 brew "automake" 

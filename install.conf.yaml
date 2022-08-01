@@ -41,6 +41,10 @@
       quiet: true
       description: Building neovim
     - 
+      command: ./install_fonts
+      quiet: true
+      description: Installing fonts
+    - 
       command: ./install_fisher
       quiet: true
       description: Installing fish dependencies
@@ -74,7 +78,11 @@
       quiet: true
       stderr: true
       description: Starting yabai
-    - [brew services restart skhd, Starting skhd]
+    - 
+      command: brew services restart skhd
+      quiet: true
+      stderr: true
+      description: Starting skhd
     - 
       command: if set -q sa_exists; sudo yabai --install-sa && sudo yabai --load-sa; end
       quiet: true

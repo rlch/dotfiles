@@ -1,0 +1,14 @@
+#!/opt/homebrew/bin/fish
+
+if ls ~/Library/Fonts | grep JetBrainsMono 1> /dev/null 2>&1
+  echo "Fonts already installed"
+else
+  test -d tmp || mkdir tmp
+  cd tmp
+  curl -o font.zip -L https://download.jetbrains.com/fonts/JetBrainsMono-2.242.zip
+  unzip -q font.zip
+  mv fonts/ttf/* ~/Library/Fonts/
+  cd ..
+  rm -rf tmp/
+end
+exit 0

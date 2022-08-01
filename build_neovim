@@ -14,6 +14,7 @@ while true
   switch $yn
     case Y y
       rm -rf vendor/neovim/
+      break
     case '' N n
       break
   end

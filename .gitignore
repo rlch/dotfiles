@@ -1,3 +1,4 @@
 node_modules
 packer_compiled.lua
 vendor/
+tmp/

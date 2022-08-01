@@ -629,6 +629,14 @@
           }
         }
       }
+    },
+    "cask": {
+      "the-unarchiver": {
+        "version": "4.3.5,139,1652457131",
+        "options": {
+          "full_name": "the-unarchiver"
+        }
+      }
     }
   },
   "system": {

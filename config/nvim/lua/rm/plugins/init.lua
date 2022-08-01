@@ -41,7 +41,7 @@ return packer.startup {
     use {
       {
         "nvim-treesitter/nvim-treesitter",
-        run = ":TSUpdate",
+        run = function() require('nvim-treesitter.install').update({ with_sync = true }) end,
         config = module "treesitter",
       },
       "nvim-treesitter/playground",
