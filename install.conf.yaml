@@ -21,13 +21,29 @@
       description: Installing homebrew
     - [brew tap Homebrew/bundle, Setup brew bundle]
     - [brew bundle, Installing homebrew dependencies]
-    - [chsh -s /opt/homebrew/bin/fish, Making fish the default shell]
     - 
-      command: nvim --version || ./build_neovim.sh
+      command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
+      stdin: true
+      stderr: true
+      quiet: true
+      description: Making fish the default shell
+    - 
+      command: gh auth status || gh auth login
+      stdin: true
+      stdout: true
+      stderr: true
+      quiet: false
+      description: Authenticate with GitHub
+    - 
+      command: ./build_neovim
       stdin: true
       stdout: true
       quiet: true
       description: Building neovim
+    - 
+      command: ./install_fisher
+      quiet: true
+      description: Installing fish dependencies
 - link:
     ~/.gitconfig:
     ~/.ssh/config:
@@ -53,4 +69,14 @@
       path: config/starship.toml
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
-    - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
+    - 
+      command: if brew services | grep yabai; brew services restart yabai; set sa_exists 1; else; brew services restart yabai; end
+      quiet: true
+      stderr: true
+      description: Starting yabai
+    - [brew services restart skhd, Starting skhd]
+    - 
+      command: if set -q sa_exists; sudo yabai --install-sa && sudo yabai --load-sa; end
+      quiet: true
+      stderr: true
+      description: Loading yabai SA

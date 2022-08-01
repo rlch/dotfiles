@@ -3,6 +3,10 @@ brew "tmux"
 brew "gitui"
 brew "koekeishiya/formulae/skhd"
 brew "koekeishiya/formulae/yabai"
+brew "starship"
+brew "pyenv"
+brew "kubectl"
+brew "luarocks"
 
 # Neovim dependencies
 brew "ninja" 

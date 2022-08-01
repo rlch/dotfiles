@@ -34,13 +34,11 @@ set -x MANPAGER 'nvim +Man!'
 set -x MAXWIDTH 999
 
 starship init fish | source
-# oh-my-posh init fish --config $HOME/.config/oh-my-posh.yaml | source
 kubectl completion fish | source
 source (pyenv init --path | psub)
 for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}'); eval $i; end
 
-source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
-
+[ -f ~/.google-cloud-sdk/path.fish.inc ]; and source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
 [ -f /opt/homebrew/share/autojump/autojump.fish ]; and source /opt/homebrew/share/autojump/autojump.fish
 
 # >>> conda initialize >>>

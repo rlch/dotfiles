@@ -8,6 +8,7 @@ function _fzf_search_git_status --description "Search the output of git status. 
             _fzf_wrapper --ansi \
                 --multi \
                 --query=(commandline --current-token) \
+                --preview='_fzf_preview_changed_file {}' \
                 $fzf_git_status_opts
         )
         if test $status -eq 0
@@ -25,7 +26,7 @@ function _fzf_search_git_status --description "Search the output of git status. 
                 end
             end
 
-            commandline --current-token --replace -- (string escape -- $cleaned_paths | string join ' ')
+            commandline --current-token --replace -- (string join ' ' $cleaned_paths)
         end
     end
 
