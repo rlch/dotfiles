@@ -20,7 +20,11 @@
       quiet: true
       description: Installing homebrew
     - [brew tap Homebrew/bundle, Setup brew bundle]
-    - [brew bundle, Installing homebrew dependencies]
+    -
+      command: brew bundle 
+      stdout: true
+      quiet: true
+      description: Installing homebrew dependencies
     - 
       command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
       stdin: true
