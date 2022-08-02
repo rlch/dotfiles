@@ -316,44 +316,44 @@ return packer.startup {
     }
 
     -- Workflow
-    use {
-      -- File-tree
-      {
-        "nvim-neo-tree/neo-tree.nvim",
-        branch = "v2.x",
-        requires = {
-          "nvim-lua/plenary.nvim",
-          "kyazdani42/nvim-web-devicons",
-          "MunifTanjim/nui.nvim",
-          "mrbjarksen/neo-tree-diagnostics.nvim",
-        },
-        config = module "workflow.neo-tree",
-      },
-      {
-        "ahmedkhalf/project.nvim",
-        config = module "workflow.project",
-        requires = {
-          "nvim-telescope/telescope.nvim",
-        },
-      },
+     use {
+       -- File-tree
+       {
+         "nvim-neo-tree/neo-tree.nvim",
+         branch = "v2.x",
+         requires = {
+           "nvim-lua/plenary.nvim",
+           "kyazdani42/nvim-web-devicons",
+           "MunifTanjim/nui.nvim",
+           "mrbjarksen/neo-tree-diagnostics.nvim",
+         },
+         config = module "workflow.neo-tree",
+       },
+       {
+         "ahmedkhalf/project.nvim",
+         config = module "workflow.project",
+         requires = {
+           "nvim-telescope/telescope.nvim",
+         },
+       },
 
-      -- Fuzzy-finder
-      { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
-      {
-        "nvim-telescope/telescope.nvim",
-        requires = {
-          "nvim-lua/plenary.nvim",
-          "nvim-telescope/telescope-fzf-native.nvim",
-        },
-        config = module "workflow.telescope",
-      },
+       -- Fuzzy-finder
+       { "nvim-telescope/telescope-fzf-native.nvim", run = "make" },
+       {
+         "nvim-telescope/telescope.nvim",
+         requires = {
+           "nvim-lua/plenary.nvim",
+           "nvim-telescope/telescope-fzf-native.nvim",
+         },
+         config = module "workflow.telescope",
+       },
 
-      {
-        "ThePrimeagen/harpoon",
-        requires = "nvim-lua/plenary.nvim",
-        config = module "workflow.harpoon",
-      },
-    }
+       {
+         "ThePrimeagen/harpoon",
+         requires = "nvim-lua/plenary.nvim",
+         config = module "workflow.harpoon",
+       },
+     }
 
     -- Traversal & motion
     use {

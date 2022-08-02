@@ -8,6 +8,8 @@ brew "pyenv"
 brew "kubectl"
 brew "luarocks"
 brew "node"
+brew "ripgrep"
+brew "fd"
 cask "the-unarchiver"
 
 tap "homebrew/cask-fonts"
