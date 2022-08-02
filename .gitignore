@@ -3,3 +3,4 @@ packer_compiled.lua
 vendor/
 tmp/
 .DS_Store
+/*.log
