@@ -48,3 +48,4 @@ hi link cypherSymbol               Operator
 hi link cypherVariable             Identifier
 
 let b:current_syntax = "cypher"
+
