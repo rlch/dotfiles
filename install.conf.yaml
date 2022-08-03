@@ -39,12 +39,6 @@
       quiet: false
       description: Authenticate with GitHub
     - 
-      command: ./build_neovim
-      stdin: true
-      stdout: true
-      quiet: true
-      description: Building neovim
-    - 
       command: ./install_fonts
       quiet: true
       description: Installing fonts
@@ -52,6 +46,18 @@
       command: ./install_fisher
       quiet: true
       description: Installing fish dependencies
+    - command: type -q rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      stdin: true
+      stdout: true
+      stderr: true
+      quiet: true
+      description: Installing rust
+    - 
+      command: ./build_neovim
+      stdin: true
+      stdout: true
+      quiet: true
+      description: Building neovim
 - link:
     ~/.gitconfig:
     ~/.ssh/config:
@@ -78,7 +84,11 @@
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
     - 
-      command: if brew services | grep yabai; brew services restart yabai; set sa_exists 1; else; brew services restart yabai; end
+      command: >
+        if not brew services | grep "yabai.*started" > /dev/null
+          brew services start yabai
+          set sa_exists 1
+        end
       quiet: true
       stderr: true
       description: Starting yabai
@@ -88,7 +98,11 @@
       stderr: true
       description: Starting skhd
     - 
-      command: if set -q sa_exists; sudo yabai --install-sa && sudo yabai --load-sa; end
+      command: >
+        if set -q sa_exists
+          sudo yabai --install-sa
+          sudo yabai --load-sa
+        end
       quiet: true
       stderr: true
       description: Loading yabai SA

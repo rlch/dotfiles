@@ -19,3 +19,10 @@ while true
       break
   end
 end
+
+# null-ls dependencies
+cargo install stylua
+brew tap yoheimuta/protolint
+brew install fnlfmt clang-format protolint
+python3 -m pip install black pylint sqlfluff
+npm install -g prettier @fsouza/prettierd stylelint neovim
