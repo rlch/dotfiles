@@ -59,7 +59,7 @@ setup "dockerls"
 setup("sqls", {
   on_attach = function(client, bufnr)
     require("sqls").on_attach(client, bufnr)
-    R.lsp.on_attach(client)
+    R.lsp.on_attach(client, bufnr)
     client.resolved_capabilities.document_formatting = false
   end,
 })
@@ -86,12 +86,12 @@ setup("yamlls", {
 })
 
 setup("tsserver", {
-  on_attach = function(client, _)
+  on_attach = function(client, bufnr)
     require("nvim-lsp-ts-utils").setup {
       filter_out_diagnostics_by_code = { 80001, 7016 },
     }
     require("nvim-lsp-ts-utils").setup_client(client)
-    R.lsp.on_attach(client)
+    R.lsp.on_attach(client, bufnr)
   end,
 })
 

@@ -25,5 +25,6 @@ null_ls.setup {
     diag.stylelint,
     diag.pylint,
     diag.protolint,
+    diag.golangci_lint,
   },
 }
