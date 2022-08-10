@@ -74,6 +74,7 @@ setup("yamlls", {
       schemas = {
         ["https://json.schemastore.org/chart.json"] = "Chart.yaml",
         ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
+        ["https://raw.githubusercontent.com/Praqma/helmsman/master/schema.json"] = "helmsman.*.yaml",
       },
     },
   },
