@@ -19,7 +19,8 @@ alias cb=clipboard
 alias dn="say done"
 alias luamake=/Users/rjm/.config/nvim/lua-language-server/3rd/luamake/luamake
 alias intel="arch -x86_64"
-alias kb="kubectl"
+alias mk="minikube"
+ 
 
 if type -q exa
   alias l "exa -l -g --icons"
