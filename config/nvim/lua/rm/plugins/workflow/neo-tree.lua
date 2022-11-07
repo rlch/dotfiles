@@ -1,4 +1,6 @@
 vim.g.neo_tree_remove_legacy_commands = 1
+vim.api.nvim_command [[hi link NeoTreeFloatBorder Comment]]
+vim.api.nvim_command [[hi link NeoTreeFloatTitle Comment]]
 
 require("neo-tree").setup {
   close_if_last_window = false,
@@ -14,8 +16,8 @@ require("neo-tree").setup {
   },
   default_component_configs = {
     indent = {
-      indent_size = 2,
-      padding = 1,
+      indent_size = 1,
+      padding = 2,
       with_markers = true,
       indent_marker = "│",
       last_indent_marker = "└",
@@ -57,6 +59,7 @@ require("neo-tree").setup {
       ["m"] = "move",
       ["p"] = "paste_from_clipboard",
       ["q"] = "close_window",
+      ["<Esc>"] = "close_window",
       ["r"] = "rename",
       ["s"] = "open_split",
       ["v"] = "open_vsplit",

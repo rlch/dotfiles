@@ -7,15 +7,6 @@ local use_local = function(args)
   return packer.use(args)
 end
 
--- local CURRENT_GROUP = nil
----@param name string
----@param args_fn fun(): table
--- local function group(name, use_fn)
---   CURRENT_GROUP = (CURRENT_GROUP ~= nil and (CURRENT_GROUP .. '.') or '') .. name
---   use_fn()
---   CURRENT_GROUP = nil
--- end
-
 ---@param name string
 -- Loads the module `name`.
 local function module(name)
@@ -75,6 +66,7 @@ return packer.startup {
       },
       {
         "github/copilot.vim",
+        disable = true,
         config = function()
           vim.g.copilot_no_tab_map = true
           vim.g.copilot_assume_mapped = true
@@ -83,11 +75,26 @@ return packer.startup {
             ["*"] = true,
             TelescopePrompt = false,
           }
-          map("i", "<C-l>", [[copilot#Accept("\<CR>")]], { expr = true })
+          map("i", "<C-f>", [[copilot#Accept("\<CR>")]], { expr = true })
         end,
       },
     }
 
+    -- Org
+    use {
+      "nvim-neorg/neorg",
+      branch = "main",
+      config = module "org/neorg",
+      requires = {
+        "nvim-lua/plenary.nvim",
+        "nvim-treesitter/nvim-treesitter",
+        "nvim-telescope/telescope.nvim",
+        "nvim-neorg/neorg-telescope",
+      },
+      run = ":Neorg sync-parsers",
+    }
+
+    -- Language specific
     use {
       -- Dart / Flutter
       {
@@ -116,7 +123,7 @@ return packer.startup {
           "nvim-telescope/telescope.nvim",
         },
         config = module "lang.rust-tools",
-        ft = { "rust", "rs", "toml" },
+        -- ft = { "rust", "rs", "toml" },
       },
 
       -- Go
@@ -132,6 +139,16 @@ return packer.startup {
 
       -- GQL
       "jparise/vim-graphql",
+
+      -- Terraform
+      "hashivim/vim-terraform",
+
+      -- LaTeX
+      {
+        "lervag/vimtex",
+        config = module "lang.latex",
+        ft = { "tex" },
+      },
     }
 
     use {
@@ -180,6 +197,7 @@ return packer.startup {
         config = function()
           require("dim").setup {}
         end,
+        disable = true,
       },
       {
         "SmiteshP/nvim-navic",
@@ -235,6 +253,7 @@ return packer.startup {
       "rlch/lsp-fastaction.nvim",
       requires = "neovim/nvim-lspconfig",
       config = module "lsp.fastaction",
+      disable = true,
     }
 
     -- Snippets
@@ -355,6 +374,20 @@ return packer.startup {
         requires = "nvim-lua/plenary.nvim",
         config = module "workflow.harpoon",
       },
+
+      -- Window management
+      {
+        "anuvyklack/windows.nvim",
+        requires = { "anuvyklack/middleclass" },
+        config = module "workflow.windows",
+      },
+
+      -- Docs
+      {
+        "danymat/neogen",
+        config = module "workflow.neogen",
+        requires = "nvim-treesitter/nvim-treesitter",
+      },
     }
 
     -- Traversal & motion
@@ -362,6 +395,7 @@ return packer.startup {
       "tpope/vim-surround",
       "tpope/vim-repeat",
       "tpope/vim-abolish",
+      "fedepujol/move.nvim",
       {
         "monaqa/dial.nvim",
         config = module "motion.dial",
@@ -402,7 +436,7 @@ return packer.startup {
         event = "BufEnter",
       },
       {
-        "windwp/nvim-spectre",
+        "nvim-pack/nvim-spectre",
         config = function()
           require("spectre").setup()
           vim.keymap.set("n", "<leader>r", function()
@@ -444,9 +478,9 @@ return packer.startup {
         "akinsho/git-conflict.nvim",
         config = function()
           vim.cmd [[
-          highlight ConflictMarkerOurs guibg=#2e5049
-          highlight ConflictMarkerTheirs guibg=#344f69
-          ]]
+highlight ConflictMarkerOurs guibg=#2e5049
+highlight ConflictMarkerTheirs guibg=#344f69
+]]
           require("git-conflict").setup {
             disable_diagnostics = true,
             highlights = {
@@ -462,6 +496,7 @@ return packer.startup {
       "rlch/github-notifications.nvim",
       branch = "hooks",
       config = module "git.notifications",
+      disable = true,
       requires = {
         "nvim-lua/plenary.nvim",
         "nvim-lualine/lualine.nvim",

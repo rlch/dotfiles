@@ -25,3 +25,15 @@ vim.api.nvim_create_autocmd(
     end,
   }
 )
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern = "*/templates/*.yaml",
+  callback = function()
+    vim.api.nvim_command "set syntax=yaml"
+  end,
+})
+
+local name = vim.api.nvim_buf_get_name(0)
+if name:match ".*templates/[^/]*%.yaml" then
+  vim.nvim_exec [[set syntax=yaml]]
+end

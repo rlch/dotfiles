@@ -1,6 +1,8 @@
-require('flutter-tools').setup {
+print(vim.fn.expand "$HOME/fvm/*/.pub-cache/hosted/*")
+
+require("flutter-tools").setup {
   ui = {
-    border = 'rounded',
+    border = "rounded",
   },
   decorations = {
     statusline = {
@@ -17,12 +19,12 @@ require('flutter-tools').setup {
     enabled = false,
   },
   closing_tags = {
-    highlight = 'Comment',
-    prefix = ' ~ ',
+    highlight = "Comment",
+    prefix = " ~ ",
     enabled = true,
   },
   dev_log = {
-    open_cmd = '14new',
+    open_cmd = "14new",
     auto_open = true,
   },
   dev_tools = {
@@ -30,7 +32,7 @@ require('flutter-tools').setup {
     auto_open_browser = false,
   },
   outline = {
-    open_cmd = '30vnew',
+    open_cmd = "30vnew",
     auto_open = false,
   },
   lsp = {
@@ -38,7 +40,7 @@ require('flutter-tools').setup {
       enabled = true,
       background = false,
       virtual_text = true,
-      virtual_text_str = '■',
+      virtual_text_str = "■",
     },
     capabilities = R.lsp.capabilities,
     on_attach = R.lsp.on_attach,
@@ -46,20 +48,21 @@ require('flutter-tools').setup {
       showTodos = false,
       completeFunctionCalls = true,
       lineLength = (function()
-        return vim.fn.expand('%:p'):find '^/Users/rjm/Coding/Tutero/' and 100 or 80
+        return vim.fn.expand("%:p"):find "^/Users/rjm/Coding/Tutero/" and 100
+          or 80
       end)(),
-      automaticCommentSlashes = 'all',
-      renameFilesWithClasses = 'always',
+      automaticCommentSlashes = "all",
+      renameFilesWithClasses = "always",
       onlyAnalyzeProjectsWithOpenFiles = true,
       analysisExcludedFolders = {
-        vim.fn.expand '$HOME/.pub-cache/',
-        vim.fn.expand '$HOME/fvm/versions/*',
-        vim.fn.expand '$HOME/fvm/versions/*/packages/*',
-        vim.fn.expand '$HOME/.pub-cache/*',
-        vim.fn.expand '$HOME/fvm/*/.pub-cache/hosted/*',
+        vim.fn.expand "$HOME/.pub-cache/",
+        vim.fn.expand "$HOME/fvm/versions/*",
+        vim.fn.expand "$HOME/fvm/versions/*/packages/*",
+        vim.fn.expand "$HOME/.pub-cache/*",
+        vim.fn.expand "$HOME/fvm/*/.pub-cache/hosted/*",
       },
     },
   },
 }
 
-require('telescope').load_extension 'flutter'
+require("telescope").load_extension "flutter"

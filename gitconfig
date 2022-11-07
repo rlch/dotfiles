@@ -13,3 +13,12 @@
   tool = nvim
 [pull]
 	rebase = true
+[alias]
+  a = add
+  c = commit
+  r = rebase
+  rc = rebase --continue
+  ra = rebase --abort
+  f = pull
+  fe = fetch
+  p = push

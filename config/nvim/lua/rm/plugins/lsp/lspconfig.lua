@@ -21,20 +21,18 @@ R.lsp.on_attach = function(client, bufnr)
   end
   if inlay_ok then
     vim.api.nvim_set_hl(0, "LspInlayHint", { default = true, link = "Comment" })
-    inlay.on_attach(bufnr, client)
+    inlay.on_attach(client, bufnr)
   end
 end
 
-R.lsp.capabilities = require("cmp_nvim_lsp").update_capabilities(
-  vim.lsp.protocol.make_client_capabilities()
-)
+R.lsp.capabilities = require("cmp_nvim_lsp").default_capabilities()
 R.lsp.capabilities.textDocument.foldingRange = {
   dynamicRegistration = false,
   lineFoldingOnly = true,
 }
 
 ---@param name string
----@param args table
+---[@param] args table
 local setup = function(name, args)
   conf[name].setup(vim.tbl_extend("keep", args or {}, {
     on_attach = R.lsp.on_attach,
@@ -45,6 +43,9 @@ end
 setup "pyright"
 setup "clojure_lsp"
 setup "taplo"
+setup("terraformls", {
+  filetypes = { "terraform", "tf" },
+})
 setup("graphql", {
   filetypes = {
     "graphql",
@@ -80,7 +81,8 @@ setup("yamlls", {
   },
   on_attach = function(_, bufnr)
     local opts = vim.bo[bufnr]
-    if opts.buftype ~= "" or opts.filetype == "helm" then
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    if opts.buftype ~= "" or name:match ".*templates/[^/]*%.yaml" then
       vim.diagnostic.disable()
     end
   end,
@@ -96,12 +98,12 @@ setup("tsserver", {
   end,
 })
 
-local HOME = vim.fn.expand "$HOME"
-local sumneko_root_path = HOME .. "/.config/lua-language-server"
-local sumneko_binary = HOME
-  .. "/.config/lua-language-server/bin/macOS/lua-language-server"
+-- local HOME = vim.fn.expand "$HOME"
+-- local sumneko_root_path = HOME .. "/.config/lua-language-server"
+-- local sumneko_binary = HOME
+--   .. "/.config/lua-language-server/bin/macOS/lua-language-server"
 setup("sumneko_lua", {
-  cmd = { sumneko_binary, "-E", sumneko_root_path .. "/main.lua" },
+  -- cmd = { sumneko_binary, "-E", sumneko_root_path .. "/main.lua" },
   settings = {
     Lua = {
       runtime = {

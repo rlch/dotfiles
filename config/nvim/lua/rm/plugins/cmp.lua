@@ -3,14 +3,14 @@ local has_lspkind, lspkind = pcall(require, "lspkind")
 local has_snip, luasnip = pcall(require, "luasnip")
 
 local source_mapping = {
-  buffer = "[Buf]",
   nvim_lsp = "[LSP]",
+  buffer = "[Buf]",
+  nvim_lsp_document_symbol = "[LSP]",
   nvim_lua = "[Lua]",
   path = "[Path]",
   luasnip = "[Snip]",
   tmux = "[tmux]",
   cmdline = "[cmd]",
-  nvim_lsp_document_symbol = "[LSP]",
   rg = "[rg]",
 }
 
@@ -85,8 +85,8 @@ cmp.setup {
     end, { "i", "c" }),
   },
   sources = {
-    { name = "luasnip" },
     { name = "nvim_lsp" },
+    { name = "luasnip" },
     { name = "neorg" },
     { name = "buffer" },
     { name = "path" },
