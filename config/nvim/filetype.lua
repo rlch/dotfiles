@@ -7,4 +7,7 @@ vim.filetype.add {
     cyp = "cypher",
     cql = "cypher",
   },
+  pattern = {
+    ["~/\\.kube/config"] = "yaml",
+  },
 }

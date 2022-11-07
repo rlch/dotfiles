@@ -95,9 +95,10 @@ R = {
 ---Create a neovim command
 ---@param name string
 ---@param rhs string
----@param modifiers string[]
+---[@param] modifiers string[]
 command = function(name, rhs, modifiers)
   modifiers = modifiers or {}
+  ---@diagnostic disable-next-line: undefined-field
   local nargs = modifiers and modifiers.nargs or 0
   vim.cmd(fmt("command! -nargs=%s %s %s", nargs, name, rhs))
 end
@@ -112,8 +113,7 @@ end
 
 ---@alias Mode "n" | "v" | "i" | "c" | table
 ---@alias RHS string | fun() : any
-
----@param expr string
+---@param expr RHS
 local function _to_exec(expr)
   return "<cmd>" .. expr .. "<cr>"
 end
@@ -121,7 +121,7 @@ end
 ---@param mode Mode
 ---@param lhs string
 ---@param rhs RHS
----@param opts table
+---[@param] opts table
 map = function(mode, lhs, rhs, opts)
   if type(opts) ~= "table" then
     opts = {}
@@ -133,7 +133,7 @@ end
 ---@param mode Mode
 ---@param lhs string
 ---@param rhs RHS
----@param opts table
+---[@param] opts table
 mapx = function(mode, lhs, rhs, opts)
   return map(mode, lhs, _to_exec(rhs), opts or {})
 end
@@ -141,7 +141,7 @@ end
 ---@param mode Mode
 ---@param lhs string
 ---@param rhs RHS
----@param opts table
+---[@param] opts table
 remap = function(mode, lhs, rhs, opts)
   return map(
     mode,

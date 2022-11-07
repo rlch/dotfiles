@@ -3,5 +3,9 @@ sanitise tridactyllocal tridactylsync
 set smoothscroll true
 colourscheme nord
 
-bind --mode=ex <C-j> ex.next_completion
-bind --mode=ex <C-k> ex.prev_completion
+bind --mode=ex <C-n> ex.next_completion
+bind --mode=ex <C-p> ex.prev_completion
+bind J tabprev
+bind K tabnext
+bind <C-J> tabmove -1
+bind <C-K> tabmove +1

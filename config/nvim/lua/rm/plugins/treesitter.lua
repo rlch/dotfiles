@@ -24,7 +24,7 @@ require("nvim-treesitter.configs").setup {
   },
   indent = {
     enable = true,
-    disable = { "dart", "graphql", "go", "yaml", "helm" },
+    disable = { "dart", "graphql", "go", "yaml", "helm", "python" },
   },
   incremental_selection = {
     enable = true,

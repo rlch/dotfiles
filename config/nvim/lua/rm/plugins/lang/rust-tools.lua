@@ -1,18 +1,19 @@
-require('rust-tools').setup {
+require("rust-tools").setup {
   server = {
+    cmd = { "/usr/local/bin/rust-analyzer" },
     on_attach = R.lsp.on_attach,
     capabilities = R.lsp.capabilities,
     standalone = true,
     settings = {
-      ['rust-analyzer'] = {
+      ["rust-analyzer"] = {
         procMacro = { enable = true },
         checkOnSave = {
           enable = true,
-          command = 'clippy',
+          command = "clippy",
         },
         diagnostics = {
           enable = true,
-          disabled = { 'unresolved-proc-macro', 'missing-unsafe' },
+          disabled = { "unresolved-proc-macro", "missing-unsafe" },
           enableExperimental = true,
           warningsAsHint = {},
         },

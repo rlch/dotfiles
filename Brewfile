@@ -16,8 +16,25 @@ brew "glow"
 brew "node"
 brew "pyenv"
 brew "luarocks"
-brew "kubectl"
 brew "lua-language-server"
+brew "rust-analyzer"
+brew "hashicorp/tap/terraform-ls"
+brew "dnsmasq"
+brew "mkcert"
+brew "nss"
+brew "rover"
+
+# Latex
+cask "skim"
+
+# Kubernetes
+brew "minikube"
+brew "kubectl"
+brew "helmsman"
+brew "terraform"
+cask "kubecontext"
+brew "fluxcd/tap/flux"
+brew "kustomize"
 
 # Miscellaneous
 cask "the-unarchiver"

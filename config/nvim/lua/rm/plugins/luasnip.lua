@@ -1,22 +1,22 @@
-local ls = require 'luasnip'
-local types = require 'luasnip.util.types'
-local extras = require 'luasnip.extras'
-local fmt = require('luasnip.extras.fmt').fmt
+local ls = require "luasnip"
+local types = require "luasnip.util.types"
+local extras = require "luasnip.extras"
+local fmt = require("luasnip.extras.fmt").fmt
 
-require('luasnip').filetype_extend('dart', { 'flutter' })
-require('luasnip.loaders.from_lua').lazy_load()
-require('luasnip.loaders.from_vscode').lazy_load()
+require("luasnip").filetype_extend("dart", { "flutter" })
+require("luasnip.loaders.from_lua").lazy_load()
+require("luasnip.loaders.from_vscode").lazy_load()
 
 ls.config.set_config {
   history = true,
-  region_check_events = 'cursormoved,cursorhold,insertenter',
-  delete_check_events = 'insertleave',
-  updateevents = 'textchanged,textchangedi',
+  region_check_events = "cursormoved,cursorhold,insertenter",
+  delete_check_events = "insertleave",
+  updateevents = "textchanged,textchangedi",
   enable_autosnippets = true,
   ext_opts = {
     [types.choiceNode] = {
       active = {
-        virt_text = { { '<-', 'error' } },
+        virt_text = { { "<-", "error" } },
       },
     },
   },

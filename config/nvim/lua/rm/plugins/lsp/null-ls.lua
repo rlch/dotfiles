@@ -9,8 +9,8 @@ null_ls.setup {
     format.black,
     format.prettierd.with {
       extra_filetypes = { "graphqls", "graphql" },
-      condition = function(utils)
-        return not utils.root_matches ".*templates/[^/]*%.yaml"
+      runtime_condition = function(params)
+        return not params.bufname:match ".*templates/[^/]*%.yaml"
       end,
     },
     format.clang_format.with {
@@ -25,6 +25,7 @@ null_ls.setup {
     diag.stylelint,
     diag.pylint,
     diag.protolint,
+    format.terraform_fmt,
     -- diag.golangci_lint,
   },
 }

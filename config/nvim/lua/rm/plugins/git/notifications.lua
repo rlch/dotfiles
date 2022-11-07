@@ -1,4 +1,4 @@
-ok, ghn = pcall(require, 'github-notifications')
+local ok, ghn = pcall(require, 'github-notifications')
 if ok then
   require('telescope').load_extension 'ghn'
   ghn.setup {
