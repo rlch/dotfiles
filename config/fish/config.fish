@@ -11,8 +11,10 @@ set -x GOPRIVATE go.buf.build,github.com
 set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
-set -g TUTERODEV_DOCKER "australia-southeast1-docker.pkg.dev/mathgaps-dev-b044f/tuterodev"
 set fish_greeting
+
+# GAR
+set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
 # CLI
 alias t="tmux"
@@ -22,7 +24,9 @@ alias cb=clipboard
 alias intel="arch -x86_64"
 alias h="helm"
 alias mk="minikube"
+alias kk="k9s"
 alias tf="terraform"
+alias d="lazydocker"
 
 # Nvim entrypoints
 alias org="cd ~/neorg/ && v index.norg"
