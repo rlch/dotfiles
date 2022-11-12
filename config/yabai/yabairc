@@ -46,17 +46,38 @@ yabai -m config mouse_modifier              ctrl
 yabai -m config mouse_action1               move
 yabai -m config mouse_action2               resize
 
-
 # ===== Spaces =================================
 
-yabai -m space 1 --label coding
-yabai -m space 2 --label social
-yabai -m space 3 --label music
-yabai -m space 4 --label browser
-yabai -m space 5 --label misc
+# populate_spaces populates the display $1 with #$2 spaces
+# $1: display index
+# $2: # desired spaces
+populate_spaces () {
+  current=$(yabai -m query --displays | jq ".[] | select(.index == $1) | .spaces | length")
+  echo "$current on display $1. Desired: $2"
+  if [ -z "$current" ]
+  then
+    echo "Could not find display $1"
+  elif (( $current < $2 ))
+  then
+    let diff=$2-$current
+    for i in $(seq 1 $diff)
+    do
+      yabai -m space --create 1 --display $1
+    done
+  fi
+}
+
+populate_spaces 1 2
+populate_spaces 2 2
+
+yabai -m space 1 --label browser
+yabai -m space 2 --label coding
+yabai -m space 3 --label social
+yabai -m space 4 --label misc
 
 # ===== Rules ==================================
 
+# Ignored apps
 yabai -m rule --add label="Finder" app="^Finder$" manage=off sticky=on
 yabai -m rule --add label="The Unarchiver" app="^The Unarchiver$" manage=off sticky=on
 yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off opacity=1.0
@@ -74,7 +95,11 @@ yabai -m rule --add label="About This Mac" app="System Information" title="About
 yabai -m rule --add label="Installer" app="^Installer$" sticky=on manage=off
 yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=off
 yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manage=off
-yabai -m rule --add label="Firefox" app="^Firefox$" opacity=1.0
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
-yabai -m rule --add label="Kitty" app="^kitty$" native-fullscreen=on space=^1
 yabai -m rule --add label="RuneMate" app="^RuneMate" manage=off
+
+yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
+yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on space=coding
+yabai -m rule --add label="Gather" app="Gather" opacity=1.0 space=social 
+yabai -m rule --add label="Slack" app="Slack" space=social
+yabai -m rule --add label="Notion" app="Notion" space=misc

@@ -6,14 +6,13 @@ alt - l : yabai -m window --focus east  || yabai -m display --focus east
 
 alt - c : yabai -m space --focus coding
 alt - s : yabai -m space --focus social
-alt - m : yabai -m space --focus music
 alt - b : yabai -m space --focus browser
-alt - 1 : yabai -m space --focus misc
+alt - m : yabai -m space --focus misc
 
 alt - n : yabai -m space --focus next
 alt - p : yabai -m space --focus prev
-shift + alt - c : yabai -m space --create
-shift + alt - x : yabai -m space --destroy
+shift + alt - c : yabai -m space --create misc; yabai -m space --focus last
+shift + alt - x : yabai -m space --destroy last
 
 # Moving windows
 alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m display --focus west; yabai -m window --warp last; end
@@ -27,18 +26,8 @@ shift + alt - p : yabai -m window --space prev;   yabai -m space --focus prev
 shift + alt + lctrl - n : yabai -m space --move next
 shift + alt + lctrl - p : yabai -m space --move prev
 
-
 shift + alt - r : yabai -m window --space recent; yabai -m space --focus recent
-shift + alt - 1 : yabai -m window --space left;   yabai -m space --focus left
-shift + alt - 2 : yabai -m window --space right;  yabai -m space --focus right
-shift + alt - 3 : yabai -m window --space music;  yabai -m space --focus music
-shift + alt - 4 : yabai -m window --space social; yabai -m space --focus social
-
-shift + alt - c : yabai -m window --space coding;   yabai -m space --focus coding;
-shift + alt - s : yabai -m window --space social;   yabai -m space --focus social;
-shift + alt - m : yabai -m window --space music;    yabai -m space --focus music;
-shift + alt - b : yabai -m window --space browser;  yabai -m space --focus browser;
-shift + alt - 1 : yabai -m window --space misc;     yabai -m space --focus misc;
+shift + alt - m : yabai -m window --space misc;   yabai -m space --focus misc
 
 # Resize windows
 lctrl + alt - h : yabai -m window --resize left:-50:0; \
@@ -54,7 +43,7 @@ lctrl + alt - l : yabai -m window --resize right:50:0; \
 lctrl + alt - e : yabai -m space --balance
 
 # Enable / Disable gaps in current workspace
-lctrl + alt - g : yabai -m space --toggle padding; yabai -m space --toggle gap
+# lctrl + alt - g : yabai -m space --toggle padding; yabai -m space --toggle gap
 
 # Rotate windows clockwise and anticlockwise
 alt - r         : yabai -m space --rotate 270
@@ -83,3 +72,15 @@ shift + lctrl + alt - r : \
 # Make window native fullscreen
 alt - f         : yabai -m window --toggle zoom-fullscreen
 ctrl + alt - f  : yabai -m window --toggle native-fullscreen
+
+cmd + shift - m : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Gather); \
+  sleep 0.1; skhd --key 'cmd + shift - a'; sleep 0.1; \
+  yabai -m window --focus recent || \
+  yabai -m space --focus recent
+lctrl + alt + shift - g : yabai -m window ($XDG_CONFIG_HOME/skhd/get_window_id Gather) --toggle zoom-fullscreen 
+
+# Window specific bindings
+lctrl + alt - g : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Gather)
+lctrl + alt - c : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id kitty)
+lctrl + alt - s : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Slack)
+lctrl + alt - b : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Firefox)
