@@ -371,6 +371,7 @@ return packer.startup {
 
       {
         "ThePrimeagen/harpoon",
+        disable = true,
         requires = "nvim-lua/plenary.nvim",
         config = module "workflow.harpoon",
       },
