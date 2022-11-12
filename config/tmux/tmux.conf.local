@@ -317,6 +317,7 @@ bind p send-keys clear\; send-keys 'Enter'
 # move status line to top
 set -g status-position bottom
 
+
 # -- tpm -----------------------------------------------------------------------
 
 # by default, launching tmux will update tpm and all plugins
@@ -334,3 +335,14 @@ set -g renumber-windows off
 unbind t
 bind t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
 bind C-t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
+
+set -g @plugin ''
+unbind Tab
+set -g @extrakto_key "tab"
+
+ # List of plugins
+ set -g @tpm_plugins '          \
+   tmux-plugins/tpm             \
+   laktak/extrakto              \
+ '
+ run '~/.tmux/plugins/tpm/tpm'
