@@ -4,3 +4,4 @@ vendor/
 tmp/
 .DS_Store
 /*.log
+config/tmux/plugins
