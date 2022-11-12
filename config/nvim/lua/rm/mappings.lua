@@ -47,8 +47,28 @@ remap("n", "K", vim.lsp.buf.hover)
 map("n", "<leader>dh", function()
   vim.diagnostic.open_float(nil, { focusable = false, width = 50 })
 end, { silent = true })
-map("n", "<leader>dk", vim.diagnostic.goto_prev, { silent = true })
-map("n", "<leader>dj", vim.diagnostic.goto_next, { silent = true })
+
+-- Jump to next/prev error; prioritizing ERROR severity.
+map("n", "<leader>dk", function()
+  local errors = vim.diagnostic.get(0, { severity = "ERROR" })
+  if #errors == 0 then
+    vim.diagnostic.goto_prev()
+  else
+    vim.diagnostic.goto_prev {
+      severity = "ERROR",
+    }
+  end
+end, { silent = true })
+map("n", "<leader>dj", function()
+  local errors = vim.diagnostic.get(0, { severity = "ERROR" })
+  if #errors == 0 then
+    vim.diagnostic.goto_next()
+  else
+    vim.diagnostic.goto_next {
+      severity = "ERROR",
+    }
+  end
+end, { silent = true })
 
 -- Open URLs
 map("n", "gx", 'viW"ay:!open <C-R>a &<cr>')
