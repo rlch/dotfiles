@@ -1,0 +1,2 @@
+#!/opt/homebrew/bin/fish
+yabai -m query --windows | jq ".[] | select(.app == \"$argv[1]\") | .id"
