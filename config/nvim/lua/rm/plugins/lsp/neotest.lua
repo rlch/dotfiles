@@ -1,34 +1,53 @@
--- TODO: setup neotest
-local map_t = function(key, test)
-  map('n', '<leader>t' .. key, function()
-    test(require 'neotest')
-  end)
-end
+-- TODO: Improve
 
-map_t('f', function(t)
-  t.run.run(vim.fn.expand '%')
-end)
-map_t('d', function(t)
-  t.run.run { strategy = 'dap' }
-end)
-map_t('n', function(t)
-  t.run.run()
-end)
-map_t('h', function(t)
-  t.output.open { enter = true }
-end)
-map_t('s', function(t)
-  t.summary.open { enter = true }
-end)
-map_t('q', function(r)
-  r.run.stop()
-end)
-
-require('neotest').setup {
+local neotest = require "neotest"
+neotest.setup {
   adapters = {
-    require 'neotest-vim-test' {
-      ignore_file_types = { 'python', 'vim', 'lua', 'go' },
+    require "neotest-vim-test" {
+      ignore_file_types = { "python", "vim", "lua", "go" },
     },
-    require 'neotest-go',
+    require "neotest-go",
   },
 }
+
+keymap({
+  name = "Neotest",
+  n = {
+    function()
+      require("neotest").run.run()
+    end,
+    "Nearest",
+  },
+  q = {
+    function()
+      require("neotest").run.stop()
+    end,
+    "Stop",
+  },
+  f = {
+    function()
+      require("neotest").run.run(vim.fn.expand "%")
+    end,
+    "File",
+  },
+  d = {
+    function()
+      require("neotest").run.run { strategy = "dap" }
+    end,
+    "Debug",
+  },
+  h = {
+    function()
+      require("neotest").output.open { enter = true }
+    end,
+    "Output",
+  },
+  s = {
+    function()
+      require("neotest").summary.open { enter = true }
+    end,
+    "Summary",
+  },
+}, {
+  prefix = "<leader>t",
+})

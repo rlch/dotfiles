@@ -1,8 +1,7 @@
-print(vim.fn.expand "$HOME/fvm/*/.pub-cache/hosted/*")
-
 require("flutter-tools").setup {
   ui = {
     border = "rounded",
+    notification_style = "native",
   },
   decorations = {
     statusline = {
@@ -14,7 +13,7 @@ require("flutter-tools").setup {
     enabled = true,
     run_via_dap = false,
   },
-  fvm = true,
+  fvm = false,
   widget_guides = {
     enabled = false,
   },

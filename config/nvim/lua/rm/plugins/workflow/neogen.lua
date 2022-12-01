@@ -31,12 +31,11 @@ require("neogen").setup {
   },
 }
 
-local wk = require "which-key"
-wk.register({
+keymap({
   name = "Docs",
-  i = { "<cmd>Neogen<cr>", "Infer" },
-  c = { "<cmd>Neogen class<cr>", "Class" },
-  t = { "<cmd>Neogen type<cr>", "Type" },
-  f = { "<cmd>Neogen func<cr>", "Function" },
-  p = { "<cmd>Neogen file<cr>", "Package" },
-}, { prefix = "<leader>c" })
+  i = { "", "Infer" },
+  c = { "class", "Class" },
+  t = { "type", "Type" },
+  f = { "func", "Function" },
+  p = { "file", "Package" },
+}, { prefix = "<leader>c", mapping_prefix = "Neogen ", cmd = true })

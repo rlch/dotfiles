@@ -1,1 +1,0 @@
-command('SubmitEx', '!exercism submit %')

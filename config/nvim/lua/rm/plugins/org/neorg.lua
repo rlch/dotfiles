@@ -121,12 +121,11 @@ require("neorg").setup {
   },
 }
 
-local wk = require "which-key"
-wk.register({
+keymap({
   name = "Neorg",
-  o = { "<cmd>Neorg<cr>", "Open" },
-  i = { "<cmd>Neorg index<cr>", "Index" },
-}, { prefix = "<leader>n" })
+  o = { "", "Open" },
+  i = { "index", "Index" },
+}, { prefix = "<leader>n", mapping_prefix = "Neorg ", cmd = true })
 
 local neorg_callbacks = require "neorg.callbacks"
 neorg_callbacks.on_event(
@@ -137,10 +136,9 @@ neorg_callbacks.on_event(
       n = { -- Bind keys in normal mode
         { "<C-h>", "core.integrations.telescope.find_linkable" },
       },
-
       i = { -- Bind in insert mode
+        { "<C-l>", "core.integrations.telescope.insert_link" },
       },
-      { "<C-l>", "core.integrations.telescope.insert_link" },
     }, {
       silent = true,
       noremap = true,

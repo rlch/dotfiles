@@ -19,6 +19,9 @@ if
   not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH)
 then
   require "impatient"
+  require "which-key"
+  require "legendary"
+  require "rm.mappings"
   require "packer_compiled"
   vim.g.packer_compiled_loaded = true
 end
@@ -27,6 +30,12 @@ return packer.startup {
   function(use)
     -- Packer
     use { "wbthomason/packer.nvim", "lewis6991/impatient.nvim" }
+
+    -- Mappings
+    use {
+      "folke/which-key.nvim",
+      "mrjones2014/legendary.nvim",
+    }
 
     -- Treesitter
     use {
@@ -75,7 +84,12 @@ return packer.startup {
             ["*"] = true,
             TelescopePrompt = false,
           }
-          map("i", "<C-f>", [[copilot#Accept("\<CR>")]], { expr = true })
+          keymap({
+            ["<C-f>"] = {
+              [[<cmd>copilot#Accept("\<CR>")<cr>]],
+              "Accept copilot suggestion",
+            },
+          }, { mode = "i" })
         end,
       },
     }
@@ -100,7 +114,12 @@ return packer.startup {
       {
         "akinsho/flutter-tools.nvim",
         config = module "lang.flutter-tools",
-        requires = { "hrsh7th/nvim-cmp", "neovim/nvim-lspconfig" },
+        requires = {
+          "hrsh7th/nvim-cmp",
+          "neovim/nvim-lspconfig",
+          "rcarriga/nvim-notify",
+          "nvim-lua/plenary.nvim",
+        },
         ft = { "dart" },
       },
       {
@@ -249,13 +268,6 @@ return packer.startup {
       },
     }
 
-    use {
-      "rlch/lsp-fastaction.nvim",
-      requires = "neovim/nvim-lspconfig",
-      config = module "lsp.fastaction",
-      disable = true,
-    }
-
     -- Snippets
     use {
       "L3MON4D3/LuaSnip",
@@ -266,6 +278,11 @@ return packer.startup {
 
     -- UI + Highlighting
     use {
+      {
+        "petertriho/nvim-scrollbar",
+        disable = true,
+        config = module "ui.scrollbar",
+      },
       {
         "stevearc/dressing.nvim",
         config = function()
@@ -347,6 +364,7 @@ return packer.startup {
           "kyazdani42/nvim-web-devicons",
           "MunifTanjim/nui.nvim",
           "mrbjarksen/neo-tree-diagnostics.nvim",
+          "mrjones2014/legendary.nvim",
         },
         config = module "workflow.neo-tree",
       },
@@ -464,7 +482,7 @@ return packer.startup {
         requires = { "nvim-lua/plenary.nvim" },
         config = function()
           vim.wo.signcolumn = "auto:1"
-          require("gitsigns").setup()
+          require("gitsigns").setup {}
         end,
       },
       {
@@ -508,20 +526,6 @@ highlight ConflictMarkerTheirs guibg=#344f69
 
     -- Diagnostics + Utilities
     use {
-      {
-        "folke/which-key.nvim",
-        config = function()
-          require("which-key").setup {
-            plugins = {
-              spelling = {
-                enabled = true,
-                suggestions = 20,
-              },
-            },
-            triggers = { "<localleader>" },
-          }
-        end,
-      },
       {
         "dstein64/vim-startuptime",
         cmd = "StartupTime",

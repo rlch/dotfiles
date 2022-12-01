@@ -4,12 +4,21 @@ local navic_ok, navic = pcall(require, "nvim-navic")
 local inlay_ok, inlay = pcall(require, "lsp-inlayhints")
 
 if illuminate_ok then
-  map("n", "<C-n>", function()
-    illuminate.next_reference { wrap = true }
-  end)
-  map("n", "<C-p>", function()
-    illuminate.next_reference { wrap = true, reverse = true }
-  end)
+  keymap {
+    name = "Illuminate",
+    ["<C-n>"] = {
+      function()
+        illuminate.next_reference { wrap = true }
+      end,
+      "Next reference",
+    },
+    ["<C-p>"] = {
+      function()
+        illuminate.next_reference { wrap = true, reverse = true }
+      end,
+      "Previous reference",
+    },
+  }
 end
 
 R.lsp.on_attach = function(client, bufnr)
@@ -97,6 +106,7 @@ setup("tsserver", {
     R.lsp.on_attach(client, bufnr)
   end,
 })
+setup "tailwindcss"
 
 -- local HOME = vim.fn.expand "$HOME"
 -- local sumneko_root_path = HOME .. "/.config/lua-language-server"
@@ -113,12 +123,12 @@ setup("sumneko_lua", {
       diagnostics = {
         globals = { "vim" },
       },
-      workspace = {
-        library = {
-          [vim.fn.expand "$VIMRUNTIME/lua"] = true,
-          [vim.fn.expand "$VIMRUNTIME/lua/vim/lsp"] = true,
-        },
-      },
+      -- workspace = {
+      --   library = {
+      --     [vim.fn.expand "$VIMRUNTIME/lua"] = true,
+      --     [vim.fn.expand "$VIMRUNTIME/lua/vim/lsp"] = true,
+      --   },
+      -- },
     },
   },
 })

@@ -43,10 +43,7 @@ require("neo-tree").setup {
   },
   window = {
     position = "float",
-    -- position = 'left',
-    -- width = 35,
     mappings = {
-      -- ['<space>'] = 'toggle_node',
       ["<2-LeftMouse>"] = "open",
       ["<Tab>"] = "open",
       ["<cr>"] = "open",
@@ -135,21 +132,11 @@ require("neo-tree").setup {
   },
 }
 
-map(
-  "n",
-  "\\",
-  "<cmd>Neotree reveal toggle position=float<cr>",
-  { silent = true }
-)
-map(
-  "n",
-  "<leader>o",
-  "<cmd>Neotree reveal toggle position=float<cr>",
-  { silent = true }
-)
-map(
-  "n",
-  "<leader>do",
-  "<cmd>Neotree diagnostics reveal toggle position=float<cr>",
-  { silent = true }
-)
+keymap({
+  ["\\"] = { "reveal toggle position=float", "File-tree" },
+  ["<leader>o"] = { "reveal toggle position=float", "File-tree" },
+  ["<leader>do"] = {
+    "diagnostics reveal toggle position=float",
+    "Diagnostics",
+  },
+}, { silent = true, cmd = true, mapping_prefix = "Neotree " })
