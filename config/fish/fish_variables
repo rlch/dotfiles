@@ -2,6 +2,14 @@
 # VERSION: 3.0
 SETUVAR Z_DATA_DIR:/Users/rjm/\x2elocal/share/z
 SETUVAR __fish_initialized:3400
+SETUVAR _fish_abbr_d:lazydocker
+SETUVAR _fish_abbr_h:helm
+SETUVAR _fish_abbr_kk:k9s
+SETUVAR _fish_abbr_mk:minikube
+SETUVAR _fish_abbr_t:tmux
+SETUVAR _fish_abbr_tf:terraform
+SETUVAR _fish_abbr_tp:tmuxp
+SETUVAR _fish_abbr_v:fg\x20\x26\x3e\x20/dev/null\x20\x7c\x7c\x20nvim
 SETUVAR _fisher_PatrickF1_2F_fzf_2E_fish_files:/Users/rjm/\x2econfig/fish/functions/_fzf_configure_bindings_help\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_extract_var_info\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_preview_changed_file\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_preview_file\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_report_diff_type\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_report_file_type\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_directory\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_git_log\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_git_status\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_history\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_processes\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_search_variables\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/_fzf_wrapper\x2efish\x1e/Users/rjm/\x2econfig/fish/functions/fzf_configure_bindings\x2efish\x1e/Users/rjm/\x2econfig/fish/conf\x2ed/fzf\x2efish\x1e/Users/rjm/\x2econfig/fish/completions/fzf_configure_bindings\x2efish
 SETUVAR _fisher_edc_2F_bass_files:/Users/rjm/\x2econfig/fish/functions/__bass\x2epy\x1e/Users/rjm/\x2econfig/fish/functions/bass\x2efish
 SETUVAR _fisher_franciscolourenco_2F_done_files:/Users/rjm/\x2econfig/fish/conf\x2ed/done\x2efish
