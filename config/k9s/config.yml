@@ -1,0 +1,52 @@
+k9s:
+  refreshRate: 2
+  maxConnRetry: 5
+  enableMouse: false
+  headless: false
+  logoless: false
+  crumbsless: false
+  readOnly: false
+  noExitOnCtrlC: false
+  noIcons: false
+  logger:
+    tail: 100
+    buffer: 5000
+    sinceSeconds: 60
+    fullScreenLogs: false
+    textWrap: false
+    showTime: false
+  currentContext: dev
+  currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
+  clusters:
+    gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
+      namespace:
+        active: learning
+        lockFavorites: false
+        favorites:
+        - learning
+        - identity
+        - flux-system
+        - all
+        - infrastructure
+        - default
+      view:
+        active: pod
+      featureGates:
+        nodeShell: false
+      shellPod:
+        image: busybox:1.35.0
+        command: []
+        args: []
+        namespace: default
+        limits:
+          cpu: 100m
+          memory: 100Mi
+      portForwardAddress: localhost
+  thresholds:
+    cpu:
+      critical: 90
+      warn: 70
+    memory:
+      critical: 90
+      warn: 70
+  screenDumpDir: /var/folders/gb/27q3sjl53pddhrrrq2wf91w00000gn/T/k9s-screens-rjm
