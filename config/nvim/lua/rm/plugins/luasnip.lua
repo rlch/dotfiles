@@ -4,6 +4,10 @@ local extras = require "luasnip.extras"
 local fmt = require("luasnip.extras.fmt").fmt
 
 require("luasnip").filetype_extend("dart", { "flutter" })
+require("luasnip").filetype_extend(
+  "typescriptreact",
+  { "javascriptreact", "html" }
+)
 require("luasnip.loaders.from_lua").lazy_load()
 require("luasnip.loaders.from_vscode").lazy_load()
 

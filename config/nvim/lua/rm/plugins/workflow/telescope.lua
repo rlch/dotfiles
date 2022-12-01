@@ -55,20 +55,26 @@ local default = {
 telescope.setup(default)
 telescope.load_extension "fzf"
 
-local map_ts = function(key, cmd)
-  mapx("n", "<leader>f" .. key, "Telescope " .. cmd)
-end
-
-map_ts("b", "buffers")
-map_ts("c", "neoclip")
-map_ts("d", "diagnostics")
-map_ts("f", "find_files find_command=rg,--ignore,--hidden,--files")
-map_ts("F", "flutter commands")
-map_ts("gb", "git_branches")
-map_ts("gc", "git_commits")
-map_ts("gs", "git_status")
-map_ts("q", "resume")
-map_ts("h", "help_tags")
-map_ts("p", "projects")
-map_ts("r", "grep_string")
-map_ts("s", "live_grep")
+keymap({
+  name = "Telescope",
+  b = { "buffers", "Buffers" },
+  c = { "neoclip", "Clipboard" },
+  d = { "diagnostics", "Diagnostics" },
+  f = { "find_files find_command=rg,--ignore,--hidden,--files", "Find files" },
+  g = {
+    name = "Git",
+    b = { "git_branches", "Branches" },
+    c = { "git_commits", "Commits" },
+    s = { "git_status", "Status" },
+  },
+  q = { "resume", "Open last window" },
+  h = { "help_tags", "Help" },
+  p = { "projects", "Projects" },
+  r = { "grep_string", "Grep references" },
+  s = { "live_grep", "Grep" },
+}, {
+  prefix = "<leader>f",
+  mapping_prefix = "Telescope ",
+  cmd = true,
+  silent = false,
+})
