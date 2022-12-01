@@ -1,4 +1,4 @@
-function k
+function k --wraps kubectl
   for arg in $argv
     if test "$arg" = "-n"; or test "$arg" = "--namespace"
       set override 0

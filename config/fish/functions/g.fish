@@ -1,4 +1,4 @@
-function g
+function g --wraps git
   if test (count $argv) -gt 0
     git $argv
   else

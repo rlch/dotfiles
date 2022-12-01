@@ -1,4 +1,3 @@
-function jt
+function jt --wraps j
   j Tutero/$argv
 end
-
