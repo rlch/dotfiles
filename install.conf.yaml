@@ -12,38 +12,35 @@
     - ~/Coding/Tutero
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
-    - [xcode-select --version | grep -q "version .*" && echo "xcode-select --install", Checking if Xcode Command Line Tools are installed]
-    - 
-      command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - [
+        xcode-select --version | grep -q "version .*" && echo "xcode-select --install",
+        Checking if Xcode Command Line Tools are installed,
+      ]
+    - command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       stdin: true
       stdout: true
       quiet: true
       description: Installing homebrew
     - [brew tap Homebrew/bundle, Setup brew bundle]
-    -
-      command: brew bundle 
+    - command: brew bundle
       stdout: true
       quiet: true
       description: Installing homebrew dependencies
-    - 
-      command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
+    - command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
       stdin: true
       stderr: true
       quiet: true
       description: Making fish the default shell
-    - 
-      command: gh auth status || gh auth login
+    - command: gh auth status || gh auth login
       stdin: true
       stdout: true
       stderr: true
       quiet: false
       description: Authenticate with GitHub
-    - 
-      command: ./install_fonts
+    - command: ./install_fonts
       quiet: true
       description: Installing fonts
-    - 
-      command: ./install_fisher
+    - command: ./install_fisher
       quiet: true
       description: Installing fish dependencies
     - command: type -q rustup || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -52,8 +49,7 @@
       stderr: true
       quiet: true
       description: Installing rust
-    - 
-      command: ./build_neovim
+    - command: ./build_neovim
       stdin: true
       stdout: true
       quiet: true
@@ -81,10 +77,15 @@
       path: config/gitui
     ~/.config/starship.toml:
       path: config/starship.toml
+    ~/.config/k9s:
+      path: config/k9s
+    ~/.config/lazydocker:
+      path: config/lazydocker
+    ~/.config/omf:
+      path: config/omf
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
-    - 
-      command: >
+    - command: >
         if not brew services | grep "yabai.*started" > /dev/null
           brew services start yabai
           set sa_exists 1
@@ -92,13 +93,11 @@
       quiet: true
       stderr: true
       description: Starting yabai
-    - 
-      command: brew services restart skhd
+    - command: brew services restart skhd
       quiet: true
       stderr: true
       description: Starting skhd
-    - 
-      command: >
+    - command: >
         if set -q sa_exists
           sudo yabai --install-sa
           sudo yabai --load-sa
