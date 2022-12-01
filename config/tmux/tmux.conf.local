@@ -113,7 +113,7 @@ tmux_conf_theme_pane_active_border="$primary"
 
 # pane indicator colours (when you hit <prefix> + q)
 tmux_conf_theme_pane_indicator="$fg_light"
-tmux_conf_theme_pane_active_indicator="$fg_light"
+tmux_conf_theme_pane_active_indicator="$primary"
 
 # status line style
 tmux_conf_theme_message_fg="$fg_light"
@@ -339,10 +339,15 @@ bind C-t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; the
 set -g @plugin ''
 unbind Tab
 set -g @extrakto_key "tab"
+unbind f
+set -g @jump-key 'f'
 
  # List of plugins
  set -g @tpm_plugins '          \
    tmux-plugins/tpm             \
    laktak/extrakto              \
+   laktak/extrakto              \
+   schasse/tmux-jump            \
  '
  run '~/.tmux/plugins/tpm/tpm'
+
