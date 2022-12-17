@@ -6,6 +6,7 @@ set -x TERM xterm-kitty
 
 ulimit -n 10240
 
+set -x CARGO_HOME $HOME/.cargo
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
 set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /usr/local/opt/sphinx-doc/bin
@@ -49,8 +50,6 @@ alias dcd="docker compose down"
 if type -q exa
   alias l "exa -l -g --icons"
   alias la "l -a"
-  alias ll "exa -l -g --icons"
-  alias lla "ll -a"
 end
 
 set -x EDITOR nvim

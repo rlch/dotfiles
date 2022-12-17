@@ -71,9 +71,9 @@ populate_spaces 1 2
 populate_spaces 2 2
 
 yabai -m space 1 --label browser
-yabai -m space 2 --label coding
-yabai -m space 3 --label social
-yabai -m space 4 --label misc
+yabai -m space 2 --label social
+yabai -m space 3 --label misc
+yabai -m space 4 --label coding
 
 # ===== Rules ==================================
 
@@ -93,7 +93,7 @@ yabai -m rule --add label="mpv" app="^mpv$" manage=off
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
 yabai -m rule --add label="Installer" app="^Installer$" sticky=on manage=off
-yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=off
+yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=on
 yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manage=off
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="RuneMate" app="^RuneMate" manage=off

@@ -1,7 +1,7 @@
 local function open_ts_if_empty()
   local lines = vim.api.nvim_buf_get_lines(0, 0, 2, false)
   if #lines == 0 or (#lines == 1 and lines[0] == nil) then
-    vim.api.nvim_command "Telescope find_files"
+    vim.api.nvim_command "Telescope find_files find_command=rg,--ignore,--hidden,--files"
   end
 end
 

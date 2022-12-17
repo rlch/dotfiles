@@ -81,8 +81,8 @@ require("neo-tree").setup {
         "thumbs.db",
       },
     },
-    follow_current_file = true,
     hijack_netrw_behavior = "open_default",
+    follow_current_file = true,
     use_libuv_file_watcher = true,
     window = {
       mappings = {

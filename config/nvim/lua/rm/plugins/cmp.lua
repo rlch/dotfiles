@@ -30,6 +30,9 @@ end
 local ALL = { "i", "c", "s" }
 
 cmp.setup {
+  experimental = {
+    ghost_text = true,
+  },
   snippet = {
     expand = function(args)
       if has_snip then
@@ -57,7 +60,7 @@ cmp.setup {
       if has_snip and luasnip.expand_or_jumpable() then
         luasnip.expand_or_jump()
       elseif cmp.visible() then
-        cmp.confirm { select = false }
+        cmp.confirm { select = true }
       elseif has_words_before() then
         cmp.complete()
       else

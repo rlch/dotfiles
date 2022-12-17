@@ -279,6 +279,21 @@ return packer.startup {
     -- UI + Highlighting
     use {
       {
+        "folke/noice.nvim",
+        config = module "ui.noice",
+        requires = {
+          "MunifTanjim/nui.nvim",
+          "rcarriga/nvim-notify",
+        },
+      },
+      {
+        "smjonas/inc-rename.nvim",
+        config = function()
+          vim.keymap.set("n", "gr", ":IncRename ")
+          require("inc_rename").setup()
+        end,
+      },
+      {
         "petertriho/nvim-scrollbar",
         disable = true,
         config = module "ui.scrollbar",
@@ -288,7 +303,9 @@ return packer.startup {
         config = function()
           require("dressing").setup {
             input = {
-              winblend = 0,
+              win_options = {
+                winblend = 0,
+              },
             },
           }
         end,
@@ -458,9 +475,27 @@ return packer.startup {
         "nvim-pack/nvim-spectre",
         config = function()
           require("spectre").setup()
-          vim.keymap.set("n", "<leader>r", function()
+          vim.keymap.set("n", "<leader>rr", function()
             require("spectre").open()
           end)
+        end,
+      },
+      {
+        "cshuaimin/ssr.nvim",
+        module = "ssr",
+        config = function()
+          require("ssr").setup {
+            keymaps = {
+              close = "q",
+              next_match = "n",
+              prev_match = "N",
+              replace_confirm = "<cr>",
+              replace_all = "<leader><cr>",
+            },
+            vim.keymap.set({ "n", "x" }, "<leader>rs", function()
+              require("ssr").open()
+            end),
+          }
         end,
       },
       {
@@ -477,6 +512,7 @@ return packer.startup {
 
     -- Git
     use {
+      "tpope/vim-fugitive",
       {
         "lewis6991/gitsigns.nvim",
         requires = { "nvim-lua/plenary.nvim" },
