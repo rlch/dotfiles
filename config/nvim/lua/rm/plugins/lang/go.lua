@@ -1,5 +1,4 @@
 require("go").setup {
-  --   lsp_cfg = {settings={gopls={matcher='CaseInsensitive', ['local'] = 'your_local_module_path', gofumpt = true }}}
   lsp_inlay_hints = {
     enable = false,
   },

@@ -15,14 +15,31 @@ M.winbar_filetype_exclude = {
   "toggleterm",
 }
 
+local truncate_filename = function()
+  local path = vim.fn.expand "%:p"
+  local path_width = string.len(path)
+  -- local width = vim.api.nvim_win_get_width(0)
+  -- local max_filename_width = math.floor(math.max(width * 0.2, 1))
+  local max_filename_width = 40
+  if path_width < max_filename_width then
+    return path
+  else
+    return string.gsub(
+      string.sub(path, path_width - max_filename_width, path_width),
+      "^([^/]*)/",
+      "…/"
+    )
+  end
+end
+
 local get_filename = function()
-  local filename = vim.fn.expand "%:t"
+  local truncated_filename = truncate_filename()
   local extension = vim.fn.expand "%:e"
 
-  if filename ~= "" and filename ~= nil then
+  if truncated_filename ~= "" and truncated_filename ~= nil then
     local file_icon, file_icon_color =
       require("nvim-web-devicons").get_icon_color(
-        filename,
+        vim.fn.expand "%:t",
         extension,
         { default = true }
       )
@@ -43,7 +60,7 @@ local get_filename = function()
       .. "%*"
       .. " "
       .. "%#CursorLineNr#"
-      .. filename
+      .. truncated_filename
       .. "%*"
   end
 end

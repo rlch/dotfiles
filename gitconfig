@@ -16,6 +16,7 @@
 [alias]
   a = add
   c = commit
+  ca = commit --amend
   r = rebase
   rc = rebase --continue
   ra = rebase --abort
