@@ -26,6 +26,15 @@ vim.api.nvim_create_autocmd(
   }
 )
 
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  callback = function()
+    if vim.api.nvim_buf_line_count(0) > 10000 then
+      vim.cmd [[ syntax off ]]
+      vim.api.nvim_command "TSBufDisable highlight"
+    end
+  end,
+})
+
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   pattern = "*/templates/*.yaml",
   callback = function()

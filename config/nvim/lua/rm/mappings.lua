@@ -194,7 +194,7 @@ keymap = function(keymap_table, opts)
 
     -- Remove extra params
     for k, _ in pairs(opts) do
-      if not vim.tbl_contains({ "mode", "prefix", "buffer", "silent", "noremap", "nowait" }, k) then
+      if not vim.tbl_contains({ "mode", "prefix", "buffer", "script", "silent", "noremap", "nowait", "expr", "unique" }, k) then
         opts[k] = nil
       end
     end
