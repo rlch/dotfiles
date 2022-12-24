@@ -79,8 +79,3 @@ cmd + shift - m : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id G
   yabai -m space --focus recent
 lctrl + alt + shift - g : yabai -m window ($XDG_CONFIG_HOME/skhd/get_window_id Gather) --toggle zoom-fullscreen 
 
-# Window specific bindings
-lctrl + alt - g : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Gather)
-lctrl + alt - c : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id kitty)
-lctrl + alt - s : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Slack)
-lctrl + alt - b : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Firefox)
