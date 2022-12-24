@@ -23,6 +23,8 @@ brew "dnsmasq"
 brew "mkcert"
 brew "nss"
 brew "rover"
+brew "gopls"
+brew "bufbuild/buf/buf"
 
 # Latex
 cask "skim"
