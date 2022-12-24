@@ -330,11 +330,11 @@ tmux_conf_update_plugins_on_launch=true
 #   - false
 tmux_conf_update_plugins_on_reload=true
 
-set -g renumber-windows off
+# set -g renumber-windows off
 
-unbind t
-bind t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
-bind C-t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
+# unbind t
+# bind t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
+# bind C-t run-shell -b "if [ $(tmux display-message -p \"#W\") = \"neorg\" ]; then tmux last-window; else tmux list-windows | grep \"0: neorg\" > /dev/null && tmux select-window -t 0 || tmux new-window -t 0 -n neorg org; fi"
 
 set -g @plugin ''
 unbind Tab

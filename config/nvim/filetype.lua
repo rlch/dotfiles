@@ -11,3 +11,4 @@ vim.filetype.add {
     ["~/\\.kube/config"] = "yaml",
   },
 }
+

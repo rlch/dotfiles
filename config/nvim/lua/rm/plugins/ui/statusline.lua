@@ -3,7 +3,7 @@ local ok, ghn = pcall(require, "github-notifications")
 if ok then
   notification_line = {
     "branch",
-    require("github-notifications").statusline_notification_count,
+    ghn.statusline_notification_count,
   }
 end
 
@@ -27,7 +27,14 @@ require("lualine").setup {
       },
       {
         require("noice").api.statusline.mode.get,
-        cond = require("noice").api.statusline.mode.has,
+        cond = function()
+          return require("noice").api.statusline.mode.has()
+            and string.find(
+                require("noice").api.statusline.mode.get(),
+                "recording .*"
+              )
+              ~= nil
+        end,
         color = { fg = "#ff9e64" },
       },
     },

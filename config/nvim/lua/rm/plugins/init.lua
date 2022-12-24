@@ -55,6 +55,7 @@ return packer.startup {
         "hrsh7th/nvim-cmp",
         config = module "cmp",
         requires = {
+          -- "zbirenbaum/copilot-cmp",
           "saadparwaiz1/cmp_luasnip",
           "hrsh7th/cmp-nvim-lsp",
           "hrsh7th/cmp-buffer",
@@ -73,23 +74,70 @@ return packer.startup {
         },
         event = "InsertEnter",
       },
+      -- {
+      --   "github/copilot.vim",
+      --   config = function()
+      --     vim.g.copilot_no_tab_map = true
+      --     vim.g.copilot_assume_mapped = true
+      --     vim.g.copilot_tab_fallback = ""
+      --     vim.g.copilot_filetypes = {
+      --       ["*"] = true,
+      --       TelescopePrompt = false,
+      --       ["neo-tree"] = false,
+      --     }
+      --     keymap({
+      --       ["<C-f>"] = {
+      --         [[copilot#Accept("\<CR>")]],
+      --         "Accept copilot suggestion",
+      --       },
+      --     }, {
+      --       mode = "i",
+      --       silent = true,
+      --       script = true,
+      --       expr = true,
+      --     })
+      --   end,
+      -- },
       {
-        "github/copilot.vim",
-        disable = true,
+        "zbirenbaum/copilot.lua",
+        event = "InsertEnter",
+        after = "nvim-cmp",
         config = function()
-          vim.g.copilot_no_tab_map = true
-          vim.g.copilot_assume_mapped = true
-          vim.g.copilot_tab_fallback = ""
-          vim.g.copilot_filetypes = {
-            ["*"] = true,
-            TelescopePrompt = false,
-          }
-          keymap({
-            ["<C-f>"] = {
-              [[<cmd>copilot#Accept("\<CR>")<cr>]],
-              "Accept copilot suggestion",
-            },
-          }, { mode = "i" })
+          vim.schedule(function()
+            require("copilot").setup {
+              panel = {
+                enabled = true,
+                auto_refresh = true,
+                keymap = {
+                  jump_prev = "[[",
+                  jump_next = "]]",
+                  accept = "<CR>",
+                  refresh = "gr",
+                  open = "<M-CR>",
+                },
+              },
+              suggestion = {
+                enabled = true,
+                auto_trigger = true,
+                debounce = 75,
+                keymap = {
+                  accept = "<C-f>",
+                  accept_word = false,
+                  accept_line = false,
+                  next = "<M-]>",
+                  prev = "<M-[>",
+                  dismiss = "<C-]>",
+                },
+              },
+              filetypes = {
+                TelescopePrompt = false,
+                ["neo-tree"] = false,
+                help = false,
+                gitcommit = true,
+                gitrebase = true,
+              },
+            }
+          end)
         end,
       },
     }

@@ -28,11 +28,14 @@ abbr v "fg &> /dev/null || nvim"
 alias cb=clipboard
 alias intel="arch -x86_64"
 
+alias gmt="go mod tidy"
+alias gmv="go mod vendor"
+
 # Nvim entrypoints
 alias org="cd ~/neorg/ && nvim index.norg"
 alias efish="cd ~/.config/fish && nvim config.fish"
 alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
-alias envim="cd ~/.config/nvim && nvim ."
+alias envim="cd ~/.config/nvim && nvim"
 
 # Sources
 alias sfish="source ~/.config/fish/config.fish"
@@ -42,7 +45,6 @@ alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 alias dn="say done"
 
 # Docker
-abbr d "lazydocker"
 alias dcub="docker compose up d && lazydocker"
 alias dcub="docker compose up --build -d && lazydocker"
 alias dcd="docker compose down"
