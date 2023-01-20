@@ -28,8 +28,12 @@ end
 
 return packer.startup {
   function(use)
-    -- Packer
-    use { "wbthomason/packer.nvim", "lewis6991/impatient.nvim" }
+    -- Base
+    use {
+      "wbthomason/packer.nvim",
+      "lewis6991/impatient.nvim",
+      "nvim-lua/plenary.nvim",
+    }
 
     -- Mappings
     use {
@@ -154,6 +158,7 @@ return packer.startup {
         "nvim-neorg/neorg-telescope",
       },
       run = ":Neorg sync-parsers",
+      disable = true,
     }
 
     -- Language specific
@@ -318,10 +323,17 @@ return packer.startup {
 
     -- Snippets
     use {
-      "L3MON4D3/LuaSnip",
-      config = module "luasnip",
-      event = "InsertEnter",
-      requires = "rafamadriz/friendly-snippets",
+      {
+        "L3MON4D3/LuaSnip",
+        config = module "luasnip",
+        event = "InsertEnter",
+        requires = "rafamadriz/friendly-snippets",
+      },
+      {
+        "~/Coding/Personal/ts-node-action",
+        requires = { "nvim-treesitter" },
+        config = module "motion.ts-node-action",
+      },
     }
 
     -- UI + Highlighting
@@ -387,6 +399,11 @@ return packer.startup {
         as = "colorscheme",
         config = module "ui.colorscheme",
       },
+      -- {
+      --   "rose-pine/neovim",
+      --   as = "colorscheme",
+      --   config = module "ui.colorscheme",
+      -- },
       {
         "mtdl9/vim-log-highlighting",
         ft = "log",

@@ -106,8 +106,16 @@ setup("tsserver", {
     R.lsp.on_attach(client, bufnr)
   end,
 })
-setup "tailwindcss"
 
+setup("tailwindcss", {
+  filetypes = {
+    "html",
+    "css",
+    "scss",
+    "javascriptreact",
+    "typescriptreact",
+  },
+})
 -- local HOME = vim.fn.expand "$HOME"
 -- local sumneko_root_path = HOME .. "/.config/lua-language-server"
 -- local sumneko_binary = HOME

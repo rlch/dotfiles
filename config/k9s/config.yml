@@ -20,9 +20,10 @@ k9s:
   clusters:
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: all
+        active: learning
         lockFavorites: false
         favorites:
+        - observability
         - tutoring
         - learning
         - identity
@@ -31,7 +32,7 @@ k9s:
         - infrastructure
         - default
       view:
-        active: svc
+        active: hr
       featureGates:
         nodeShell: false
       shellPod:
