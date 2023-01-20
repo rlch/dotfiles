@@ -306,13 +306,23 @@ set -g mouse on
 set -g status-keys vi
 set -g mode-keys vi
 
-# replace C-b by C-a instead of using both prefixes
+# replace C-b by C-s instead of using both prefixes
 set -gu prefix2
 unbind C-s
 unbind C-b
 set -g prefix C-s
 bind C-s send-prefix
 bind p send-keys clear\; send-keys 'Enter'
+
+unbind s
+unbind v
+bind s split-window -v
+bind v split-window -h
+
+bind -n C-S-h swap-pane -d -t '{left-of}'
+bind -n C-S-l swap-pane -d -t '{right-of}'
+bind -n C-S-k swap-pane -d -t '{up-of}'
+bind -n C-S-j swap-pane -d -t '{down-of}'
 
 # move status line to top
 set -g status-position bottom
@@ -338,15 +348,12 @@ tmux_conf_update_plugins_on_reload=true
 
 set -g @plugin ''
 unbind Tab
-set -g @extrakto_key "tab"
 unbind f
 set -g @jump-key 'f'
 
  # List of plugins
  set -g @tpm_plugins '          \
    tmux-plugins/tpm             \
-   laktak/extrakto              \
-   laktak/extrakto              \
    schasse/tmux-jump            \
  '
  run '~/.tmux/plugins/tpm/tpm'
