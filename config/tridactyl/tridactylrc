@@ -1,6 +1,7 @@
 sanitise tridactyllocal tridactylsync
 
 set smoothscroll true
+set modeindicatormodes {"ignore":"false"}
 colourscheme nord
 
 bind --mode=ex <C-n> ex.next_completion
