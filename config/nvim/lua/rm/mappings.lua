@@ -103,7 +103,7 @@ require("which-key").setup {
       suggestions = 20,
     },
   },
-  triggers = { "<localleader>" },
+  triggers = { "<localleader>", "<leader>" },
 }
 
 ---@alias ModeEnum "n" | "v" | "i" | "c"

@@ -13,7 +13,7 @@ require("rust-tools").setup {
         },
         diagnostics = {
           enable = true,
-          disabled = { "unresolved-proc-macro", "missing-unsafe" },
+          disabled = { "unresolved-proc-macro", "missing-unsafe", "inactive-code" },
           enableExperimental = true,
           warningsAsHint = {},
         },

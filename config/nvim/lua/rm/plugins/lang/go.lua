@@ -7,6 +7,9 @@ require("go").setup {
     settings = {
       gopls = {
         buildFlags = { "-tags=tools" },
+        analyses = {
+          ST1001 = false,
+        },
         hints = {
           assignVariableTypes = true,
           compositeLiteralFields = true,

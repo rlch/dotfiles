@@ -59,7 +59,6 @@ return packer.startup {
         "hrsh7th/nvim-cmp",
         config = module "cmp",
         requires = {
-          -- "zbirenbaum/copilot-cmp",
           "saadparwaiz1/cmp_luasnip",
           "hrsh7th/cmp-nvim-lsp",
           "hrsh7th/cmp-buffer",
@@ -78,30 +77,6 @@ return packer.startup {
         },
         event = "InsertEnter",
       },
-      -- {
-      --   "github/copilot.vim",
-      --   config = function()
-      --     vim.g.copilot_no_tab_map = true
-      --     vim.g.copilot_assume_mapped = true
-      --     vim.g.copilot_tab_fallback = ""
-      --     vim.g.copilot_filetypes = {
-      --       ["*"] = true,
-      --       TelescopePrompt = false,
-      --       ["neo-tree"] = false,
-      --     }
-      --     keymap({
-      --       ["<C-f>"] = {
-      --         [[copilot#Accept("\<CR>")]],
-      --         "Accept copilot suggestion",
-      --       },
-      --     }, {
-      --       mode = "i",
-      --       silent = true,
-      --       script = true,
-      --       expr = true,
-      --     })
-      --   end,
-      -- },
       {
         "zbirenbaum/copilot.lua",
         event = "InsertEnter",
@@ -117,7 +92,7 @@ return packer.startup {
                   jump_next = "]]",
                   accept = "<CR>",
                   refresh = "gr",
-                  open = "<M-CR>",
+                  open = "<M-a>",
                 },
               },
               suggestion = {
@@ -242,7 +217,6 @@ return packer.startup {
       },
       {
         "mfussenegger/nvim-dap",
-        disable = true,
         config = module "lsp.dap",
         requires = { "rcarriga/nvim-dap-ui" },
         event = { "BufEnter" },
@@ -594,7 +568,7 @@ return packer.startup {
         },
         config = module "git.neogit",
       },
-      use {
+      {
         "akinsho/git-conflict.nvim",
         config = function()
           vim.cmd [[
