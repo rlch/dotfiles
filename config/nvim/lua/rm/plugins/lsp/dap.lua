@@ -45,16 +45,16 @@ vim.fn.sign_define(
 
 keymap({
   name = "Debugger Adapter Protocol",
-  b = dap.toggle_breakpoint,
-  x = dapui.close,
-  c = dap.continue,
-  l = dap.run_last,
-  o = dapui.open,
-  r = dap.repl.open,
-  sn = dap.step_over,
-  si = dap.step_into,
-  so = dap.step_out,
-  t = dapui.toggle,
+  -- b = dap.toggle_breakpoint,
+  x = { dapui.close, "Close" },
+  c = { dap.continue, "Continue" },
+  l = { dap.run_last, "Run last" },
+  o = { dapui.open, "Open" },
+  r = { dap.repl.open, "Open repl" },
+  sn = { dap.step_over, "Step over" },
+  si = { dap.step_into, "Step into" },
+  so = { dap.step_out, "Step out" },
+  t = { dapui.toggle, "Toggle" },
 }, {
   prefix = "<leader>d",
 })

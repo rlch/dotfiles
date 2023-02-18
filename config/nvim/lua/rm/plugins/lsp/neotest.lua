@@ -8,6 +8,9 @@ neotest.setup {
     },
     require "neotest-go",
   },
+  quickfix = {
+    open = false,
+  },
 }
 
 keymap({

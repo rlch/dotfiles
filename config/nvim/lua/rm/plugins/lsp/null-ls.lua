@@ -26,6 +26,6 @@ null_ls.setup {
     diag.pylint,
     diag.protolint,
     format.terraform_fmt,
-    -- diag.golangci_lint,
+    diag.golangci_lint,
   },
 }

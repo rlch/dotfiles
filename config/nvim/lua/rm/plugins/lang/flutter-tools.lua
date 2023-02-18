@@ -13,7 +13,7 @@ require("flutter-tools").setup {
     enabled = true,
     run_via_dap = false,
   },
-  fvm = false,
+  fvm = true,
   widget_guides = {
     enabled = false,
   },
