@@ -15,11 +15,13 @@
 	rebase = true
 [alias]
   a = add
+  ab = absorb
   c = commit
   ca = commit --amend
   r = rebase
   rc = rebase --continue
   ra = rebase --abort
+  ras = rebase -i --autosquash
   f = pull
   fe = fetch
   p = push

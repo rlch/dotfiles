@@ -18,11 +18,34 @@ k9s:
   currentContext: dev
   currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
   clusters:
+    docker-desktop:
+      namespace:
+        active: default
+        lockFavorites: false
+        favorites:
+        - all
+        - registry
+        - default
+      view:
+        active: previewlink
+      featureGates:
+        nodeShell: false
+      shellPod:
+        image: busybox:1.35.0
+        command: []
+        args: []
+        namespace: default
+        limits:
+          cpu: 100m
+          memory: 100Mi
+      portForwardAddress: localhost
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
         active: all
         lockFavorites: false
         favorites:
+        - schools
+        - learning
         - identity
         - infrastructure
         - flux-system
@@ -43,18 +66,39 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: learning
+        active: all
         lockFavorites: false
         favorites:
+        - preview-links
+        - identity
+        - learning
+        - cockroach-operator-system
+        - default
+        - flux-system
         - all
         - gmp-system
-        - observability
         - schools
-        - infrastructure
-        - kube-system
-        - tutoring
+      view:
+        active: pod
+      featureGates:
+        nodeShell: false
+      shellPod:
+        image: busybox:1.35.0
+        command: []
+        args: []
+        namespace: default
+        limits:
+          cpu: 100m
+          memory: 100Mi
+      portForwardAddress: localhost
+    minikube:
+      namespace:
+        active: default
+        lockFavorites: false
+        favorites:
         - learning
-        - identity
+        - all
+        - default
       view:
         active: pod
       featureGates:

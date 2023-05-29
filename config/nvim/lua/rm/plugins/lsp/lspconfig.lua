@@ -1,7 +1,13 @@
 local conf = require "lspconfig"
 local illuminate_ok, illuminate = pcall(require, "illuminate")
 local navic_ok, navic = pcall(require, "nvim-navic")
+local navbuddy_ok, navbuddy = pcall(require, "nvim-navbuddy")
 local inlay_ok, inlay = pcall(require, "lsp-inlayhints")
+
+local neodev_ok, neodev = pcall(require, "neodev")
+if neodev_ok then
+  neodev.setup {}
+end
 
 if illuminate_ok then
   keymap {
@@ -28,6 +34,9 @@ R.lsp.on_attach = function(client, bufnr)
   if navic_ok then
     navic.attach(client, bufnr)
   end
+  if navbuddy_ok then
+    navbuddy.attach(client, bufnr)
+  end
   if inlay_ok then
     vim.api.nvim_set_hl(0, "LspInlayHint", { default = true, link = "Comment" })
     inlay.on_attach(client, bufnr)
@@ -52,6 +61,7 @@ end
 setup "pyright"
 setup "clojure_lsp"
 setup "taplo"
+setup "marksman"
 setup("terraformls", {
   filetypes = { "terraform", "tf" },
 })
@@ -66,7 +76,7 @@ setup("graphql", {
 })
 setup "dockerls"
 
-setup("sqls", {
+setup("sqlls", {
   on_attach = function(client, bufnr)
     require("sqls").on_attach(client, bufnr)
     R.lsp.on_attach(client, bufnr)
@@ -116,12 +126,8 @@ setup("tailwindcss", {
     "typescriptreact",
   },
 })
--- local HOME = vim.fn.expand "$HOME"
--- local sumneko_root_path = HOME .. "/.config/lua-language-server"
--- local sumneko_binary = HOME
---   .. "/.config/lua-language-server/bin/macOS/lua-language-server"
-setup("sumneko_lua", {
-  -- cmd = { sumneko_binary, "-E", sumneko_root_path .. "/main.lua" },
+
+setup("lua_ls", {
   settings = {
     Lua = {
       runtime = {
@@ -130,6 +136,9 @@ setup("sumneko_lua", {
       },
       diagnostics = {
         globals = { "vim" },
+      },
+      completion = {
+        callSnippet = "Replace",
       },
       -- workspace = {
       --   library = {

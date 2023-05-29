@@ -140,3 +140,5 @@ keymap({
     "Diagnostics",
   },
 }, { silent = true, cmd = true, mapping_prefix = "Neotree " })
+
+vim.api.nvim_set_hl(0, "NeoTreeFloatBorder", { link = "TelescopeBorder" })

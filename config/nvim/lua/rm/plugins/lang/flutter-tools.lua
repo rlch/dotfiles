@@ -53,13 +53,11 @@ require("flutter-tools").setup {
       automaticCommentSlashes = "all",
       renameFilesWithClasses = "always",
       onlyAnalyzeProjectsWithOpenFiles = true,
-      analysisExcludedFolders = {
-        vim.fn.expand "$HOME/.pub-cache/",
-        vim.fn.expand "$HOME/fvm/versions/*",
-        vim.fn.expand "$HOME/fvm/versions/*/packages/*",
-        vim.fn.expand "$HOME/.pub-cache/*",
-        vim.fn.expand "$HOME/fvm/*/.pub-cache/hosted/*",
-      },
+      -- analysisExcludedFolders = {
+      --   vim.fn.expand "$HOME/.pub-cache/*",
+      --   vim.fn.expand "$HOME/fvm/versions/*/packages/*",
+      --   vim.fn.expand "$HOME/fvm/*/.pub-cache/*",
+      -- },
     },
   },
 }

@@ -82,23 +82,13 @@ cmp.setup {
         fallback()
       end
     end, { "i", "c" }),
-    ["<C-j>"] = cmp.mapping(function(_)
-      if has_snip and luasnip.expand_or_locally_jumpable() then
-        luasnip.expand_or_jump()
-      end
-    end, { "i", "c" }),
-    ["<C-k>"] = cmp.mapping(function(_)
-      if has_snip and luasnip.jumpable(-1) then
-        luasnip.jump(-1)
-      end
-    end, { "i", "c" }),
   },
   sources = {
     -- { name = "copilot" },
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
+    { name = "luasnip", priority = 3 },
+    { name = "nvim_lsp", priority = 2 },
+    { name = "buffer", priority = 1 },
     { name = "neorg" },
-    { name = "buffer" },
     { name = "path" },
     { name = "tmux" },
     { name = "rg" },
@@ -140,7 +130,7 @@ cmp.setup {
     },
   },
   view = {
-    entries = { name = "custom",},
+    entries = { name = "custom" },
   },
 }
 

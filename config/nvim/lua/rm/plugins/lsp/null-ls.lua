@@ -27,5 +27,14 @@ null_ls.setup {
     diag.protolint,
     format.terraform_fmt,
     diag.golangci_lint,
+    -- diag.mdl,
   },
+  on_attach = function(client, bufnr)
+    vim.api.nvim_buf_set_option(bufnr, "formatexpr", "")
+    local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+    if filetype == "markdown" then
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end
+  end,
 }

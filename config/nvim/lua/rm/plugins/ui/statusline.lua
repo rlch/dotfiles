@@ -6,6 +6,7 @@ if ok then
     ghn.statusline_notification_count,
   }
 end
+local noice = require "noice"
 
 require("plenary.reload").reload_module("lualine", true)
 require("lualine").setup {
@@ -26,13 +27,10 @@ require("lualine").setup {
         path = 1,
       },
       {
-        require("noice").api.statusline.mode.get,
+        noice.api.statusline.mode.get,
         cond = function()
-          return require("noice").api.statusline.mode.has()
-            and string.find(
-                require("noice").api.statusline.mode.get(),
-                "recording .*"
-              )
+          return noice.api.statusline.mode.has()
+            and string.find(noice.api.statusline.mode.get(), "recording .*")
               ~= nil
         end,
         color = { fg = "#ff9e64" },

@@ -49,7 +49,7 @@ keymap({
   x = { dapui.close, "Close" },
   c = { dap.continue, "Continue" },
   l = { dap.run_last, "Run last" },
-  o = { dapui.open, "Open" },
+  O = { dapui.open, "Open" },
   r = { dap.repl.open, "Open repl" },
   sn = { dap.step_over, "Step over" },
   si = { dap.step_into, "Step into" },
