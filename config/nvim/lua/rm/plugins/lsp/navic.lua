@@ -78,8 +78,8 @@ local hls = {
   { "NavicIconsEvent", "CmpItemKindEvent" },
   { "NavicIconsOperator", "CmpItemKindOperator" },
   { "NavicIconsTypeParameter", "CmpItemKindTypeParameter" },
-  { "NavicText", "LineNr" },
-  { "NavicSeparator", "LineNr" },
+  { "NavicText", "CursorLineNr" },
+  { "NavicSeparator", "CursorLineNr" },
 }
 for _, hl in pairs(hls) do
   vim.api.nvim_set_hl(0, hl[1], { link = hl[2], default = true })

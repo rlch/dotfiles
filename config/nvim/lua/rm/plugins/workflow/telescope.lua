@@ -78,3 +78,8 @@ keymap({
   cmd = true,
   silent = false,
 })
+
+vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#829181", bg = "#2d353b" })
+vim.api.nvim_set_hl(0, "TransparentBorder", { fg = "#829181", bg = "#2d353b" })
+
+vim.api.nvim_set_hl(0, "TelescopeBorder", { link = "TransparentBorder" })

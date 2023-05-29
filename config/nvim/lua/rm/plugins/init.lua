@@ -240,6 +240,7 @@ return packer.startup {
       {
         "SmiteshP/nvim-navic",
         config = module "lsp.navic",
+        requires = { "neanias/everforest-nvim" },
       },
       {
         "SmiteshP/nvim-navbuddy",
@@ -372,8 +373,7 @@ return packer.startup {
         end,
       },
       {
-        "sainnhe/everforest",
-        as = "colorscheme",
+        "rlch/everforest-nvim",
         config = module "ui.colorscheme",
       },
       -- {
@@ -396,7 +396,7 @@ return packer.startup {
       {
         "nvim-lualine/lualine.nvim",
         config = module "ui.statusline",
-        -- after = 'colorscheme',
+        after = "everforest-nvim",
       },
       {
         "lukas-reineke/indent-blankline.nvim",
@@ -475,6 +475,39 @@ return packer.startup {
       "tpope/vim-abolish",
       "fedepujol/move.nvim",
       "mizlan/iswap.nvim",
+      {
+        "chrisgrieser/nvim-spider",
+        config = function()
+          print "yoo"
+          require("spider").setup {
+            skipInsignificantPunctuation = true,
+          }
+          vim.keymap.set(
+            { "n", "o", "x" },
+            "w",
+            "<cmd>lua require('spider').motion('w')<CR>",
+            { desc = "Spider-w" }
+          )
+          vim.keymap.set(
+            { "n", "o", "x" },
+            "e",
+            "<cmd>lua require('spider').motion('e')<CR>",
+            { desc = "Spider-e" }
+          )
+          vim.keymap.set(
+            { "n", "o", "x" },
+            "b",
+            "<cmd>lua require('spider').motion('b')<CR>",
+            { desc = "Spider-b" }
+          )
+          vim.keymap.set(
+            { "n", "o", "x" },
+            "ge",
+            "<cmd>lua require('spider').motion('ge')<CR>",
+            { desc = "Spider-ge" }
+          )
+        end,
+      },
       {
         "monaqa/dial.nvim",
         config = module "motion.dial",
