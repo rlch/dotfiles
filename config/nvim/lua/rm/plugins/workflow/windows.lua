@@ -8,5 +8,6 @@ require("windows").setup {
 }
 keymap({
   name = "Windows",
+  ["o"] = { "WindowsMaximize", "Maximize" },
   ["<C-o>"] = { "WindowsMaximize", "Maximize" },
 }, { prefix = "<C-w>", cmd = true })

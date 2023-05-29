@@ -77,47 +77,25 @@ return packer.startup {
         },
         event = "InsertEnter",
       },
+      "folke/neodev.nvim",
+    }
+
+    -- AI
+    use {
       {
         "zbirenbaum/copilot.lua",
         event = "InsertEnter",
         after = "nvim-cmp",
-        config = function()
-          vim.schedule(function()
-            require("copilot").setup {
-              panel = {
-                enabled = true,
-                auto_refresh = true,
-                keymap = {
-                  jump_prev = "[[",
-                  jump_next = "]]",
-                  accept = "<CR>",
-                  refresh = "gr",
-                  open = "<M-a>",
-                },
-              },
-              suggestion = {
-                enabled = true,
-                auto_trigger = true,
-                debounce = 75,
-                keymap = {
-                  accept = "<C-f>",
-                  accept_word = false,
-                  accept_line = false,
-                  next = "<M-]>",
-                  prev = "<M-[>",
-                  dismiss = "<C-]>",
-                },
-              },
-              filetypes = {
-                TelescopePrompt = false,
-                ["neo-tree"] = false,
-                help = false,
-                gitcommit = true,
-                gitrebase = true,
-              },
-            }
-          end)
-        end,
+        config = module "ai/copilot",
+      },
+      {
+        "jackMort/ChatGPT.nvim",
+        config = module "ai/chatgpt",
+        requires = {
+          "MunifTanjim/nui.nvim",
+          "nvim-lua/plenary.nvim",
+          "nvim-telescope/telescope.nvim",
+        },
       },
     }
 
@@ -138,6 +116,13 @@ return packer.startup {
 
     -- Language specific
     use {
+      -- Markdown
+      {
+        "lukas-reineke/headlines.nvim",
+        config = function()
+          require("headlines").setup()
+        end,
+      },
       -- Dart / Flutter
       {
         "akinsho/flutter-tools.nvim",
@@ -179,6 +164,13 @@ return packer.startup {
         config = module "lang.go",
         requires = { "neovim/nvim-lspconfig", "hrsh7th/nvim-cmp" },
         ft = { "go" },
+      },
+      {
+        "yanskun/gotests.nvim",
+        ft = { "go" },
+        config = function()
+          require("gotests").setup()
+        end,
       },
 
       -- SQL
@@ -250,6 +242,10 @@ return packer.startup {
         config = module "lsp.navic",
       },
       {
+        "SmiteshP/nvim-navbuddy",
+        config = module "lsp.navbuddy",
+      },
+      {
         "lvimuser/lsp-inlayhints.nvim",
         requires = "neovim/nvim-lspconfig",
         config = function()
@@ -292,6 +288,13 @@ return packer.startup {
         },
         event = { "BufEnter" },
         config = module "lsp.neotest",
+      },
+      {
+        "andythigpen/nvim-coverage",
+        requires = "nvim-lua/plenary.nvim",
+        config = function()
+          require("coverage").setup()
+        end,
       },
     }
 
@@ -417,7 +420,7 @@ return packer.startup {
         branch = "v2.x",
         requires = {
           "nvim-lua/plenary.nvim",
-          "kyazdani42/nvim-web-devicons",
+          "nvim-tree/nvim-web-devicons",
           "MunifTanjim/nui.nvim",
           "mrbjarksen/neo-tree-diagnostics.nvim",
           "mrjones2014/legendary.nvim",
@@ -471,6 +474,7 @@ return packer.startup {
       "tpope/vim-repeat",
       "tpope/vim-abolish",
       "fedepujol/move.nvim",
+      "mizlan/iswap.nvim",
       {
         "monaqa/dial.nvim",
         config = module "motion.dial",

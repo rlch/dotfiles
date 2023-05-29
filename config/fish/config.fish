@@ -9,7 +9,7 @@ ulimit -n 10240
 set -x CARGO_HOME $HOME/.cargo
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
-set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /usr/local/opt/sphinx-doc/bin
+set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
 set fish_greeting
@@ -63,6 +63,8 @@ starship init fish | source
 kubectl completion fish | source
 flux completion fish | source
 source (pyenv init --path | psub)
+source (rbenv init - | psub)
+cat ~/.dotfiles/config/fish/secrets.fish | source
 for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}'); eval $i; end
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
