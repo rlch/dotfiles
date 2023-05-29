@@ -478,7 +478,6 @@ return packer.startup {
       {
         "chrisgrieser/nvim-spider",
         config = function()
-          print "yoo"
           require("spider").setup {
             skipInsignificantPunctuation = true,
           }
@@ -506,6 +505,26 @@ return packer.startup {
             "<cmd>lua require('spider').motion('ge')<CR>",
             { desc = "Spider-ge" }
           )
+        end,
+      },
+      {
+        "chrisgrieser/nvim-various-textobjs",
+        config = function()
+          require("various-textobjs").setup { useDefaultKeymaps = false }
+          vim.keymap.set(
+            { "o", "x" },
+            "aw",
+            '<cmd>lua require("various-textobjs").subword(false)<CR>',
+            { remap = false }
+          )
+          vim.keymap.set(
+            { "o", "x" },
+            "iw",
+            '<cmd>lua require("various-textobjs").subword(true)<CR>',
+            { remap = false }
+          )
+          vim.keymap.set({ "o", "x" }, "iW", "iw")
+          vim.keymap.set({ "o", "x" }, "aW", "aw")
         end,
       },
       {

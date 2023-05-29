@@ -85,14 +85,14 @@ cmp.setup {
   },
   sources = {
     -- { name = "copilot" },
-    { name = "luasnip", priority = 3 },
-    { name = "nvim_lsp", priority = 2 },
-    { name = "buffer", priority = 1 },
-    { name = "neorg" },
-    { name = "path" },
-    { name = "tmux" },
-    { name = "rg" },
-    { name = "nvim_lsp_signature_help" },
+    { name = "luasnip", priority = 20 },
+    { name = "nvim_lsp", priority = 10 },
+    { name = "nvim_lsp_signature_help", priority = 6 },
+    { name = "buffer", priority = 5 },
+    { name = "neorg", priority = 5 },
+    { name = "path", priority = 7 },
+    { name = "tmux", priority = 3 },
+    { name = "rg", priority = 2 },
   },
   formatting = {
     format = lspkind.cmp_format {
