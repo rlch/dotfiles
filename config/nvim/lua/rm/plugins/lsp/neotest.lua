@@ -47,7 +47,7 @@ keymap({
   },
   s = {
     function()
-      require("neotest").summary.open { enter = true }
+      require("neotest").summary.open()
     end,
     "Summary",
   },

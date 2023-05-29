@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 local notification_line = {}
 local ok, ghn = pcall(require, "github-notifications")
 if ok then
@@ -7,11 +8,20 @@ if ok then
   }
 end
 local noice = require "noice"
+local everforest_theme = require "lualine.themes.everforest"
+
+
+everforest_theme.normal.c.bg = "NONE"
+everforest_theme.insert.c.bg = "NONE"
+everforest_theme.visual.c.bg = "NONE"
+everforest_theme.replace.c.bg = "NONE"
+everforest_theme.command.c.bg = "NONE"
+everforest_theme.inactive.c.bg = "NONE"
 
 require("plenary.reload").reload_module("lualine", true)
 require("lualine").setup {
   options = {
-    theme = "everforest",
+    theme = everforest_theme,
     icons_enabled = true,
     component_separators = { "।", "।" },
     section_separators = { "", "" },
@@ -27,10 +37,10 @@ require("lualine").setup {
         path = 1,
       },
       {
-        noice.api.statusline.mode.get,
+        noice.api.status.mode.get,
         cond = function()
-          return noice.api.statusline.mode.has()
-            and string.find(noice.api.statusline.mode.get(), "recording .*")
+          return noice.api.status.mode.has()
+            and string.find(noice.api.status.mode.get(), "recording .*")
               ~= nil
         end,
         color = { fg = "#ff9e64" },

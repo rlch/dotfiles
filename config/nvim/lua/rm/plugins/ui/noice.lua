@@ -25,4 +25,8 @@ require("noice").setup {
     view_history = "messages", -- view for :messages
     view_search = "virtualtext", -- view for search count messages. Set to `false` to disable
   },
+  win_options = {
+    winblend = 100,
+    winhighlight = "Normal:Normal,FloatBorder:TransparentBorder",
+  },
 }
