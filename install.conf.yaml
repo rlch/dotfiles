@@ -83,6 +83,10 @@
       path: config/lazydocker
     ~/.config/omf:
       path: config/omf
+    ~/.config/raycast:
+      path: config/raycast
+    ~/.config/gobang:
+      path: config/gobang
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
     - command: >

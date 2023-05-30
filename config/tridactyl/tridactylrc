@@ -10,3 +10,7 @@ bind J tabprev
 bind K tabnext
 bind <C-J> tabmove -1
 bind <C-K> tabmove +1
+
+autocmd DocStart plex\.rjmath\.com mode ignore
+autocmd DocStart youtube\.com mode ignore
+autocmd DocStart stan\.com\.au mode ignore

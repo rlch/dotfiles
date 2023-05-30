@@ -84,6 +84,8 @@ setup("sqlls", {
   end,
 })
 
+setup "jsonls"
+
 setup("yamlls", {
   settings = {
     yaml = {

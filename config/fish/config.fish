@@ -6,7 +6,6 @@ set -x TERM xterm-kitty
 
 ulimit -n 10240
 
-set -x CARGO_HOME $HOME/.cargo
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
 set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
@@ -17,6 +16,7 @@ set fish_greeting
 # GAR
 set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
+
 # CLI
 abbr t "tmux"
 abbr tp "tmuxp"
@@ -25,6 +25,7 @@ abbr mk "minikube"
 abbr kk "k9s"
 abbr tf "terraform"
 abbr v "fg &> /dev/null || nvim"
+abbr c "cd"
 alias cb=clipboard
 alias intel="arch -x86_64"
 
@@ -36,6 +37,10 @@ alias org="cd ~/neorg/ && nvim index.norg"
 alias efish="cd ~/.config/fish && nvim config.fish"
 alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
 alias envim="cd ~/.config/nvim && nvim"
+
+# Rust
+set -x CARGO_HOME $HOME/.cargo
+set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 
 # Sources
 alias sfish="source ~/.config/fish/config.fish"
@@ -62,6 +67,7 @@ set -x MAXWIDTH 999
 starship init fish | source
 kubectl completion fish | source
 flux completion fish | source
+diesel completions fish | source
 source (pyenv init --path | psub)
 source (rbenv init - | psub)
 cat ~/.dotfiles/config/fish/secrets.fish | source
@@ -79,3 +85,6 @@ set fish_cursor_default block
 set fish_cursor_insert line
 set fish_cursor_replace_one underscore
 set fish_cursor_visual block
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/rjm/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/Users/rjm/Downloads/google-cloud-sdk/path.fish.inc'; end
