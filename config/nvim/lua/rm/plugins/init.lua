@@ -82,21 +82,20 @@ return packer.startup {
 
     -- AI
     use {
-      {
-        "zbirenbaum/copilot.lua",
-        event = "InsertEnter",
-        after = "nvim-cmp",
-        config = module "ai/copilot",
-      },
-      {
-        "jackMort/ChatGPT.nvim",
-        config = module "ai/chatgpt",
-        requires = {
-          "MunifTanjim/nui.nvim",
-          "nvim-lua/plenary.nvim",
-          "nvim-telescope/telescope.nvim",
-        },
-      },
+      "zbirenbaum/copilot.lua",
+      event = "InsertEnter",
+      after = "nvim-cmp",
+      config = module "ai/copilot",
+      --       {
+      --         "jackMort/ChatGPT.nvim",
+      --         disable = true,
+      --         config = module "ai/chatgpt",
+      --         requires = {
+      --           "MunifTanjim/nui.nvim",
+      --           "nvim-lua/plenary.nvim",
+      --           "nvim-telescope/telescope.nvim",
+      --         },
+      --       },
     }
 
     -- Org
@@ -308,7 +307,7 @@ return packer.startup {
         requires = "rafamadriz/friendly-snippets",
       },
       {
-        "~/Coding/Personal/ts-node-action",
+        "ckolkey/ts-node-action",
         requires = { "nvim-treesitter" },
         config = module "motion.ts-node-action",
       },
@@ -396,7 +395,7 @@ return packer.startup {
       {
         "nvim-lualine/lualine.nvim",
         config = module "ui.statusline",
-        after = "everforest-nvim",
+        after = { "everforest-nvim" },
       },
       {
         "lukas-reineke/indent-blankline.nvim",
@@ -639,19 +638,6 @@ highlight ConflictMarkerTheirs guibg=#344f69
             },
           }
         end,
-      },
-    }
-
-    use {
-      "rlch/github-notifications.nvim",
-      branch = "hooks",
-      config = module "git.notifications",
-      disable = true,
-      requires = {
-        "nvim-lua/plenary.nvim",
-        "nvim-lualine/lualine.nvim",
-        "nvim-telescope/telescope.nvim",
-        "rcarriga/nvim-notify",
       },
     }
 
