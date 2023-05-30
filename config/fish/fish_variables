@@ -2,6 +2,7 @@
 # VERSION: 3.0
 SETUVAR Z_DATA_DIR:/Users/rjm/\x2elocal/share/z
 SETUVAR __fish_initialized:3400
+SETUVAR _fish_abbr_c:cd
 SETUVAR _fish_abbr_h:helm
 SETUVAR _fish_abbr_kk:k9s
 SETUVAR _fish_abbr_mk:minikube
