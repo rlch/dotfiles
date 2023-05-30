@@ -70,7 +70,7 @@ flux completion fish | source
 diesel completions fish | source
 source (pyenv init --path | psub)
 source (rbenv init - | psub)
-cat ~/.dotfiles/config/fish/secrets.fish | source
+cat ~/.config/fish/secrets.fish | source
 for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}'); eval $i; end
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
