@@ -25,6 +25,7 @@ brew "nss"
 brew "rover"
 brew "gopls"
 brew "bufbuild/buf/buf"
+brew "rbenv"
 
 # Latex
 cask "skim"
