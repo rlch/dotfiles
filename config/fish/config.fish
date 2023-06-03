@@ -1,11 +1,6 @@
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-end
-
-set -x TERM xterm-kitty
-
 ulimit -n 10240
 
+set -x TERM xterm-kitty
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
 set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
@@ -13,9 +8,20 @@ set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
 set fish_greeting
 
+set -x EDITOR nvim
+set -x VISUAL nvim
+set -x MANPAGER 'nvim +Man!'
+set -x MAXWIDTH 999
+
+status job-control full
+set -x KITTY_SHELL_INTEGRATION enabled
+
 # GAR
 set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
+# Rust
+set -x CARGO_HOME $HOME/.cargo
+set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 
 # CLI
 abbr t "tmux"
@@ -26,21 +32,19 @@ abbr kk "k9s"
 abbr tf "terraform"
 abbr v "fg &> /dev/null || nvim"
 abbr c "cd"
+abbr zel "zellij"
+
 alias cb=clipboard
 alias intel="arch -x86_64"
 
 alias gmt="go mod tidy"
 alias gmv="go mod vendor"
 
-# Nvim entrypoints
+# Neovim entrypoints
 alias org="cd ~/neorg/ && nvim index.norg"
 alias efish="cd ~/.config/fish && nvim config.fish"
 alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
 alias envim="cd ~/.config/nvim && nvim"
-
-# Rust
-set -x CARGO_HOME $HOME/.cargo
-set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 
 # Sources
 alias sfish="source ~/.config/fish/config.fish"
@@ -59,11 +63,6 @@ if type -q exa
   alias la "l -a"
 end
 
-set -x EDITOR nvim
-set -x VISUAL nvim
-set -x MANPAGER 'nvim +Man!'
-set -x MAXWIDTH 999
-
 starship init fish | source
 kubectl completion fish | source
 flux completion fish | source
@@ -77,7 +76,7 @@ set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
 [ -f ~/.google-cloud-sdk/path.fish.inc ]; and source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
 [ -f /opt/homebrew/share/autojump/autojump.fish ]; and source /opt/homebrew/share/autojump/autojump.fish
 
-test -n "$TMUX" || tmux a || tmux
+# test -n "$TMUX" || tmux a || tmux
 
 # Vi mode
 
