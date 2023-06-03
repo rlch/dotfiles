@@ -1,8 +1,8 @@
+.DS_Store
 node_modules
 packer_compiled.lua
 vendor/
 tmp/
-.DS_Store
 /*.log
 config/tmux/plugins
 secrets.fish

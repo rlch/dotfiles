@@ -17,15 +17,6 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   command = "source <afile> | PackerCompile",
 })
 
-vim.api.nvim_create_autocmd(
-  { "CursorMoved", "BufWinEnter", "BufFilePost", "InsertEnter", "BufWritePost" },
-  {
-    callback = function()
-      require("rm.plugins.ui.winbar").get_winbar()
-    end,
-  }
-)
-
 vim.api.nvim_create_autocmd({ "BufEnter" }, {
   callback = function()
     if vim.api.nvim_buf_line_count(0) > 10000 then

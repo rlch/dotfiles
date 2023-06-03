@@ -22,7 +22,7 @@ then
   require "which-key"
   require "legendary"
   require "rm.mappings"
-  require "packer_compiled"
+  pcall(require, "packer_compiled")
   vim.g.packer_compiled_loaded = true
 end
 
@@ -49,6 +49,9 @@ return packer.startup {
           require("nvim-treesitter.install").update { with_sync = true }
         end,
         config = module "treesitter",
+        requires = {
+          "JoosepAlviste/nvim-ts-context-commentstring",
+        }
       },
       "nvim-treesitter/playground",
     }
@@ -162,7 +165,7 @@ return packer.startup {
         "ray-x/go.nvim",
         config = module "lang.go",
         requires = { "neovim/nvim-lspconfig", "hrsh7th/nvim-cmp" },
-        ft = { "go" },
+        -- ft = { "go", "gomod" },
       },
       {
         "yanskun/gotests.nvim",
@@ -391,11 +394,17 @@ return packer.startup {
         end,
       },
 
-      -- Statusline
+      -- Statusline/winbar
       {
-        "nvim-lualine/lualine.nvim",
-        config = module "ui.statusline",
-        after = { "everforest-nvim" },
+        {
+          "nvim-lualine/lualine.nvim",
+          config = module "ui.statusline",
+          after = { "everforest-nvim" },
+        },
+        {
+          "Bekaboo/dropbar.nvim",
+          config = module "ui.winbar",
+        },
       },
       {
         "lukas-reineke/indent-blankline.nvim",
@@ -548,10 +557,14 @@ return packer.startup {
       },
       {
         "numToStr/Comment.nvim",
+
         config = function()
           require("Comment").setup()
         end,
         event = "InsertEnter",
+        requires = {
+          "nvim-treesitter/nvim-treesitter",
+        },
       },
       {
         "rlane/pounce.nvim",
