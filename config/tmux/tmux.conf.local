@@ -328,7 +328,7 @@ bind -n C-S-j swap-pane -d -t '{down-of}'
 set -g status-position bottom
 
 bind-key "g" split-window -fZ -c "#{pane_current_path}" "gitui" 
-bind-key "d" split-window -fZ -c "#{pane_current_path}" "lazydocker" 
+bind-key "D" split-window -fZ -c "#{pane_current_path}" "lazydocker" 
 
 # -- tpm -----------------------------------------------------------------------
 

@@ -45,11 +45,11 @@ cmp.setup {
     end,
   },
   mapping = {
-    ["<C-f>"] = cmp.mapping(function()
+    ["<C-l>"] = cmp.mapping(function()
       require("copilot.suggestion").accept()
     end),
-    ["<C-D>"] = cmp.mapping.scroll_docs(-4),
-    ["<C-F>"] = cmp.mapping.scroll_docs(4),
+    -- ["<C-D>"] = cmp.mapping.scroll_docs(-4),
+    -- ["<C-F>"] = cmp.mapping.scroll_docs(4),
     ["<C-A>"] = cmp.mapping(function(_)
       cmp.complete()
     end, ALL),

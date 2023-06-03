@@ -78,4 +78,3 @@ cmd + shift - m : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id G
   yabai -m window --focus recent || \
   yabai -m space --focus recent
 lctrl + alt + shift - g : yabai -m window ($XDG_CONFIG_HOME/skhd/get_window_id Gather) --toggle zoom-fullscreen 
-

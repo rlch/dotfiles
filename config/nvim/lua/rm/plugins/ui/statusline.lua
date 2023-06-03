@@ -64,7 +64,7 @@ local theme = {
 require("plenary.reload").reload_module("lualine", true)
 require("lualine").setup {
   options = {
-    theme = everforest_theme,
+    theme = theme,
     icons_enabled = true,
     component_separators = { "।", "।" },
     section_separators = { "", "" },

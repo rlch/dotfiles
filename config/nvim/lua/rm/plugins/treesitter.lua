@@ -1,5 +1,16 @@
 require("nvim-treesitter.configs").setup {
-  ensure_installed = { "lua", "go", "javascript", "typescript", "rust" },
+  ensure_installed = {
+    "lua",
+    "go",
+    "javascript",
+    "typescript",
+    "rust",
+    "kdl",
+    "graphql",
+  },
+  context_commentstring = {
+    enable = true,
+  },
   playground = {
     enable = true,
     disable = {},

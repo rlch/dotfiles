@@ -55,49 +55,30 @@
       quiet: true
       description: Building neovim
 - link:
-    ~/.gitconfig:
-    ~/.ssh/config:
-      path: ssh/config
-    ~/.tmux.conf:
-    ~/.config/nvim:
-      path: config/nvim
-    ~/.config/fish:
-      path: config/fish
-    ~/.config/yabai:
-      path: config/yabai
-    ~/.config/skhd:
-      path: config/skhd
-    ~/.config/tridactyl:
-      path: config/tridactyl
-    ~/.config/tmux:
-      path: config/tmux
-    ~/.config/kitty:
-      path: config/kitty
-    ~/.config/gitui:
-      path: config/gitui
-    ~/.config/starship.toml:
-      path: config/starship.toml
-    ~/.config/k9s:
-      path: config/k9s
-    ~/.config/lazydocker:
-      path: config/lazydocker
-    ~/.config/omf:
-      path: config/omf
-    ~/.config/raycast:
-      path: config/raycast
-    ~/.config/gobang:
-      path: config/gobang
+    ~/.gitconfig: .gitconfig
+    ~/.ssh/config: ssh/config
+    ~/.config/nvim: config/nvim
+    ~/.config/fish: config/fish
+    ~/.config/yabai: config/yabai
+    ~/.config/skhd: config/skhd
+    ~/.config/tridactyl: config/tridactyl
+    ~/.config/tmux: config/tmux
+    ~/.config/kitty: config/kitty
+    ~/.config/gitui: config/gitui
+    ~/.config/starship.toml: config/starship.toml
+    ~/.config/k9s: config/k9s
+    ~/.config/lazydocker: config/lazydocker
+    ~/.config/omf: config/omf
+    ~/.config/raycast: config/raycast
+    ~/.config/zellij: config/zellij
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true
     - command: >
-        if not brew services | grep "yabai.*started" > /dev/null
-          brew services start yabai
-          set sa_exists 1
-        end
+        yabai --restart-service
       quiet: true
       stderr: true
       description: Starting yabai
-    - command: brew services restart skhd
+    - command: skhd --restart-service
       quiet: true
       stderr: true
       description: Starting skhd

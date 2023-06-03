@@ -8,6 +8,7 @@ k9s:
   readOnly: false
   noExitOnCtrlC: false
   noIcons: false
+  skipLatestRevCheck: false
   logger:
     tail: 100
     buffer: 5000
@@ -38,6 +39,7 @@ k9s:
         limits:
           cpu: 100m
           memory: 100Mi
+        labels: {}
       portForwardAddress: localhost
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
@@ -63,10 +65,11 @@ k9s:
         limits:
           cpu: 100m
           memory: 100Mi
+        labels: {}
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: schools
+        active: all
         lockFavorites: false
         favorites:
         - preview-links
@@ -79,7 +82,7 @@ k9s:
         - gmp-system
         - schools
       view:
-        active: pod
+        active: event
       featureGates:
         nodeShell: false
       shellPod:
@@ -90,6 +93,7 @@ k9s:
         limits:
           cpu: 100m
           memory: 100Mi
+        labels: {}
       portForwardAddress: localhost
     minikube:
       namespace:
@@ -111,6 +115,7 @@ k9s:
         limits:
           cpu: 100m
           memory: 100Mi
+        labels: {}
       portForwardAddress: localhost
   thresholds:
     cpu:
