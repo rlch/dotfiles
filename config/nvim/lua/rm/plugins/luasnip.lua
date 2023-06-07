@@ -20,7 +20,7 @@ ls.config.set_config {
       active = {
         hl_mode = "combine",
         virt_text = { { "∨", "Operator" } },
-      },
+     },
     },
     [types.insertNode] = {
       active = {

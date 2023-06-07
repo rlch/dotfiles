@@ -6,9 +6,11 @@ vim.filetype.add {
     cypher = "cypher",
     cyp = "cypher",
     cql = "cypher",
+    dump = "bash",
+    avsc = "json",
+    avro = "json",
   },
   pattern = {
     ["~/\\.kube/config"] = "yaml",
   },
 }
-
