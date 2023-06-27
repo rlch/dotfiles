@@ -14,3 +14,5 @@ bind <C-K> tabmove +1
 autocmd DocStart plex\.rjmath\.com mode ignore
 autocmd DocStart youtube\.com mode ignore
 autocmd DocStart stan\.com\.au mode ignore
+autocmd DocStart wanikani\.com mode ignore
+autocmd DocStart bunpro\.jp mode ignore
