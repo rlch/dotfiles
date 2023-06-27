@@ -1,0 +1,15 @@
+themes {
+    everforest {
+        fg "#d3c6aa" 
+        bg "#323d43"
+        red "#e67e80"
+        green "#a7c080"
+        yellow "#dbbc7f"
+        blue "#7fbbb3"
+        magenta "#d699b6"
+        orange "#e69875"
+        cyan "#83c092"
+        black "#323d43"
+        white "#e0dcc7"
+    }
+}

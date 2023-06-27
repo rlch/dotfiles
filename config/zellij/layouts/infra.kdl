@@ -1,0 +1,17 @@
+layout {
+  cwd "/Users/rjm/Coding/Tutero/infrastructure"
+  pane command="ls" 
+  pane stacked=true {
+    pane {
+      command "k9s"
+      expanded true
+    }
+    pane {
+      command "lazydocker"
+    }
+    pane {
+      cwd "/Users/rjm/Coding/Tutero/cdk"
+      command "ls"
+    }
+  }
+}
