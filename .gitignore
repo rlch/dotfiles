@@ -4,5 +4,7 @@ packer_compiled.lua
 vendor/
 tmp/
 /*.log
-config/tmux/plugins
 secrets.fish
+
+config/tmux/plugins
+config/raycast/extensions
