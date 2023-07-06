@@ -613,7 +613,6 @@ return packer.startup {
       },
       {
         "cshuaimin/ssr.nvim",
-        module = "ssr",
         config = function()
           require("ssr").setup {
             keymaps = {
@@ -623,10 +622,10 @@ return packer.startup {
               replace_confirm = "<cr>",
               replace_all = "<leader><cr>",
             },
-            vim.keymap.set({ "n", "x" }, "<leader>rs", function()
-              require("ssr").open()
-            end),
           }
+          vim.keymap.set({ "n", "x" }, "<leader>rs", function()
+            require("ssr").open()
+          end)
         end,
       },
       {
@@ -653,7 +652,7 @@ return packer.startup {
         end,
       },
       {
-        "TimUntersberger/neogit",
+        "NeogitOrg/neogit",
         requires = {
           "sindrets/diffview.nvim",
           "nvim-lua/plenary.nvim",

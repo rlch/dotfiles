@@ -3,7 +3,7 @@ require("rust-tools").setup {
     cmd = { "/usr/local/bin/rust-analyzer" },
     on_attach = R.lsp.on_attach,
     capabilities = R.lsp.capabilities,
-    standalone = true,
+    -- standalone = true,
     settings = {
       ["rust-analyzer"] = {
         procMacro = { enable = true },
@@ -13,7 +13,12 @@ require("rust-tools").setup {
         },
         diagnostics = {
           enable = true,
-          disabled = { "unresolved-proc-macro", "unresolved-macro-call", "missing-unsafe", "inactive-code"  },
+          disabled = {
+            "unresolved-proc-macro",
+            "unresolved-macro-call",
+            "missing-unsafe",
+            "inactive-code",
+          },
           enableExperimental = true,
           warningsAsHint = {},
         },
