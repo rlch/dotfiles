@@ -43,9 +43,10 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
-        active: all
+        active: infrastructure
         lockFavorites: false
         favorites:
+        - elastic-system
         - schools
         - learning
         - identity
@@ -69,20 +70,20 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: all
+        active: schools
         lockFavorites: false
         favorites:
+        - flux-system
+        - all
+        - tutoring
+        - schools
+        - infrastructure
         - preview-links
         - identity
         - learning
         - cockroach-operator-system
-        - default
-        - flux-system
-        - all
-        - gmp-system
-        - schools
       view:
-        active: event
+        active: pod
       featureGates:
         nodeShell: false
       shellPod:
