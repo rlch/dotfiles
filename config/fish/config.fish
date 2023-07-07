@@ -46,18 +46,13 @@ alias org="cd ~/neorg/ && nvim index.norg"
 alias efish="cd ~/.config/fish && nvim config.fish"
 alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
 alias envim="cd ~/.config/nvim && nvim"
+alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 
 # Sources
 alias sfish="source ~/.config/fish/config.fish"
  
 # Misc
-alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 alias dn="say done"
-
-# Docker
-alias dcub="docker compose up d && lazydocker"
-alias dcub="docker compose up --build -d && lazydocker"
-alias dcd="docker compose down"
 
 if type -q exa
   alias l "exa -l -g --icons"
@@ -71,6 +66,7 @@ diesel completions fish | source
 source (pyenv init --path | psub)
 source (rbenv init - | psub)
 cat ~/.config/fish/secrets.fish | source
+for f in ~/.config/fish/autoload/*; source $f; end
 for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}'); eval $i; end
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True

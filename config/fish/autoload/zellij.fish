@@ -12,3 +12,4 @@ function zl
   zellij action new-tab -l layout.kdl -n "$NAME"
   return 2
 end
+

@@ -40,4 +40,3 @@ function knl
     echo "Namespace set to $ns."
   end
 end
-
