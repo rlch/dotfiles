@@ -42,9 +42,7 @@ function __aj_err
   echo -e $argv 1>&2; false
 end
 
-# default autojump command
-# automatically executes zl after jumping successfully
-function j
+function jj
   switch "$argv"
   case '-*' '--*'
     autojump $argv
@@ -66,12 +64,21 @@ function j
       end
     end
   end
+end
+
+# default autojump command
+# automatically executes zl after jumping successfully
+function j
+  jj $argv
   zl
   if test $status -ne 0
     cd -
   end
 end
 
+function jt --wraps j
+  j Tutero/$argv
+end
 
 # jump to child directory (subdirectory of current path)
 function jc
@@ -115,3 +122,4 @@ function jco
     jo (pwd) $argv
   end
 end
+
