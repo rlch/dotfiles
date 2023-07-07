@@ -67,6 +67,9 @@ function j
     end
   end
   zl
+  if test $status -ne 0
+    cd -
+  end
 end
 
 
