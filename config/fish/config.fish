@@ -13,7 +13,6 @@ set -x VISUAL nvim
 set -x MANPAGER 'nvim +Man!'
 set -x MAXWIDTH 999
 
-status job-control full
 set -x KITTY_SHELL_INTEGRATION enabled
 
 # GAR
@@ -22,6 +21,11 @@ set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/regis
 # Rust
 set -x CARGO_HOME $HOME/.cargo
 set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
+
+if not status --is-interactive
+  return
+end
+status job-control full
 
 # CLI
 abbr t "tmux"
@@ -71,8 +75,6 @@ for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}')
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
 [ -f ~/.google-cloud-sdk/path.fish.inc ]; and source '/Users/rjm/.google-cloud-sdk/path.fish.inc'
-
-# test -n "$TMUX" || tmux a || tmux
 
 # Vi mode
 
