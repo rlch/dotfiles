@@ -15,14 +15,14 @@ shift + alt - c : yabai -m space --create misc; yabai -m space --focus last
 shift + alt - x : yabai -m space --destroy last
 
 # Moving windows
-alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m display --focus west; yabai -m window --warp last; end
+alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m window --focus recent; end
 alt + shift - j : yabai -m window --swap south || begin; yabai -m window --display south; yabai -m display --focus south; end
 alt + shift - k : yabai -m window --swap north || begin; yabai -m window --display north; yabai -m display --focus north; end
-alt + shift - l : yabai -m window --swap east  || begin; yabai -m window --display east; yabai -m display --focus east; yabai -m window --warp first; end
+alt + shift - l : yabai -m window --swap east  || begin; yabai -m window --display east; yabai -m window --focus recent; end
 
 # Moving spaces
-shift + alt - n : yabai -m window --space next;   yabai -m space --focus next
-shift + alt - p : yabai -m window --space prev;   yabai -m space --focus prev
+shift + alt - n : yabai -m window --space next; yabai -m space --focus next
+shift + alt - p : yabai -m window --space prev;  yabai -m space --focus prev
 shift + alt + lctrl - n : yabai -m space --move next
 shift + alt + lctrl - p : yabai -m space --move prev
 
@@ -66,15 +66,15 @@ shift + alt - space : yabai -m window --toggle float
 # shift + lctrl + alt - r : \
 #     launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
 shift + lctrl + alt - r : \
-      brew services restart yabai; \
-      brew services restart skhd
+      yabai --restart-service; \
+      skhd --restart-service
 
 # Make window native fullscreen
 alt - f         : yabai -m window --toggle zoom-fullscreen
 ctrl + alt - f  : yabai -m window --toggle native-fullscreen
 
 cmd + shift - m : yabai -m window --focus ($XDG_CONFIG_HOME/skhd/get_window_id Gather); \
-  sleep 0.1; skhd --key 'cmd + shift - a'; sleep 0.1; \
+  skhd --key 'cmd + shift - a'; \
   yabai -m window --focus recent || \
   yabai -m space --focus recent
 lctrl + alt + shift - g : yabai -m window ($XDG_CONFIG_HOME/skhd/get_window_id Gather) --toggle zoom-fullscreen 

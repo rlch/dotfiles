@@ -1,2 +1,2 @@
 #!/bin/bash
-yabai -m query --windows | jq ".[] | select(.app == \"$argv[1]\") | .id"
+yabai -m query --windows | jq ".[] | select(.app == \"$1\") | .id"
