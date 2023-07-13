@@ -52,7 +52,7 @@ vim.keymap.set(
   "<leader>so",
   "<cmd>lua require('luasnip.loaders').edit_snippet_files()<CR>"
 )
-vim.keymap.set({ "s", "i" }, "<c-l>", function()
+vim.keymap.set({ "s", "i" }, "<c-k>", function()
   if ls.choice_active() then
     ls.change_choice(1)
   end

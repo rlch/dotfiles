@@ -184,7 +184,7 @@ scroll_buffer_size 3000
 // copy_on_select true
 
 theme "everforest"
-default_layout "default"
+default_layout "compact"
 default_mode "normal"
 default_shell "fish"
 layout_dir "/Users/rjm/.config/zellij/layouts"
