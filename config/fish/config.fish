@@ -29,7 +29,7 @@ status job-control full
 
 # CLI
 abbr t "tmux"
-abbr tp "tmuxp"
+abbr tp "telepresence"
 abbr h "helm"
 abbr mk "minikube"
 abbr kk "k9s"
