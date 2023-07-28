@@ -33,6 +33,7 @@ opt.relativenumber = true
 opt.cursorline = true
 opt.completeopt = "menu,menuone,preview,noselect,longest"
 opt.textwidth = 80
+opt.swapfile = false
 
 -- Search
 opt.ignorecase = true

@@ -16,8 +16,8 @@ k9s:
     fullScreenLogs: false
     textWrap: false
     showTime: false
-  currentContext: dev
-  currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
+  currentContext: prod
+  currentCluster: gke_mathgaps-56d5a_australia-southeast1-a_primary
   clusters:
     docker-desktop:
       namespace:
@@ -55,7 +55,7 @@ k9s:
         - all
         - default
       view:
-        active: pod
+        active: hr
       featureGates:
         nodeShell: false
       shellPod:
@@ -70,7 +70,7 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: schools
+        active: all
         lockFavorites: false
         favorites:
         - flux-system

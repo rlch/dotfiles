@@ -122,4 +122,22 @@ ctx, span := otel.GetTracerProvider().Tracer("github.com/MathGaps/{}").Start(ctx
       "}",
     },
   }),
+  postfix(".m", {
+    d(1, function(_, parent)
+      return sn(nil, {
+        i(1, "method"),
+        t("(" .. parent.snippet.env.POSTFIX_MATCH .. ")"),
+        i(2, ""),
+      })
+    end),
+  }, {
+    matchPattern = "[%w%.%_%-%(%)]+$",
+  }),
+  postfix(".dump", {
+    d(1, function(_, parent)
+      return sn(nil, {
+        t("litter.Dump(" .. parent.snippet.env.POSTFIX_MATCH .. ")"),
+      })
+    end),
+  })
 }

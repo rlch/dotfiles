@@ -15,10 +15,14 @@ shift + alt - c : yabai -m space --create misc; yabai -m space --focus last
 shift + alt - x : yabai -m space --destroy last
 
 # Moving windows
-alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m window --focus recent; end
-alt + shift - j : yabai -m window --swap south || begin; yabai -m window --display south; yabai -m display --focus south; end
-alt + shift - k : yabai -m window --swap north || begin; yabai -m window --display north; yabai -m display --focus north; end
-alt + shift - l : yabai -m window --swap east  || begin; yabai -m window --display east; yabai -m window --focus recent; end
+# alt + shift - h : yabai -m window --swap west  || begin; yabai -m window --display west; yabai -m window --focus recent; end
+# alt + shift - j : yabai -m window --swap south || begin; yabai -m window --display south; yabai -m display --focus south; end
+# alt + shift - k : yabai -m window --swap north || begin; yabai -m window --display north; yabai -m display --focus north; end
+# alt + shift - l : yabai -m window --swap east  || begin; yabai -m window --display east; yabai -m window --focus recent; end
+alt + shift - h : yabai -m window --swap west 
+alt + shift - j : yabai -m window --swap south
+alt + shift - k : yabai -m window --swap north
+alt + shift - l : yabai -m window --swap east 
 
 # Moving spaces
 shift + alt - n : yabai -m window --space next; yabai -m space --focus next

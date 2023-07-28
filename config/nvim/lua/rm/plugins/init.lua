@@ -14,9 +14,9 @@ local function module(name)
 end
 
 local PACKER_COMPILED_PATH = vim.fn.stdpath "config"
-  .. "/lua/packer_compiled.lua"
+    .. "/lua/packer_compiled.lua"
 if
-  not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH)
+    not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH)
 then
   require "impatient"
   require "which-key"
@@ -692,9 +692,11 @@ highlight ConflictMarkerTheirs guibg=#344f69
         requires = "tpope/vim-dispatch",
       },
       {
-        "gioele/vim-autoswap",
+        "Pocco81/auto-save.nvim",
         config = function()
-          vim.g.autoswap_detect_tmux = 1
+          require("auto-save").setup {
+            debounce_delay = 5000,
+          }
         end,
       },
       {

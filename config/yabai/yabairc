@@ -98,8 +98,8 @@ yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manag
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="Krisp" app="^krisp" manage=off
 
-yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
-yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on space=coding
-yabai -m rule --add label="Gather" app="Gather" opacity=1.0 space=browser
-yabai -m rule --add label="Slack" app="Slack" space=social
-yabai -m rule --add label="Notion" app="Notion" space=misc
+yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0 
+yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on 
+yabai -m rule --add label="Gather" app="Gather" opacity=1.0
+yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on
+yabai -m rule --add label="Notion" app="Notion"

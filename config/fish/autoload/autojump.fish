@@ -71,7 +71,7 @@ end
 function j
   jj $argv
   zl
-  if test $status -ne 0
+  if test $status -eq 2
     cd -
   end
 end

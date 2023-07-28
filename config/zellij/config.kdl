@@ -54,6 +54,11 @@ keybinds clear-defaults=true {
         bind "h" "Left" "Down" "j" { GoToPreviousTab; }
         bind "l" "Right" "Up" "k" { GoToNextTab; }
         bind "n" { NewTab; SwitchToMode "Normal"; }
+        bind "q" {
+          LaunchOrFocusPlugin "file:~/.config/zellij/plugins/room.wasm" {
+              floating true
+          }; SwitchToMode "Normal";
+        }
 
         bind "x" { CloseTab; SwitchToMode "Normal"; }
         bind "s" { ToggleActiveSyncTab; SwitchToMode "Normal"; }
