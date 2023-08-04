@@ -16,31 +16,9 @@ k9s:
     fullScreenLogs: false
     textWrap: false
     showTime: false
-  currentContext: prod
-  currentCluster: gke_mathgaps-56d5a_australia-southeast1-a_primary
+  currentContext: dev
+  currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
   clusters:
-    docker-desktop:
-      namespace:
-        active: default
-        lockFavorites: false
-        favorites:
-        - all
-        - registry
-        - default
-      view:
-        active: previewlink
-      featureGates:
-        nodeShell: false
-      shellPod:
-        image: busybox:1.35.0
-        command: []
-        args: []
-        namespace: default
-        limits:
-          cpu: 100m
-          memory: 100Mi
-        labels: {}
-      portForwardAddress: localhost
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
         active: infrastructure
@@ -70,9 +48,10 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: all
+        active: default
         lockFavorites: false
         favorites:
+        - default
         - flux-system
         - all
         - tutoring
@@ -81,7 +60,6 @@ k9s:
         - preview-links
         - identity
         - learning
-        - cockroach-operator-system
       view:
         active: pod
       featureGates:
