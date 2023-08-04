@@ -4,10 +4,10 @@ local fmt = string.format
 R = {
   icons = {
     signs = {
-      Error = "",
+      Error = "󰅙",
       Warning = "",
       Warn = "",
-      Hint = "",
+      Hint = "",
       Information = "",
       Info = "",
     },
