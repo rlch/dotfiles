@@ -16,6 +16,9 @@ bind --mode=ignore <C-k> scrollline -10
 bind --mode=normal <C-j> scrollline 10
 bind --mode=normal <C-k> scrollline -10
 
+seturl home\.rjmath\.com disable true
+
+autocmd DocStart code\.rjmath\.com mode ignore
 autocmd DocStart plex\.rjmath\.com mode ignore
 autocmd DocStart stan\.com\.au mode ignore
 autocmd DocStart wanikani\.com mode ignore
