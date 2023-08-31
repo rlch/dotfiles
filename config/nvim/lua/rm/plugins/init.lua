@@ -279,7 +279,7 @@ return packer.startup {
         end,
       },
       -- Tests
-      use {
+      {
         "nvim-neotest/neotest",
         requires = {
           "nvim-lua/plenary.nvim",
@@ -612,20 +612,30 @@ return packer.startup {
         end,
       },
       {
-        "cshuaimin/ssr.nvim",
+        "AckslD/muren.nvim",
         config = function()
-          require("ssr").setup {
-            keymaps = {
-              close = "q",
-              next_match = "n",
-              prev_match = "N",
-              replace_confirm = "<cr>",
-              replace_all = "<leader><cr>",
+          require("muren").setup {
+            create_commands = true,
+            keys = {
+              close = 'q',
+              toggle_side = '<Tab>',
+              toggle_options_focus = '<C-k>',
+              toggle_option_under_cursor = '<CR>',
+              scroll_preview_up = '<Up>',
+              scroll_preview_down = '<Down>',
+              do_replace = '<CR>',
+              -- NOTE these are not guaranteed to work, what they do is just apply `:normal! u` vs :normal! <C-r>`
+              -- on the last affected buffers so if you do some edit in these buffers in the meantime it won't do the correct thing
+              do_undo = '<localleader>u',
+              do_redo = '<localleader>r',
             },
+            patterns_width = 30,
+            patterns_height = 10,
+            options_width = 20,
+            preview_height = 12,
+            anchor = 'center', -- Set to one of:
           }
-          vim.keymap.set({ "n", "x" }, "<leader>rs", function()
-            require("ssr").open()
-          end)
+          vim.keymap.set("n", "<leader>rs", "<cmd>MurenToggle<cr>")
         end,
       },
       {
@@ -653,6 +663,7 @@ return packer.startup {
       },
       {
         "NeogitOrg/neogit",
+        disable = true,
         requires = {
           "sindrets/diffview.nvim",
           "nvim-lua/plenary.nvim",

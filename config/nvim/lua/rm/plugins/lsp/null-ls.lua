@@ -3,10 +3,10 @@ local format = null_ls.builtins.formatting
 local diag = null_ls.builtins.diagnostics
 
 null_ls.setup {
+  temp_dir = "/tmp",
   sources = {
     format.stylua,
     format.fnlfmt,
-    format.black,
     format.prettierd.with {
       extra_filetypes = { "graphqls", "graphql" },
       runtime_condition = function(params)
@@ -23,10 +23,20 @@ null_ls.setup {
       extra_args = { "--dialect", "postgres" },
     },
     diag.stylelint,
-    diag.pylint,
     diag.protolint,
     format.terraform_fmt,
     diag.golangci_lint,
+
+    -- Python
+    diag.mypy.with({
+      extra_args = {
+        "--ignore-missing-imports",
+        "--check-untyped-defs"
+      }
+    }),
+    diag.ruff,
+    format.black,
+
     -- diag.mdl,
   },
   on_attach = function(client, bufnr)

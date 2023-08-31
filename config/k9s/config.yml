@@ -48,7 +48,7 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: default
+        active: infrastructure
         lockFavorites: false
         favorites:
         - default

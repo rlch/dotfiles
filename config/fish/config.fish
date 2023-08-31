@@ -35,7 +35,6 @@ abbr mk "minikube"
 abbr kk "k9s"
 abbr tf "terraform"
 abbr v "fg &> /dev/null || nvim"
-abbr c "cd"
 abbr zel "zellij"
 
 alias cb=clipboard
@@ -85,3 +84,11 @@ set fish_cursor_visual block
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/rjm/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/Users/rjm/Downloads/google-cloud-sdk/path.fish.inc'; end
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+if test -f /Users/rjm/miniconda3/bin/conda
+    eval /Users/rjm/miniconda3/bin/conda "shell.fish" "hook" $argv | source
+    conda deactivate
+end
+# <<< conda initialize <<<

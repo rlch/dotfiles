@@ -14,7 +14,19 @@ neotest.setup {
 }
 
 keymap({
-  name = "Neotest",
+  name = "Testing",
+  c = {
+    function()
+      local cov = require("coverage")
+      local cov_signs = require("coverage.signs")
+      if cov_signs.is_enabled() then
+        cov.toggle()
+      else
+        cov.load(true)
+      end
+    end,
+    "Coverage",
+  },
   n = {
     function()
       require("neotest").run.run()
