@@ -21,7 +21,7 @@ k9s:
   clusters:
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
-        active: infrastructure
+        active: all
         lockFavorites: false
         favorites:
         - elastic-system
@@ -33,7 +33,7 @@ k9s:
         - all
         - default
       view:
-        active: hr
+        active: pod
       featureGates:
         nodeShell: false
       shellPod:
@@ -48,18 +48,16 @@ k9s:
       portForwardAddress: localhost
     gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
       namespace:
-        active: infrastructure
+        active: all
         lockFavorites: false
         favorites:
+        - schools
+        - infrastructure
+        - learning
         - default
         - flux-system
         - all
         - tutoring
-        - schools
-        - infrastructure
-        - preview-links
-        - identity
-        - learning
       view:
         active: pod
       featureGates:

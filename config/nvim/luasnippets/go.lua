@@ -90,7 +90,7 @@ ctx, span := otel.GetTracerProvider().Tracer("github.com/MathGaps/{}").Start(ctx
     i(3, "message"),
     t ")",
   }),
-  snippet("slog", {
+  snippet("plog", {
     c(1, {
       t "",
       t { "l := log.SugaredFrom(ctx)", "" },

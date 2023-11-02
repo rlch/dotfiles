@@ -9,7 +9,9 @@ local has_snip, luasnip = pcall(require, "luasnip")
 -- end
 
 local source_mapping = {
-  copilot = "(AI)",
+  Codeium = "()",
+  codeium = "()",
+  copilot = "()",
   nvim_lsp = "(LSP)",
   buffer = "(Buf)",
   nvim_lsp_document_symbol = "(LSP)",
@@ -27,7 +29,7 @@ local has_words_before = function()
   end
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
   return col ~= 0
-    and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match "^%s*$"
+      and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match "^%s*$"
       == nil
 end
 
@@ -84,26 +86,28 @@ cmp.setup {
     end, { "i", "c" }),
   },
   sources = {
-    -- { name = "copilot" },
-    { name = "luasnip", priority = 20 },
-    { name = "nvim_lsp", priority = 10 },
+    { name = "codeium",                 priority = 20 },
+    { name = "luasnip",                 priority = 15 },
+    { name = "nvim_lsp",                priority = 10 },
     { name = "nvim_lsp_signature_help", priority = 6 },
-    { name = "buffer", priority = 5 },
-    { name = "neorg", priority = 5 },
-    { name = "path", priority = 7 },
-    { name = "tmux", priority = 3 },
-    { name = "rg", priority = 2 },
+    { name = "buffer",                  priority = 5 },
+    { name = "neorg",                   priority = 5 },
+    { name = "path",                    priority = 7 },
+    { name = "tmux",                    priority = 3 },
+    { name = "rg",                      priority = 2 },
   },
   formatting = {
     format = lspkind.cmp_format {
       mode = "symbol_text",
       max_width = 25,
-      symbol_map = { Copilot = "" },
       before = function(entry, vim_item)
         local replace_icon = function(item)
           if has_lspkind then
             local menu = source_mapping[entry.source.name]
             item.kind = lspkind.presets.default[item.kind]
+            if item.kind == nil then
+              item.kind = ""
+            end
             item.menu = menu
             return item
           end

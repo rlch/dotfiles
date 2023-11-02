@@ -85,10 +85,22 @@ return packer.startup {
 
     -- AI
     use {
-      "zbirenbaum/copilot.lua",
-      event = "InsertEnter",
-      after = "nvim-cmp",
-      config = module "ai/copilot",
+      {
+        "Exafunction/codeium.nvim",
+        requires = {
+          "nvim-lua/plenary.nvim",
+          "hrsh7th/nvim-cmp",
+        },
+        config = function()
+          require("codeium").setup({})
+        end
+      },
+      {
+        "zbirenbaum/copilot.lua",
+        event = "InsertEnter",
+        after = "nvim-cmp",
+        config = module "ai/copilot",
+      }
       --       {
       --         "jackMort/ChatGPT.nvim",
       --         disable = true,
@@ -402,7 +414,9 @@ return packer.startup {
           after = { "everforest-nvim" },
         },
         {
+          -- TODO: Re-enable when going back to nightly / 0.10
           "Bekaboo/dropbar.nvim",
+          disable = true,
           config = module "ui.winbar",
         },
       },
@@ -706,9 +720,10 @@ highlight ConflictMarkerTheirs guibg=#344f69
         "Pocco81/auto-save.nvim",
         config = function()
           require("auto-save").setup {
-            debounce_delay = 5000,
+            debounce_delay = 10000,
           }
         end,
+        disable = true,
       },
       {
         "antoinemadec/FixCursorHold.nvim",
