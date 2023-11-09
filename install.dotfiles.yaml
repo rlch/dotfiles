@@ -1,0 +1,81 @@
+- defaults:
+    link:
+      relink: true
+      create: true
+      force: true
+- clean: ['$BASE_DIR']
+- create:
+    - $BASE_DIR
+    - $DIRS_CONFIG
+    - $DIRS_BACKEND
+    - $DIRS_FRONTEND
+    - $DIRS_INFRASTRUCTURE
+    - $DIRS_PLAYGROUND
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+    - [
+        xcode-select --version | grep -q "version .*" && echo "xcode-select --install",
+        Checking if Xcode Command Line Tools are installed,
+      ]
+    - command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      stdin: true
+      stdout: true
+      quiet: true
+      description: Installing homebrew
+    - [brew tap Homebrew/bundle, Setup brew bundle]
+    - command: brew bundle
+      stdout: true
+      quiet: true
+      description: Installing homebrew dependencies
+    - command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
+      stdin: true
+      stderr: true
+      quiet: true
+      description: Making fish the default shell
+    - command: gh auth status || gh auth login
+      stdin: true
+      stdout: true
+      stderr: true
+      quiet: false
+      description: Authenticate with GitHub
+    - command: ./install_fonts
+      quiet: true
+      description: Installing fonts
+    - command: ./install_fisher
+      quiet: true
+      description: Installing fish dependencies
+- link:
+    $BASE_DIR/.gitconfig: .gitconfig
+    $BASE_DIR/.ssh/config: ssh/config
+    $DIRS_CONFIG/nvim: config/nvim
+    $DIRS_CONFIG/fish: config/fish
+    $DIRS_CONFIG/yabai: config/yabai
+    $DIRS_CONFIG/skhd: config/skhd
+    $DIRS_CONFIG/tridactyl: config/tridactyl
+    $DIRS_CONFIG/tmux: config/tmux
+    $DIRS_CONFIG/kitty: config/kitty
+    $DIRS_CONFIG/gitui: config/gitui
+    $DIRS_CONFIG/starship.toml: config/starship.toml
+    $DIRS_CONFIG/k9s: config/k9s
+    $DIRS_CONFIG/lazydocker: config/lazydocker
+    $DIRS_CONFIG/omf: config/omf
+    $DIRS_CONFIG/raycast: config/raycast
+    $DIRS_CONFIG/zellij: config/zellij
+- shell:
+    - command: >
+        yabai --restart-service
+      quiet: true
+      stderr: true
+      description: Starting yabai
+    - command: skhd --restart-service
+      quiet: true
+      stderr: true
+      description: Starting skhd
+    - command: >
+        if set -q sa_exists
+          sudo yabai --install-sa
+          sudo yabai --load-sa
+        end
+      quiet: true
+      stderr: true
+      description: Loading yabai SA

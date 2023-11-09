@@ -1,0 +1,8 @@
+# baseDir is the base directory for all the subdirectories of dirs.
+baseDir: integration/
+dirs:
+  config: .config/
+  backend: Coding/Tutero/Backend/
+  frontend: Coding/Tutero/Frontend/
+  infrastructure: Coding/Tutero/Infrastructure/
+  playground: Coding/Playground/
