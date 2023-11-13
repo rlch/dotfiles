@@ -55,11 +55,11 @@
     $DIRS_CONFIG/starship.toml: config/starship.toml
 - shell:
     - command: >
-        yabai --restart-service
+        yabai --start-service
       quiet: true
       stderr: true
       description: Starting yabai
-    - command: skhd --restart-service
+    - command: skhd --start-service
       quiet: true
       stderr: true
       description: Starting skhd
