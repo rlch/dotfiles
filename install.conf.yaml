@@ -70,6 +70,7 @@
     ~/.config/lazydocker: config/lazydocker
     ~/.config/omf: config/omf
     ~/.config/raycast: config/raycast
+    ~/.config/wezterm: config/wezterm
     ~/.config/zellij: config/zellij
 - shell:
     - ln -s ~/.config/tmux/tmux.conf.local ~/.tmux.conf.local || true

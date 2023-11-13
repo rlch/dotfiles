@@ -74,8 +74,8 @@ yabai -m config mouse_drop_action           swap
 # populate_spaces 2 2
 
 yabai -m space 1 --label social
-yabai -m config --space social left_padding 378
-yabai -m config --space social right_padding 378
+# yabai -m config --space social left_padding 378
+# yabai -m config --space social right_padding 378
 
 yabai -m space 2 --label browser
 yabai -m space 3 --label misc
@@ -107,6 +107,7 @@ yabai -m rule --add label="Krisp" app="^krisp" manage=off
 
 yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
 yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="WezTerm" app="WezTerm" native-fullscreen=on opacity=1.0
 yabai -m rule --add label="Gather" app="Gather" border=off opacity=1.0
 yabai -m rule --add label="Gather Desktop" title="Gather Desktop" border=on
 yabai -m rule --add label="Gather Borer" app="Gather Border Highlight" opacity=1.0 border=off manage=off

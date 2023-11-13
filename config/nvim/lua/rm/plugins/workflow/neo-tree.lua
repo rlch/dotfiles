@@ -23,8 +23,8 @@ require("neo-tree").setup {
       last_indent_marker = "└",
       highlight = "NeoTreeIndentMarker",
       with_expanders = nil,
-      expander_collapsed = "",
-      expander_expanded = "",
+      expander_collapsed = " ",
+      expander_expanded = " ",
       expander_highlight = "NeoTreeExpander",
     },
     icon = {
@@ -111,8 +111,8 @@ require("neo-tree").setup {
       leave_dirs_open = true,
     },
     group_dirs_and_files = true, -- when true, empty folders and files will be grouped together
-    group_empty_dirs = true,     -- when true, empty directories will be grouped together
-    show_unloaded = true,        -- show diagnostics from unloaded buffers
+    group_empty_dirs = true, -- when true, empty directories will be grouped together
+    show_unloaded = true, -- show diagnostics from unloaded buffers
   },
   git_status = {
     window = {

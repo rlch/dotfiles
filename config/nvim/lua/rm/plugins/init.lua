@@ -14,9 +14,9 @@ local function module(name)
 end
 
 local PACKER_COMPILED_PATH = vim.fn.stdpath "config"
-    .. "/lua/packer_compiled.lua"
+  .. "/lua/packer_compiled.lua"
 if
-    not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH)
+  not vim.g.packer_compiled_loaded and vim.loop.fs_stat(PACKER_COMPILED_PATH)
 then
   require "impatient"
   require "which-key"
@@ -92,15 +92,15 @@ return packer.startup {
           "hrsh7th/nvim-cmp",
         },
         config = function()
-          require("codeium").setup({})
-        end
+          require("codeium").setup {}
+        end,
       },
       {
         "zbirenbaum/copilot.lua",
         event = "InsertEnter",
         after = "nvim-cmp",
         config = module "ai/copilot",
-      }
+      },
       --       {
       --         "jackMort/ChatGPT.nvim",
       --         disable = true,
@@ -422,6 +422,7 @@ return packer.startup {
       },
       {
         "lukas-reineke/indent-blankline.nvim",
+        disable = true, -- need lazy.nvim
         config = function()
           require("indent_blankline").setup {
             use_treesitter = true,
@@ -631,23 +632,23 @@ return packer.startup {
           require("muren").setup {
             create_commands = true,
             keys = {
-              close = 'q',
-              toggle_side = '<Tab>',
-              toggle_options_focus = '<C-k>',
-              toggle_option_under_cursor = '<CR>',
-              scroll_preview_up = '<Up>',
-              scroll_preview_down = '<Down>',
-              do_replace = '<CR>',
+              close = "q",
+              toggle_side = "<Tab>",
+              toggle_options_focus = "<C-k>",
+              toggle_option_under_cursor = "<CR>",
+              scroll_preview_up = "<Up>",
+              scroll_preview_down = "<Down>",
+              do_replace = "<CR>",
               -- NOTE these are not guaranteed to work, what they do is just apply `:normal! u` vs :normal! <C-r>`
               -- on the last affected buffers so if you do some edit in these buffers in the meantime it won't do the correct thing
-              do_undo = '<localleader>u',
-              do_redo = '<localleader>r',
+              do_undo = "<localleader>u",
+              do_redo = "<localleader>r",
             },
             patterns_width = 30,
             patterns_height = 10,
             options_width = 20,
             preview_height = 12,
-            anchor = 'center', -- Set to one of:
+            anchor = "center", -- Set to one of:
           }
           vim.keymap.set("n", "<leader>rs", "<cmd>MurenToggle<cr>")
         end,

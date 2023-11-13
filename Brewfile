@@ -1,4 +1,4 @@
-# Shell
+# shell
 brew "fish"
 brew "tmux"
 brew "starship"
@@ -12,7 +12,7 @@ brew "tree"
 brew "glow"
 
 
-# Development
+# development
 brew "node"
 brew "pyenv"
 brew "luarocks"
@@ -27,10 +27,10 @@ brew "gopls"
 brew "bufbuild/buf/buf"
 brew "rbenv"
 
-# Latex
+# latex
 cask "skim"
 
-# Kubernetes
+# kubernetes
 brew "minikube"
 brew "kubectl"
 brew "helmsman"
@@ -39,18 +39,18 @@ cask "kubecontext"
 brew "fluxcd/tap/flux"
 brew "kustomize"
 
-# Miscellaneous
+# miscellaneous
 cask "the-unarchiver"
 
-# Window tiling
+# window tiling
 brew "koekeishiya/formulae/skhd"
 brew "koekeishiya/formulae/yabai"
 
-# Fonts
+# fonts
 tap "homebrew/cask-fonts"
 cask "font-jetbrains-mono-nerd-font"
 
-# Neovim build dependencies
+# neovim build dependencies
 brew "ninja" 
 brew "libtool" 
 brew "automake" 
