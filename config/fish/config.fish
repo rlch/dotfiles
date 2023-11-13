@@ -58,7 +58,8 @@ alias dn="say done"
 
 if type -q exa
     alias l "exa -l -g --icons"
-    alias la "l -a"
+    alias ll "l -a"
+    alias la ll
 end
 
 type -q starship && starship init fish | source
