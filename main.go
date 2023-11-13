@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -49,6 +50,9 @@ func parseConfig(bytes []byte) (*Config, error) {
 	c := new(Config)
 	if err := yaml.Unmarshal(bytes, c); err != nil {
 		return nil, fmt.Errorf("cannot parse config: %w", err)
+	}
+	if c.BaseDir == "" {
+		return nil, errors.New("base directory needs to be configured, please set baseDir in config")
 	}
 	return c, nil
 }
