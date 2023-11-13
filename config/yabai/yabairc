@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# find "$HOME/.config/yabai" - type f -perm +111 -exec {} \;
+
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+sudo yabai --load-sa
+
+# ====== Variables =============================
+
+declare -A gaps
+declare -A color
+
+color["focused"]="0x5e00c460"
+color["normal"]="0x00010101"
+color["preselect"]="0xE02d74da"
+
+# ===== Tiling setting =========================
+
+yabai -m config layout bsp
+
+yabai -m config top_padding 30
+yabai -m config bottom_padding 30
+yabai -m config left_padding 30
+yabai -m config right_padding 30
+yabai -m config window_gap 30
+
+yabai -m config mouse_follows_focus off
+yabai -m config focus_follows_mouse off
+
+yabai -m config window_topmost off
+yabai -m config window_opacity on
+yabai -m config window_shadow float
+
+yabai -m config window_border on
+yabai -m config window_border_blur on
+yabai -m config window_border_hidpi off
+yabai -m config window_border_width 2
+yabai -m config active_window_border_color "${color["focused"]}"
+yabai -m config normal_window_border_color "0x00ffffff"
+
+yabai -m config active_window_opacity 1.0
+yabai -m config normal_window_opacity 0.85
+yabai -m config split_ratio 0.50
+
+yabai -m config auto_balance off
+
+yabai -m config mouse_modifier ctrl
+yabai -m config mouse_action1 move
+yabai -m config mouse_action2 resize
+yabai -m config mouse_drop_action swap
+
+# ===== Rules ==================================
+
+yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
+yabai -m rule --add label="Activity Monitor" app="^Activity Monitor$" manage=off
+yabai -m rule --add label="App Store" app="^App Store$" manage=off
+yabai -m rule --add label="Archive Utility" app="^Archive Utility$" manage=off
+yabai -m rule --add label="Calculator" app="^Calculator$" manage=off
+yabai -m rule --add label="Dictionary" app="^Dictionary$" manage=off
+yabai -m rule --add label="Finder" app="^Finder$" manage=off sticky=on
+yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
+yabai -m rule --add label="Gather Borer" app="Gather Border Highlight" opacity=1.0 border=off manage=off
+yabai -m rule --add label="Gather Desktop" title="Gather Desktop" border=on
+yabai -m rule --add label="Gather" app="Gather" border=off opacity=1.0
+yabai -m rule --add label="Installer" app="^Installer$" sticky=on manage=off
+yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manage=off
+yabai -m rule --add label="KeePassXC" app="^KeePassXC$" manage=off
+yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="Krisp" app="^krisp" manage=off
+yabai -m rule --add label="Notion" app="Notion"
+yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
+yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off opacity=1.0
+yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="Software Update" title="Software Update" manage=off
+yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=on
+yabai -m rule --add label="System Preferences" app="^System Preferences$" title=".*" manage=off
+yabai -m rule --add label="System Settings" app="^System Settings$" title=".*" manage=off
+yabai -m rule --add label="The Unarchiver" app="^The Unarchiver$" manage=off sticky=on
+yabai -m rule --add label="WezTerm" app="WezTerm" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="macfeh" app="^macfeh$" manage=off
+yabai -m rule --add label="mpv" app="^mpv$" manage=off
