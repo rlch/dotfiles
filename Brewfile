@@ -1,6 +1,6 @@
 # shell
 brew "fish"
-brew "tmux"
+brew "zellij"
 brew "starship"
 brew "gitui"
 brew "autojump"
