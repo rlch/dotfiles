@@ -1,5 +1,5 @@
 # baseDir is the base directory for all the subdirectories of dirs.
-baseDir:
+baseDir: "/Users/rjm"
 dirs:
   config: .config/
   backend: Coding/Tutero/Backend/

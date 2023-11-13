@@ -77,6 +77,10 @@ function j
     end
 end
 
+function jt --wraps j
+    j Tutero/$argv
+end
+
 # jump to child directory (subdirectory of current path)
 function jc
     switch "$argv"

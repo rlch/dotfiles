@@ -20,3 +20,11 @@ bind --mode=insert <C-k> scrollline -10
 bind --mode=normal <C-j> scrollline 10
 bind --mode=normal <C-k> scrollline -10
 bind --mode=normal gi    composite focusinput -l | text.end_of_line
+
+seturl home\.rjmath\.com disable true
+
+autocmd DocStart code\.rjmath\.com mode ignore
+autocmd DocStart plex\.rjmath\.com mode ignore
+autocmd DocStart stan\.com\.au mode ignore
+autocmd DocStart wanikani\.com mode ignore
+autocmd DocStart bunpro\.jp mode ignore
