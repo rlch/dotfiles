@@ -124,6 +124,16 @@ return {
     },
   },
   {
+    "chrisgrieser/nvim-various-textobjs",
+    opts = { useDefaultKeymaps = false },
+    keys = {
+      { "aw", '<cmd>lua require("various-textobjs").subword(false)<CR>', { remap = false }, mode = { "o", "x" } },
+      { "iw", '<cmd>lua require("various-textobjs").subword(true)<CR>', { remap = false }, mode = { "o", "x" } },
+      { "iW", "iw", mode = { "o", "x" } },
+      { "aW", "aw", mode = { "o", "x" } },
+    },
+  },
+  {
     "hrsh7th/nvim-cmp",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",

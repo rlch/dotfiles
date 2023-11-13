@@ -1,11 +1,27 @@
 return {
   {
-    "smjonas/inc-rename.nvim",
-    config = function()
-      require("inc_rename").setup()
+    "neovim/nvim-lspconfig",
+    init = function()
+      local keys = require("lazyvim.plugins.lsp.keymaps").get()
+      -- disable a keymap
+      keys[#keys + 1] = { "<leader>cr", false }
     end,
+  },
+  {
+    "smjonas/inc-rename.nvim",
+    cmd = "IncRename",
+    config = true,
     keys = {
-      { "gr", "<cmd>IncRename ", mode = "n" },
+      {
+        "<leader>cr",
+        function()
+          local inc_rename = require("inc_rename")
+          return ":" .. inc_rename.config.cmd_name .. " "
+        end,
+        expr = true,
+        mode = "n",
+        desc = "Rename",
+      },
     },
   },
 }
