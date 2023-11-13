@@ -27,6 +27,11 @@
       stdout: true
       quiet: true
       description: Installing homebrew dependencies
+    - command: /bin/bash -c "grep -Fxq \"/opt/homebrew/bin/fish\" /etc/shells || echo \"/opt/homebrew/bin/fish\" | sudo tee -a /etc/shells"
+      stdin: true
+      stderr: true
+      quiet: true
+      description: Add fish to /etc/shells
     - command: /bin/bash -c "chsh -s /opt/homebrew/bin/fish"
       stdin: true
       stderr: true
