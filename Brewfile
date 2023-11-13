@@ -11,7 +11,7 @@ brew "exa"
 brew "tree"
 
 # development
-cask "kitty"
+cask "wezterm"
 brew "neovim"
 brew "node"
 brew "pyenv"
