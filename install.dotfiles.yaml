@@ -53,6 +53,17 @@
     - description: Installing fish dependencies
       command: ./install_fisher
       quiet: true
+
+    - description: Add wezterm terminal definition
+      command: |
+        tempfile=$(mktemp) \
+          && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
+          && tic -x -o ~/.terminfo $tempfile \
+          && rm $tempfile
+      stdin: true
+      stdout: true
+      stderr: true
+      quiet: false
 - link:
     $DIRS_CONFIG/fish: config/fish
     $DIRS_CONFIG/gitui: config/gitui
