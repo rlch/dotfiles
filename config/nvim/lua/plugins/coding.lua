@@ -10,7 +10,6 @@ return {
   },
   {
     "monaqa/dial.nvim",
-    lazy = false,
     keys = {
       {
         "<C-a>",
@@ -114,7 +113,6 @@ return {
   },
   {
     "chrisgrieser/nvim-spider",
-    event = "BufEnter",
     opts = {
       skipInsignificantPunctuation = true,
     },
