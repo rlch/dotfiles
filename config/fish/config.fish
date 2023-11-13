@@ -68,7 +68,7 @@ type -q flux && flux completion fish | source
 type -q diesel && diesel completions fish | source
 type -q pyenv && source (pyenv init --path | psub)
 type -q rbenv && source (rbenv init - | psub)
-cat ~/.config/fish/secrets.fish | source
+test -e ~/.config/fish/secrets.fish && cat ~/.config/fish/secrets.fish | source
 for f in ~/.config/fish/autoload/*
     source $f
 end
