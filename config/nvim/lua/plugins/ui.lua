@@ -109,28 +109,35 @@ return {
   {
     "nvimdev/dashboard-nvim",
     opts = function()
-      local logo = [[
-                `         '                
-;,,,             `       '             ,,,;
-`YES8888bo.       :     :       .od8888YES'
-  888IO8DO88b.     :   :     .d8888I8DO88  
-  8LOVEY'  `Y8b.   `   '   .d8Y'  `YLOVE8  
- jTHEE!  .db.  Yb. '   ' .dY  .db.  8THEE! 
-   `888  Y88Y    `b ( ) d'    Y88Y  888'   
-    8MYb  '"        ,',        "'  dMY8    
-   j8prECIOUSgf"'   ':'   `"?g8prECIOUSk   
-     'Y'   .8'     d' 'b     '8.   'Y'     
-      !   .8' db  d'; ;`b  db '8.   !      
-         d88  `'  8 ; ; 8  `'  88b         
-        d88Ib   .g8 ',' 8g.   dI88b        
-       :888LOVE88Y'     'Y88LOVE888:       
-       '! THEE888'       `888THEE !'       
-          '8Y  `Y         Y'  Y8'          
-           Y                   Y           
-           !                   !           
+      local tutero = [[
+            ..:----::.             
+         :-=++==--==+++=:          
+       -===:.       ..:===-.       
+     :===:        .......-==-      
+    -==:..................:==-     
+   :==:.....................==-    
+   ==-....:============:....:==.   
+   ==-......::-===--::......:==.   
+   ==-.........:--:         :==    
+   .==:...     .--.        :==:    
+    :==:       .--.       .==-     
+     .==:      .--.      .-=:      
+      .--:     .--.     .--:       
+       :--     .--.     :--        
+       .--:    :--      --:        
+        :---:----.     .--:        
+         ..::::.     .:--:         
+               ...::::::.          
+           .:--::::..              
+           -=--:.....::.           
+            -========-:.           
+           ====::..  ..            
+           :=+++=++++++-           
+             ..::::...             
+                                   
   ]]
 
-      logo = string.rep("\n", 8) .. logo .. "\n\n"
+      local logo = string.rep("\n", 8) .. tutero .. "\n\n"
 
       local opts = {
         theme = "doom",
@@ -144,12 +151,12 @@ return {
         -- stylua: ignore
         center = {
           { action = "Telescope find_files",                                     desc = " Find file",       icon = " ", key = "f" },
+          { action = "Neotree filesystem current",                               desc = " Filesystem",      icon = "󰙅 ", key = "o" },
           { action = "ene | startinsert",                                        desc = " New file",        icon = " ", key = "n" },
           { action = "Telescope oldfiles",                                       desc = " Recent files",    icon = " ", key = "r" },
           { action = "Telescope live_grep",                                      desc = " Find text",       icon = " ", key = "g" },
           { action = [[lua require("lazyvim.util").telescope.config_files()()]], desc = " Config",          icon = " ", key = "c" },
           { action = 'lua require("persistence").load()',                        desc = " Restore Session", icon = " ", key = "s" },
-          { action = "LazyExtras",                                               desc = " Lazy Extras",     icon = " ", key = "x" },
           { action = "Lazy",                                                     desc = " Lazy",            icon = "󰒲 ", key = "l" },
           { action = "qa",                                                       desc = " Quit",            icon = " ", key = "q" },
         },

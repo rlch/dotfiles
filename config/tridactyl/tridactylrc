@@ -1,0 +1,22 @@
+sanitise tridactyllocal tridactylsync
+
+set smoothscroll true
+set modeindicatormodes {"ignore":"false"}
+colourscheme nord
+
+bind --mode=ex <C-n> ex.next_completion
+bind --mode=ex <C-p> ex.prev_completion
+bind J tabprev
+bind K tabnext
+
+bind --mode=ignore <C-d> scrollpage 0.5
+bind --mode=ignore <C-u> scrollpage -0.5
+bind --mode=ignore <C-j> scrollline 10
+bind --mode=ignore <C-k> scrollline -10
+bind --mode=insert <C-d> scrollpage 0.5
+bind --mode=insert <C-u> scrollpage -0.5
+bind --mode=insert <C-j> scrollline 10
+bind --mode=insert <C-k> scrollline -10
+bind --mode=normal <C-j> scrollline 10
+bind --mode=normal <C-k> scrollline -10
+bind --mode=normal gi    composite focusinput -l | text.end_of_line
