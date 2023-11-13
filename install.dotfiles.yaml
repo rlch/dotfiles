@@ -70,6 +70,7 @@
     $DIRS_CONFIG/nvim: config/nvim
     $DIRS_CONFIG/skhd: config/skhd
     $DIRS_CONFIG/tridactyl: config/tridactyl
+    $DIRS_CONFIG/wezterm: config/wezterm
     $DIRS_CONFIG/yabai: config/yabai
     $DIRS_CONFIG/zellij: config/zellij
     $DIRS_CONFIG/starship.toml: config/starship.toml
