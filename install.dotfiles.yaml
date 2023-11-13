@@ -17,38 +17,42 @@
         xcode-select --version | grep -q "version .*" && echo "xcode-select --install",
         Checking if Xcode Command Line Tools are installed,
       ]
-    - command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - description: Installing homebrew
+      command: brew -v || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       stdin: true
       stdout: true
       quiet: true
-      description: Installing homebrew
     - [brew tap Homebrew/bundle, Setup brew bundle]
-    - command: brew bundle
+    - description: Installing homebrew dependencies
+      command: brew bundle
       stdout: true
       quiet: true
-      description: Installing homebrew dependencies
-    - command: /bin/bash -c "grep -Fxq \"/opt/homebrew/bin/fish\" /etc/shells || echo \"/opt/homebrew/bin/fish\" | sudo tee -a /etc/shells"
+
+    - description: Add fish to /etc/shells
+      command: /bin/bash -c "grep -Fxq \"/opt/homebrew/bin/fish\" /etc/shells || echo \"/opt/homebrew/bin/fish\" | sudo tee -a /etc/shells"
       stdin: true
       stderr: true
       quiet: true
-      description: Add fish to /etc/shells
-    - command: /bin/bash -c "chsh -s /opt/homebrew/bin/fish"
+
+    - description: Making fish the default shell
+      command: /bin/bash -c "chsh -s /opt/homebrew/bin/fish"
       stdin: true
       stderr: true
       quiet: true
-      description: Making fish the default shell
-    - command: gh auth status || gh auth login
+
+    - description: Authenticate with GitHub
+      command: gh auth status || gh auth login
       stdin: true
       stdout: true
       stderr: true
       quiet: false
-      description: Authenticate with GitHub
-    - command: ./install_fonts
+
+    - description: Installing fonts
+      command: ./install_fonts
       quiet: true
-      description: Installing fonts
-    - command: ./install_fisher
+    - description: Installing fish dependencies
+      command: ./install_fisher
       quiet: true
-      description: Installing fish dependencies
 - link:
     $DIRS_CONFIG/fish: config/fish
     $DIRS_CONFIG/gitui: config/gitui
@@ -59,20 +63,15 @@
     $DIRS_CONFIG/zellij: config/zellij
     $DIRS_CONFIG/starship.toml: config/starship.toml
 - shell:
-    - command: >
-        yabai --start-service
+    - description: Starting yabai
+      command: yabai --start-service
       quiet: true
       stderr: true
-      description: Starting yabai
     - command: skhd --start-service
       quiet: true
       stderr: true
       description: Starting skhd
-    - command: >
-        if set -q sa_exists
-          sudo yabai --install-sa
-          sudo yabai --load-sa
-        end
+    - description: Loading yabai SA
+      command: sudo yabai --load-sa
       quiet: true
       stderr: true
-      description: Loading yabai SA
