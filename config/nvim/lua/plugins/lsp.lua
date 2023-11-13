@@ -5,7 +5,7 @@ return {
       require("inc_rename").setup()
     end,
     keys = {
-      { "n", "gr", "<cmd>IncRename " },
+      { "gr", "<cmd>IncRename ", mode = "n" },
     },
   },
 }

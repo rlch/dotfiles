@@ -13,62 +13,104 @@ return {
     lazy = false,
     keys = {
       {
-        "n",
         "<C-a>",
         function()
           require("dial.map").manipulate("increment", "normal")
         end,
+        mode = "n",
       },
       {
-        "n",
         "<C-x>",
         function()
           require("dial.map").manipulate("decrement", "normal")
         end,
+        mode = "n",
       },
       {
-        "n",
         "g<C-a>",
         function()
           require("dial.map").manipulate("increment", "gnormal")
         end,
+        mode = "n",
       },
       {
-        "n",
         "g<C-x>",
         function()
           require("dial.map").manipulate("decrement", "gnormal")
         end,
+        mode = "n",
       },
       {
-        "v",
         "<C-a>",
         function()
           require("dial.map").manipulate("increment", "visual")
         end,
+        mode = "v",
       },
       {
-        "v",
         "<C-x>",
         function()
           require("dial.map").manipulate("decrement", "visual")
         end,
+        mode = "v",
       },
       {
-        "v",
         "g<C-a>",
         function()
           require("dial.map").manipulate("increment", "gvisual")
         end,
+        mode = "v",
       },
       {
-        "v",
         "g<C-x>",
         function()
           require("dial.map").manipulate("decrement", "gvisual")
         end,
+        mode = "v",
       },
     },
+    config = function()
+      local augend = require("dial.augend")
+      local default = {
+        augend.integer.alias.decimal,
+        augend.integer.alias.hex,
+        augend.date.alias["%Y/%m/%d"],
+        augend.constant.alias.bool,
+        augend.constant.new({
+          elements = { "and", "or" },
+          word = true, -- if false, "sand" is incremented into "sor", "doctor" into "doctand", etc.
+          cyclic = true, -- "or" is incremented into "and".
+        }),
+        augend.constant.new({
+          elements = { "&&", "||" },
+          word = false,
+          cyclic = true,
+        }),
+        augend.constant.alias.alpha,
+        augend.constant.alias.Alpha,
+      }
+      require("dial.config").augends:register_group({
+        default = default,
+        typescript = {
+          augend.integer.alias.decimal,
+          augend.integer.alias.hex,
+          augend.constant.new({ elements = { "let", "const" } }),
+        },
+        dart = vim.tbl_extend("force", default, {}),
+        yaml = {
+          augend.integer.alias.decimal,
+          augend.semver.alias.semver,
+          augend.constant.alias.bool,
+        },
+        visual = {
+          augend.integer.alias.decimal,
+          augend.integer.alias.hex,
+          augend.date.alias["%Y/%m/%d"],
+          augend.constant.alias.alpha,
+          augend.constant.alias.Alpha,
+        },
+      })
+    end,
   },
   {
     "chrisgrieser/nvim-spider",
