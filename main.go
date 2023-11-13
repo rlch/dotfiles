@@ -58,9 +58,6 @@ func parseConfig(bytes []byte) (*Config, error) {
 }
 
 func setupEnvs(c *Config) error {
-	if c.BaseDir != "integration/" {
-		return fmt.Errorf("expected integration/ got %s", c.BaseDir)
-	}
 	baseDir, err := filepath.Abs(c.BaseDir)
 	if err != nil {
 		return err
