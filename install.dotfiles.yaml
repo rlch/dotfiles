@@ -3,7 +3,7 @@
       relink: true
       create: true
       force: true
-- clean: ['$BASE_DIR']
+- clean: ["$BASE_DIR"]
 - create:
     - $BASE_DIR
     - $DIRS_CONFIG
@@ -27,6 +27,11 @@
       stdout: true
       quiet: true
       description: Installing homebrew dependencies
+    - command: if [ (basename $SHELL) != "fish" ]; sudo echo /usr/local/bin/fish >> /etc/shells
+      stdin: true
+      stderr: true
+      quiet: true
+      description: Adding fish shell
     - command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
       stdin: true
       stderr: true
