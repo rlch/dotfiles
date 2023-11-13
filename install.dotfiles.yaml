@@ -27,12 +27,7 @@
       stdout: true
       quiet: true
       description: Installing homebrew dependencies
-    - command: if [ (basename $SHELL) != "fish" ]; sudo echo /usr/local/bin/fish >> /etc/shells
-      stdin: true
-      stderr: true
-      quiet: true
-      description: Adding fish shell
-    - command: if [ (basename $SHELL) != "fish" ]; chsh -s /opt/homebrew/bin/fish; end
+    - command: /bin/bash -c "chsh -s /opt/homebrew/bin/fish"
       stdin: true
       stderr: true
       quiet: true

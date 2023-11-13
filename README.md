@@ -1,4 +1,13 @@
-# Tutero dotfiles
+# dotfiles
+
+<!--toc:start-->
+
+- [dotfiles](#dotfiles)
+  - [Getting started](#getting-started)
+  - [Installation](#installation)
+  - [Updating](#updating)
+  - [Contribution](#contribution)
+  <!--toc:end-->
 
 ## Getting started
 
@@ -27,13 +36,13 @@ git fetch template
 git submodule update --remote
 ```
 
-With the dotfiles repository created, we can now install the dotfiles.
+With the dotfiles repository created, we can now install the dotfiles. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` or whichever directory you would like to install your dotfiles to. You may also customize the default folder locations.
 
 ```bash
 go run .
 ```
 
-## Pulling updates from the template
+## Updating
 
 In order to pull updates from this repository when others make improvements, we need to merge your upstream branch with the template branch. We cannot assume equivalent histories given upstream changes can be made.
 
@@ -42,3 +51,7 @@ git fetch template
 git merge template/main --allow-unrelated-histories
 # Resolve any conflicts
 ```
+
+## Contribution
+
+If you have any improvements, features, fixes or new software that you think will benefit everyone in the team,

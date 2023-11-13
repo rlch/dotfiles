@@ -24,7 +24,7 @@ type Config struct {
 
 func main() {
 	if err := run(); err != nil {
-		panic(err)
+		fmt.Println("ERROR:", err)
 	}
 }
 
@@ -52,7 +52,7 @@ func parseConfig(bytes []byte) (*Config, error) {
 		return nil, fmt.Errorf("cannot parse config: %w", err)
 	}
 	if c.BaseDir == "" {
-		return nil, errors.New("base directory needs to be configured, please set baseDir in config")
+		return nil, errors.New("base directory needs to be configured, please set baseDir in config.yaml")
 	}
 	return c, nil
 }
