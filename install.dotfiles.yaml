@@ -45,22 +45,14 @@
       quiet: true
       description: Installing fish dependencies
 - link:
-    $BASE_DIR/.gitconfig: .gitconfig
-    $BASE_DIR/.ssh/config: ssh/config
-    $DIRS_CONFIG/nvim: config/nvim
     $DIRS_CONFIG/fish: config/fish
-    $DIRS_CONFIG/yabai: config/yabai
+    $DIRS_CONFIG/gitui: config/gitui
+    $DIRS_CONFIG/nvim: config/nvim
     $DIRS_CONFIG/skhd: config/skhd
     $DIRS_CONFIG/tridactyl: config/tridactyl
-    $DIRS_CONFIG/tmux: config/tmux
-    $DIRS_CONFIG/kitty: config/kitty
-    $DIRS_CONFIG/gitui: config/gitui
-    $DIRS_CONFIG/starship.toml: config/starship.toml
-    $DIRS_CONFIG/k9s: config/k9s
-    $DIRS_CONFIG/lazydocker: config/lazydocker
-    $DIRS_CONFIG/omf: config/omf
-    $DIRS_CONFIG/raycast: config/raycast
+    $DIRS_CONFIG/yabai: config/yabai
     $DIRS_CONFIG/zellij: config/zellij
+    $DIRS_CONFIG/starship.toml: config/starship.toml
 - shell:
     - command: >
         yabai --restart-service

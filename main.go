@@ -77,8 +77,14 @@ func setupEnvs(c *Config) error {
 }
 
 func runDotbot() error {
-	if err := os.Chmod("install", os.ModePerm); err != nil {
-		return fmt.Errorf("cannot chmod install: %w", err)
+	for _, bin := range []string{
+		"install",
+		"install_fonts",
+		"install_fisher",
+	} {
+		if err := os.Chmod(bin, os.ModePerm); err != nil {
+			return fmt.Errorf("cannot chmod %s: %w", bin, err)
+		}
 	}
 	cmd := exec.Command("./install")
 	cmd.Stdout = os.Stdout
