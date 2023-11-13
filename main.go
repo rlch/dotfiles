@@ -3,10 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strings"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,7 +18,6 @@ import (
 type Config struct {
 	BaseDir string `yaml:"baseDir"`
 	Dirs    struct {
-		Config         string `yaml:"config"`
 		Backend        string `yaml:"backend"`
 		Frontend       string `yaml:"frontend"`
 		Infrastructure string `yaml:"infrastructure"`
@@ -38,6 +41,9 @@ func run() error {
 		return err
 	}
 	if err := setupEnvs(c); err != nil {
+		return err
+	}
+	if err := execTemplate(c); err != nil {
 		return err
 	}
 	if err := runDotbot(); err != nil {
@@ -65,15 +71,52 @@ func setupEnvs(c *Config) error {
 	os.Setenv("BASE_DIR", baseDir)
 
 	sub := func(d string) string {
-		return path.Join(baseDir, d)
+		return path.Clean(path.Join(baseDir, d))
 	}
-	os.Setenv("DIRS_CONFIG", sub(c.Dirs.Config))
 	os.Setenv("DIRS_BACKEND", sub(c.Dirs.Backend))
 	os.Setenv("DIRS_FRONTEND", sub(c.Dirs.Frontend))
 	os.Setenv("DIRS_INFRASTRUCTURE", sub(c.Dirs.Infrastructure))
 	os.Setenv("DIRS_PLAYGROUND", sub(c.Dirs.Playground))
 	fmt.Println(os.Getenv("DIRS_CONFIG"))
 	return nil
+}
+
+func execTemplate(c *Config) error {
+	type Vars struct {
+		Config
+	}
+	vars := Vars{Config: *c}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("cannot get current directory: %w", err)
+	}
+	filepath.WalkDir(path.Join(cwd, "config"), func(p string, d fs.DirEntry, _ error) error {
+		re := regexp.MustCompile(`(.*)\.(\w+)\.tmpl$`)
+		matches := re.FindStringSubmatch(d.Name())
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".tmpl") {
+			return nil
+		}
+		content, err := os.ReadFile(p)
+		if err != nil {
+			return fmt.Errorf("cannot read file: %w", err)
+		}
+		tmpl, err := template.New("dotfiles").Parse(string(content))
+		if err != nil {
+			return fmt.Errorf("cannot parse template: %w", err)
+		}
+		dir := path.Dir(p)
+		newFilename := matches[1] + "." + matches[2]
+		file, err := os.Create(path.Join(dir, newFilename))
+		if err != nil {
+			return fmt.Errorf("cannot open file: %w", err)
+		}
+		defer file.Close()
+		if err := tmpl.Execute(file, vars); err != nil {
+			return fmt.Errorf("cannot execute template: %w", err)
+		}
+		return os.Remove(p)
+	})
+	return errors.New("laksjdfh")
 }
 
 func runDotbot() error {
