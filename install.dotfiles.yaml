@@ -6,7 +6,6 @@
 - clean: ["$BASE_DIR"]
 - create:
     - $BASE_DIR
-    - $DIRS_CONFIG
     - $DIRS_BACKEND
     - $DIRS_FRONTEND
     - $DIRS_INFRASTRUCTURE
@@ -65,15 +64,15 @@
       stderr: true
       quiet: false
 - link:
-    $DIRS_CONFIG/fish: config/fish
-    $DIRS_CONFIG/gitui: config/gitui
-    $DIRS_CONFIG/nvim: config/nvim
-    $DIRS_CONFIG/skhd: config/skhd
-    $DIRS_CONFIG/tridactyl: config/tridactyl
-    $DIRS_CONFIG/wezterm: config/wezterm
-    $DIRS_CONFIG/yabai: config/yabai
-    $DIRS_CONFIG/zellij: config/zellij
-    $DIRS_CONFIG/starship.toml: config/starship.toml
+    $BASE_DIR/.config/fish: config/fish
+    $BASE_DIR/.config/gitui: config/gitui
+    $BASE_DIR/.config/nvim: config/nvim
+    $BASE_DIR/.config/skhd: config/skhd
+    $BASE_DIR/.config/tridactyl: config/tridactyl
+    $BASE_DIR/.config/wezterm: config/wezterm
+    $BASE_DIR/.config/yabai: config/yabai
+    $BASE_DIR/.config/zellij: config/zellij
+    $BASE_DIR/.config/starship.toml: config/starship.toml
 - shell:
     - description: Starting yabai
       command: yabai --start-service

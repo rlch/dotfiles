@@ -77,7 +77,6 @@ func setupEnvs(c *Config) error {
 	os.Setenv("DIRS_FRONTEND", sub(c.Dirs.Frontend))
 	os.Setenv("DIRS_INFRASTRUCTURE", sub(c.Dirs.Infrastructure))
 	os.Setenv("DIRS_PLAYGROUND", sub(c.Dirs.Playground))
-	fmt.Println(os.Getenv("DIRS_CONFIG"))
 	return nil
 }
 
@@ -116,7 +115,7 @@ func execTemplate(c *Config) error {
 		}
 		return os.Remove(p)
 	})
-	return errors.New("laksjdfh")
+	return nil
 }
 
 func runDotbot() error {
