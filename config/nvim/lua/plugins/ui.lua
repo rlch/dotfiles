@@ -56,6 +56,10 @@ return {
           hide_gitignored = true,
           hide_hidden = true,
         },
+        follow_current_file = {
+          enabled = true,
+          leave_dirs_open = true,
+        },
       },
     },
     keys = {
