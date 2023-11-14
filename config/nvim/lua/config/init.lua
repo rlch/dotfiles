@@ -11,6 +11,8 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+require("config.globals")
+
 package.loaded["lazyvim.config.options"] = true
 require("lazy").setup({
   spec = {
