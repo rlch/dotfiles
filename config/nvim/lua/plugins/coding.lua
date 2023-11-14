@@ -314,12 +314,6 @@ return {
     end,
   },
   {
-    "L3MON4D3/LuaSnip",
-    keys = function()
-      return {}
-    end,
-  },
-  {
     "zbirenbaum/copilot.lua",
     opts = {
       suggestion = {
@@ -344,5 +338,86 @@ return {
         gitrebase = true,
       },
     },
+  },
+  {
+    "L3MON4D3/LuaSnip",
+    lazy = false,
+    build = (not jit.os:find("Windows"))
+        and "echo 'NOTE: jsregexp is optional, so not a big deal if it fails to build'; make install_jsregexp"
+      or nil,
+    dependencies = {
+      "rafamadriz/friendly-snippets",
+    },
+    config = function(_, opts)
+      local ls = require("luasnip")
+      ls.config.setup(opts)
+      ls.filetype_extend("dart", { "flutter" })
+      ls.filetype_extend("typescriptreact", { "javascriptreact", "html" })
+      require("luasnip.loaders.from_vscode").lazy_load()
+      require("luasnip.loaders.from_lua").load({
+        paths = { "~/.config/nvim/luasnippets" },
+      })
+    end,
+    opts = function()
+      local ls = require("luasnip")
+      local types = require("luasnip.util.types")
+      local extras = require("luasnip.extras")
+      local fmt = require("luasnip.extras.fmt").fmt
+
+      return {
+        history = true,
+        delete_check_events = "TextChanged",
+        enable_autosnippets = true,
+        ext_opts = {
+          [types.choiceNode] = {
+            active = {
+              hl_mode = "combine",
+              virt_text = { { "∨", "Operator" } },
+            },
+          },
+          [types.insertNode] = {
+            active = {
+              hl_mode = "combine",
+              virt_text = { { "●", "Type" } },
+            },
+          },
+        },
+        snip_env = {
+          fmt = fmt,
+          m = extras.match,
+          t = ls.text_node,
+          f = ls.function_node,
+          c = ls.choice_node,
+          d = ls.dynamic_node,
+          i = ls.insert_node,
+          l = extras.lamda,
+          snippet = ls.snippet,
+        },
+      }
+    end,
+    keys = function()
+      return {
+        {
+          "<c-k>",
+          function()
+            local ls = require("luasnip")
+            if ls.choice_active() then
+              ls.change_choice(1)
+            end
+          end,
+          mode = { "s", "i" },
+        },
+        {
+          "<c-j>",
+          function()
+            local ls = require("luasnip")
+            if ls.choice_active() then
+              require("luasnip.extras.select_choice")()
+            end
+          end,
+          mode = { "s", "i" },
+        },
+      }
+    end,
   },
 }
