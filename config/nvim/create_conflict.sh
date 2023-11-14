@@ -1,5 +1,5 @@
 #!/bin/bash
-[ -d ./../conflict-test/ ] && rm -rf ./conflict-test/
+rm -rf ./conflict-test/
 mkdir conflict-test
 cd conflict-test || exit
 git init
