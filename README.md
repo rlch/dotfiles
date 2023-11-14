@@ -42,6 +42,9 @@ With the dotfiles repository created, we can now install the dotfiles. First, mo
 go run .
 ```
 
+> [!NOTE]
+> If the installation process hangs when installing dependencies for longer than 20-30 seconds, try cancelling with `<Ctrl-C>` and run `go run .` again. The script is idempotent.
+
 ## Updating
 
 In order to pull updates from this repository when others make improvements, we need to merge your upstream branch with the template branch. We cannot assume equivalent histories given upstream changes can be made.

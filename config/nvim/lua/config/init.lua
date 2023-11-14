@@ -26,8 +26,8 @@ require("lazy").setup({
           keymaps = false,
         },
         news = {
-          lazyim = true,
           neovim = true,
+          lazyim = true,
         },
       },
     },
