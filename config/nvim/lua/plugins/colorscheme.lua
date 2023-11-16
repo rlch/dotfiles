@@ -8,6 +8,16 @@ return {
         light = "latte",
         dark = "macchiato",
       },
+      integrations = {
+        dropbar = { enable = true },
+        headlines = true,
+        neotree = true,
+        noice = true,
+        notify = true,
+        treesitter_context = true,
+        octo = true,
+        which_key = true,
+      },
     },
     config = function(_, opts)
       require("catppuccin").setup(opts)

@@ -191,7 +191,7 @@ return {
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
           ["<C-a>"] = cmp.mapping.complete(),
-          ["<C-oe>"] = cmp.mapping.abort(),
+          ["<C-e>"] = cmp.mapping.abort(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
           ["<S-CR>"] = cmp.mapping.confirm({
             behavior = cmp.ConfirmBehavior.Replace,
@@ -202,14 +202,13 @@ return {
             fallback()
           end,
           ["<Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
+            if luasnip.expand_or_locally_jumpable() then
+              luasnip.expand_or_jump()
+            elseif cmp.visible() then
               -- You could replace select_next_item() with confirm({ select = true }) to get VS Code autocompletion behavior
               cmp.confirm({ select = false })
-              -- You could replace the expand_or_jumpable() calls with expand_or_locally_jumpable()
-              --  j
-              -- this way you will only jump inside the snippet region
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
+            elseif luasnip.jumpable(1) then
+              luasnip.jump(1)
             elseif has_words_before() then
               cmp.complete()
             else
@@ -231,6 +230,7 @@ return {
           { name = "luasnip" },
           { name = "nvim_lsp" },
           { name = "nvim_lsp_signature_help" },
+          { name = "git" },
           { name = "path" },
           { name = "buffer" },
           { name = "rg" },
@@ -365,8 +365,10 @@ return {
       local fmt = require("luasnip.extras.fmt").fmt
 
       return {
-        history = true,
-        delete_check_events = "TextChanged",
+        history = false,
+        region_check_events = "CursorMoved,CursorHold,InsertEnter",
+        delete_check_events = "TextChanged,InsertLeave",
+        update_events = "TextChanged,TextChangedI",
         enable_autosnippets = true,
         ext_opts = {
           [types.choiceNode] = {
@@ -395,29 +397,28 @@ return {
         },
       }
     end,
-    keys = function()
-      return {
-        {
-          "<c-k>",
-          function()
-            local ls = require("luasnip")
-            if ls.choice_active() then
-              ls.change_choice(1)
-            end
-          end,
-          mode = { "s", "i" },
-        },
-        {
-          "<c-j>",
-          function()
-            local ls = require("luasnip")
-            if ls.choice_active() then
-              require("luasnip.extras.select_choice")()
-            end
-          end,
-          mode = { "s", "i" },
-        },
-      }
-    end,
+    keys = {
+      { "<Tab>", false },
+      {
+        "<c-k>",
+        function()
+          local ls = require("luasnip")
+          if ls.choice_active() then
+            ls.change_choice(1)
+          end
+        end,
+        mode = { "s", "i" },
+      },
+      {
+        "<c-j>",
+        function()
+          local ls = require("luasnip")
+          if ls.choice_active() then
+            require("luasnip.extras.select_choice")()
+          end
+        end,
+        mode = { "s", "i" },
+      },
+    },
   },
 }

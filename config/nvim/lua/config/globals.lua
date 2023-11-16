@@ -1,4 +1,7 @@
-I = function(table)
-  local pkg = debug.getinfo(2).source:match("@?(.*)")
-  return vim.notify(pkg .. "\n" .. vim.inspect(table), vim.log.levels.INFO)
+I = function(table, print_pkg)
+  local log = vim.inspect(table)
+  if print_pkg then
+    log = log .. "\n" .. debug.getinfo(2).source:match("@?(.*)")
+  end
+  return vim.notify(log, vim.log.levels.INFO)
 end

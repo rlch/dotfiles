@@ -6,7 +6,10 @@ return {
     opts = function()
       return {
         markdown = {
-          headline_highlights = false,
+          headline_highlights = {
+            "Headline1",
+            "Headline2",
+          },
         },
       }
     end,
@@ -27,9 +30,15 @@ return {
   },
   {
     "mfussenegger/nvim-lint",
+    init = function()
+      require("lint").linters.markdownlint.args = {
+        "--disable",
+        "MD013",
+      }
+    end,
     opts = {
       linters_by_ft = {
-        markdown = { "markdownlint", "vale" },
+        markdown = { "markdownlint" },
       },
     },
   },

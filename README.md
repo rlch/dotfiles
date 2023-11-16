@@ -1,8 +1,8 @@
-# dotfiles
+# `dotfiles`
 
 <!--toc:start-->
 
-- [dotfiles](#dotfiles)
+- [`dotfiles`](#dotfiles)
   - [Getting started](#getting-started)
   - [Installation](#installation)
   - [Updating](#updating)
@@ -11,20 +11,27 @@
 
 ## Getting started
 
-Before dotfiles are installed, a few dependencies are required:
+Before `dotfiles` can be setup, install a few dependencies:
 
-- [GitHub CLI](https://docs.github.com/en/github-cli/github-cli/quickstart)
-- [Go](https://go.dev/doc/install)
+- [`brew`](https://brew.sh/)
+- [`gh`](https://docs.github.com/en/github-cli/github-cli/quickstart)
+- [`go`](https://go.dev/doc/install)
+
+After installing `brew`, install the remaining dependencies using:
+
+```bash
+brew install gh go ...
+```
 
 ## Installation
 
-First, we install the GitHub CLI `gh` and authenticate with GitHub.
+First, install the GitHub command-line tool `gh` and authenticate with GitHub.
 
 ```bash
 gh auth login
 ```
 
-Now, we create a dotfiles repository on your GitHub account, from the Tutero `dotfiles` template.
+Now, we create a `dotfiles` repository on your GitHub account, from the Tutero `dotfiles` template.
 
 ```bash
 cd ~
@@ -36,7 +43,7 @@ git fetch template
 git submodule update --remote
 ```
 
-With the dotfiles repository created, we can now install the dotfiles. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` or whichever directory you would like to install your dotfiles to. You may also customize the default folder locations.
+With the `dotfiles` repository created, run the installation process. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` or whichever directory you would like to install your `dotfiles` to. You may also customize the default folder locations.
 
 ```bash
 go run .
@@ -57,4 +64,4 @@ git merge template/main --allow-unrelated-histories
 
 ## Contribution
 
-If you have any improvements, features, fixes or new software that you think will benefit everyone in the team,
+If you have any improvements, features, fixes, or new software that you think benefit everyone in the team,

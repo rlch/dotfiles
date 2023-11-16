@@ -6,6 +6,9 @@ return {
       -- disable a keymap
       keys[#keys + 1] = { "<leader>cr", false }
     end,
+    opts = {
+      inlay_hints = { enabled = true },
+    },
   },
   {
     "smjonas/inc-rename.nvim",
