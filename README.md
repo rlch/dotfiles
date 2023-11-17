@@ -28,6 +28,7 @@ brew install gh go ...
 Also install the terminal definitions for `wezterm` in a `bash/zsh` shell (this isn't valid `fish`):
 
 ```bash
+bash
 tempfile=$(mktemp) \
   && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
   && tic -x -o ~/.terminfo $tempfile \
