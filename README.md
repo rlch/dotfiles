@@ -3,12 +3,12 @@
 <!--toc:start-->
 
 - [`dotfiles`](#dotfiles)
-
   - [Getting started](#getting-started)
   - [Installation](#installation)
+  - [Making changes](#making-changes)
+    - [Tracking configuration for new software](#tracking-configuration-for-new-software)
   - [Updating](#updating)
   - [Contribution](#contribution)
-
   <!--toc:end-->
 
 ## Getting started
@@ -54,7 +54,7 @@ git fetch template
 git submodule update --remote
 ```
 
-With the `dotfiles` repository created, run the installation process. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` or whichever directory you would like to install your `dotfiles` to. You may also customize the default folder locations.
+With the `dotfiles` repository created, run the installation process. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` (no trailing `/`) or whichever directory you would like to install your `dotfiles` to. You may also customize the default folder locations.
 
 ```bash
 go run .
@@ -64,6 +64,13 @@ go run .
 > If the installation process hangs when installing dependencies for longer than 20-30 seconds, try cancelling with `<Ctrl-C>` and run `go run .` again. The script is idempotent.
 
 After the installation process completes, it is recommended to logout and login again to ensure system changes (like key repeat) have been applied.
+
+> [!IMPORTANT]
+> If you already had `<baseDir>/.config/*` files, they will be moved to `<baseDir>/.config.bak/*`. Ensure any files you want to keep in your `dotfiles` are moved back to `<baseDir>/.config/*`.
+
+## Making changes
+
+### Tracking configuration for new software
 
 ## Updating
 

@@ -16,8 +16,10 @@ import (
 )
 
 type Config struct {
-	BaseDir string `yaml:"baseDir"`
-	Dirs    struct {
+	Backup    bool   `yaml:"backup"`
+	BackupDir string `yaml:"backupDir"`
+	BaseDir   string `yaml:"baseDir"`
+	Dirs      struct {
 		Backend        string `yaml:"backend"`
 		Frontend       string `yaml:"frontend"`
 		Infrastructure string `yaml:"infrastructure"`
@@ -40,6 +42,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if c.Backup {
+		if err := backupFiles(c); err != nil {
+			return err
+		}
+	}
 	if err := setupEnvs(c); err != nil {
 		return err
 	}
@@ -49,7 +56,30 @@ func run() error {
 	if err := runDotbot(); err != nil {
 		return err
 	}
-	return nil
+	return success()
+}
+
+func backupFiles(c *Config) error {
+	bakDir := path.Join(c.BaseDir, c.BackupDir)
+	if err := os.Mkdir(bakDir, os.ModePerm); err != nil &&
+		!strings.Contains(err.Error(), "file exists") {
+		return err
+	}
+	root := path.Clean(path.Join(c.BaseDir, ".config"))
+	return filepath.WalkDir(
+		root,
+		func(p string, d fs.DirEntry, _ error) error {
+			if path.Clean(root) == path.Clean(p) || !d.IsDir() {
+				return nil
+			}
+			if d.Type() == fs.ModeSymlink {
+				return nil
+			}
+			if err := os.Rename(p, path.Join(bakDir, d.Name())); err != nil {
+				return err
+			}
+			return fs.SkipDir
+		})
 }
 
 func parseConfig(bytes []byte) (*Config, error) {
@@ -81,9 +111,7 @@ func setupEnvs(c *Config) error {
 }
 
 func execTemplate(c *Config) error {
-	type Vars struct {
-		Config
-	}
+	type Vars struct{ Config }
 	vars := Vars{Config: *c}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -134,4 +162,8 @@ func runDotbot() error {
 		return fmt.Errorf("cannot run install: %w", err)
 	}
 	return nil
+}
+
+func success() error {
+	return exec.Command("say", "-v", "ralph", "\"Your config is now managed by the almighty bean. All hail beans. All hail beans. All hail beans.\"").Run()
 }
