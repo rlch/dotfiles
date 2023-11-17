@@ -18,11 +18,12 @@ Before `dotfiles` can be setup, install a few dependencies:
 - [`brew`](https://brew.sh/)
 - [`gh`](https://docs.github.com/en/github-cli/github-cli/quickstart)
 - [`go`](https://go.dev/doc/install)
+- [`jq`](https://jqlang.github.io/jq/download/)
 
 After installing `brew`, install the remaining dependencies using:
 
 ```bash
-brew install gh go ...
+brew install gh go jq
 ```
 
 Also install the terminal definitions for `wezterm` in a `bash/zsh` shell (this isn't valid `fish`):
@@ -46,10 +47,11 @@ gh auth login
 Now, we create a `dotfiles` repository on your GitHub account, from the Tutero `dotfiles` template.
 
 ```bash
+GH_USER=$(gh api user | jq -r '.login')
 cd ~
-gh repo create <github-username>/dotfiles --private --template=MathGaps/dotfiles
-gh repo clone <github-username>/dotfiles dotfiles
+gh repo create $GH_USER/dotfiles --private --template=MathGaps/dotfiles
 cd dotfiles
+gh repo clone $GH_USER/dotfiles dotfiles
 git remote add template https://github.com/MathGaps/dotfiles.git
 git fetch template
 git submodule update --remote
