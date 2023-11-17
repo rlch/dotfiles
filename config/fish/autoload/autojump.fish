@@ -43,7 +43,7 @@ function __aj_err
     false
 end
 
-function jj
+function jj --wraps j
     switch "$argv"
         case '-*' '--*'
             autojump $argv
@@ -67,12 +67,11 @@ function jj
     end
 end
 
-# default autojump command
 # automatically executes zl after jumping successfully
 function j
     jj $argv
     zl
-    if test $status -eq 2
+    if test $status -ne 0
         cd -
     end
 end
@@ -82,7 +81,7 @@ function jt --wraps j
 end
 
 # jump to child directory (subdirectory of current path)
-function jc
+function jc --wraps j
     switch "$argv"
         case '-*'
             j $argv
