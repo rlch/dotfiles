@@ -50,8 +50,8 @@ Now, we create a `dotfiles` repository on your GitHub account, from the Tutero `
 GH_USER=$(gh api user | jq -r '.login')
 cd ~
 gh repo create $GH_USER/dotfiles --private --template=MathGaps/dotfiles
-cd dotfiles
 gh repo clone $GH_USER/dotfiles dotfiles
+cd dotfiles
 git remote add template https://github.com/MathGaps/dotfiles.git
 git fetch template
 git submodule update --remote
