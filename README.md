@@ -3,10 +3,12 @@
 <!--toc:start-->
 
 - [`dotfiles`](#dotfiles)
+
   - [Getting started](#getting-started)
   - [Installation](#installation)
   - [Updating](#updating)
   - [Contribution](#contribution)
+
   <!--toc:end-->
 
 ## Getting started
@@ -21,6 +23,15 @@ After installing `brew`, install the remaining dependencies using:
 
 ```bash
 brew install gh go ...
+```
+
+Also install the terminal definitions for `wezterm`:
+
+```bash
+tempfile=$(mktemp) \
+  && curl -o=$tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
+  && tic -x -o ~/.terminfo $tempfile \
+  && rm $tempfile
 ```
 
 ## Installation
@@ -51,6 +62,8 @@ go run .
 
 > [!NOTE]
 > If the installation process hangs when installing dependencies for longer than 20-30 seconds, try cancelling with `<Ctrl-C>` and run `go run .` again. The script is idempotent.
+
+After the installation process completes, it is recommended to logout and login again to ensure system changes (like key repeat) have been applied.
 
 ## Updating
 

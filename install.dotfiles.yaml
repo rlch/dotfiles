@@ -21,6 +21,13 @@
       stdin: true
       stdout: true
       quiet: true
+    - description: Reduce key repeat
+      command: |
+        defaults write -g KeyRepeat -int 1;
+        defaults write -g InitialKeyRepeat -int 10;
+      stdin: true
+      stdout: true
+      quiet: true
     - [brew tap Homebrew/bundle, Setup brew bundle]
     - description: Installing homebrew dependencies
       command: brew bundle
@@ -52,17 +59,6 @@
     - description: Installing fish dependencies
       command: ./install_fisher
       quiet: true
-
-    - description: Add wezterm terminal definition
-      command: |
-        tempfile=$(mktemp) \
-          && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
-          && tic -x -o ~/.terminfo $tempfile \
-          && rm $tempfile
-      stdin: true
-      stdout: true
-      stderr: true
-      quiet: false
 - link:
     $BASE_DIR/.config/fish: config/fish
     $BASE_DIR/.config/gitui: config/gitui
