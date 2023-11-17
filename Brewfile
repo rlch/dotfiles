@@ -18,7 +18,6 @@ brew "node"
 brew "pyenv"
 brew "luarocks"
 brew "lua-language-server"
-brew "vale"
 
 # miscellaneous
 cask "the-unarchiver"
