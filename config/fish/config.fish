@@ -88,11 +88,6 @@ set fish_cursor_replace_one underscore
 set fish_cursor_visual block
 set fish_vi_force_cursor 1
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '~/Downloads/google-cloud-sdk/path.fish.inc' ]
-    . '~/Downloads/google-cloud-sdk/path.fish.inc'
-end
-
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 if test -f ~/miniconda3/bin/conda
