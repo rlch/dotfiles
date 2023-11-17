@@ -4,6 +4,18 @@ local function augroup(name)
   return vim.api.nvim_create_augroup("dotfiles_" .. name, { clear = true })
 end
 
+vim.api.nvim_create_user_command("Say", function(opts)
+  I(opts)
+  local arg = opts.args
+  local Job = require("plenary.job")
+  Job:new({
+    command = "say",
+    args = { "-v", "ralph", '"' .. arg .. '"' },
+  }):start()
+end, {
+  nargs = "+",
+})
+
 -- Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = augroup("checktime"),
