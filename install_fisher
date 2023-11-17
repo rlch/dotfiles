@@ -12,3 +12,4 @@ fisher install edc/bass
 fisher install franciscolourenco/done
 fisher install jorgebucaran/nvm.fish
 fisher install markcial/upto
+fisher install meaningful-ooo/sponge

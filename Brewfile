@@ -28,4 +28,3 @@ brew "koekeishiya/formulae/yabai"
 
 # fonts
 tap "homebrew/cask-fonts"
-cask "font-jetbrains-mono-nerd-font"
