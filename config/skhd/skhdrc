@@ -76,4 +76,3 @@ shift + lctrl + alt - r : \
 # Make window native fullscreen
 alt - f         : yabai -m window --toggle zoom-fullscreen
 ctrl + alt - f  : yabai -m window --toggle native-fullscreen
-

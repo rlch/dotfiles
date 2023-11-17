@@ -22,6 +22,9 @@ set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 # Tutero
 set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
+if not status --is-interactive
+    return
+end
 status job-control full
 
 # CLI
