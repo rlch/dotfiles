@@ -22,9 +22,6 @@ set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 # Tutero
 set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
-if not status --is-interactive
-    return
-end
 status job-control full
 
 # CLI
@@ -104,3 +101,17 @@ end
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+set ZELLIJ_AUTO_ATTACH true
+set ZELLIJ_AUTO_EXIT true
+if not set -q ZELLIJ
+    if test "$ZELLIJ_AUTO_ATTACH" = true
+        zellij attach --index 0 || zellij
+    else
+        zellij
+    end
+
+    if test "$ZELLIJ_AUTO_EXIT" = true
+        kill $fish_pid
+    end
+end
