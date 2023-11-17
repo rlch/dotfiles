@@ -5,7 +5,6 @@ local function augroup(name)
 end
 
 vim.api.nvim_create_user_command("Say", function(opts)
-  I(opts)
   local arg = opts.args
   local Job = require("plenary.job")
   Job:new({
