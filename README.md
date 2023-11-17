@@ -25,11 +25,11 @@ After installing `brew`, install the remaining dependencies using:
 brew install gh go ...
 ```
 
-Also install the terminal definitions for `wezterm`:
+Also install the terminal definitions for `wezterm` in a `bash/zsh` shell (this isn't valid `fish`):
 
 ```bash
 tempfile=$(mktemp) \
-  && curl -o=$tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
+  && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
   && tic -x -o ~/.terminfo $tempfile \
   && rm $tempfile
 ```
