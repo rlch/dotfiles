@@ -33,26 +33,16 @@
       command: brew bundle
       stdout: true
       quiet: true
-
     - description: Add fish to /etc/shells
       command: /bin/bash -c "grep -Fxq \"/opt/homebrew/bin/fish\" /etc/shells || echo \"/opt/homebrew/bin/fish\" | sudo tee -a /etc/shells"
       stdin: true
       stderr: true
       quiet: true
-
     - description: Making fish the default shell
       command: /bin/bash -c "chsh -s /opt/homebrew/bin/fish"
       stdin: true
       stderr: true
       quiet: true
-
-    - description: Authenticate with GitHub
-      command: gh auth status || gh auth login
-      stdin: true
-      stdout: true
-      stderr: true
-      quiet: false
-
     - description: Installing fonts
       command: ./install_fonts
       quiet: true
