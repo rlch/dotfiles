@@ -78,7 +78,7 @@ for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}')
 end
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
-[ -f ~/.google-cloud-sdk/path.fish.inc ]; and source '~/.google-cloud-sdk/path.fish.inc'
+test -d '~/.google-cloud-sdk/' && test -f '~/.google-cloud-sdk/path.fish.inc' && source '~/.google-cloud-sdk/path.fish.inc'
 
 # Vi mode
 

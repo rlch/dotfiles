@@ -5,6 +5,9 @@ add_newline = false
 [gcloud]
 disabled = true
 
+[battery]
+disabled = true
+
 [character]
 success_symbol = "[λ](bold purple)"
 error_symbol = "[λ](bold red)"
