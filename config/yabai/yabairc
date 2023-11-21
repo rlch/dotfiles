@@ -48,6 +48,11 @@ yabai -m config mouse_action1 move
 yabai -m config mouse_action2 resize
 yabai -m config mouse_drop_action swap
 
+# ==== Spaces ==================================
+
+yabai -m config --space 1 left_padding 378
+yabai -m config --space 1 right_padding 378
+
 # ===== Rules ==================================
 
 yabai -m rule --add label="About This Mac" app="System Information" title="About This Mac" manage=off
