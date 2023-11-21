@@ -52,13 +52,16 @@
 - link:
     $BASE_DIR/.config/fish: config/fish
     $BASE_DIR/.config/gitui: config/gitui
+    $BASE_DIR/.config/k9s: config/k9s
+    $BASE_DIR/.config/lazydocker: config/lazydocker
     $BASE_DIR/.config/nvim: config/nvim
+    $BASE_DIR/.config/omf: config/omf
     $BASE_DIR/.config/skhd: config/skhd
+    $BASE_DIR/.config/starship.toml: config/starship.toml
     $BASE_DIR/.config/tridactyl: config/tridactyl
     $BASE_DIR/.config/wezterm: config/wezterm
     $BASE_DIR/.config/yabai: config/yabai
     $BASE_DIR/.config/zellij: config/zellij
-    $BASE_DIR/.config/starship.toml: config/starship.toml
 - shell:
     - description: Starting yabai
       command: yabai --start-service
