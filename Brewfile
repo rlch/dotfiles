@@ -1,26 +1,24 @@
 # shell
-brew "fish"
-brew "zellij"
-brew "starship"
-brew "gitui"
-brew "git-delta"
 brew "autojump"
-brew "ripgrep"
-brew "fd"
-brew "fzf"
 brew "exa"
+brew "fd"
+brew "fish"
+brew "fzf"
+brew "git-delta"
+brew "gitui"
+brew "ripgrep"
+brew "starship"
 brew "tree"
+brew "zellij"
 
 # development
-cask "wezterm"
+brew "lua-language-server"
+brew "luarocks"
 brew "neovim"
 brew "node"
 brew "pyenv"
-brew "luarocks"
-brew "lua-language-server"
-
-# miscellaneous
-cask "the-unarchiver"
+brew "vale"
+cask "wezterm"
 
 # window tiling
 brew "koekeishiya/formulae/skhd"

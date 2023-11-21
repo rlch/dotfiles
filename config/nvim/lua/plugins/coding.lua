@@ -78,7 +78,7 @@ return {
         augend.constant.new({
           elements = { "and", "or" },
           word = true, -- if false, "sand" is incremented into "sor", "doctor" into "doctand", etc.
-          cyclic = true, -- "or" is incremented into "and".
+          cyclic = true, -- "or" is incremented into "and."
         }),
         augend.constant.new({
           elements = { "&&", "||" },

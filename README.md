@@ -44,7 +44,7 @@ First, install the GitHub command-line tool `gh` and authenticate with GitHub.
 gh auth login
 ```
 
-Now, we create a `dotfiles` repository on your GitHub account, from the Tutero `dotfiles` template.
+Now, create a `dotfiles` repository on your GitHub account, from the Tutero `dotfiles` template.
 
 ```bash
 GH_USER=$(gh api user | jq -r '.login')
@@ -66,7 +66,7 @@ go run .
 > [!NOTE]
 > If the installation process hangs when installing dependencies for longer than 20-30 seconds, try cancelling with `<Ctrl-C>` and run `go run .` again. The script is idempotent.
 
-After the installation process completes, it is recommended to logout and login again to ensure system changes (like key repeat) have been applied.
+After the installation process completes, it's recommended to logout and login again to ensure system changes (like key repeat) have been applied.
 
 > [!IMPORTANT]
 > If you already had `<baseDir>/.config/*` files, they will be moved to `<baseDir>/.config.bak/*`. Ensure any files you want to keep in your `dotfiles` are moved back to `<baseDir>/.config/*`.

@@ -62,7 +62,13 @@
     $BASE_DIR/.config/wezterm: config/wezterm
     $BASE_DIR/.config/yabai: config/yabai
     $BASE_DIR/.config/zellij: config/zellij
+    $BASE_DIR/.vale.ini: config/vale.ini
 - shell:
+    - description: Sync vale configuration
+      command: cd $BASE_DIR && vale sync
+      quiet: true
+      stdout: true
+      stderr: true
     - description: Starting yabai
       command: yabai --start-service
       quiet: true

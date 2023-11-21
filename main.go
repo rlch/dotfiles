@@ -16,7 +16,6 @@ import (
 )
 
 type Config struct {
-	Backup    bool   `yaml:"backup"`
 	BackupDir string `yaml:"backupDir"`
 	BaseDir   string `yaml:"baseDir"`
 	Dirs      struct {
@@ -25,6 +24,7 @@ type Config struct {
 		Infrastructure string `yaml:"infrastructure"`
 		Playground     string `yaml:"playground"`
 	}
+	Backup bool `yaml:"backup"`
 }
 
 func main() {

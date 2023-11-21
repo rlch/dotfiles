@@ -1,4 +1,4 @@
-backup: true
+backup: false
 backupDir: ".config.bak"
 # baseDir is the base directory for all the subdirectories of dirs.
 baseDir: /Users/rjm
