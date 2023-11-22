@@ -13,6 +13,8 @@ color["focused"]="0x5e00c460"
 color["normal"]="0x00010101"
 color["preselect"]="0xE02d74da"
 
+BIGGEST_DISPLAY=$(yabai -m query --displays | jq -r 'max_by(.frame.w) | .index')
+
 # ===== Tiling setting =========================
 
 yabai -m config layout bsp
@@ -63,9 +65,9 @@ yabai -m rule --add label="Calculator" app="^Calculator$" manage=off
 yabai -m rule --add label="Dictionary" app="^Dictionary$" manage=off
 yabai -m rule --add label="Finder" app="^Finder$" manage=off sticky=on
 yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
-yabai -m rule --add label="Gather Borer" app="Gather Border Highlight" opacity=1.0 border=off manage=off
-yabai -m rule --add label="Gather Desktop" title="Gather Desktop" border=on
-yabai -m rule --add label="Gather" app="Gather" border=off opacity=1.0
+yabai -m rule --add label="Gather Border" app="Gather Border Highlight" opacity=1.0 border=off manage=off
+yabai -m rule --add label="Gather Desktop" title="Gather Desktop" border=on display="1"
+yabai -m rule --add label="Gather" app="Gather" border=off opacity=1.0 display="1"
 yabai -m rule --add label="Installer" app="^Installer$" sticky=on manage=off
 yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manage=off
 yabai -m rule --add label="KeePassXC" app="^KeePassXC$" manage=off
@@ -74,12 +76,12 @@ yabai -m rule --add label="Krisp" app="^krisp" manage=off
 yabai -m rule --add label="Notion" app="Notion"
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off opacity=1.0
-yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on opacity=1.0 display="1"
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=on
 yabai -m rule --add label="System Preferences" app="^System Preferences$" title=".*" manage=off
 yabai -m rule --add label="System Settings" app="^System Settings$" title=".*" manage=off
 yabai -m rule --add label="The Unarchiver" app="^The Unarchiver$" manage=off sticky=on
-yabai -m rule --add label="WezTerm" app="WezTerm" native-fullscreen=on opacity=1.0
+yabai -m rule --add label="WezTerm" app="WezTerm" native-fullscreen=on opacity=1.0 display="$BIGGEST_DISPLAY"
 yabai -m rule --add label="macfeh" app="^macfeh$" manage=off
 yabai -m rule --add label="mpv" app="^mpv$" manage=off
