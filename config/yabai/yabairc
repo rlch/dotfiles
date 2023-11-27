@@ -19,11 +19,11 @@ BIGGEST_DISPLAY=$(yabai -m query --displays | jq -r 'max_by(.frame.w) | .index')
 
 yabai -m config layout bsp
 
-yabai -m config top_padding 30
-yabai -m config bottom_padding 30
-yabai -m config left_padding 30
-yabai -m config right_padding 30
-yabai -m config window_gap 30
+yabai -m config top_padding 20
+yabai -m config bottom_padding 20
+yabai -m config left_padding 20
+yabai -m config right_padding 20
+yabai -m config window_gap 20
 
 yabai -m config mouse_follows_focus off
 yabai -m config focus_follows_mouse off
@@ -52,8 +52,8 @@ yabai -m config mouse_drop_action swap
 
 # ==== Spaces ==================================
 
-yabai -m config --space 1 left_padding 378
-yabai -m config --space 1 right_padding 378
+# yabai -m config --space 1 left_padding 378
+# yabai -m config --space 1 right_padding 378
 
 # ===== Rules ==================================
 
