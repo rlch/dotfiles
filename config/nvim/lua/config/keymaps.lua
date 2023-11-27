@@ -87,12 +87,6 @@ map("n", "<leader>xq", "<cmd>copen<cr>", { desc = "Quickfix List" })
 map("n", "[q", vim.cmd.cprev, { desc = "Previous quickfix" })
 map("n", "]q", vim.cmd.cnext, { desc = "Next quickfix" })
 
--- lsp
-map({ "n", "v" }, "<leader>lf", function()
-  Util.format({ force = true })
-end, { desc = "Format" })
-map("n", "<leader>lr", "<cmd>LspRestart<cr>")
-
 -- diagnostic
 local diagnostic_goto = function(next, severity)
   local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
