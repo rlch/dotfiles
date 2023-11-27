@@ -83,8 +83,9 @@ Once you've made changes as above, you can:
 
 1. Create a new branch based off `template/main`, inside `origin` with `git fetch template && git checkout -b <new-branch-name> template/main`
 2. Make changes to this branch / cherry-pick from your other commits in `origin`.
-3. Create a PR to `MathGaps/dotfiles` with `gh pr create -B main -R MathGaps/dotfiles`; and follow the process.
-4. Once merged, let everyone know via Slack if necessary.
+3. Push your changes to `template` with `git push template HEAD`
+4. Create a PR to `MathGaps/dotfiles` with `gh pr create -B main -R MathGaps/dotfiles`; and follow the process.
+5. Once merged, let everyone know via Slack if necessary.
 
 ### Tracking configuration for new software
 
