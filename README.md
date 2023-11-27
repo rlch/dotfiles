@@ -6,6 +6,8 @@
   - [Getting started](#getting-started)
   - [Installation](#installation)
   - [Making changes](#making-changes)
+    - [Updating your own `dotfiles`](#updating-your-own-dotfiles)
+    - [Updating template `dotfiles`](#updating-template-dotfiles)
     - [Tracking configuration for new software](#tracking-configuration-for-new-software)
   - [Updating](#updating)
   - [Contribution](#contribution)
