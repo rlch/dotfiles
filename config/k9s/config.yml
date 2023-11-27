@@ -16,8 +16,8 @@ k9s:
     fullScreenLogs: false
     textWrap: false
     showTime: false
-  currentContext: dev
-  currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
+  currentContext: prod
+  currentCluster: gke_mathgaps-56d5a_australia-southeast1-a_primary
   clusters:
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
@@ -33,7 +33,7 @@ k9s:
         - all
         - default
       view:
-        active: pod
+        active: event
       featureGates:
         nodeShell: false
       shellPod:

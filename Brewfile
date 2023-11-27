@@ -18,6 +18,7 @@ brew "neovim"
 brew "node"
 brew "pyenv"
 brew "vale"
+brew "coursier/formulas/coursier"
 cask "wezterm"
 
 # window tiling

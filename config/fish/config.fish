@@ -78,7 +78,7 @@ for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}')
 end
 
 set -x USE_GKE_GCLOUD_AUTH_PLUGIN True
-test -d '~/.google-cloud-sdk/' && test -f '~/.google-cloud-sdk/path.fish.inc' && source '~/.google-cloud-sdk/path.fish.inc'
+source "$(brew --prefix)/share/google-cloud-sdk/path.fish.inc"
 
 # Vi mode
 
@@ -113,3 +113,7 @@ if not set -q ZELLIJ
         kill $fish_pid
     end
 end
+
+# >>> coursier install directory >>>
+set -gx PATH "$PATH:/Users/rjm/Library/Application Support/Coursier/bin"
+# <<< coursier install directory <<<
