@@ -79,6 +79,13 @@ Simply make changes to `<repository clone dir>/config/*` or equivalently the sym
 
 ### Updating template `dotfiles`
 
+Once you've made changes as above, you can:
+
+1. Create a new branch based off `template/main`, inside `origin` with `git fetch template && git checkout -b <new-branch-name> template/main`
+2. Make changes to this branch / cherry-pick from your other commits in `origin`.
+3. Create a PR to `MathGaps/dotfiles` with `gh pr create -B main -R MathGaps/dotfiles`; and follow the process.
+4. Once merged, let everyone know via Slack if necessary.
+
 ### Tracking configuration for new software
 
 If you want to add and track changes to new software, then:
