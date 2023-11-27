@@ -73,7 +73,24 @@ After the installation process completes, it's recommended to logout and login a
 
 ## Making changes
 
+### Updating your own `dotfiles`
+
+Simply make changes to `<repository clone dir>/config/*` or equivalently the symbolic links inside `<baseDir>/.config/*` and push to git as normal. This will make changes to your own `dotfiles` repository, **not the template**.
+
+### Updating template `dotfiles`
+
 ### Tracking configuration for new software
+
+If you want to add and track changes to new software, then:
+
+1. Add your configuration to `<repository clone dir>/config/<name>`.
+
+> [!IMPORTANT]
+> Make sure your configuration is copied over from `<baseDir>/.config/<name>` before continuing. Any `links` in `install.dotfiles.yaml` will replace existing configuration with the source-of-truth in the repository.
+
+2. Add `$BASE_DIR/.config/<name>: config/<name>` to `install.dotfiles.yaml` so that the CLI knows to symbolically link these directories.
+3. Run `go run .` to create the symbolic link.
+4. _If you make a PR to the template, make sure to let everyone know. Anyone wanting these changes should also run `go run .`_
 
 ## Updating
 
