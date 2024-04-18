@@ -1,5 +1,4 @@
 function gotesti
-  set loc (walk)
-  gotestsum $loc/... $argv
+    set loc (walk)
+    gotestsum $loc/... $argv
 end
-
