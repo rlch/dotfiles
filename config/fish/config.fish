@@ -1,9 +1,9 @@
 ulimit -n 10240
 
+fish_add_path /opt/homebrew/opt/gnu-sed/libexec/gnubin $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
 set -x TERM wezterm
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
-set -x PATH /opt/homebrew/opt/gnu-sed/libexec/gnubin $PATH $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
 set -x XDG_CONFIG_HOME $HOME/.config
 set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
 set fish_greeting
@@ -70,6 +70,7 @@ type -q diesel && diesel completions fish | source
 type -q pyenv && source (pyenv init --path | psub)
 type -q rbenv && source (rbenv init - | psub)
 test -e ~/.config/fish/secrets.fish && cat ~/.config/fish/secrets.fish | source
+type -q atuin && atuin init fish | source
 for f in ~/.config/fish/autoload/*
     source $f
 end
@@ -113,7 +114,3 @@ if not set -q ZELLIJ
         kill $fish_pid
     end
 end
-
-# >>> coursier install directory >>>
-set -gx PATH "$PATH:/Users/rjm/Library/Application Support/Coursier/bin"
-# <<< coursier install directory <<<
