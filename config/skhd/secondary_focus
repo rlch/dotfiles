@@ -1,0 +1,7 @@
+#!/bin/bash
+ID=$(yabai -m query --windows | jq -re '[.[] | select(.space == 1)][0] | .id | select(. != null)')
+if [ -z "$ID" ]; then
+	yabai -m window --space 1
+else
+	yabai -m window --swap $ID
+fi

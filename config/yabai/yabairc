@@ -45,15 +45,15 @@ yabai -m config split_ratio 0.50
 
 yabai -m config auto_balance off
 
-yabai -m config mouse_modifier ctrl
+yabai -m config mouse_modifier fn
 yabai -m config mouse_action1 move
 yabai -m config mouse_action2 resize
 yabai -m config mouse_drop_action swap
 
 # ==== Spaces ==================================
 
-# yabai -m config --space 1 left_padding 378
-# yabai -m config --space 1 right_padding 378
+yabai -m config --space 1 left_padding 378
+yabai -m config --space 1 right_padding 378
 
 # ===== Rules ==================================
 
@@ -65,17 +65,22 @@ yabai -m rule --add label="Calculator" app="^Calculator$" manage=off
 yabai -m rule --add label="Dictionary" app="^Dictionary$" manage=off
 yabai -m rule --add label="Finder" app="^Finder$" manage=off sticky=on
 yabai -m rule --add label="Firefox" app="Firefox" opacity=1.0
-yabai -m rule --add label="Gather Border" app="Gather Border Highlight" opacity=1.0 border=off manage=off
-yabai -m rule --add label="Gather Desktop" title="Gather Desktop" border=on display="1"
-yabai -m rule --add label="Gather" app="Gather" border=off opacity=1.0 display="1"
+yabai -m rule --add label="Gather Border" app="Gather Border Highlight" opacity=1.0 manage=off
+yabai -m rule --add label="Gather Desktop" title="Gather Desktop" display="1"
+yabai -m rule --add label="Gather" app="Gather" opacity=1.0 display="1"
+yabai -m rule --add label="Blender" app="Blender" manage=off
+yabai -m rule --add label="Audacity" app="Audacity" manage=off
+yabai -m rule --add label="Godot" app="Godot" manage=off
 yabai -m rule --add label="Installer" app="^Installer$" sticky=on manage=off
 yabai -m rule --add label="Karabiner" app="^Karabiner-Elements$" sticky=on manage=off
 yabai -m rule --add label="KeePassXC" app="^KeePassXC$" manage=off
 yabai -m rule --add label="Kitty" app="kitty" native-fullscreen=on opacity=1.0
 yabai -m rule --add label="Krisp" app="^krisp" manage=off
+yabai -m rule --add label="Music" app="Music" native-fullscreen=on opacity=1.0
 yabai -m rule --add label="Notion" app="Notion"
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off opacity=1.0
+yabai -m rule --add label="Shortcat" app="^Shortcat$" manage=off
 yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on opacity=1.0 display="1"
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=on

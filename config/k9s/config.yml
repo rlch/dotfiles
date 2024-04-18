@@ -16,24 +16,25 @@ k9s:
     fullScreenLogs: false
     textWrap: false
     showTime: false
-  currentContext: prod
-  currentCluster: gke_mathgaps-56d5a_australia-southeast1-a_primary
+  currentContext: dev
+  currentCluster: gke_mathgaps-dev-b044f_australia-southeast1-a_primary
   clusters:
     gke_mathgaps-56d5a_australia-southeast1-a_primary:
       namespace:
         active: all
         lockFavorites: false
         favorites:
-        - elastic-system
-        - schools
         - learning
-        - identity
+        - kube-system
         - infrastructure
-        - flux-system
         - all
-        - default
+        - gmp-public
+        - gmp-system
+        - observability
+        - cockroach-operator-system
+        - elastic-system
       view:
-        active: event
+        active: pod
       featureGates:
         nodeShell: false
       shellPod:
@@ -51,6 +52,8 @@ k9s:
         active: all
         lockFavorites: false
         favorites:
+        - observability
+        - kube-system
         - schools
         - infrastructure
         - learning
