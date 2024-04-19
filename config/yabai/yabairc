@@ -19,11 +19,11 @@ BIGGEST_DISPLAY=$(yabai -m query --displays | jq -r 'max_by(.frame.w) | .index')
 
 yabai -m config layout bsp
 
-yabai -m config top_padding 20
-yabai -m config bottom_padding 20
-yabai -m config left_padding 20
-yabai -m config right_padding 20
-yabai -m config window_gap 20
+yabai -m config top_padding 15
+yabai -m config bottom_padding 15
+yabai -m config left_padding 15
+yabai -m config right_padding 15
+yabai -m config window_gap 15
 
 yabai -m config mouse_follows_focus off
 yabai -m config focus_follows_mouse off
@@ -49,11 +49,6 @@ yabai -m config mouse_modifier fn
 yabai -m config mouse_action1 move
 yabai -m config mouse_action2 resize
 yabai -m config mouse_drop_action swap
-
-# ==== Spaces ==================================
-
-yabai -m config --space 1 left_padding 378
-yabai -m config --space 1 right_padding 378
 
 # ===== Rules ==================================
 
@@ -90,3 +85,4 @@ yabai -m rule --add label="The Unarchiver" app="^The Unarchiver$" manage=off sti
 yabai -m rule --add label="WezTerm" app="WezTerm" native-fullscreen=on opacity=1.0 display="$BIGGEST_DISPLAY"
 yabai -m rule --add label="macfeh" app="^macfeh$" manage=off
 yabai -m rule --add label="mpv" app="^mpv$" manage=off
+yabai -m rule --add label="oe" app="^OpenEmu$" manage=off opacity=1.0
