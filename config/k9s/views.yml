@@ -1,7 +1,0 @@
-k9s:
-  views:
-    tutero.com/v1/previewlinks:
-      columns:
-        - NAME
-        - AGE
-        - STATE

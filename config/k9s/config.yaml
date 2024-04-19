@@ -1,4 +1,6 @@
 k9s:
+  ui:
+    skin: catppuccin-macchiato
   refreshRate: 2
   maxConnRetry: 5
   enableMouse: false
@@ -24,15 +26,15 @@ k9s:
         active: all
         lockFavorites: false
         favorites:
-        - learning
-        - kube-system
-        - infrastructure
-        - all
-        - gmp-public
-        - gmp-system
-        - observability
-        - cockroach-operator-system
-        - elastic-system
+          - learning
+          - kube-system
+          - infrastructure
+          - all
+          - gmp-public
+          - gmp-system
+          - observability
+          - cockroach-operator-system
+          - elastic-system
       view:
         active: pod
       featureGates:
@@ -52,15 +54,15 @@ k9s:
         active: all
         lockFavorites: false
         favorites:
-        - observability
-        - kube-system
-        - schools
-        - infrastructure
-        - learning
-        - default
-        - flux-system
-        - all
-        - tutoring
+          - observability
+          - kube-system
+          - schools
+          - infrastructure
+          - learning
+          - default
+          - flux-system
+          - all
+          - tutoring
       view:
         active: pod
       featureGates:
@@ -80,9 +82,9 @@ k9s:
         active: default
         lockFavorites: false
         favorites:
-        - learning
-        - all
-        - default
+          - learning
+          - all
+          - default
       view:
         active: pod
       featureGates:
