@@ -1,5 +1,5 @@
 # shell
-brew "autojump"
+brew "zoxide"
 brew "exa"
 brew "fd"
 brew "fish"

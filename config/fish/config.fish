@@ -63,6 +63,7 @@ if type -q exa
     alias la ll
 end
 
+type -q zoxide && zoxide init fish | source
 type -q starship && starship init fish | source
 type -q kubectl && kubectl completion fish | source
 type -q flux && flux completion fish | source
@@ -100,6 +101,12 @@ end
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+# fzf theme
+set -Ux FZF_DEFAULT_OPTS "\
+--color=bg+:#363a4f,bg:#24273a,spinner:#f4dbd6,hl:#ed8796 \
+--color=fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6 \
+--color=marker:#f4dbd6,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796"
 
 set ZELLIJ_AUTO_ATTACH true
 set ZELLIJ_AUTO_EXIT true
