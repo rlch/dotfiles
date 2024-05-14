@@ -1,0 +1,75 @@
+k9s:
+  refreshRate: 2
+  maxConnRetry: 5
+  enableMouse: false
+  headless: false
+  logoless: false
+  crumbsless: false
+  readOnly: false
+  noExitOnCtrlC: false
+  noIcons: false
+  skipLatestRevCheck: false
+  logger:
+    tail: 100
+    buffer: 5000
+    sinceSeconds: 300
+    fullScreenLogs: false
+    textWrap: false
+    showTime: false
+  currentContext: prod
+  currentCluster: gke_mathgaps-56d5a_australia-southeast1-a_primary
+  clusters:
+    gke_mathgaps-56d5a_australia-southeast1-a_primary:
+      namespace:
+        active: all
+        lockFavorites: false
+        favorites:
+        - learning
+        - schools
+        - all
+        - infrastructure
+        - default
+      view:
+        active: pod
+      featureGates:
+        nodeShell: false
+      shellPod:
+        image: busybox:1.35.0
+        command: []
+        args: []
+        namespace: default
+        limits:
+          cpu: 100m
+          memory: 100Mi
+        labels: {}
+      portForwardAddress: localhost
+    gke_mathgaps-dev-b044f_australia-southeast1-a_primary:
+      namespace:
+        active: all
+        lockFavorites: false
+        favorites:
+        - all
+        - infrastructure
+        - default
+      view:
+        active: pod
+      featureGates:
+        nodeShell: false
+      shellPod:
+        image: busybox:1.35.0
+        command: []
+        args: []
+        namespace: default
+        limits:
+          cpu: 100m
+          memory: 100Mi
+        labels: {}
+      portForwardAddress: localhost
+  thresholds:
+    cpu:
+      critical: 90
+      warn: 70
+    memory:
+      critical: 90
+      warn: 70
+  screenDumpDir: /var/folders/gb/27q3sjl53pddhrrrq2wf91w00000gn/T/k9s-screens-rjm
