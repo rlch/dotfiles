@@ -40,10 +40,6 @@ abbr zel zellij
 alias cb=clipboard
 alias intel="arch -x86_64"
 
-alias gmt="go mod tidy"
-alias gmv="go mod vendor"
-alias gmtv="go mod tidy && go mod vendor"
-
 # Neovim entrypoints
 alias org="cd ~/neorg/ && nvim index.norg"
 alias efish="cd ~/.config/fish && nvim config.fish"
