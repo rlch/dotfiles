@@ -137,7 +137,6 @@ return {
       { "<leader>sM", "<cmd>Telescope man_pages<cr>", desc = "Man Pages" },
       { "<leader>sm", "<cmd>Telescope marks<cr>", desc = "Jump to Mark" },
       { "<leader>so", "<cmd>Telescope vim_options<cr>", desc = "Options" },
-      { "<leader>sR", "<cmd>Telescope resume<cr>", desc = "Resume" },
       { "<leader>sw", Util.telescope("grep_string", { word_match = "-w" }), desc = "Word (root dir)" },
       { "<leader>sW", Util.telescope("grep_string", { cwd = false, word_match = "-w" }), desc = "Word (cwd)" },
       { "<leader>sw", Util.telescope("grep_string"), mode = "v", desc = "Selection (root dir)" },
@@ -174,5 +173,36 @@ return {
       { "<C-Tab>", "<plug>(CybuLastusedNext)", mode = { "n", "v" } },
     },
     opts = {},
+  },
+  {
+    "cshuaimin/ssr.nvim",
+    opts = {
+      border = "rounded",
+      min_width = 50,
+      min_height = 5,
+      max_width = 120,
+      max_height = 25,
+      adjust_window = true,
+      keymaps = {
+        close = "q",
+        next_match = "n",
+        prev_match = "N",
+        replace_confirm = "<cr>",
+        replace_all = "<leader><cr>",
+      },
+    },
+    keys = {
+      {
+        "<leader>sR",
+        function()
+          require("ssr").open()
+        end,
+        desc = "Structural search and replace",
+      },
+    },
+  },
+  {
+    "kevinhwang91/nvim-bqf",
+    ft = "qf",
   },
 }

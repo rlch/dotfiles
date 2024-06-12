@@ -421,4 +421,66 @@ return {
       },
     },
   },
+  {
+    "Wansmer/treesj",
+    keys = {
+      {
+        "<leader>cs",
+        function()
+          require("treesj").toggle()
+        end,
+        mode = "n",
+        desc = "Split/Join",
+      },
+    },
+  },
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    branch = "canary",
+    dependencies = {
+      { "zbirenbaum/copilot.lua" },
+      { "nvim-lua/plenary.nvim" },
+    },
+    opts = {
+      -- context = "buffers",
+      model = "gpt-3.5-turbo",
+    },
+    keys = {
+      { "<leader>a ", ":CopilotChat ", desc = "Open chat window with optional input", mode = { "n", "v" } },
+      { "<leader>ao", ":CopilotChatOpen<cr>", desc = "Open chat window", mode = { "n", "v" } },
+      { "<leader>aq", ":CopilotChatClose<cr>", desc = "Close chat window" },
+      { "<leader>at", ":CopilotChatToggle<cr>", desc = "Toggle chat window" },
+      { "<leader>as", ":CopilotChatStop<cr>", desc = "Stop current copilot output" },
+      { "<leader>ar", ":CopilotChatReset<cr>", desc = "Reset chat window" },
+      { "<leader>aS", ":CopilotChatSave ", desc = "Save chat history to file" },
+      { "<leader>al", ":CopilotChatLoad ", desc = "Load chat history from file" },
+      {
+        "<leader>acb",
+        function()
+          local input = vim.fn.input("Chat with buffer: ")
+          if input ~= "" then
+            require("CopilotChat").ask(input, { selection = require("CopilotChat.select").buffer })
+          end
+        end,
+        desc = "Open chat window with buffer input",
+      },
+      {
+        "<leader>ach",
+        function()
+          local actions = require("CopilotChat.actions")
+          require("CopilotChat.integrations.telescope").pick(actions.help_actions())
+        end,
+        desc = "Pick prompts using diagnostics as context",
+      },
+      {
+        "<leader>acp",
+        function()
+          local actions = require("CopilotChat.actions")
+          require("CopilotChat.integrations.telescope").pick(actions.prompt_actions())
+        end,
+        desc = "Pick prompts",
+      },
+      { "<leader>ad", ":CopilotChatDebugInfo<cr>", desc = "Show debug information" },
+    },
+  },
 }

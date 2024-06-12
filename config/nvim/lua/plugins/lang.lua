@@ -73,14 +73,13 @@ return {
           virtual_text = true,
           virtual_text_str = "■",
         },
-        settings = {
+        init_options = {
           onlyAnalyzeProjectsWithOpenFiles = true,
-          analysisExcludedFolders = { vim.fn.expand("$HOME/flutter/.pub-cache") },
+        },
+        settings = {
           lineLength = 100,
           completeFunctionCalls = true,
-          showTodos = true,
           renameFilesWithClasses = "always",
-          enableSnippets = true,
         },
       },
     },
@@ -162,13 +161,6 @@ return {
     end,
   },
   {
-    "williamboman/mason.nvim",
-    opts = function(_, opts)
-      opts.ensure_installed = opts.ensure_installed or {}
-      vim.list_extend(opts.ensure_installed, { "vale" })
-    end,
-  },
-  {
     "mfussenegger/nvim-lint",
     init = function()
       require("lint").linters.markdownlint.args = {
@@ -224,5 +216,55 @@ return {
       end)
       require("metals").initialize_or_attach(opts)
     end,
+  },
+
+  -- YAML
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      -- make sure mason installs the server
+      servers = {
+        yamlls = {
+          settings = {
+            yaml = {
+              schemas = require("schemastore").yaml.schemas({
+                -- select subset from the JSON schema catalog
+                select = {
+                  "kustomization.yaml",
+                  "docker-compose.yml",
+                },
+
+                -- additional schemas (not in the catalog)
+                extra = {
+                  url = "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/argoproj.io/application_v1alpha1.json",
+                  name = "Argo CD Application",
+                  fileMatch = "argocd-application.yaml",
+                },
+              }),
+            },
+          },
+          on_new_config = function(new_config)
+            new_config.settings.yaml.schemas = vim.tbl_deep_extend(
+              "force",
+              new_config.settings.yaml.schemas or {},
+              require("schemastore").yaml.schemas()
+            )
+          end,
+        },
+      },
+    },
+  },
+  {
+    "williamboman/mason.nvim",
+    opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, { "helm-ls" })
+    end,
+  },
+
+  -- Polar
+  {
+    "osohq/polar.vim",
+    ft = { "polar" },
   },
 }
