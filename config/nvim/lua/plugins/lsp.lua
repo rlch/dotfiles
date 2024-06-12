@@ -50,4 +50,14 @@ return {
       dap.listeners.before.event_exited["dapui_config"] = function() end
     end,
   },
+  {
+    "leoluz/nvim-dap-go",
+    opts = {
+      delve = {
+        args = {
+          "--check-go-version=false",
+        },
+      },
+    },
+  },
 }

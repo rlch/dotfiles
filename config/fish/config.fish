@@ -37,7 +37,6 @@ abbr tf terraform
 abbr v "fg &>/dev/null || nvim"
 abbr zel zellij
 
-alias cb=clipboard
 alias intel="arch -x86_64"
 
 alias gmt="go mod tidy"
@@ -109,7 +108,7 @@ set -Ux FZF_DEFAULT_OPTS "\
 --color=marker:#f4dbd6,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796"
 
 set ZELLIJ_AUTO_ATTACH true
-set ZELLIJ_AUTO_EXIT true
+set ZELLIJ_AUTO_EXIT false
 if not set -q ZELLIJ
     if test "$ZELLIJ_AUTO_ATTACH" = true
         zellij attach --index 0 || zellij
