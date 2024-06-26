@@ -76,6 +76,7 @@ yabai -m rule --add label="Notion" app="Notion"
 yabai -m rule --add label="Pika" app="^Pika.*$" sticky=on manage=off
 yabai -m rule --add label="Safari" app="^Safari$" title="^(General|(Tab|Password|Website|Extension)s|AutoFill|Se(arch|curity)|Privacy|Advance)$" manage=off opacity=1.0
 yabai -m rule --add label="Shortcat" app="^Shortcat$" manage=off
+yabai -m rule --add label="Photoshop" app="Photoshop" manage=off
 yabai -m rule --add label="Slack" app="Slack" native-fullscreen=on opacity=1.0 display="1"
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add label="Spotify" app="^Spotify$" sticky=on manage=on

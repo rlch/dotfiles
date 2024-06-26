@@ -168,6 +168,7 @@ return {
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
       local defaults = require("cmp.config.default")()
+
       local has_words_before = function()
         unpack = unpack or table.unpack
         local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -433,6 +434,9 @@ return {
         desc = "Split/Join",
       },
     },
+    opts = {
+      max_join_length = 500,
+    },
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
@@ -455,7 +459,7 @@ return {
       { "<leader>aS", ":CopilotChatSave ", desc = "Save chat history to file" },
       { "<leader>al", ":CopilotChatLoad ", desc = "Load chat history from file" },
       {
-        "<leader>acb",
+        "<leader>apb",
         function()
           local input = vim.fn.input("Chat with buffer: ")
           if input ~= "" then
@@ -465,7 +469,7 @@ return {
         desc = "Open chat window with buffer input",
       },
       {
-        "<leader>ach",
+        "<leader>aph",
         function()
           local actions = require("CopilotChat.actions")
           require("CopilotChat.integrations.telescope").pick(actions.help_actions())
@@ -473,7 +477,7 @@ return {
         desc = "Pick prompts using diagnostics as context",
       },
       {
-        "<leader>acp",
+        "<leader>app",
         function()
           local actions = require("CopilotChat.actions")
           require("CopilotChat.integrations.telescope").pick(actions.prompt_actions())
