@@ -51,6 +51,7 @@ opt.splitkeep = "screen"
 opt.splitright = true -- Put new windows right of current
 opt.tabstop = 2 -- Number of spaces tabs count for
 opt.termguicolors = true -- True color support
+opt.textwidth = 80 -- Maximum width of text
 opt.timeoutlen = 300
 opt.undofile = true
 opt.undolevels = 10000

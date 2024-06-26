@@ -9,7 +9,7 @@ set -x PKG_CONFIG_PATH $PKG_CONFIG_PATH /opt/local/lib/pkgconfig
 set fish_greeting
 
 set -x EDITOR nvim
-set -x GIT_EDITOR 'nvim +DiffviewOpen'
+set -x GIT_EDITOR nvim
 set -x VISUAL nvim
 set -x MANPAGER 'nvim +Man!'
 set -x MAXWIDTH 999
