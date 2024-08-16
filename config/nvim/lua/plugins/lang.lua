@@ -7,15 +7,59 @@ return {
         gopls = {
           settings = {
             gopls = {
+              gofumpt = true,
+              codelenses = {
+                gc_details = false,
+                generate = true,
+                regenerate_cgo = true,
+                run_govulncheck = true,
+                test = true,
+                tidy = true,
+                upgrade_dependency = true,
+                vendor = true,
+              },
+              hints = {
+                assignVariableTypes = true,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = false,
+                constantValues = false,
+                functionTypeParameters = true,
+                parameterNames = true,
+                rangeVariableTypes = true,
+              },
               analyses = {
                 fieldalignment = false,
+                nilness = true,
+                unusedparams = true,
+                unusedwrite = true,
+                useany = true,
               },
+              completeUnimported = true,
+              staticcheck = true,
+              directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
+              semanticTokens = true,
+              usePlaceholders = false,
             },
           },
         },
       },
     },
   },
+
+  {
+    "mfussenegger/nvim-lint",
+    init = function()
+      require("lint").linters.golangcilint.args = {
+        "--module-download-mode=vendor",
+      }
+    end,
+    opts = {
+      linters_by_ft = {
+        go = { "golangcilint" },
+      },
+    },
+  },
+
   -- Flutter/Dart
   {
     "akinsho/flutter-tools.nvim",
@@ -138,6 +182,7 @@ return {
       end, { desc = "Clear exception breakpoints" })
     end,
   },
+
   -- Markdown
   {
     "lukas-reineke/headlines.nvim",
@@ -266,5 +311,15 @@ return {
   {
     "osohq/polar.vim",
     ft = { "polar" },
+  },
+
+  -- Nix
+  {
+    "stevearc/conform.nvim",
+    opts = {
+      formatters_by_ft = {
+        nix = { "alejandra" },
+      },
+    },
   },
 }

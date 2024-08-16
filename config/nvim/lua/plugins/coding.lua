@@ -426,7 +426,7 @@ return {
     "Wansmer/treesj",
     keys = {
       {
-        "<leader>cs",
+        "<leader>cj",
         function()
           require("treesj").toggle()
         end,
@@ -486,5 +486,10 @@ return {
       },
       { "<leader>ad", ":CopilotChatDebugInfo<cr>", desc = "Show debug information" },
     },
+  },
+  {
+    "andythigpen/nvim-coverage",
+    dependencies = "nvim-lua/plenary.nvim",
+    opts = {},
   },
 }
