@@ -1,6 +1,6 @@
 ulimit -n 10240
 
-fish_add_path /opt/homebrew/opt/gnu-sed/libexec/gnubin $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin
+fish_add_path -g /opt/homebrew/opt/gnu-sed/libexec/gnubin $GOPATH/bin $HOME/.cargo/bin /opt/homebrew/bin $HOME/.pub-cache/bin $HOME/fvm/default/bin /opt/homebrew/opt/gnu-sed/libexec/gnubin /opt/local/bin $HOME/.rover/bin $HOME/usr/local/bin $HOME/.local/bin /opt/homebrew/lib/ruby/gems/3.2.0/bin /usr/local/opt/sphinx-doc/bin $HOME/.gem/bin
 set -x TERM wezterm
 set -x GOPATH $HOME/go
 set -x GOPRIVATE go.buf.build,github.com
@@ -14,6 +14,7 @@ set -x VISUAL nvim
 set -x MANPAGER 'nvim +Man!'
 set -x MAXWIDTH 999
 set -x KITTY_SHELL_INTEGRATION enabled
+set -x sponge_purge_only_on_exit true
 
 # Rust
 set -x CARGO_HOME $HOME/.cargo
@@ -28,6 +29,7 @@ end
 status job-control full
 
 # CLI
+abbr f spf
 abbr t tmux
 abbr tp telepresence
 abbr h helm
@@ -52,8 +54,8 @@ alias sfish="source ~/.config/fish/config.fish"
 # Misc
 alias dn="say done"
 
-if type -q exa
-    alias l "exa -l -g --icons"
+if type -q eza
+    alias l "eza -l -g --icons"
     alias ll "l -a"
     alias la ll
 end
@@ -70,7 +72,7 @@ type -q atuin && atuin init fish | source
 for f in ~/.config/fish/autoload/*
     source $f
 end
-for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "set -gx "$2}')
+for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "fish_add_path \"$2\""}')
     eval $i
 end
 

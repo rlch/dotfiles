@@ -1,8 +1,9 @@
 sanitise tridactyllocal tridactylsync
 
 set smoothscroll true
+set modeindicator false
 set modeindicatormodes {"ignore":"false"}
-colourscheme nord
+colourscheme midnight
 
 bind --mode=ex <C-n> ex.next_completion
 bind --mode=ex <C-p> ex.prev_completion
@@ -30,5 +31,8 @@ autocmd DocStart wanikani\.com mode ignore
 autocmd DocStart bunpro\.jp mode ignore
 autocmd DocStart monkeytype\.com mode ignore
 autocmd DocStart hackthebox\.com mode ignore
+autocmd DocStart richards-mac-mini\.local mode ignore
+autocmd DocStart richards-mac-mini\.local:32400 mode ignore
+
 
 autocmd DocStart github\.com bind --mode=normal yr composite js document.URL.match("https://github.com/([^/]*/[^/]*)/?")[1] | yank
