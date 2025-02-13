@@ -186,7 +186,7 @@ return {
   -- Markdown
   {
     "lukas-reineke/headlines.nvim",
-    ft = { "markdown", "norg", "rmd", "org" },
+    ft = { "markdown", "norg", "rmd", "org", "Avante" },
     opts = function()
       return {
         markdown = {
@@ -270,22 +270,45 @@ return {
       -- make sure mason installs the server
       servers = {
         yamlls = {
+          capabilities = {
+            textDocument = {
+              foldingRange = {
+                dynamicRegistration = false,
+                lineFoldingOnly = true,
+              },
+            },
+          },
           settings = {
+            redhat = { telemetry = { enabled = false } },
             yaml = {
-              schemas = require("schemastore").yaml.schemas({
-                -- select subset from the JSON schema catalog
-                select = {
-                  "kustomization.yaml",
-                  "docker-compose.yml",
-                },
-
-                -- additional schemas (not in the catalog)
-                extra = {
-                  url = "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/argoproj.io/application_v1alpha1.json",
-                  name = "Argo CD Application",
-                  fileMatch = "argocd-application.yaml",
-                },
-              }),
+              keyOrdering = false,
+              format = {
+                enable = true,
+              },
+              validate = true,
+              schemaStore = {
+                -- Must disable built-in schemaStore support to use
+                -- schemas from SchemaStore.nvim plugin
+                enable = false,
+                -- Avoid TypeError: Cannot read properties of undefined (reading 'length')
+                url = "",
+              },
+              schemas = vim.tbl_deep_extend(
+                "force",
+                require("schemastore").yaml.schemas({
+                  -- select subset from the JSON schema catalog
+                  select = {
+                    "kustomization.yaml",
+                    "docker-compose.yml",
+                    "GitHub Workflow",
+                    "Helm Chart.yaml",
+                    "Helm Chart.lock",
+                  },
+                }),
+                {
+                  ["https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/refs/heads/main/helmrelease-helm-v2.json"] = "release.yaml",
+                }
+              ),
             },
           },
           on_new_config = function(new_config)
@@ -319,6 +342,85 @@ return {
     opts = {
       formatters_by_ft = {
         nix = { "alejandra" },
+      },
+    },
+  },
+
+  -- PHP
+  {
+    "williamboman/mason.nvim",
+    opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, { "phpactor" })
+    end,
+  },
+
+  -- HTTP
+  {
+    "rest-nvim/rest.nvim",
+    ft = { "http" },
+    keys = {
+      {
+        "<localleader>o",
+        "<cmd>Rest open",
+        desc = "Open result pane",
+        mode = { "n" },
+      },
+      {
+        "<localleader>r",
+        "<cmd>Rest run",
+        desc = "Run request under the cursor.",
+        mode = { "n" },
+      },
+      {
+        "<localleader>",
+        "<cmd>Rest run {name}",
+        "Run request with name {name}",
+        mode = { "n" },
+      },
+      {
+        "<localleader>h",
+        "<cmd>Rest last",
+        desc = "Run last request",
+        mode = { "n" },
+      },
+      {
+        "<localleader>l",
+        "<cmd>Rest logs",
+        desc = "Edit logs file",
+        mode = { "n" },
+      },
+      {
+        "<localleader>c",
+        "<cmd>Rest cookies",
+        desc = "Edit cookies file",
+        mode = { "n" },
+      },
+      {
+        "<localleader>eo",
+        "<cmd>Rest env show",
+        desc = "Show dotenv file registered to current .http file",
+        mode = { "n" },
+      },
+      {
+        "<localleader>es",
+        "<cmd>Rest env select ",
+        desc = "Select & register .env file with vim.ui.select()",
+        mode = { "n" },
+      },
+      { "<localleader>er", "<cmd>Rest env set ", desc = "Register .env file to current .http file", mode = { "n" } },
+    },
+  },
+
+  -- Neotest
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "marilari88/neotest-vitest",
+    },
+    opts = {
+      adapters = {
+        ["neotest-vitest"] = {},
       },
     },
   },

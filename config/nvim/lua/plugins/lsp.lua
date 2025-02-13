@@ -21,21 +21,20 @@ return {
     },
   },
   {
-    "smjonas/inc-rename.nvim",
-    cmd = "IncRename",
-    config = true,
-    keys = {
-      {
+    "neovim/nvim-lspconfig",
+    opts = function()
+      local keys = require("lazyvim.plugins.lsp.keymaps").get()
+      keys[#keys + 1] = {
         "<leader>cr",
         function()
           local inc_rename = require("inc_rename")
           return ":" .. inc_rename.config.cmd_name .. " "
         end,
         expr = true,
-        mode = "n",
-        desc = "Rename",
-      },
-    },
+        desc = "Rename (inc-rename.nvim)",
+        has = "rename",
+      }
+    end,
   },
 
   -- DAP

@@ -110,13 +110,13 @@ SETUVAR fish_pager_color_description:B3A06D\x1eyellow
 SETUVAR fish_pager_color_prefix:normal\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
 SETUVAR fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
 SETUVAR fish_pager_color_selected_background:\x2dr
-SETUVAR fish_user_paths:/opt/homebrew/opt/gnu\x2dsed/libexec/gnubin\x1e/Users/rjm/go/bin\x1e/Users/rjm/\x2ecargo/bin\x1e/Users/rjm/\x2epub\x2dcache/bin\x1e/Users/rjm/fvm/default/bin\x1e/opt/local/bin\x1e/Users/rjm/\x2erover/bin\x1e/Users/rjm/\x2elocal/bin\x1e/opt/homebrew/lib/ruby/gems/3\x2e2\x2e0/bin\x1e/usr/local/opt/sphinx\x2ddoc/bin\x1e/opt/homebrew/opt/llvm/bin\x1e/opt/homebrew/bin\x1e/opt/homebrew/opt/fzf/bin
+SETUVAR fish_user_paths:\x2e\x1e/opt/homebrew/opt/gnu\x2dsed/libexec/gnubin\x1e/Users/rjm/go/bin\x1e/Users/rjm/\x2ecargo/bin\x1e/Users/rjm/\x2epub\x2dcache/bin\x1e/Users/rjm/fvm/default/bin\x1e/opt/local/bin\x1e/Users/rjm/\x2erover/bin\x1e/Users/rjm/\x2elocal/bin\x1e/opt/homebrew/lib/ruby/gems/3\x2e2\x2e0/bin\x1e/usr/local/opt/sphinx\x2ddoc/bin\x1e/opt/homebrew/opt/llvm/bin\x1e/opt/homebrew/bin\x1e/opt/homebrew/opt/fzf/bin
 SETUVAR nvm_data:/Users/rjm/\x2elocal/share/nvm
 SETUVAR nvm_default_version:v17\x2e4\x2e0
 SETUVAR nvm_mirror:https\x3a//nodejs\x2eorg/dist
 SETUVAR sponge_allow_previously_successful:true
 SETUVAR sponge_delay:2
 SETUVAR sponge_filters:sponge_filter_failed\x1esponge_filter_matched
-SETUVAR sponge_purge_only_on_exit:false
+SETUVAR --export sponge_purge_only_on_exit:true
 SETUVAR sponge_regex_patterns:\x1d
 SETUVAR sponge_successful_exit_codes:0
