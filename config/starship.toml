@@ -13,7 +13,15 @@ success_symbol = "[λ](bold purple)"
 error_symbol = "[λ](bold red)"
 vimcmd_symbol = "[π](bold green)"
 
+[status]
+disabled = false
+format = '[$symbol]($style) '
+map_symbol = true
+
 [scala]
+disabled = true
+
+[git_status]
 disabled = true
 
 [line_break]
