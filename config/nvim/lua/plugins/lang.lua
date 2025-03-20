@@ -131,9 +131,7 @@ return {
       local map = vim.keymap.set
       local dap = require("dap")
       require("flutter-tools").setup(opts)
-      require("telescope").load_extension("flutter")
 
-      map("n", "<leader>sf", "<cmd>Telescope flutter commands<cr>", { desc = "Flutter commands" })
       map("n", "<localleader>a", "<cmd>FlutterReanalyze<cr>", { desc = "Flutter reanalyze" })
       map("n", "<localleader>d", "<cmd>FlutterDevices<cr>", { desc = "Flutter devices" })
       map("n", "<localleader>D", function()
@@ -184,26 +182,37 @@ return {
   },
 
   -- Markdown
+  -- {
+  --   "lukas-reineke/headlines.nvim",
+  --   ft = { "markdown", "norg", "rmd", "org", "Avante", "codecompanion" },
+  --   opts = function()
+  --     return {
+  --       markdown = {
+  --         headline_highlights = {
+  --           "Headline1",
+  --           "Headline2",
+  --         },
+  --       },
+  --     }
+  --   end,
+  --   config = function(_, opts)
+  --     -- PERF: schedule to prevent headlines slowing down opening a file
+  --     vim.schedule(function()
+  --       require("headlines").setup(opts)
+  --       require("headlines").refresh()
+  --     end)
+  --   end,
+  -- },
   {
-    "lukas-reineke/headlines.nvim",
-    ft = { "markdown", "norg", "rmd", "org", "Avante" },
-    opts = function()
-      return {
-        markdown = {
-          headline_highlights = {
-            "Headline1",
-            "Headline2",
-          },
-        },
-      }
-    end,
-    config = function(_, opts)
-      -- PERF: schedule to prevent headlines slowing down opening a file
-      vim.schedule(function()
-        require("headlines").setup(opts)
-        require("headlines").refresh()
-      end)
-    end,
+    "MeanderingProgrammer/render-markdown.nvim",
+    opts = {
+      render_modes = true,
+      heading = {
+        sign = false,
+        icons = {},
+      },
+    },
+    ft = { "markdown", "codecompanion", "Avante" },
   },
   {
     "mfussenegger/nvim-lint",
@@ -421,6 +430,27 @@ return {
     opts = {
       adapters = {
         ["neotest-vitest"] = {},
+      },
+    },
+  },
+
+  -- TypeScript
+
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        vtsls = {
+          root_dir = function(fname)
+            local node = vim.fs.root(fname, { "package.json", "node_modules" })
+            if node then
+              local deno = vim.fs.root(fname, { "deno.json" })
+              if not deno or #deno > #node then
+                return node
+              end
+            end
+          end,
+        },
       },
     },
   },

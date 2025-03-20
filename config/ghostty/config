@@ -1,0 +1,4 @@
+font-family = "JetBrains Mono"
+theme = "catppuccin-mocha"
+macos-titlebar-style = "hidden"
+shell-integration = "fish"

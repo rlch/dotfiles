@@ -8,7 +8,7 @@ return {
     opts = {
       background = { -- :h background
         light = "latte",
-        dark = "macchiato",
+        dark = "mocha",
       },
       integrations = {
         dropbar = { enabled = true },

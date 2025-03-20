@@ -20,6 +20,7 @@ brew "neovim"
 brew "node"
 brew "pyenv"
 cask "wezterm"
+cask "ghostty"
 
 # window tiling
 brew "koekeishiya/formulae/skhd"

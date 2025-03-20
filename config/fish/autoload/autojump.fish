@@ -1,5 +1,6 @@
 function _tabjump
     zl
+    # return to previous directory if zl succeeded
     if test "$argv" != - -a $status -ne 0
         cd -
     end

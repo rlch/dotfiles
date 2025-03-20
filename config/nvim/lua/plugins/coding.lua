@@ -10,6 +10,7 @@ return {
   },
   {
     "monaqa/dial.nvim",
+    vscode = true,
     keys = {
       {
         "<C-a>",
@@ -116,6 +117,7 @@ return {
     opts = {
       skipInsignificantPunctuation = true,
     },
+    vscode = true,
     keys = {
       { "w", "<cmd>lua require('spider').motion('w')<CR>", mode = { "n", "o", "x" }, desc = "Spider-w" },
       { "e", "<cmd>lua require('spider').motion('e')<CR>", mode = { "n", "o", "x" }, desc = "Spider-e" },
@@ -125,7 +127,8 @@ return {
   },
   {
     "chrisgrieser/nvim-various-textobjs",
-    opts = { useDefaultKeymaps = false },
+    opts = { useDefaults = false },
+    vscode = true,
     keys = {
       { "aw", '<cmd>lua require("various-textobjs").subword(false)<CR>', { remap = false }, mode = { "o", "x" } },
       { "iw", '<cmd>lua require("various-textobjs").subword(true)<CR>', { remap = false }, mode = { "o", "x" } },
@@ -243,6 +246,7 @@ return {
   },
   {
     "Wansmer/treesj",
+    vscode = true,
     keys = {
       {
         "<leader>cj",
@@ -269,7 +273,13 @@ return {
     "saghen/blink.cmp",
     dependencies = {
       "xzbdmw/colorful-menu.nvim",
+      "Kaiser-Yang/blink-cmp-avante",
     },
+
+    -- TODO: workaround for a codecompanion + blink bug
+    -- see <https://github.com/olimorris/codecompanion.nvim/issues/968#issuecomment-2672905893>
+    -- see <https://github.com/Saghen/blink.cmp/issues/1303>
+    -- tag = "v0.12.2",
 
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
@@ -277,6 +287,7 @@ return {
       signature = { enabled = true },
       completion = {
         accept = {
+          dot_repeat = false,
           auto_brackets = {
             enabled = true,
           },
@@ -309,6 +320,19 @@ return {
           enabled = vim.g.ai_cmp,
         },
       },
+      sources = {
+        default = { "avante", "lsp", "path", "snippets", "buffer" },
+        per_filetype = {
+          codecompanion = { "codecompanion", "buffer" },
+        },
+        providers = {
+          avante = {
+            module = "blink-cmp-avante",
+            name = "Avante",
+          },
+        },
+      },
+      cmdline = { enabled = false },
     },
   },
 }

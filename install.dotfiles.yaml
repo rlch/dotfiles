@@ -14,6 +14,7 @@
     $BASE_DIR/.config/aerospace: config/aerospace
     $BASE_DIR/.config/borders: config/borders
     $BASE_DIR/.config/fish: config/fish
+    $BASE_DIR/.config/ghostty: config/ghostty
     $BASE_DIR/.config/gitui: config/gitui
     $BASE_DIR/.config/k9s: config/k9s
     $BASE_DIR/.config/lazydocker: config/lazydocker

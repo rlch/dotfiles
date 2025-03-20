@@ -107,7 +107,7 @@ set -Ux FZF_DEFAULT_OPTS "\
 
 set ZELLIJ_AUTO_ATTACH true
 set ZELLIJ_AUTO_EXIT false
-if not set -q ZELLIJ
+if not set -q ZELLIJ; and test "$TERM_PROGRAM" != vscode
     if test "$ZELLIJ_AUTO_ATTACH" = true
         zellij attach --index 0 || zellij
     else
@@ -118,3 +118,14 @@ if not set -q ZELLIJ
         kill $fish_pid
     end
 end
+
+# pnpm
+set -gx PNPM_HOME /Users/rjm/Library/pnpm
+if not string match -q -- $PNPM_HOME $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init2.fish 2>/dev/null || :

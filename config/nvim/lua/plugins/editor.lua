@@ -161,23 +161,19 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     opts = {
+      indent = {
+        disable = { "lua" },
+      },
       incremental_selection = {
         enable = true,
         keymaps = {
           init_selection = "<C-space>",
-          node_incremental = "<Space>",
+          node_incremental = "<C-space>",
           scope_incremental = false,
           node_decremental = "<bs>",
         },
       },
     },
-    -- keys = function()
-    --   return {
-    --     -- { "<Space>", desc = "Increment Selection", mode = "x" },
-    --     { "<Space>", desc = "Increment Selection", mode = "x" },
-    --     { "<bs>", desc = "Decrement Selection", mode = "x" },
-    --   }
-    -- end,
   },
   {
     "snacks.nvim",
