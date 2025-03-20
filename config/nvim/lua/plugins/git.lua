@@ -47,7 +47,7 @@ return {
     "pwntester/octo.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope.nvim",
+      "ibhagwan/fzf-lua",
       "nvim-tree/nvim-web-devicons",
     },
     keys = {
@@ -68,6 +68,7 @@ return {
       default_remote = { "upstream", "origin" }, -- order to try remotes
       right_bubble_delimiter = "", -- bubble delimiter
       left_bubble_delimiter = "",
+      picker = "fzf-lua",
       picker_config = {
         mappings = {
           open_in_browser = { lhs = "<C-b>", desc = "open issue in browser" },
@@ -88,7 +89,7 @@ return {
           field = "UPDATED_AT",
           direction = "DESC",
         },
-        always_select_remote_on_create = "false",
+        always_select_remote_on_create = false,
       },
       file_panel = {
         size = 10,

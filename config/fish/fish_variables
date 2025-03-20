@@ -2,7 +2,7 @@
 # VERSION: 3.0
 SETUVAR --export FZF_DEFAULT_OPTS:\x2d\x2dcolor\x3dbg\x2b\x3a\x23363a4f\x2cbg\x3a\x2324273a\x2cspinner\x3a\x23f4dbd6\x2chl\x3a\x23ed8796\x20\x2d\x2dcolor\x3dfg\x3a\x23cad3f5\x2cheader\x3a\x23ed8796\x2cinfo\x3a\x23c6a0f6\x2cpointer\x3a\x23f4dbd6\x20\x2d\x2dcolor\x3dmarker\x3a\x23f4dbd6\x2cfg\x2b\x3a\x23cad3f5\x2cprompt\x3a\x23c6a0f6\x2chl\x2b\x3a\x23ed8796
 SETUVAR Z_DATA_DIR:/Users/rjm/\x2elocal/share/z
-SETUVAR __fish_initialized:3400
+SETUVAR __fish_initialized:3800
 SETUVAR _fish_abbr_h:helm
 SETUVAR _fish_abbr_kk:k9s
 SETUVAR _fish_abbr_mk:minikube
@@ -11,14 +11,14 @@ SETUVAR _fish_abbr_tf:terraform
 SETUVAR _fish_abbr_tp:tmuxp
 SETUVAR _fish_abbr_v:fg\x20\x26\x3e\x20/dev/null\x20\x7c\x7c\x20nvim
 SETUVAR _fish_abbr_zel:zellij
-SETUVAR _fisher_PatrickF1_2F_fzf_2E_fish_files:\x7e/\x2econfig/fish/functions/_fzf_configure_bindings_help\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_extract_var_info\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_preview_changed_file\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_preview_file\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_report_diff_type\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_report_file_type\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_directory\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_git_log\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_git_status\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_history\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_processes\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_variables\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_wrapper\x2efish\x1e\x7e/\x2econfig/fish/functions/fzf_configure_bindings\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/fzf\x2efish\x1e\x7e/\x2econfig/fish/completions/fzf_configure_bindings\x2efish
 SETUVAR _fisher_edc_2F_bass_files:\x7e/\x2econfig/fish/functions/__bass\x2epy\x1e\x7e/\x2econfig/fish/functions/bass\x2efish
 SETUVAR _fisher_franciscolourenco_2F_done_files:\x7e/\x2econfig/fish/conf\x2ed/done\x2efish
 SETUVAR _fisher_jorgebucaran_2F_fisher_files:\x7e/\x2econfig/fish/functions/fisher\x2efish\x1e\x7e/\x2econfig/fish/completions/fisher\x2efish
 SETUVAR _fisher_jorgebucaran_2F_nvm_2E_fish_files:\x7e/\x2econfig/fish/functions/_nvm_index_update\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_list\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_version_activate\x2efish\x1e\x7e/\x2econfig/fish/functions/_nvm_version_deactivate\x2efish\x1e\x7e/\x2econfig/fish/functions/nvm\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/nvm\x2efish\x1e\x7e/\x2econfig/fish/completions/nvm\x2efish
 SETUVAR _fisher_markcial_2F_upto_files:\x7e/\x2econfig/fish/functions/upto\x2efish\x1e\x7e/\x2econfig/fish/completions/upto\x2efish
 SETUVAR _fisher_meaningful_2D_ooo_2F_sponge_files:\x7e/\x2econfig/fish/functions/_sponge_clear_state\x2efish\x1e\x7e/\x2econfig/fish/functions/_sponge_on_exit\x2efish\x1e\x7e/\x2econfig/fish/functions/_sponge_on_postexec\x2efish\x1e\x7e/\x2econfig/fish/functions/_sponge_on_preexec\x2efish\x1e\x7e/\x2econfig/fish/functions/_sponge_on_prompt\x2efish\x1e\x7e/\x2econfig/fish/functions/_sponge_remove_from_history\x2efish\x1e\x7e/\x2econfig/fish/functions/sponge_filter_failed\x2efish\x1e\x7e/\x2econfig/fish/functions/sponge_filter_matched\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/sponge\x2efish
-SETUVAR _fisher_plugins:jorgebucaran/fisher\x1efranciscolourenco/done\x1ejorgebucaran/nvm\x2efish\x1eedc/bass\x1ePatrickF1/fzf\x2efish\x1emarkcial/upto\x1emeaningful\x2dooo/sponge
+SETUVAR _fisher_patrickf1_2F_fzf_2E_fish_files:\x7e/\x2econfig/fish/functions/_fzf_configure_bindings_help\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_extract_var_info\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_preview_changed_file\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_preview_file\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_report_diff_type\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_report_file_type\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_directory\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_git_log\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_git_status\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_history\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_processes\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_search_variables\x2efish\x1e\x7e/\x2econfig/fish/functions/_fzf_wrapper\x2efish\x1e\x7e/\x2econfig/fish/functions/fzf_configure_bindings\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/fzf\x2efish\x1e\x7e/\x2econfig/fish/completions/fzf_configure_bindings\x2efish
+SETUVAR _fisher_plugins:jorgebucaran/fisher\x1efranciscolourenco/done\x1ejorgebucaran/nvm\x2efish\x1eedc/bass\x1emarkcial/upto\x1emeaningful\x2dooo/sponge\x1epatrickf1/fzf\x2efish
 SETUVAR _fisher_upgraded_to_4_4:\x1d
 SETUVAR _tide_prompt_10142:\x1e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m\x1b\x5b1m\x1b\x5b96m\x7e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x2econfig/fish/\x1b\x5b1m\x1b\x5b96mfunctions\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m6s\x1b\x5b90m\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m11\x3a59\x3a51\x20am\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b92m\u276f\x1b\x5bm\x0f\x20
 SETUVAR _tide_prompt_10551:\x1e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m\x1b\x5b1m\x1b\x5b96m\x7e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x1b\x5b35mC\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x1b\x5b35mT\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x1b\x5b1m\x1b\x5b96mmonorepo\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x1b\x5b35mp\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m/\x1b\x5b1m\x1b\x5b96mcore\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b36m\x1b\x5b90m\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b92m\x1b\x5b37m\x1b\x5b92madmin\x2dentities\x2dmigration\x1b\x5b91m\x1b\x5b92m\x1b\x5b92m\x20\x2a1\x1b\x5b91m\x1b\x5b93m\x1b\x5b93m\x1b\x5b94m\x20\x3f1\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m8s\x1b\x5b90m\x20\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b90m11\x3a56\x3a13\x20pm\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5bm\x0f\x1e\x1b\x5bm\x0f\x1b\x5bm\x0f\x1b\x5b92m\u276f\x1b\x5bm\x0f\x20
@@ -98,7 +98,7 @@ SETUVAR fish_color_operator:00a6b2
 SETUVAR fish_color_param:eceff4
 SETUVAR fish_color_quote:a3be8c
 SETUVAR fish_color_redirection:b48ead
-SETUVAR fish_color_search_match:bryellow\x1e\x2d\x2dbackground\x3dbrblack
+SETUVAR fish_color_search_match:white\x1e\x2d\x2dbackground\x3dbrblack
 SETUVAR fish_color_selection:white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dbrblack
 SETUVAR fish_color_status:red
 SETUVAR fish_color_user:brgreen
@@ -110,13 +110,11 @@ SETUVAR fish_pager_color_description:B3A06D\x1eyellow
 SETUVAR fish_pager_color_prefix:normal\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
 SETUVAR fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
 SETUVAR fish_pager_color_selected_background:\x2dr
-SETUVAR fish_user_paths:/opt/homebrew/opt/gnu\x2dsed/libexec/gnubin\x1e/Users/rjm/go/bin\x1e/Users/rjm/\x2ecargo/bin\x1e/Users/rjm/\x2epub\x2dcache/bin\x1e/Users/rjm/fvm/default/bin\x1e/opt/local/bin\x1e/Users/rjm/\x2erover/bin\x1e/Users/rjm/\x2elocal/bin\x1e/opt/homebrew/lib/ruby/gems/3\x2e2\x2e0/bin\x1e/usr/local/opt/sphinx\x2ddoc/bin\x1e/opt/homebrew/opt/llvm/bin\x1e/opt/homebrew/bin\x1e/opt/homebrew/opt/fzf/bin
-SETUVAR nvm_data:/Users/rjm/\x2elocal/share/nvm
+SETUVAR fish_user_paths:\x2e\x1e/opt/homebrew/opt/gnu\x2dsed/libexec/gnubin\x1e/Users/rjm/go/bin\x1e/Users/rjm/\x2ecargo/bin\x1e/Users/rjm/\x2epub\x2dcache/bin\x1e/Users/rjm/fvm/default/bin\x1e/opt/local/bin\x1e/Users/rjm/\x2erover/bin\x1e/Users/rjm/\x2elocal/bin\x1e/opt/homebrew/lib/ruby/gems/3\x2e2\x2e0/bin\x1e/usr/local/opt/sphinx\x2ddoc/bin\x1e/opt/homebrew/opt/llvm/bin\x1e/opt/homebrew/bin\x1e/opt/homebrew/opt/fzf/bin
 SETUVAR nvm_default_version:v17\x2e4\x2e0
-SETUVAR nvm_mirror:https\x3a//nodejs\x2eorg/dist
 SETUVAR sponge_allow_previously_successful:true
 SETUVAR sponge_delay:2
 SETUVAR sponge_filters:sponge_filter_failed\x1esponge_filter_matched
-SETUVAR sponge_purge_only_on_exit:false
+SETUVAR --export sponge_purge_only_on_exit:true
 SETUVAR sponge_regex_patterns:\x1d
 SETUVAR sponge_successful_exit_codes:0

@@ -70,21 +70,21 @@ return {
       {
         "<leader>fe",
         function()
-          require("neo-tree.command").execute({ toggle = true, dir = Util.root(), reveal = true })
-        end,
-        desc = "Explorer NeoTree (root dir)",
-      },
-      {
-        "<leader>fE",
-        function()
           require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd(), reveal = true })
         end,
         desc = "Explorer NeoTree (cwd)",
       },
-      { "<leader>o", "<leader>fe", desc = "Explorer NeoTree (root dir)", remap = true },
-      { "<leader>O", "<leader>fE", desc = "Explorer NeoTree (cwd)", remap = true },
-      { "<leader>e", "<leader>fe", desc = "Explorer NeoTree (root dir)", remap = true },
-      { "<leader>E", "<leader>fE", desc = "Explorer NeoTree (cwd)", remap = true },
+      {
+        "<leader>fE",
+        function()
+          require("neo-tree.command").execute({ toggle = true, dir = Util.root(), reveal = true })
+        end,
+        desc = "Explorer NeoTree (root dir)",
+      },
+      { "<leader>o", "<leader>fe", desc = "Explorer NeoTree (cwd)", remap = true },
+      { "<leader>O", "<leader>fE", desc = "Explorer NeoTree (root dir)", remap = true },
+      { "<leader>e", "<leader>fe", desc = "Explorer NeoTree (cwd)", remap = true },
+      { "<leader>E", "<leader>fE", desc = "Explorer NeoTree (root dir)", remap = true },
       {
         "<leader>ge",
         function()
@@ -98,73 +98,6 @@ return {
           require("neo-tree.command").execute({ source = "buffers", toggle = true })
         end,
         desc = "Buffer explorer",
-      },
-    },
-  },
-  {
-    "nvim-telescope/telescope.nvim",
-    keys = {
-      {
-        "<leader>,",
-        "<cmd>Telescope buffers sort_mru=true sort_lastused=true<cr>",
-        desc = "Switch Buffer",
-      },
-      { "<leader>/", LazyVim.pick("live_grep"), desc = "Grep (Root Dir)" },
-      { "<leader>:", "<cmd>Telescope command_history<cr>", desc = "Command History" },
-      { "<leader><space>", "<cmd>Telescope resume<cr>", desc = "Resume Telescope Session" },
-      -- find
-      { "<leader>fb", "<cmd>Telescope buffers sort_mru=true sort_lastused=true<cr>", desc = "Buffers" },
-      { "<leader>fc", LazyVim.pick.config_files(), desc = "Find Config File" },
-      { "<leader>ff", LazyVim.pick("auto"), desc = "Find Files (Root Dir)" },
-      { "<leader>fF", LazyVim.pick("auto", { root = false }), desc = "Find Files (cwd)" },
-      { "<leader>fg", "<cmd>Telescope git_files<cr>", desc = "Find Files (git-files)" },
-      { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent" },
-      { "<leader>fR", LazyVim.pick("oldfiles", { cwd = vim.uv.cwd() }), desc = "Recent (cwd)" },
-      -- git
-      { "<leader>gc", "<cmd>Telescope git_commits<CR>", desc = "Commits" },
-      { "<leader>gs", "<cmd>Telescope git_status<CR>", desc = "Status" },
-      -- search
-      { '<leader>s"', "<cmd>Telescope registers<cr>", desc = "Registers" },
-      { "<leader>sa", "<cmd>Telescope autocommands<cr>", desc = "Auto Commands" },
-      { "<leader>sb", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Buffer" },
-      { "<leader>sc", "<cmd>Telescope command_history<cr>", desc = "Command History" },
-      { "<leader>sC", "<cmd>Telescope commands<cr>", desc = "Commands" },
-      { "<leader>sd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document Diagnostics" },
-      { "<leader>sD", "<cmd>Telescope diagnostics<cr>", desc = "Workspace Diagnostics" },
-      { "<leader>sg", LazyVim.pick("live_grep"), desc = "Grep (Root Dir)" },
-      { "<leader>sG", LazyVim.pick("live_grep", { root = false }), desc = "Grep (cwd)" },
-      { "<leader>sh", "<cmd>Telescope help_tags<cr>", desc = "Help Pages" },
-      { "<leader>sH", "<cmd>Telescope highlights<cr>", desc = "Search Highlight Groups" },
-      { "<leader>sj", "<cmd>Telescope jumplist<cr>", desc = "Jumplist" },
-      { "<leader>sk", "<cmd>Telescope keymaps<cr>", desc = "Key Maps" },
-      { "<leader>sl", "<cmd>Telescope loclist<cr>", desc = "Location List" },
-      { "<leader>sM", "<cmd>Telescope man_pages<cr>", desc = "Man Pages" },
-      { "<leader>sm", "<cmd>Telescope marks<cr>", desc = "Jump to Mark" },
-      { "<leader>so", "<cmd>Telescope vim_options<cr>", desc = "Options" },
-      { "<leader>sR", false },
-      { "<leader>sq", "<cmd>Telescope quickfix<cr>", desc = "Quickfix List" },
-      { "<leader>sw", LazyVim.pick("grep_string", { word_match = "-w" }), desc = "Word (Root Dir)" },
-      { "<leader>sW", LazyVim.pick("grep_string", { root = false, word_match = "-w" }), desc = "Word (cwd)" },
-      { "<leader>sw", LazyVim.pick("grep_string"), mode = "v", desc = "Selection (Root Dir)" },
-      { "<leader>sW", LazyVim.pick("grep_string", { root = false }), mode = "v", desc = "Selection (cwd)" },
-      { "<leader>uC", LazyVim.pick("colorscheme", { enable_preview = true }), desc = "Colorscheme with Preview" },
-      {
-        "<leader>ss",
-        function()
-          require("telescope.builtin").lsp_document_symbols({
-            symbols = require("lazyvim.config").get_kind_filter(),
-          })
-        end,
-        desc = "Goto Symbol",
-      },
-      {
-        "<leader>sS",
-        function()
-          require("telescope.builtin").lsp_dynamic_workspace_symbols({
-            symbols = require("lazyvim.config").get_kind_filter(),
-          })
-        end,
-        desc = "Goto Symbol (Workspace)",
       },
     },
   },
@@ -220,5 +153,32 @@ return {
     event = { "InsertEnter", "CmdlineEnter" },
     branch = "v0.6", --recommended as each new version will have breaking changes
     opts = {},
+  },
+  {
+    "lambdalisue/vim-suda",
+    cmd = { "SudaRead", "SudaWrite" },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = {
+      indent = {
+        disable = { "lua" },
+      },
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = "<C-space>",
+          node_incremental = "<C-space>",
+          scope_incremental = false,
+          node_decremental = "<bs>",
+        },
+      },
+    },
+  },
+  {
+    "snacks.nvim",
+    opts = {
+      scroll = { enabled = false },
+    },
   },
 }
