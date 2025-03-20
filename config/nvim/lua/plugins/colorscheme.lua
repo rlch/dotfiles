@@ -27,18 +27,18 @@ return {
           },
         },
       },
+      custom_highlights = function(colors)
+        return {
+          -- Comment = { fg = colors.flamingo },
+          -- TabLineSel = { bg = colors.pink },
+          -- CmpBorder = { fg = colors.surface2 },
+          -- Pmenu = { bg = colors.none },
+        }
+      end,
     },
     config = function(_, opts)
       require("catppuccin").setup(opts)
       vim.cmd.colorscheme("catppuccin")
-    end,
-    custom_highlights = function(colors)
-      return {
-        Comment = { fg = colors.flamingo },
-        TabLineSel = { bg = colors.pink },
-        CmpBorder = { fg = colors.surface2 },
-        Pmenu = { bg = colors.none },
-      }
     end,
   },
 }

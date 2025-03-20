@@ -80,6 +80,7 @@ return {
       "nvim-treesitter/nvim-treesitter",
       "folke/noice.nvim",
       "ravitemer/mcphub.nvim",
+      { "echasnovski/mini.diff", opts = {} },
     },
     init = function()
       require("plugins.extensions.companion-notification").init()
@@ -87,6 +88,9 @@ return {
     opts = {
       display = {
         chat = { start_in_insert_mode = true },
+        diff = {
+          provider = "mini_diff",
+        },
         action_palette = {},
       },
       strategies = {
@@ -187,7 +191,7 @@ return {
     config = function()
       require("mcphub").setup({
         -- Required options
-        port = 3000, -- Port for MCP Hub server
+        port = 3333, -- Port for MCP Hub server
         config = vim.fn.expand("~/mcpservers.json"), -- Absolute path to config file
 
         -- Optional options
