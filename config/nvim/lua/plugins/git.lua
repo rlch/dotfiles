@@ -210,4 +210,13 @@ return {
       },
     },
   },
+  {
+    "akinsho/git-conflict.nvim",
+    event = "BufRead",
+    version = "v2.1.0",
+    config = true,
+    opts = {
+      disable_diagnostics = true,
+    },
+  },
 }
