@@ -137,32 +137,6 @@ return {
     },
   },
   {
-    "zbirenbaum/copilot.lua",
-    opts = {
-      suggestion = {
-        enabled = true,
-        auto_trigger = true,
-        debounce = 75,
-        keymap = {
-          accept = "<C-l>",
-          accept_word = false,
-          accept_line = false,
-          next = "<M-]>",
-          prev = "<M-[>",
-          dismiss = "<C-]>",
-        },
-      },
-      panel = { enabled = false },
-      filetypes = {
-        TelescopePrompt = false,
-        ["neo-tree"] = false,
-        help = false,
-        gitcommit = true,
-        gitrebase = true,
-      },
-    },
-  },
-  {
     "L3MON4D3/LuaSnip",
     lazy = false,
     build = (not jit.os:find("Windows"))

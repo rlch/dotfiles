@@ -45,9 +45,43 @@ return {
       },
     },
   },
-
   {
-    "mfussenegger/nvim-lint",
+    "fang2hou/go-impl.nvim",
+    dev = true,
+    ft = "go",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+
+      -- Choose one of the following fuzzy finder
+      "folke/snacks.nvim",
+    },
+    opts = {
+      receiver = {
+        predict_abbreviation = function(struct_name)
+          if not struct_name then
+            return ""
+          end
+          local abbreviation = string.sub(struct_name, 1, 1)
+          return string.lower(abbreviation) .. " *" .. struct_name
+        end,
+      },
+    },
+    keys = {
+      {
+        "<localleader>gi",
+        function()
+          require("go-impl").open()
+        end,
+        mode = { "n" },
+        desc = "Go Impl",
+      },
+    },
+  },
+  {
+    -- TODO: Revert once https://github.com/mfussenegger/nvim-lint/pull/761/files merged
+    "JonnyLoughlin/nvim-lint",
+    branch = "golangcilint-fix",
     init = function()
       require("lint").linters.golangcilint.args = {
         "--module-download-mode=vendor",
@@ -182,29 +216,51 @@ return {
   },
 
   -- Markdown
-  -- {
-  --   "lukas-reineke/headlines.nvim",
-  --   ft = { "markdown", "norg", "rmd", "org", "Avante", "codecompanion" },
-  --   opts = function()
-  --     return {
-  --       markdown = {
-  --         headline_highlights = {
-  --           "Headline1",
-  --           "Headline2",
-  --         },
-  --       },
-  --     }
-  --   end,
-  --   config = function(_, opts)
-  --     -- PERF: schedule to prevent headlines slowing down opening a file
-  --     vim.schedule(function()
-  --       require("headlines").setup(opts)
-  --       require("headlines").refresh()
-  --     end)
-  --   end,
-  -- },
+  {
+    "OXY2DEV/markview.nvim",
+    lazy = false,
+    dependencies = { "saghen/blink.cmp" },
+    ---@class mkv.config
+    config = function()
+      local presets = require("markview.presets")
+      require("markview").setup({
+        preview = {
+          filetypes = {
+            "md",
+            "markdown",
+            "norg",
+            "rmd",
+            "org",
+            "vimwiki",
+            "typst",
+            "latex",
+            "quarto",
+            "Avante",
+            "codecompanion",
+          },
+          ignore_buftypes = {},
+          modes = { "n", "no", "c", "i" },
+          debounce = 0,
+          condition = function(buffer)
+            local ft, bt = vim.bo[buffer].ft, vim.bo[buffer].bt
+            if bt == "nofile" and ft == "codecompanion" then
+              return true
+            elseif bt == "nofile" then
+              return false
+            else
+              return true
+            end
+          end,
+        },
+        markdown = {
+          headings = presets.headings.marker,
+        },
+      })
+    end,
+  },
   {
     "MeanderingProgrammer/render-markdown.nvim",
+    enabled = false,
     opts = {
       render_modes = true,
       heading = {
@@ -215,7 +271,8 @@ return {
     ft = { "markdown", "codecompanion", "Avante" },
   },
   {
-    "mfussenegger/nvim-lint",
+    -- TODO: see golang
+    "JonnyLoughlin/nvim-lint",
     init = function()
       require("lint").linters.markdownlint.args = {
         "--disable",
@@ -382,7 +439,7 @@ return {
         mode = { "n" },
       },
       {
-        "<localleader>",
+        "<localleader>R",
         "<cmd>Rest run {name}",
         "Run request with name {name}",
         mode = { "n" },
@@ -451,6 +508,17 @@ return {
             end
           end,
         },
+      },
+    },
+  },
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "marilari88/neotest-vitest",
+    },
+    opts = {
+      adapters = {
+        ["neotest-vitest"] = {},
       },
     },
   },

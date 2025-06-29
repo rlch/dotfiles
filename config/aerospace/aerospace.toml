@@ -1,6 +1,8 @@
 # Place a copy of this config to ~/.aerospace.toml
 # After that, you can edit ~/.aerospace.toml to your liking
 
+on-focus-changed = ['move-mouse window-lazy-center']
+
 # You can use it to add commands that run after login to macOS user session.
 # 'start-at-login' needs to be 'true' for 'after-login-command' to work
 # Available commands: https://nikitabobko.github.io/AeroSpace/commands
@@ -31,11 +33,6 @@ default-root-container-layout = 'tiles'
 #               tall monitor (anything higher than wide) gets vertical orientation
 default-root-container-orientation = 'auto'
 
-# Mouse follows focus when focused monitor changes
-# Drop it from your config, if you don't like this behavior
-# See https://nikitabobko.github.io/AeroSpace/guide#on-focus-changed-callbacks
-# See https://nikitabobko.github.io/AeroSpace/commands#move-mouse
-on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
 # You can effectively turn off macOS "Hide application" (cmd-h) feature by toggling this flag
 # Useful if you don't use this macOS feature, but accidentally hit cmd-h or cmd-alt-h key
@@ -126,6 +123,7 @@ alt-equal = 'resize smart +100'
 alt-1 = 'focus-monitor 1'
 alt-2 = 'focus-monitor 2'
 alt-3 = 'focus-monitor 3'
+alt-4 = 'focus-monitor 4'
 
 ctrl-alt-1 = 'workspace 1'
 ctrl-alt-2 = 'workspace 2'
@@ -138,6 +136,7 @@ ctrl-alt-6 = 'workspace 6'
 alt-shift-1 = 'move-node-to-monitor 1 --focus-follows-window'
 alt-shift-2 = 'move-node-to-monitor 2 --focus-follows-window'
 alt-shift-3 = 'move-node-to-monitor 3 --focus-follows-window'
+alt-shift-4 = 'move-node-to-monitor 4 --focus-follows-window'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
 alt-tab = 'workspace-back-and-forth'
@@ -155,10 +154,7 @@ alt-shift-semicolon = 'mode service'
 4 = [2, 1]
 5 = [3, 1]
 6 = [3, 2, 1]
-
-# 'service' binding mode declaration.
-# See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
-[mode.service.binding]
+# 'service' binding mode declaration. See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes [mode.service.binding]
 esc = ['reload-config', 'mode main']
 r = ['flatten-workspace-tree', 'mode main'] # reset layout
 backspace = ['close-all-windows-but-current', 'mode main']
@@ -173,3 +169,8 @@ alt-shift-h = ['join-with left', 'mode main']
 alt-shift-j = ['join-with down', 'mode main']
 alt-shift-k = ['join-with up', 'mode main']
 alt-shift-l = ['join-with right', 'mode main']
+
+
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = ['layout floating']

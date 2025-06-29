@@ -16,6 +16,28 @@ config.window_padding = {
 	top = 1,
 	bottom = 1,
 }
+config.keys = {
+	{
+		key = "h",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "j",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "k",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "l",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+}
 
 config.window_decorations = "RESIZE"
 config.hyperlink_rules = wezterm.default_hyperlink_rules()

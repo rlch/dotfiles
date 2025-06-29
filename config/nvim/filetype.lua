@@ -1,4 +1,9 @@
 vim.filetype.add({
+  extension = {
+    gotmpl = "gotmpl",
+    vars = "vars",
+    query = "query",
+  },
   pattern = {
     ["*.vars"] = "env",
     ["*.gotmpl"] = "gotmpl",

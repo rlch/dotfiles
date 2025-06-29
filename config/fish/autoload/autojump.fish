@@ -1,4 +1,5 @@
 function _tabjump
+    set -x GUARD_TAB 1
     zl
     # return to previous directory if zl succeeded
     if test "$argv" != - -a $status -ne 0

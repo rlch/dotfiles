@@ -1,5 +1,6 @@
 ---@diagnostic disable: undefined-field
 return {
+
   {
     "echasnovski/mini.indentscope",
     opts = {
@@ -84,9 +85,9 @@ return {
     "SmiteshP/nvim-navic",
     init = function()
       vim.g.navic_silence = true
-      require("lazyvim.util").lsp.on_attach(function(client, buffer)
-        if client.supports_method("textDocument/documentSymbol") then
-          require("nvim-navic").attach(client, buffer)
+      require("lazyvim.util").lsp.on_attach(function(client, bufnr)
+        if client.server_capabilities.documentSymbolProvider then
+          require("nvim-navic").attach(client, bufnr)
         end
       end)
     end,
@@ -290,5 +291,37 @@ return {
 
       return opts
     end,
+  },
+  {
+    "echasnovski/mini.diff",
+    event = "VeryLazy",
+    config = function(_, opts)
+      local diff = require("mini.diff")
+      diff.setup(vim.tbl_extend("force", opts, {
+        source = diff.gen_source.none(),
+      }))
+    end,
+    opts = {
+      view = {
+        style = "sign",
+        signs = {
+          add = "▎",
+          change = "▎",
+          delete = "",
+        },
+      },
+    },
+  },
+  {
+    "folke/trouble.nvim",
+    opts = {}, -- for default options, refer to the configuration section for custom setup.
+    cmd = "Trouble",
+    keys = {
+      {
+        "<leader>cS",
+        "<cmd>Trouble lsp toggle focus=true win.position=right<cr>",
+        desc = "LSP Definitions / references / ... (Trouble)",
+      },
+    },
   },
 }

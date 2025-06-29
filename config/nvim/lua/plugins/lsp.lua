@@ -15,6 +15,8 @@ return {
       map("n", "<leader>lr", "<cmd>LspRestart<cr>", { desc = "Restart LSP" })
       map("n", "<leader>li", "<cmd>LspInfo<cr>", { desc = "LSP Info" })
       map("n", "<leader>cl", vim.lsp.codelens.run, { desc = "Codelens" })
+      map("n", "<leader>dj", "[d", { remap = true })
+      map("n", "<leader>dk", "]d", { remap = true })
     end,
     opts = {
       inlay_hints = { enabled = true },
@@ -35,6 +37,10 @@ return {
         has = "rename",
       }
     end,
+    keys = {
+      { "<leader>dj", "]d" },
+      { "<leader>dk", "[d" },
+    },
   },
 
   -- DAP

@@ -74,18 +74,29 @@ return {
   },
   {
     "olimorris/codecompanion.nvim",
-    config = true,
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "folke/noice.nvim",
-      "ravitemer/mcphub.nvim",
-      { "echasnovski/mini.diff", opts = {} },
+      "rlch/mcphub.nvim",
+      "echasnovski/mini.diff",
     },
     init = function()
       require("plugins.extensions.companion-notification").init()
     end,
+    config = true,
     opts = {
+      extensions = {
+        mcphub = {
+          callback = "mcphub.extensions.codecompanion",
+          opts = {
+            make_vars = true,
+            make_slash_commands = true,
+            show_result_in_chat = true,
+            show_raw_result = true,
+          },
+        },
+      },
       display = {
         chat = { start_in_insert_mode = true },
         diff = {
@@ -124,21 +135,55 @@ return {
               opts = { provider = "fzf_lua" },
             },
           },
-          tools = {
-            ["mcp"] = {
-              -- calling it in a function would prevent mcphub from being loaded before it's needed
-              callback = function()
-                return require("mcphub.extensions.codecompanion")
-              end,
-              description = "Call tools and resources from the MCP Servers",
-              opts = {
-                requires_approval = true,
-              },
-            },
-          },
         },
-        inline = { adapter = "openai" },
+        inline = { adapter = "copilot" },
       },
+      ---This is the default prompt which is sent with every request in the chat
+      ---strategy. It is primarily based on the GitHub Copilot Chat's prompt
+      ---but with some modifications. You can choose to remove this via
+      ---your own config but note that LLM results may not be as good
+      ---@param opts table
+      ---@return string
+      system_prompt = function(opts)
+        local language = opts.language or "English"
+        return string.format(
+          [[You are an AI programming assistant named "CodeCompanion". You are currently plugged into the Neovim text editor on a user's machine.
+
+Your core tasks include:
+- Answering general programming questions.
+- Explaining how the code in a Neovim buffer works.
+- Reviewing the selected code from a Neovim buffer.
+- Generating unit tests for the selected code.
+- Proposing fixes for problems in the selected code.
+- Scaffolding code for a new workspace.
+- Finding relevant code to the user's query.
+- Proposing fixes for test failures.
+- Answering questions about Neovim.
+- Running tools.
+
+You must:
+- Follow the user's requirements carefully and to the letter.
+- Keep your answers short and impersonal, especially if the user's context is outside your core tasks.
+- Minimize additional prose unless clarification is needed.
+- Use Markdown formatting in your answers.
+- Include the programming language name at the start of each Markdown code block.
+- Avoid including line numbers in code blocks.
+- Avoid wrapping the whole response in triple backticks.
+- Only return code that's directly relevant to the task at hand. You may omit code that isn’t necessary for the solution.
+- Avoid using H1, H2 or H3 headers in your responses as these are reserved for the user.
+- Use actual line breaks in your responses; only use "\n" when you want a literal backslash followed by 'n'.
+- All non-code text responses must be written in the %s language indicated.
+- Multiple, different tools can be called as part of the same response.
+
+When given a task:
+1. Think step-by-step and, unless the user requests otherwise or the task is very simple, describe your plan in detailed pseudocode.
+2. Output the final code in a single code block, ensuring that only relevant code is included.
+3. End your response with a short suggestion for the next user turn that directly supports continuing the conversation.
+4. Provide exactly one complete reply per conversation turn.
+5. If necessary, execute multiple tools in a single turn.]],
+          language
+        )
+      end,
     },
     keys = {
       {
@@ -171,10 +216,45 @@ return {
         "<cmd>CodeCompanionChat Add<CR>",
         mode = { "v" },
       },
+      {
+        "<localleader>b",
+        "a#buffer <Esc>",
+        desc = "Add #buffer to chat",
+      },
+      {
+        "<localleader>v",
+        "a#viewport <Esc>",
+        desc = "Add #viewport to chat",
+      },
+      {
+        "<localleader>l",
+        "a#lsp <Esc>",
+        desc = "Add #lsp to chat",
+      },
+      {
+        "<localleader>e",
+        "a@editor <Esc>",
+        desc = "Add @editor to chat",
+      },
+      {
+        "<localleader>m",
+        "a@mcp <Esc>",
+        desc = "Add @mcp to chat",
+      },
+      {
+        "<localleader>c",
+        "a@cmd_runner <Esc>",
+        desc = "Add @cmd_runner to chat",
+      },
+      {
+        "<localleader>f",
+        "a@files <Esc>",
+        desc = "Add @files to chat",
+      },
     },
   },
   {
-    "ravitemer/mcphub.nvim",
+    "rlch/mcphub.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim", -- Required for Job and HTTP requests
     },
@@ -188,29 +268,27 @@ return {
         desc = "Open MCPHub",
       },
     },
-    config = function()
-      require("mcphub").setup({
-        -- Required options
-        port = 3333, -- Port for MCP Hub server
-        config = vim.fn.expand("~/mcpservers.json"), -- Absolute path to config file
+    opts = {
+      -- Required options
+      port = 3333, -- Port for MCP Hub server
+      config = vim.fn.expand("~/mcpservers.json"), -- Absolute path to config file
 
-        -- Optional options
-        on_ready = function(_)
-          -- Called when hub is ready
-        end,
-        on_error = function(err)
-          -- Called on errors
-          -- vim.notify(err, vim.log.levels.ERROR)
-        end,
-        shutdown_delay = 0, -- Wait 0ms before shutting down server after last client exits
-        log = {
-          level = vim.log.levels.WARN,
-          to_file = false,
-          file_path = nil,
-          prefix = "MCPHub",
-        },
-      })
-    end,
+      -- Optional options
+      on_ready = function(_)
+        -- Called when hub is ready
+      end,
+      on_error = function(_)
+        -- Called on errors
+        -- vim.notify(err, vim.log.levels.ERROR)
+      end,
+      shutdown_delay = 0, -- Wait 0ms before shutting down server after last client exits
+      log = {
+        level = vim.log.levels.WARN,
+        to_file = false,
+        file_path = nil,
+        prefix = "MCPHub",
+      },
+    },
   },
   {
     "Davidyz/VectorCode",
@@ -259,7 +337,7 @@ return {
         auto_trigger = true,
         debounce = 75,
         keymap = {
-          accept = "<C-l>",
+          accept = "<Tab>",
           accept_word = false,
           accept_line = false,
           next = "<M-]>",

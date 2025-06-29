@@ -29,6 +29,7 @@ return {
       },
       custom_highlights = function(colors)
         return {
+          LspReferenceText = { bg = colors.none },
           -- Comment = { fg = colors.flamingo },
           -- TabLineSel = { bg = colors.pink },
           -- CmpBorder = { fg = colors.surface2 },

@@ -14,7 +14,7 @@ map("n", "Q", "@q", { remap = true })
 map("n", "Y", "y$", { remap = true })
 
 -- Make S/Tab less quirky
-map("i", "<Tab>", "<C-i>")
+-- map("i", "<Tab>", "<C-i>")
 map("i", "<S-Tab>", "<C-d>")
 map("n", "<S-Tab>", "<<")
 map("v", "<Tab>", ">gv")
