@@ -30,6 +30,14 @@ return {
       custom_highlights = function(colors)
         return {
           LspReferenceText = { bg = colors.none },
+          -- Minimal diff colors for clean diffthis experience
+          DiffAdd = { bg = "#1a3d1a" }, -- Subtle green for added lines
+          DiffChange = { bg = "#1a2633" }, -- Subtle blue for changed lines
+          DiffDelete = { bg = "#3d1a1a", fg = "#cc7a7a" }, -- Subtle red for deleted lines
+          DiffText = { bg = "#2a3f5f", fg = "#e6e6e6" }, -- Muted highlight for changed text
+          -- Minimal git conflict highlighting
+          GitConflictCurrent = { bg = "#1a3d1a" }, -- Subtle green for current changes
+          GitConflictIncoming = { bg = "#1a2633" }, -- Subtle blue for incoming changes
           -- Comment = { fg = colors.flamingo },
           -- TabLineSel = { bg = colors.pink },
           -- CmpBorder = { fg = colors.surface2 },

@@ -217,6 +217,10 @@ return {
     config = true,
     opts = {
       disable_diagnostics = true,
+      highlights = {
+        incoming = "GitConflictIncoming",
+        current = "GitConflictCurrent",
+      },
     },
   },
 }

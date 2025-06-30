@@ -1,0 +1,31 @@
+This is a sample file to test merge conflict highlighting.
+
+Here's some normal text that both branches agree on.
+
+<<<<<<< HEAD
+This is the current branch content.
+It has some specific changes that were made locally.
+We want to keep this version because it's better.
+=======
+This is the incoming branch content.
+It contains different changes from the remote.
+This version has its own improvements too.
+>>>>>>> feature-branch
+
+And here's some more text after the conflict.
+
+Another section with potential conflicts:
+
+<<<<<<< HEAD
+Current implementation:
+- Uses new API
+- Has better error handling
+- Includes unit tests
+=======
+Incoming implementation:
+- Uses legacy API
+- Basic error handling
+- Missing some tests
+>>>>>>> feature-branch
+
+End of test file.

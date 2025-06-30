@@ -1,4 +1,4 @@
--- Options are automatically loaded before lazy.nvim startup
+--  -- Enable auto writeOptions are automatically loaded before lazy.nvim startup
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = ","
@@ -15,6 +15,7 @@ vim.g.lazyvim_picker = "fzf"
 -- * a function with signature `function(buf) -> string|string[]`
 vim.g.root_spec = { "lsp", { ".git", "lua" }, "cwd" }
 
+vim.opt.autoread = true -- Enable auto write
 vim.opt.autowrite = true -- Enable auto write
 vim.opt.clipboard = "unnamedplus" -- Sync with system clipboard
 vim.opt.completeopt = "menu,menuone,noselect,preview"
@@ -49,6 +50,7 @@ vim.opt.spelloptions = { "camel", "noplainbuffer" }
 vim.opt.splitbelow = true -- Put new windows below current
 vim.opt.splitkeep = "screen"
 vim.opt.splitright = true -- Put new windows right of current
+vim.opt.swapfile = false
 vim.opt.tabstop = 2 -- Number of spaces tabs count for
 vim.opt.termguicolors = true -- True color support
 -- vim.opt.textwidth = 80 -- Maximum width of text

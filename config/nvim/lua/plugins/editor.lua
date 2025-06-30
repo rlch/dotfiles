@@ -29,6 +29,14 @@ return {
       window = {
         position = "float",
       },
+      event_handlers = {
+        {
+          event = "file_opened",
+          handler = function(file_path)
+            require("neo-tree.command").execute({ action = "close" })
+          end
+        },
+      },
       nesting_rules = {
         default_component_configs = {
           indent = {
@@ -64,6 +72,7 @@ return {
           enabled = true,
           leave_dirs_open = true,
         },
+        hijack_netrw_behavior = "open_current",
       },
     },
     keys = {

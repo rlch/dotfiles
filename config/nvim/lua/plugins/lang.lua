@@ -224,6 +224,7 @@ return {
     config = function()
       local presets = require("markview.presets")
       require("markview").setup({
+        experimental = { check_rtp = false },
         preview = {
           filetypes = {
             "md",
@@ -483,10 +484,17 @@ return {
     "nvim-neotest/neotest",
     dependencies = {
       "marilari88/neotest-vitest",
+      "MisanthropicBit/neotest-busted",
     },
     opts = {
       adapters = {
         ["neotest-vitest"] = {},
+        ["neotest-busted"] = {
+          -- Optional: override busted command
+          -- busted_command = "busted",
+          -- Optional: override busted arguments
+          -- busted_args = { "--verbose" },
+        },
       },
     },
   },
@@ -508,17 +516,6 @@ return {
             end
           end,
         },
-      },
-    },
-  },
-  {
-    "nvim-neotest/neotest",
-    dependencies = {
-      "marilari88/neotest-vitest",
-    },
-    opts = {
-      adapters = {
-        ["neotest-vitest"] = {},
       },
     },
   },

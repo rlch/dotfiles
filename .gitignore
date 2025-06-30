@@ -1,3 +1,4 @@
 integration/
 vendor/
 secrets.fish
+config/claude/

@@ -37,6 +37,10 @@ config.keys = {
 		mods = "CTRL|SHIFT",
 		action = wezterm.action.DisableDefaultAssignment,
 	},
+	{
+		key = "Delete",
+		action = wezterm.action.SendKey({ key = "Delete" }),
+	},
 }
 
 config.window_decorations = "RESIZE"

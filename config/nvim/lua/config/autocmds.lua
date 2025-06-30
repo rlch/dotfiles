@@ -4,24 +4,13 @@ local function augroup(name)
   return vim.api.nvim_create_augroup("dotfiles_" .. name, { clear = true })
 end
 
-vim.api.nvim_create_user_command("Say", function(opts)
-  local arg = opts.args
-  local Job = require("plenary.job")
-  Job:new({
-    command = "say",
-    args = { "-v", "ralph", '"' .. arg .. '"' },
-  }):start()
-end, {
-  nargs = "+",
-})
-
 -- Check if we need to reload the file when it changed
-vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave", "CursorHold", "CursorHoldI" }, {
   group = augroup("checktime"),
   command = "checktime",
 })
 
--- Highlight on yank
+-- Highlight text on yank operation
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup("highlight_yank"),
   callback = function()
@@ -29,7 +18,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
--- resize splits if window got resized
+-- Resize splits when window gets resized
 vim.api.nvim_create_autocmd({ "VimResized" }, {
   group = augroup("resize_splits"),
   callback = function()
@@ -39,7 +28,7 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
   end,
 })
 
--- go to last loc when opening a buffer
+-- Jump to last cursor location when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
   group = augroup("last_loc"),
   callback = function(event)
@@ -57,7 +46,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   end,
 })
 
--- close some filetypes with <q>
+-- Close certain filetypes with <q> key
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("close_with_q"),
   pattern = {
@@ -82,7 +71,7 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- wrap and check for spell in text filetypes
+-- Wrap and enable spell check in text filetypes
 vim.api.nvim_create_autocmd("FileType", {
   group = augroup("wrap_spell"),
   pattern = { "gitcommit", "markdown" },
@@ -92,7 +81,7 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Auto create dir when saving a file, in case some intermediate directory does not exist
+-- Auto create directory when saving a file, if intermediate directory does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   group = augroup("auto_create_dir"),
   callback = function(event)
@@ -101,5 +90,33 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     end
     local file = vim.loop.fs_realpath(event.match) or event.match
     vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+  end,
+})
+
+-- Zellij pane name management
+local has_renamed = false
+
+-- Update Zellij pane name when changing buffers
+local last_renamed_file = nil
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  group = augroup("zellij_pane_name"),
+  callback = function()
+    local filename = vim.fn.expand("%:t")
+    if filename ~= "" and filename ~= last_renamed_file then
+      last_renamed_file = filename
+      has_renamed = true
+      vim.fn.system("zellij action rename-pane '" .. filename .. "'")
+    end
+  end,
+})
+
+-- Set pane name to current directory on exit
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = augroup("zellij_restore_pane_name"),
+  callback = function()
+    if has_renamed then
+      local cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+      vim.fn.system("zellij action rename-pane '" .. cwd .. "'")
+    end
   end,
 })
