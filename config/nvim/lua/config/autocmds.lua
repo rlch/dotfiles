@@ -93,30 +93,28 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
--- Zellij pane name management
-local has_renamed = false
-
 -- Update Zellij pane name when changing buffers
 local last_renamed_file = nil
 vim.api.nvim_create_autocmd({ "BufEnter" }, {
-  group = augroup("zellij_pane_name"),
+  group = augroup("terminal_pane_name"),
   callback = function()
     local filename = vim.fn.expand("%:t")
     if filename ~= "" and filename ~= last_renamed_file then
       last_renamed_file = filename
-      has_renamed = true
-      vim.fn.system("zellij action rename-pane '" .. filename .. "'")
+      -- Use ANSI escape sequence to set pane title
+      io.stdout:write("\027]2;" .. filename .. "\007")
     end
   end,
 })
 
 -- Set pane name to current directory on exit
-vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = augroup("zellij_restore_pane_name"),
-  callback = function()
-    if has_renamed then
-      local cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-      vim.fn.system("zellij action rename-pane '" .. cwd .. "'")
-    end
-  end,
-})
+-- vim.api.nvim_create_autocmd("VimLeavePre", {
+--   group = augroup("terminal_restore_pane_name"),
+--   callback = function()
+--     if has_renamed then
+--       local cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+--       -- Use ANSI escape sequence to restore pane title
+--       io.stdout:write("\027]2;" .. cwd .. "\007")
+--     end
+--   end,
+-- })

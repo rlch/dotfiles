@@ -2,7 +2,7 @@ keybinds clear-defaults=true {
     normal {
         // uncomment this and adjust key if using copy_on_select=false
         // bind "Alt c" { Copy; }
-        bind "Alt c" { MessagePlugin "file:/Users/rjm/.config/zellij/plugins/claude-zellij.wasm"; }
+        // bind "Alt c" { LaunchPlugin "file:~/.config/zellij/plugins/claude-zellij.wasm" { floating false; in_place true; }; }
     }
     locked {
         bind "Ctrl g" { SwitchToMode "Normal"; }
@@ -25,7 +25,7 @@ keybinds clear-defaults=true {
         bind "n" { NewPane; SwitchToMode "Normal"; }
         bind "s" { NewPane "Down"; SwitchToMode "Normal"; }
         bind "v" { NewPane "Right"; SwitchToMode "Normal"; }
-        bind "a" { Run "named-claude" "-c" "--ide" { direction "Right"; name ""; }; SwitchToMode "Normal"; }
+        // bind "a" { Run "named-claude" "-c" "--ide" { direction "Right"; name ""; }; SwitchToMode "Normal"; }
         bind "x" { CloseFocus; SwitchToMode "Normal"; }
         bind "f" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
         bind "z" { TogglePaneFrames; SwitchToMode "Normal"; }
@@ -144,12 +144,11 @@ plugins {
     status-bar    { path "status-bar"; }
     strider       { path "strider"; }
     compact-bar   { path "compact-bar"; }
-    // claude-zellij { location ""; }
 }
 
 ui {
     pane_frames {
-        rounded_corners true
+       rounded_corners true
     }
 }
 
