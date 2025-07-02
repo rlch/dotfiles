@@ -77,8 +77,13 @@ if vim.fn.has("nvim-0.10") == 1 then
 end
 
 -- Folding
+vim.o.foldcolumn = "0"
 vim.opt.foldlevel = 99
-vim.opt.foldtext = "v:lua.require'lazyvim.util'.ui.foldtext()"
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+-- vim.opt.foldtext = "v:lua.require'lazyvim.util'.ui.foldtext()"
+vim.o.foldtext = ""
 
 if vim.fn.has("nvim-0.9.0") == 1 then
   vim.opt.statuscolumn = [[%!v:lua.Snacks.statuscolumn()]]

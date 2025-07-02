@@ -42,6 +42,7 @@ return {
           -- TabLineSel = { bg = colors.pink },
           -- CmpBorder = { fg = colors.surface2 },
           -- Pmenu = { bg = colors.none },
+          Folded = { bg = colors.none },
         }
       end,
     },
