@@ -4,13 +4,8 @@
 
 # System limits
 ulimit -n 10240
-
-# PATH configuration
-fish_add_path -g \
-    /opt/homebrew/opt/gnu-sed/libexec/gnubin \
-    $GOPATH/bin \
-    $HOME/.cargo/bin \
-    /opt/homebrew/bin \
+# PATH configuration fish_add_path -g \ /opt/homebrew/opt/gnu-sed/libexec/gnubin \ $GOPATH/bin \ $HOME/.cargo/bin \
+/opt/homebrew/bin \
     $HOME/.pub-cache/bin \
     $HOME/fvm/default/bin \
     /opt/local/bin \

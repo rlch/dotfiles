@@ -28,12 +28,12 @@ function _tabjump
             break
         end
     end
-    
+
     # Only rename current tab if target tab doesn't exist (i.e., we're creating a new session)
     if test $tab_exists -eq 0
         _rename_tab_if_allowed
     end
-    
+
     zl
     # return to previous directory if zl succeeded
     if test "$argv" != - -a $status -ne 0
@@ -41,25 +41,12 @@ function _tabjump
     end
 end
 
-# c - Autojump with intelligent tab management
-# 1. Uses zoxide (z) to jump to specified directory
-# 2. Looks for existing Zellij tab for the target directory/git workspace
-# 3. If tab exists: switches to that tab, preserves current tab state
-# 4. If no tab exists: creates new tab with appropriate layout
-# 5. The spawning tab remains unaffected (no unwanted renames)
-# Key behavior: Creates/switches to project tabs, doesn't rename spawning tab
 function c --wraps z
     z $argv
-    _tabjump $argv
+    _rename_tab_if_allowed
 end
 
-# cc - Autojump with current tab rename only
-# 1. Uses zoxide (z) to jump to specified directory
-# 2. Renames the CURRENT tab to match the new location
-# 3. Does NOT create or switch to other tabs
-# 4. Stays in the same tab but updates its name appropriately
-# Key behavior: Only renames current tab, no tab switching/creation
-function cc --wraps z
+function j --wraps z
     z $argv
     _rename_tab_if_allowed
 end
