@@ -1,8 +1,14 @@
 # `dotfiles`
 
+> 🚀 A comprehensive dotfiles management system for macOS development environments
+
+This repository contains my personal development environment configurations, managed through a Go-based CLI with Dotbot for symlink management. It provides a streamlined setup for a complete macOS development workflow.
+
 <!--toc:start-->
 
 - [`dotfiles`](#dotfiles)
+  - [Features](#features)
+  - [What's Included](#whats-included)
   - [Getting started](#getting-started)
   - [Installation](#installation)
   - [Making changes](#making-changes)
@@ -10,44 +16,71 @@
     - [Updating template `dotfiles`](#updating-template-dotfiles)
     - [Tracking configuration for new software](#tracking-configuration-for-new-software)
   - [Updating](#updating)
+  - [Troubleshooting](#troubleshooting)
   - [Contribution](#contribution)
   <!--toc:end-->
 
+## Features
+
+- **Automated Setup**: Single command installation with `go run .`
+- **Idempotent**: Safe to run multiple times without breaking existing configs
+- **Backup System**: Automatically backs up existing configs to `.config.bak`
+- **Template Support**: Go-based templating for dynamic configuration
+- **Modular Structure**: Organized configuration by tool in `config/` directory
+- **Version Control**: Easy tracking and sharing of configuration changes
+
+## What's Included
+
+### Development Tools
+- **Neovim**: LazyVim-based configuration with extensive customization
+- **Fish Shell**: Modern shell with custom functions and abbreviations
+- **WezTerm**: GPU-accelerated terminal emulator
+- **AeroSpace**: Tiling window manager for macOS
+- **Zellij**: Terminal multiplexer with custom layouts and keybindings
+
+### Productivity Tools
+- **Starship**: Fast, customizable shell prompt
+- **Homebrew**: Package management via Brewfile
+- **Claude Code**: AI coding assistant integration
+
+### Development Environments
+- Support for multiple project paths (Backend, Frontend, Infrastructure)
+- Auto-jumping with Zoxide integration
+- Project-specific Zellij layouts
+
 ## Getting started
 
-Before `dotfiles` can be setup, install a few dependencies:
+### Prerequisites
 
-- [`brew`](https://brew.sh/)
-- [`gh`](https://docs.github.com/en/github-cli/github-cli/quickstart)
-- [`go`](https://go.dev/doc/install)
-- [`jq`](https://jqlang.github.io/jq/download/)
+1. **Install Homebrew** (macOS package manager):
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
 
-After installing `brew`, install the remaining dependencies using:
+2. **Install required dependencies**:
+   ```bash
+   brew install gh go jq
+   ```
 
-```bash
-brew install gh go jq
-```
-
-Also install the terminal definitions for `wezterm` in a `bash/zsh` shell (this isn't valid `fish`):
-
-```bash
-bash
-tempfile=$(mktemp) \
-  && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
-  && tic -x -o ~/.terminfo $tempfile \
-  && rm $tempfile
-```
+3. **Install WezTerm terminal definitions** (run in bash/zsh):
+   ```bash
+   tempfile=$(mktemp) \
+     && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/main/termwiz/data/wezterm.terminfo \
+     && tic -x -o ~/.terminfo $tempfile \
+     && rm $tempfile
+   ```
 
 ## Installation
 
-First, install the GitHub command-line tool `gh` and authenticate with GitHub.
+### 1. Authenticate with GitHub
 
 ```bash
 gh auth login
 ```
 
-Now, create a `dotfiles` repository on your GitHub account, from the Tutero `dotfiles` template.
+### 2. Fork or Clone Repository
 
+**Option A: Create from template (for Tutero team)**
 ```bash
 GH_USER=$(gh api user | jq -r '.login')
 cd ~
@@ -59,19 +92,36 @@ git fetch template
 git submodule update --remote
 ```
 
-With the `dotfiles` repository created, run the installation process. First, modify the `baseDir` in `config.yaml` to `/Users/<home-user>` (no trailing `/`) or whichever directory you would like to install your `dotfiles` to. You may also customize the default folder locations.
+**Option B: Fork this repository**
+```bash
+gh repo fork rlch/dotfiles --clone
+cd dotfiles
+```
+
+### 3. Configure Base Directory
+
+Edit `config.yaml` and set your home directory:
+```yaml
+baseDir: "/Users/YOUR_USERNAME"  # No trailing slash
+```
+
+### 4. Run Installation
 
 ```bash
 go run .
 ```
 
-> [!NOTE]
-> If the installation process hangs when installing dependencies for longer than 20-30 seconds, try cancelling with `<Ctrl-C>` and run `go run .` again. The script is idempotent.
+The installation will:
+- Install all Homebrew packages from `Brewfile`
+- Create symbolic links for all configurations
+- Back up existing configs to `~/.config.bak/`
+- Apply system preferences (key repeat rate, etc.)
 
-After the installation process completes, it's recommended to logout and login again to ensure system changes (like key repeat) have been applied.
+> [!NOTE]
+> If installation hangs for >30 seconds, press `Ctrl-C` and re-run. The process is idempotent.
 
 > [!IMPORTANT]
-> If you already had `<baseDir>/.config/*` files, they will be moved to `<baseDir>/.config.bak/*`. Ensure any files you want to keep in your `dotfiles` are moved back to `<baseDir>/.config/*`.
+> After installation, log out and back in to ensure all system changes take effect.
 
 ## Making changes
 
