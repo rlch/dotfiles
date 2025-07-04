@@ -15,25 +15,14 @@ function _get_tab_name
     end
 end
 
-function zl
-    if set -q GUARD_TAB
-        return
-    end
+function _zellij_create_or_switch_tab
+    set tab_name $argv[1]
+    set layout_name $argv[2]
 
-    set NAME (_get_tab_name)
-    set LAYOUT_NAME ""
-    if test -f layout.kdl
-        set LAYOUT_NAME layout.kdl
-    else if git rev-parse --is-inside-work-tree &>/dev/null
-        set LAYOUT_NAME compact
-    end
-    if test -z $LAYOUT_NAME
-        return 0
-    end
-
-    for EXISTING in (zellij action query-tab-names)
-        if [ "$EXISTING" = "$NAME" ]
-            zellij action go-to-tab-name "$NAME"
+    # Check if tab exists and switch to it
+    for existing_tab in (zellij action query-tab-names)
+        if [ "$existing_tab" = "$tab_name" ]
+            zellij action go-to-tab-name "$tab_name"
             # Apply layout if layout.kdl exists in current directory
             if test -f layout.kdl
                 zellij run -f -- zellij action new-pane -- zellij -l layout.kdl
@@ -42,10 +31,31 @@ function zl
             return 1
         end
     end
-    zellij action new-tab -l $LAYOUT_NAME -n "$NAME"
-    set -x AUTO_RENAME_TAB 0
-    set -x GUARD_TAB 1
-    return 2
+
+    # Create new tab with layout
+    zellij action new-tab -l $layout_name -n "$tab_name"
+    return 0
+end
+
+function zl
+    if set -q GUARD_TAB
+        return 1
+    end
+
+    set NAME (_get_tab_name)
+    set LAYOUT_NAME ""
+    if test -f layout.kdl
+        set LAYOUT_NAME layout.kdl
+    else
+        set LAYOUT_NAME compact
+    end
+
+    if test -n "$LAYOUT_NAME"
+        if _zellij_create_or_switch_tab $NAME $LAYOUT_NAME
+            set -x AUTO_RENAME_TAB 0
+            set -x GUARD_TAB 1
+        end
+    end
 end
 
 function zr

@@ -43,12 +43,20 @@ end
 
 function c --wraps z
     z $argv
+    zl && cd -
+end
+
+function cc --wraps z
+    z $argv
     _rename_tab_if_allowed
 end
 
 function j --wraps z
-    z $argv
-    _rename_tab_if_allowed
+    c $argv
+end
+
+function jj --wraps z
+    cc $argv
 end
 
 # ci - Interactive autojump with tab management
