@@ -76,8 +76,6 @@ alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 # Configuration management
 alias sfish="source ~/.config/fish/config.fish"
 
-alias cl="claude --ide --continue || claude --ide"
-
 # Utilities
 alias dn="say done"
 

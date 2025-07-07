@@ -63,9 +63,8 @@ return {
     },
   },
   {
-    "coder/claudecode.nvim",
+    "rlch/claudecode.nvim",
     dependencies = { "folke/snacks.nvim" },
-    dev = true,
     config = true,
     event = "VeryLazy",
     keys = {
