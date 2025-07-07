@@ -49,15 +49,6 @@ set -x RUSTFLAGS "-L /opt/homebrew/opt/libpq/lib"
 set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/registry"
 
 # =============================================================================
-# Interactive Shell Setup
-# =============================================================================
-
-if not status --is-interactive
-    return
-end
-status job-control full
-
-# =============================================================================
 # Abbreviations and Aliases
 # =============================================================================
 
@@ -96,6 +87,15 @@ if type -q eza
     alias ll "l -a"
     alias la ll
 end
+
+# =============================================================================
+# Interactive Shell Setup
+# =============================================================================
+
+if not status --is-interactive
+    return
+end
+status job-control full
 
 # =============================================================================
 # Tool Initialization and Completions

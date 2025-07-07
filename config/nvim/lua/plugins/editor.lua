@@ -34,7 +34,7 @@ return {
           event = "file_opened",
           handler = function(file_path)
             require("neo-tree.command").execute({ action = "close" })
-          end
+          end,
         },
       },
       nesting_rules = {
@@ -171,7 +171,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     opts = {
       indent = {
-        disable = { "lua" },
+        disable = { "lua", "yaml" },
       },
       incremental_selection = {
         enable = true,
