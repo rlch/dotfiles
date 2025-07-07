@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "repomix": {
+      "type": "stdio",
+      "command": "repomix",
+      "args": [
+        "--compress",
+        "--mcp"
+      ],
+      "env": {}
+    }
+  }
+}
