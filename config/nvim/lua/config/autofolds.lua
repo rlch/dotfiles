@@ -44,7 +44,8 @@ local fold_patterns = {
                            (return_statement
                              (expression_list
                                (_) @return
-                               (identifier) @errReturn))) (#eq? @errReturn "err")
+                               (_) @errReturn))) (#match? @errReturn "err")
+
             !initializer
             !alternative
           ) @start
@@ -54,7 +55,7 @@ local fold_patterns = {
       fold_text = function(_, captures)
         return {
           { " ? ", "ErrorMsg" },
-          { "{ " .. captures["return"] .. ", err }", "Comment" },
+          { "{ " .. captures["return"] .. ", " .. captures["errReturn"] .. " }", "Comment" },
         }
       end,
     },
