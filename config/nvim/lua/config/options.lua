@@ -84,17 +84,11 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 -- vim.opt.foldtext = "v:lua.require'lazyvim.util'.ui.foldtext()"
 vim.o.foldtext = ""
+vim.o.foldmethod = "expr"
+vim.o.foldexpr = "v:lua.auto_foldexpr()"
 
 if vim.fn.has("nvim-0.9.0") == 1 then
   vim.opt.statuscolumn = [[%!v:lua.Snacks.statuscolumn()]]
-end
-
--- HACK: causes freezes on <= 0.9, so only enable on >= 0.10 for now
-if vim.fn.has("nvim-0.10") == 1 then
-  vim.opt.foldmethod = "expr"
-  vim.opt.foldexpr = "v:lua.require'lazyvim.util'.ui.foldexpr()"
-else
-  vim.opt.foldmethod = "indent"
 end
 
 vim.o.formatexpr = "v:lua.require'lazyvim.util'.format.formatexpr()"

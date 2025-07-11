@@ -485,15 +485,15 @@ return {
     dependencies = {
       "marilari88/neotest-vitest",
       "MisanthropicBit/neotest-busted",
+      "fredrikaverpil/neotest-golang",
     },
     opts = {
       adapters = {
         ["neotest-vitest"] = {},
-        ["neotest-busted"] = {
-          -- Optional: override busted command
-          -- busted_command = "busted",
-          -- Optional: override busted arguments
-          -- busted_args = { "--verbose" },
+        ["neotest-golang"] = {
+          runner = "gotestsum",
+          warn_test_name_dupes = false,
+          warn_test_not_executed = false,
         },
       },
     },
