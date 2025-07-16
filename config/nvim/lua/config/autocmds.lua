@@ -121,4 +121,4 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 -- })
 
 -- Load auto-folding system
-require("config.autofolds")
+-- require("config.autofolds")

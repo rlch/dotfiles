@@ -372,5 +372,18 @@ local function setup_auto_folding()
   })
 end
 
+-- Setup buffer cleanup for memory management only
+local function setup_buffer_cleanup()
+  vim.api.nvim_create_autocmd({ "BufDelete", "BufUnload" }, {
+    group = augroup("buffer_cleanup"),
+    callback = function(args)
+      auto_fold_ranges[args.buf] = nil
+      fold_states[args.buf] = nil
+      pcall(vim.api.nvim_buf_clear_namespace, args.buf, fold_ns, 0, -1)
+    end,
+  })
+end
+
 -- Initialize the auto-folding system
 setup_auto_folding()
+setup_buffer_cleanup()
