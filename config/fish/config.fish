@@ -89,6 +89,12 @@ if type -q eza
     alias la ll
 end
 
+# Load secrets and autoload functions
+test -e ~/.config/fish/secrets.fish && cat ~/.config/fish/secrets.fish | source
+for f in ~/.config/fish/autoload/*
+    source $f
+end
+
 # =============================================================================
 # Interactive Shell Setup
 # =============================================================================
@@ -115,12 +121,6 @@ type -q diesel && diesel completions fish | source
 # Language environment managers
 type -q pyenv && source (pyenv init --path | psub)
 type -q rbenv && source (rbenv init - | psub)
-
-# Load secrets and autoload functions
-test -e ~/.config/fish/secrets.fish && cat ~/.config/fish/secrets.fish | source
-for f in ~/.config/fish/autoload/*
-    source $f
-end
 
 # Lua rocks path configuration
 for i in (luarocks path | awk '{sub(/PATH=/, "PATH ", $2); print "fish_add_path \"$2\""}')

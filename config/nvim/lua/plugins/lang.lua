@@ -519,4 +519,10 @@ return {
       },
     },
   },
+
+  -- Alloy
+  {
+    "grafana/vim-alloy",
+    ft = { "alloy" },
+  },
 }
