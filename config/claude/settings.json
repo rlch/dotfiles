@@ -1,0 +1,28 @@
+{
+  "keybindings": {
+    "interrupt": "ctrl+c"
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/config/claude/notify.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/config/claude/notify.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "model": "sonnet"
+}

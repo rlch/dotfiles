@@ -2,7 +2,8 @@
   "extras": [
     "lazyvim.plugins.extras.lang.clangd",
     "lazyvim.plugins.extras.lang.cmake",
-    "lazyvim.plugins.extras.lang.git"
+    "lazyvim.plugins.extras.lang.git",
+    "lazyvim.plugins.extras.lang.sql"
   ],
   "install_version": 7,
   "news": {

@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local act = wezterm.action
 local config = {}
 
 if wezterm.config_builder then
@@ -17,6 +18,11 @@ config.window_padding = {
 	bottom = 1,
 }
 config.keys = {
+	{
+		key = "v",
+		mods = "CMD",
+		action = act.PasteFrom("Clipboard"),
+	},
 	{
 		key = "h",
 		mods = "CTRL|SHIFT",
@@ -53,5 +59,11 @@ table.insert(config.hyperlink_rules, {
 	regex = [[["]?([\w\d]{1}[-\w\d]+)(/){1}([-\w\d\.]+)["]?]],
 	format = "https://www.github.com/$1/$3",
 })
+
+config.notification_handling = "AlwaysShow"
+
+wezterm.on("window-config-reloaded", function(window, _)
+	window:toast_notification("wezterm", "configuration reloaded!", nil, 4000)
+end)
 
 return config

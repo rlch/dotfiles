@@ -79,9 +79,7 @@ return {
     },
   },
   {
-    -- TODO: Revert once https://github.com/mfussenegger/nvim-lint/pull/761/files merged
     "JonnyLoughlin/nvim-lint",
-    branch = "golangcilint-fix",
     init = function()
       require("lint").linters.golangcilint.args = {
         "--module-download-mode=vendor",
@@ -96,7 +94,48 @@ return {
 
   -- Flutter/Dart
   {
+    "stevearc/conform.nvim",
+    opts = {
+      formatters_by_ft = {
+        dart = { "dart_format" },
+      },
+    },
+  },
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        dartls = {
+          cmd = { "/Users/rjm/fvm/default/bin/dart", "language-server", "--protocol=lsp" },
+          filetypes = { "dart" },
+          root_dir = function(fname)
+            return require("lspconfig.util").root_pattern("pubspec.yaml")(fname)
+          end,
+          init_options = {
+            onlyAnalyzeProjectsWithOpenFiles = true,
+            suggestFromUnimportedLibraries = true,
+            closingLabels = true,
+            outline = true,
+            flutterOutline = true,
+            allowOpenUri = true,
+          },
+          settings = {
+            dart = {
+              completeFunctionCalls = false,
+              showTodos = true,
+              renameFilesWithClasses = "always",
+              enableSnippets = false,
+              updateImportsOnRename = true,
+              inlayHints = true,
+            },
+          },
+        },
+      },
+    },
+  },
+  {
     "akinsho/flutter-tools.nvim",
+    enabled = false,
     ft = { "dart" },
     requires = {
       "nvim-lua/plenary.nvim",
@@ -145,14 +184,14 @@ return {
       },
       lsp = {
         color = {
-          enabled = true,
+          enabled = false,
           background = false,
           foreground = false,
           virtual_text = true,
           virtual_text_str = "■",
         },
         init_options = {
-          onlyAnalyzeProjectsWithOpenFiles = true,
+          onlyAnalyzeProjectsWithOpenFiles = false,
         },
         settings = {
           lineLength = 100,
@@ -481,22 +520,40 @@ return {
 
   -- Neotest
   {
-    "nvim-neotest/neotest",
+    "rlch/neotest",
+    commit = "9a9f589",
     dependencies = {
       "marilari88/neotest-vitest",
       "MisanthropicBit/neotest-busted",
       "fredrikaverpil/neotest-golang",
+      "sidlatau/neotest-dart",
     },
     opts = {
+      output = {
+        enabled = true,
+        open_on_run = "short",
+      },
+      output_panel = {
+        enabled = true,
+        open = "botright split | resize 15",
+      },
       adapters = {
         ["neotest-vitest"] = {},
         ["neotest-golang"] = {
-          runner = "gotestsum",
+          -- runner = "gotestsum",
           warn_test_name_dupes = false,
           warn_test_not_executed = false,
         },
+        ["neotest-dart"] = {
+          command = "/Users/rjm/fvm/default/bin/flutter",
+          use_lsp = true,
+        },
       },
     },
+  },
+  {
+    "fredrikaverpil/neotest-golang",
+    dev = true,
   },
 
   -- TypeScript
@@ -524,5 +581,69 @@ return {
   {
     "grafana/vim-alloy",
     ft = { "alloy" },
+  },
+
+  -- GraphQL
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        graphql = {},
+      },
+    },
+  },
+
+  -- CSV
+  {
+    "hat0uma/csvview.nvim",
+    ft = "csv",
+    ---@module "csvview"
+    ---@type CsvView.Options
+    opts = {
+      parser = { comments = { "#", "//" } },
+      keymaps = {
+        -- Text objects for selecting fields
+        textobject_field_inner = { "if", mode = { "o", "x" } },
+        textobject_field_outer = { "af", mode = { "o", "x" } },
+        -- Excel-like navigation:
+        -- Use <Tab> and <S-Tab> to move horizontally between fields.
+        -- Use <Enter> and <S-Enter> to move vertically between rows and place the cursor at the end of the field.
+        -- Note: In terminals, you may need to enable CSI-u mode to use <S-Tab> and <S-Enter>.
+        jump_next_field_end = { "<Tab>", mode = { "n", "v" } },
+        jump_prev_field_end = { "<S-Tab>", mode = { "n", "v" } },
+        jump_next_row = { "<Enter>", mode = { "n", "v" } },
+        jump_prev_row = { "<S-Enter>", mode = { "n", "v" } },
+      },
+      view = {
+        display_mode = "border",
+        min_column_width = 3,
+      },
+    },
+    cmd = { "CsvViewEnable", "CsvViewDisable", "CsvViewToggle" },
+  },
+
+  -- SQL
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.formatters.sqlfluff = {
+        args = { "format", "--dialect=postgres", "-" },
+      }
+      return opts
+    end,
+  },
+
+  -- Rust
+  {
+    "mrcjkb/rustaceanvim",
+    keys = {
+      {
+        "<localleader>m",
+        "<cmd>RustLsp expandMacro<cr>",
+        desc = "Expand macro",
+        ft = "rust",
+      },
+    },
   },
 }

@@ -47,7 +47,7 @@ function zl
     if test -f layout.kdl
         set LAYOUT_NAME layout.kdl
     else
-        set LAYOUT_NAME compact
+        set LAYOUT_NAME default
     end
 
     if test -n "$LAYOUT_NAME"

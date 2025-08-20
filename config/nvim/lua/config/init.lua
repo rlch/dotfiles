@@ -94,3 +94,5 @@ require("lazy").setup({
     },
   },
 })
+
+require("config.autocmds")

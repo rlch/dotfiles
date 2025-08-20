@@ -5,10 +5,26 @@ set modeindicator false
 set modeindicatormodes {"ignore":"false"}
 colourscheme midnight
 
+bind J tabnext
+bind K tabprev
+bind <C-j> scrollline 10
+bind <C-k> scrollline -10
+bind gi    composite focusinput -l | text.end_of_line
+
+bind --mode=normal t       fillcmdline tab
+bind --mode=normal T       fillcmdline tgroupswitch
+bind --mode=normal n       fillcmdline tabopen
+bind --mode=normal <C-t>   mode tab
+bind --mode=tab    <Esc>   mode normal
+bind --mode=tab    c       composite mode normal | fillcmdline_notrail tgroupcreate
+bind --mode=tab    d       tgroupclose
+bind --mode=tab    m       composite mode normal | fillcmdline_notrail tgroupmove
+bind --mode=tab    r       composite mode normal | fillcmdline_notrail tgrouprename
+bind --mode=tab    o       composite mode normal | fillcmdline_notrail tgroupswitch
+bind --mode=tab    <Space> composite mode normal | fillcmdline_notrail tgroupswitch
+
 bind --mode=ex <C-n> ex.next_completion
 bind --mode=ex <C-p> ex.prev_completion
-bind J tabprev
-bind K tabnext
 
 bind --mode=ignore <C-d> scrollpage 0.5
 bind --mode=ignore <C-u> scrollpage -0.5
@@ -18,21 +34,11 @@ bind --mode=insert <C-d> scrollpage 0.5
 bind --mode=insert <C-u> scrollpage -0.5
 bind --mode=insert <C-j> scrollline 10
 bind --mode=insert <C-k> scrollline -10
-bind --mode=normal <C-j> scrollline 10
-bind --mode=normal <C-k> scrollline -10
-bind --mode=normal gi    composite focusinput -l | text.end_of_line
 
-seturl home\.rjmath\.com disable true
-
-autocmd DocStart code\.rjmath\.com mode ignore
-autocmd DocStart plex\.rjmath\.com mode ignore
 autocmd DocStart stan\.com\.au mode ignore
 autocmd DocStart wanikani\.com mode ignore
 autocmd DocStart bunpro\.jp mode ignore
 autocmd DocStart monkeytype\.com mode ignore
 autocmd DocStart hackthebox\.com mode ignore
-autocmd DocStart richards-mac-mini\.local mode ignore
-autocmd DocStart richards-mac-mini\.local:32400 mode ignore
-
 
 autocmd DocStart github\.com bind --mode=normal yr composite js document.URL.match("https://github.com/([^/]*/[^/]*)/?")[1] | yank

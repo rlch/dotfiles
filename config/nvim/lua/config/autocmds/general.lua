@@ -1,5 +1,3 @@
--- Autocmds are automatically loaded on the VeryLazy event
-
 local function augroup(name)
   return vim.api.nvim_create_augroup("dotfiles_" .. name, { clear = true })
 end
@@ -107,18 +105,3 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
     end
   end,
 })
-
--- Set pane name to current directory on exit
--- vim.api.nvim_create_autocmd("VimLeavePre", {
---   group = augroup("terminal_restore_pane_name"),
---   callback = function()
---     if has_renamed then
---       local cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
---       -- Use ANSI escape sequence to restore pane title
---       io.stdout:write("\027]2;" .. cwd .. "\007")
---     end
---   end,
--- })
-
--- Load auto-folding system
--- require("config.autofolds")
