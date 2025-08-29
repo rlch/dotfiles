@@ -47,6 +47,11 @@ config.keys = {
 		key = "Delete",
 		action = wezterm.action.SendKey({ key = "Delete" }),
 	},
+	{
+		key = "Enter",
+		mods = "ALT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
 }
 
 config.window_decorations = "RESIZE"

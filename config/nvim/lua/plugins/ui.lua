@@ -14,6 +14,10 @@ return {
   },
   {
     "akinsho/bufferline.nvim",
+    dependencies = {
+      "catppuccin/nvim",
+    },
+    enabled = false,
     opts = {
       options = {
         always_show_bufferline = false,

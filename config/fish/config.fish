@@ -12,6 +12,7 @@ fish_add_path -g \
     /opt/homebrew/bin \
     $HOME/.pub-cache/bin \
     $HOME/fvm/default/bin \
+    $HOME/.pub-cache/bin \
     /opt/local/bin \
     $HOME/.rover/bin \
     $HOME/usr/local/bin \
