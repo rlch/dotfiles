@@ -82,4 +82,34 @@ return {
       -- { "<leader>ad", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Deny diff" },
     },
   },
+
+  {
+    "supermaven-inc/supermaven-nvim",
+    lazy = false,
+    config = function()
+      require("supermaven-nvim").setup({
+        log_level = "info",
+        disable_inline_completion = false,
+        disable_keymaps = true,
+      })
+
+      local completion_preview = require("supermaven-nvim.completion_preview")
+      require("which-key").add({
+        {
+          "<C-l>",
+          completion_preview.on_accept_suggestion,
+          mode = "i",
+          desc = "Accept suggestion",
+          noremap = true,
+        },
+        {
+          "<C-j>",
+          completion_preview.on_accept_suggestion_word,
+          mode = "i",
+          desc = "Accept word",
+          noremap = true,
+        },
+      })
+    end,
+  },
 }

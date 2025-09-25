@@ -31,7 +31,7 @@ return {
   {
     "andrewferrier/debugprint.nvim",
     dependencies = {
-      "echasnovski/mini.nvim",
+      "nvim-mini/mini.nvim",
     },
     lazy = false,
     version = "*",

@@ -79,10 +79,18 @@ return {
     },
   },
   {
-    "JonnyLoughlin/nvim-lint",
+    "mfussenegger/nvim-lint",
     init = function()
       require("lint").linters.golangcilint.args = {
+        "run",
         "--module-download-mode=vendor",
+        "--output.json.path=stdout",
+        "--show-stats=false",
+        "--output.text.print-issued-lines=false",
+        "--output.text.print-linter-name=false",
+        function()
+          return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":h")
+        end,
       }
     end,
     opts = {
@@ -98,38 +106,6 @@ return {
     opts = {
       formatters_by_ft = {
         dart = { "dart_format" },
-      },
-    },
-  },
-  {
-    "neovim/nvim-lspconfig",
-    opts = {
-      servers = {
-        dartls = {
-          cmd = { "/Users/rjm/fvm/default/bin/dart", "language-server", "--protocol=lsp" },
-          filetypes = { "dart" },
-          root_dir = function(fname)
-            return require("lspconfig.util").root_pattern("pubspec.yaml")(fname)
-          end,
-          init_options = {
-            onlyAnalyzeProjectsWithOpenFiles = true,
-            suggestFromUnimportedLibraries = true,
-            closingLabels = true,
-            outline = true,
-            flutterOutline = true,
-            allowOpenUri = true,
-          },
-          settings = {
-            dart = {
-              completeFunctionCalls = false,
-              showTodos = true,
-              renameFilesWithClasses = "always",
-              enableSnippets = false,
-              updateImportsOnRename = true,
-              inlayHints = true,
-            },
-          },
-        },
       },
     },
   },
@@ -310,21 +286,20 @@ return {
     },
     ft = { "markdown", "codecompanion", "Avante" },
   },
-  {
-    -- TODO: see golang
-    "JonnyLoughlin/nvim-lint",
-    init = function()
-      require("lint").linters.markdownlint.args = {
-        "--disable",
-        "MD013",
-      }
-    end,
-    opts = {
-      linters_by_ft = {
-        markdown = { "markdownlint" },
-      },
-    },
-  },
+  -- {
+  --   "JonnyLoughlin/nvim-lint",
+  --   init = function()
+  --     require("lint").linters.markdownlint.args = {
+  --       "--disable",
+  --       "MD013",
+  --     }
+  --   end,
+  --   opts = {
+  --     linters_by_ft = {
+  --       markdown = { "markdownlint" },
+  --     },
+  --   },
+  -- },
 
   -- Scala
   {
@@ -429,7 +404,7 @@ return {
     },
   },
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       vim.list_extend(opts.ensure_installed, { "helm-ls" })
@@ -454,7 +429,7 @@ return {
 
   -- PHP
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       vim.list_extend(opts.ensure_installed, { "phpactor" })
@@ -520,8 +495,8 @@ return {
 
   -- Neotest
   {
-    "rlch/neotest",
-    commit = "9a9f589",
+    "nvim-neotest/neotest",
+    dev = true,
     dependencies = {
       "marilari88/neotest-vitest",
       "MisanthropicBit/neotest-busted",
@@ -571,6 +546,7 @@ return {
                 return node
               end
             end
+            return "."
           end,
         },
       },
@@ -634,6 +610,25 @@ return {
     end,
   },
 
+  -- Waku
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters_by_ft = {
+        waku = { "wakufmt" },
+      },
+      formatters = {
+        wakufmt = {
+          command = "wakufmt",
+          args = {},
+          stdin = true,
+          exit_codes = { 0 },
+        },
+      },
+    },
+  },
+
   -- Rust
   {
     "mrcjkb/rustaceanvim",
@@ -643,6 +638,35 @@ return {
         "<cmd>RustLsp expandMacro<cr>",
         desc = "Expand macro",
         ft = "rust",
+      },
+    },
+  },
+
+  -- Obsidian
+  {
+    "obsidian-nvim/obsidian.nvim",
+    version = "*", -- recommended, use latest release instead of latest commit
+    ft = "markdown",
+    -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+    ---@module 'obsidian'
+    ---@type obsidian.config
+    opts = {
+      legacy_commands = false,
+      workspaces = {
+        {
+          name = "waku",
+          path = "~/Coding/Waku/vault/",
+        },
+      },
+      completion = {
+        -- Enables completion using nvim_cmp
+        nvim_cmp = false,
+        -- Enables completion using blink.cmp
+        blink = true,
+        -- Trigger completion at 2 chars.
+        min_chars = 2,
+        -- Set to false to disable new note creation in the picker
+        create_new = true,
       },
     },
   },

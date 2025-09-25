@@ -307,6 +307,10 @@ return {
         },
       },
       cmdline = { enabled = false },
+      keymap = {
+        preset = "enter",
+        ["<C-f"] = false,
+      },
     },
   },
   {

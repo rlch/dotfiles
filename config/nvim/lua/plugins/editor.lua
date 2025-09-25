@@ -154,7 +154,7 @@ return {
     ft = "qf",
   },
   {
-    "echasnovski/mini.pairs",
+    "nvim-mini/mini.pairs",
     enabled = true,
   },
   {
@@ -169,10 +169,12 @@ return {
   },
   {
     "nvim-treesitter/nvim-treesitter",
+    dev = true,
     opts = {
       indent = {
-        disable = { "lua", "yaml", "dart" },
+        disable = { "lua", "yaml" },
       },
+      highlight = { enable = true },
       incremental_selection = {
         enable = true,
         keymaps = {

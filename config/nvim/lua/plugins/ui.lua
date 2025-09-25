@@ -2,7 +2,7 @@
 return {
 
   {
-    "echasnovski/mini.indentscope",
+    "nvim-mini/mini.indentscope",
     opts = {
       draw = {
         delay = 50,
@@ -297,7 +297,7 @@ return {
     end,
   },
   {
-    "echasnovski/mini.diff",
+    "nvim-mini/mini.diff",
     event = "VeryLazy",
     config = function(_, opts)
       local diff = require("mini.diff")

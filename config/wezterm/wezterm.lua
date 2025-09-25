@@ -6,7 +6,7 @@ if wezterm.config_builder then
 	config = wezterm.config_builder()
 end
 
-config.color_scheme = "catppuccin-mocha"
+config.color_scheme = "Catppuccin Mocha"
 config.font = wezterm.font("JetBrains Mono")
 config.enable_tab_bar = false
 config.default_prog = { "/opt/homebrew/bin/fish", "-l" }
@@ -47,9 +47,39 @@ config.keys = {
 		key = "Delete",
 		action = wezterm.action.SendKey({ key = "Delete" }),
 	},
+	-- {
+	-- 	key = "f",
+	-- 	mods = "CTRL",
+	-- 	action = wezterm.action.DisableDefaultAssignment,
+	-- },
 	{
 		key = "Enter",
 		mods = "ALT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "Enter",
+		mods = "SHIFT",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "LeftArrow",
+		mods = "CTRL",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "RightArrow",
+		mods = "CTRL",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "Space",
+		mods = "CTRL",
+		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "p",
+		mods = "CTRL|SHIFT",
 		action = wezterm.action.DisableDefaultAssignment,
 	},
 }
@@ -66,6 +96,8 @@ table.insert(config.hyperlink_rules, {
 })
 
 config.notification_handling = "AlwaysShow"
+
+config.front_end = "WebGpu"
 
 wezterm.on("window-config-reloaded", function(window, _)
 	window:toast_notification("wezterm", "configuration reloaded!", nil, 4000)

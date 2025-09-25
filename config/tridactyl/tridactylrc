@@ -40,5 +40,6 @@ autocmd DocStart wanikani\.com mode ignore
 autocmd DocStart bunpro\.jp mode ignore
 autocmd DocStart monkeytype\.com mode ignore
 autocmd DocStart hackthebox\.com mode ignore
+autocmd DocStart excalidraw\.com mode ignore
 
 autocmd DocStart github\.com bind --mode=normal yr composite js document.URL.match("https://github.com/([^/]*/[^/]*)/?")[1] | yank

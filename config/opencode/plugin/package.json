@@ -1,0 +1,15 @@
+{
+  "name": "plugin",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "notify.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^0.5.29"
+  }
+}
