@@ -12,7 +12,6 @@ fish_add_path -g \
     /opt/homebrew/bin \
     $HOME/.pub-cache/bin \
     $HOME/fvm/default/bin \
-    $HOME/.pub-cache/bin \
     /opt/local/bin \
     $HOME/.rover/bin \
     $HOME/usr/local/bin \
@@ -57,8 +56,7 @@ set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/regis
 # =============================================================================
 
 # Development tools
-abbr f spf
-abbr t tmux
+abbr tm task-master
 abbr tp telepresence
 abbr h helm
 abbr mk minikube
@@ -66,6 +64,9 @@ abbr kk k9s
 abbr tf terraform
 abbr v "fg &>/dev/null || nvim"
 abbr zel zellij
+abbr gw worktree-tui
+abbr cld cl --dangerously-skip-permissions
+abbr ai opencode
 
 # System aliases
 alias intel="arch -x86_64"
@@ -76,6 +77,7 @@ alias efish="cd ~/.config/fish && nvim config.fish"
 alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
 alias envim="cd ~/.config/nvim && nvim"
 alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
+alias cbo="tee /dev/tty | cb"
 
 # Configuration management
 alias sfish="source ~/.config/fish/config.fish"
@@ -118,6 +120,7 @@ type -q atuin && atuin init fish | source
 type -q kubectl && kubectl completion fish | source
 type -q flux && flux completion fish | source
 type -q diesel && diesel completions fish | source
+type -q claude-squad && claude-squad completion fish | source
 
 # Language environment managers
 type -q pyenv && source (pyenv init --path | psub)

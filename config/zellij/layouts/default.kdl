@@ -30,10 +30,17 @@ layout {
         mode_tmux          "#[bg=#F2CDCD,fg=#181825] 󰙀  "
         mode_default_to_mode "tmux"
 
-        tab_normal   "#[fg=#6C7086] {name} "
-        tab_active   "#[fg=#9399B2,bold,italic] {name} "
-        tab_sync_indicator       "<> "
-        tab_fullscreen_indicator "[] "
+        tab_normal   "#[fg=#6C7086]{index} {name} "
+        tab_normal_sync   "#[fg=#6C7086]{index} {name} {sync_indicator}"
+        tab_normal_fullscreen   "#[fg=#6C7086]{index} {name} {fullscreen_indicator}"
+
+        tab_active   "#[fg=#9399B2,bold,italic]{index} {name} "
+        tab_active_sync   "#[fg=#9399B2,bold,italic]{index} {name} {sync_indicator}"
+        tab_active_fullscreen   "#[fg=#9399B2,bold,italic]{index} {name} {fullscreen_indicator}"
+
+        tab_separator "#[fg=##9399B2] | "
+        tab_sync_indicator       "󰓦 "
+        tab_fullscreen_indicator "󰊓 "
         tab_floating_indicator   "⬚ "
 
         tab_display_count         "5"  // limit to showing 3 tabs

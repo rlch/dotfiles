@@ -9,7 +9,7 @@
 function _rename_tab_if_allowed
     if not set -q GUARD_TAB
         set tab_name (_get_tab_name)
-        command nohup zellij action rename-tab $tab_name >/dev/null 2>&1 &
+        # command nohup zellij action rename-tab $tab_name >/dev/null 2>&1 &
     end
 end
 

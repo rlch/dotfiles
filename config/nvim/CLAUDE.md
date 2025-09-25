@@ -9,10 +9,12 @@ This is a Neovim configuration based on LazyVim, using the lazy.nvim plugin mana
 ## Architecture
 
 ### Entry Points
+
 - `init.lua` - Main entry point that requires the config module
 - `lua/config/init.lua` - Bootstraps lazy.nvim and loads all plugin specifications
 
 ### Configuration Structure
+
 - `lua/config/` - Core configuration files
   - `globals.lua` - Global variables and settings
   - `options.lua` - Neovim options (leader key is space, localleader is comma)
@@ -30,6 +32,7 @@ This is a Neovim configuration based on LazyVim, using the lazy.nvim plugin mana
 ### Plugin Management
 
 This configuration uses lazy.nvim with LazyVim as a base. LazyVim extras are imported for:
+
 - Languages: Go, Rust, Python, TypeScript, Elixir, Docker, Terraform, YAML, JSON, Markdown
 - Formatting: Black, Prettier
 - Editor: FZF (picker), dial, inc-rename, outline
@@ -45,11 +48,13 @@ This configuration uses lazy.nvim with LazyVim as a base. LazyVim extras are imp
 ## Development Commands
 
 ### Neovim Plugin Management
+
 - `:Lazy` - Open lazy.nvim UI for plugin management
 - `:Lazy sync` - Update all plugins
 - `:Lazy clean` - Remove unused plugins
 
 ### LSP Commands
+
 - `:LspInfo` - Show LSP server information
 - `:LspRestart` - Restart LSP servers
 - `<leader>lf` - Format code (force)
@@ -57,6 +62,7 @@ This configuration uses lazy.nvim with LazyVim as a base. LazyVim extras are imp
 - `<leader>li` - LSP Info
 
 ### Key Mappings
+
 - Leader: `<space>`
 - Local leader: `,`
 - `;` remapped to `:` for easier command mode access
@@ -69,3 +75,4 @@ This configuration uses lazy.nvim with LazyVim as a base. LazyVim extras are imp
 - FZF is configured as the default picker (`vim.g.lazyvim_picker = "fzf"`)
 - Autoformat is enabled by default (`vim.g.autoformat = true`)
 - The configuration includes custom development paths at `~/Coding/Personal/`
+

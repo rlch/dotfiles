@@ -96,6 +96,7 @@ outer.right = 10
 alt-slash = 'layout tiles horizontal vertical'
 alt-comma = 'layout accordion horizontal vertical'
 alt-f = 'fullscreen'
+ctrl-alt-f = 'macos-native-fullscreen'
 alt-shift-f = 'layout floating tiling'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus

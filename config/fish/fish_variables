@@ -2,6 +2,9 @@
 # VERSION: 3.0
 SETUVAR --export FZF_DEFAULT_OPTS:\x2d\x2dcolor\x3dbg\x2b\x3a\x23363a4f\x2cbg\x3a\x2324273a\x2cspinner\x3a\x23f4dbd6\x2chl\x3a\x23ed8796\x20\x2d\x2dcolor\x3dfg\x3a\x23cad3f5\x2cheader\x3a\x23ed8796\x2cinfo\x3a\x23c6a0f6\x2cpointer\x3a\x23f4dbd6\x20\x2d\x2dcolor\x3dmarker\x3a\x23f4dbd6\x2cfg\x2b\x3a\x23cad3f5\x2cprompt\x3a\x23c6a0f6\x2chl\x2b\x3a\x23ed8796
 SETUVAR __fish_initialized:3800
+SETUVAR _fisher_plugins:realiserad/fish\x2dai
+SETUVAR _fisher_realiserad_2F_fish_2D_ai_files:\x7e/\x2econfig/fish/functions/_fish_ai_autocomplete\x2efish\x1e\x7e/\x2econfig/fish/functions/_fish_ai_autocomplete_or_fix\x2efish\x1e\x7e/\x2econfig/fish/functions/_fish_ai_codify\x2efish\x1e\x7e/\x2econfig/fish/functions/_fish_ai_codify_or_explain\x2efish\x1e\x7e/\x2econfig/fish/functions/_fish_ai_explain\x2efish\x1e\x7e/\x2econfig/fish/functions/_fish_ai_fix\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_ai_bug_report\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_ai_put_api_key\x2efish\x1e\x7e/\x2econfig/fish/functions/fish_ai_switch_context\x2efish\x1e\x7e/\x2econfig/fish/conf\x2ed/fish_ai\x2efish
+SETUVAR _fisher_upgraded_to_4_4:\x1d
 SETUVAR fish_color_autosuggestion:brblack
 SETUVAR fish_color_cancel:\x2dr
 SETUVAR fish_color_command:normal
