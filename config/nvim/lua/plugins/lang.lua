@@ -670,4 +670,26 @@ return {
       },
     },
   },
+
+  -- Lua
+  {
+    "rafcamlet/nvim-luapad",
+    cmd = { "Luapad" },
+    ft = "lua",
+    opts = { eval_on_change = false },
+    keys = {
+      { "<localleader>p", "<cmd>Luapad<cr>", mode = "n" },
+      { "<localleader>r", "<cmd>LuaRun<cr>", mode = "n" },
+    },
+    -- {
+    --   "rafcamlet/nvim-luapad",
+    --   cmd = { "Luapad" },
+    --   ft = "lua",
+    --   opts = { eval_on_change = false },
+    --   keys = {
+    --     { "<localleader>p", "<cmd>Luapad<cr>", mode = "n" },
+    --     { "<localleader>r", "<cmd>LuaRun<cr>", mode = "n" },
+    --   },
+    -- },
+  },
 }
