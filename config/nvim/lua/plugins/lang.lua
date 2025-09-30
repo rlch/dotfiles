@@ -532,7 +532,6 @@ return {
   },
 
   -- TypeScript
-
   {
     "neovim/nvim-lspconfig",
     opts = {
@@ -542,9 +541,10 @@ return {
             local node = vim.fs.root(fname, { "package.json", "node_modules" })
             if node then
               local deno = vim.fs.root(fname, { "deno.json" })
-              if not deno or #deno > #node then
-                return node
+              if deno ~= nil and #deno > #node then
+                return deno
               end
+              return node
             end
             return "."
           end,

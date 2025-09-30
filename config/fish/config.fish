@@ -67,6 +67,7 @@ abbr zel zellij
 abbr gw worktree-tui
 abbr cld cl --dangerously-skip-permissions
 abbr ai opencode
+abbr n pnpm
 
 # System aliases
 alias intel="arch -x86_64"

@@ -2,3 +2,4 @@ integration/
 vendor/
 secrets.fish
 config/claude/**/
+config/claude/history.jsonl

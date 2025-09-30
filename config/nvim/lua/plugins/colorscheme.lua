@@ -6,25 +6,49 @@ return {
     ---@module 'catppuccin.types'
     ---@type CatppuccinOptions
     opts = {
+      float = {
+        transparent = false,
+        solid = true,
+      },
       background = { -- :h background
         light = "latte",
         dark = "mocha",
       },
-      integrations = {
-        dropbar = { enabled = true },
-        headlines = true,
-        neotree = true,
-        noice = true,
-        notify = true,
-        treesitter_context = true,
-        octo = true,
-        which_key = true,
-        fzf = true,
-        native_lsp = {
-          enabled = true,
-          inlay_hints = {
-            background = false,
-          },
+      default_integrations = true,
+      auto_integrations = true,
+      dim_inactive = {
+        enabled = true,
+        shade = "dark",
+        percentage = 0.10,
+      },
+      -- integrations = {
+      --   dropbar = { enabled = true },
+      --   headlines = true,
+      --   neotree = true,
+      --   noice = true,
+      --   notify = true,
+      --   treesitter_context = true,
+      --   octo = true,
+      --   which_key = true,
+      --   fzf = true,
+      --   native_lsp = {
+      --     enabled = true,
+      --     inlay_hints = {
+      --       background = false,
+      --     },
+      --   },
+      -- },
+      lsp_styles = {
+        enabled = true,
+        inlay_hints = {
+          background = false,
+        },
+        virtual_text = {
+          errors = { "italic" },
+          hints = { "italic" },
+          warnings = { "italic" },
+          information = { "italic" },
+          ok = { "italic" },
         },
       },
       custom_highlights = function(colors)

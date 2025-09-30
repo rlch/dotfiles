@@ -1,4 +1,8 @@
 font-family = "JetBrains Mono"
-theme = "catppuccin-mocha"
+font-thicken = false
+theme = "Catppuccin Mocha"
 macos-titlebar-style = "hidden"
 shell-integration = "fish"
+
+# Delete word
+keybind = alt+backspace=text:\x1b\x7f

@@ -11,5 +11,10 @@
       "type": "local",
       "command": ["npx", "-y", "--package=task-master-ai", "task-master-ai"]
     }
+  },
+  "lsp": {
+    "rust-analyzer": {
+      "disabled": true
+    }
   }
 }
