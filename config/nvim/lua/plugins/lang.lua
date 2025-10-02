@@ -286,20 +286,20 @@ return {
     },
     ft = { "markdown", "codecompanion", "Avante" },
   },
-  -- {
-  --   "JonnyLoughlin/nvim-lint",
-  --   init = function()
-  --     require("lint").linters.markdownlint.args = {
-  --       "--disable",
-  --       "MD013",
-  --     }
-  --   end,
-  --   opts = {
-  --     linters_by_ft = {
-  --       markdown = { "markdownlint" },
-  --     },
-  --   },
-  -- },
+  {
+    "mfussenegger/nvim-lint",
+    init = function()
+      require("lint").linters["markdownlint-cli2"].args = {
+        "--config",
+        "~/.markdownlint-cli2.jsonc",
+      }
+    end,
+    opts = {
+      linters_by_ft = {
+        markdown = { "markdownlint-cli2" },
+      },
+    },
+  },
 
   -- Scala
   {
@@ -536,19 +536,7 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        vtsls = {
-          root_dir = function(fname)
-            local node = vim.fs.root(fname, { "package.json", "node_modules" })
-            if node then
-              local deno = vim.fs.root(fname, { "deno.json" })
-              if deno ~= nil and #deno > #node then
-                return deno
-              end
-              return node
-            end
-            return "."
-          end,
-        },
+        vtsls = {},
       },
     },
   },

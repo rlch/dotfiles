@@ -1,7 +1,86 @@
 {
-  "keybindings": {
-    "interrupt": "ctrl+c"
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Edit(**)",
+      "MultiEdit(**)",
+      "Write(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "LS(**)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(git remote:*)",
+      "Bash(git config:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(git clone:*)",
+      "Bash(git restore:*)",
+      "WebFetch(domain:*)",
+      "WebSearch",
+      "Bash(npx playwright:*)",
+      "Bash(make:*)",
+      "Bash(cargo:*)",
+      "Bash(go:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(tar:*)",
+      "Bash(zip:*)",
+      "Bash(unzip:*)",
+      "Bash(jq:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(wc:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf /)",
+      "Bash(sudo rm -rf /)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)",
+      "Bash(halt:*)",
+      "Bash(poweroff:*)",
+      "Bash(docker run --privileged:*)",
+      "Bash(docker run --pid=host:*)",
+      "Bash(docker run -v /:/host *)",
+      "Bash(sudo passwd:*)",
+      "Bash(sudo useradd:*)",
+      "Bash(sudo userdel:*)",
+      "Bash(sudo ufw disable:*)",
+      "Bash(sudo iptables -F:*)",
+      "Bash(sudo rm /etc/*)",
+      "Bash(sudo > /etc/*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(git push --force origin master:*)",
+      "Bash(git push --force origin main:*)",
+      "Bash(git push -f origin master:*)",
+      "Bash(git push -f origin main:*)",
+      "Bash(cat ~/.aws/*)",
+      "Bash(cat ~/.ssh/id_*)",
+      "Read(.env*)",
+      "Read(*/secrets/*)",
+      "Read(*secret*)",
+      "Read(*password*)"
+    ],
+    "defaultMode": "acceptEdits"
   },
+  "enableAllProjectMcpServers": true,
   "hooks": {
     "Notification": [
       {
@@ -24,104 +103,7 @@
       }
     ]
   },
-  "model": "sonnet",
-  "enableAllProjectMcpServers": true,
-  "includeCoAuthoredBy": false,
-  "permissions": {
-    "allow": [
-      "Read(**)",
-      "Edit(**)",
-      "MultiEdit(**)",
-      "Write(**)",
-      "Glob(**)",
-      "Grep(**)",
-      "LS(**)",
-
-      "Bash(git status:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git pull:*)",
-      "Bash(git fetch:*)",
-      "Bash(git log:*)",
-      "Bash(git diff:*)",
-      "Bash(git checkout:*)",
-      "Bash(git branch:*)",
-      "Bash(git merge:*)",
-      "Bash(git stash:*)",
-      "Bash(git remote:*)",
-      "Bash(git config:*)",
-      "Bash(git show:*)",
-      "Bash(git blame:*)",
-      "Bash(git clone:*)",
-      "Bash(git restore:*)",
-
-      "WebFetch(domain:*)",
-      "WebSearch",
-
-      "Bash(npx playwright:*)",
-
-      "Bash(make:*)",
-      "Bash(cargo:*)",
-      "Bash(go:*)",
-
-      "Bash(cp:*)",
-      "Bash(mv:*)",
-      "Bash(mkdir:*)",
-      "Bash(touch:*)",
-
-      "Bash(tar:*)",
-      "Bash(zip:*)",
-      "Bash(unzip:*)",
-
-      "Bash(jq:*)",
-      "Bash(sed:*)",
-      "Bash(awk:*)",
-      "Bash(sort:*)",
-      "Bash(uniq:*)",
-      "Bash(wc:*)"
-    ],
-
-    "deny": [
-      "Bash(rm -rf /*)",
-      "Bash(rm -rf /)",
-      "Bash(sudo rm -rf /)",
-
-      "Bash(shutdown:*)",
-      "Bash(reboot:*)",
-      "Bash(halt:*)",
-      "Bash(poweroff:*)",
-
-      "Bash(docker run --privileged:*)",
-      "Bash(docker run --pid=host:*)",
-      "Bash(docker run -v /:/host *)",
-
-      "Bash(sudo passwd:*)",
-      "Bash(sudo useradd:*)",
-      "Bash(sudo userdel:*)",
-
-      "Bash(sudo ufw disable:*)",
-      "Bash(sudo iptables -F:*)",
-
-      "Bash(sudo rm /etc/*)",
-      "Bash(sudo > /etc/*)",
-
-      "Bash(curl:*)",
-      "Bash(wget:*)",
-
-      "Bash(git push --force origin master:*)",
-      "Bash(git push --force origin main:*)",
-      "Bash(git push -f origin master:*)",
-      "Bash(git push -f origin main:*)",
-
-      "Bash(cat ~/.aws/*)",
-      "Bash(cat ~/.ssh/id_*)",
-      "Read(.env*)",
-      "Read(*/secrets/*)",
-      "Read(*secret*)",
-      "Read(*password*)"
-    ],
-
-    "defaultMode": "acceptEdits"
+  "keybindings": {
+    "interrupt": "ctrl+c"
   }
 }
