@@ -37,6 +37,7 @@ set -x EDITOR nvim
 set -x GIT_EDITOR nvim
 set -x VISUAL nvim
 set -x MANPAGER 'nvim +Man!'
+set -x AMP_URL 'http://localhost:8317'
 
 # Development tools
 set -x GOPATH $HOME/go
@@ -57,6 +58,7 @@ set -g TUTERO_REGISTRY "australia-southeast1-docker.pkg.dev/mathgaps-56d5a/regis
 
 # Development tools
 abbr tm task-master
+abbr wr wrangler
 abbr tp telepresence
 abbr h helm
 abbr mk minikube
@@ -66,8 +68,11 @@ abbr v "fg &>/dev/null || nvim"
 abbr zel zellij
 abbr gw worktree-tui
 abbr cld cl --dangerously-skip-permissions
-abbr ai opencode
 abbr n pnpm
+abbr frb flutter_rust_bridge_codegen
+abbr f flutter
+abbr ai amp --ide --dangerously-allow-all
+# abbr ai opencode
 
 # System aliases
 alias intel="arch -x86_64"
@@ -79,6 +84,11 @@ alias etmux="cd ~/.config/tmux && nvim tmux.conf.local"
 alias envim="cd ~/.config/nvim && nvim"
 alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 alias cbo="tee /dev/tty | cb"
+alias fpg="flutter pub get"
+alias fc="flutter clean"
+alias frm="flutter run -d macos"
+alias frc="flutter run -d chrome"
+alias frcc="flutter run -d chrome --web-header=Cross-Origin-Opener-Policy=same-origin --web-header=Cross-Origin-Embedder-Policy=require-corp"
 
 # Configuration management
 alias sfish="source ~/.config/fish/config.fish"
@@ -205,3 +215,10 @@ end
 
 # OrbStack integration
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /Users/rjm/.lmstudio/bin
+# End of LM Studio CLI section
+
+set -gx VOLTA_HOME "$HOME/.volta"
+set -gx PATH "$VOLTA_HOME/bin" $PATH

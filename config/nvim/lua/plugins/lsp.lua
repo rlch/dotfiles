@@ -2,11 +2,6 @@ return {
   {
     "neovim/nvim-lspconfig",
     init = function()
-      local keys = require("lazyvim.plugins.lsp.keymaps").get()
-      -- disable a keymap
-      keys[#keys + 1] = { "<leader>cr", false }
-      keys[#keys + 1] = { "<leader>cl", false }
-
       local map = vim.keymap.set
       local Util = require("lazyvim.util")
       map({ "n", "v" }, "<leader>lf", function()
@@ -20,23 +15,27 @@ return {
     end,
     opts = {
       inlay_hints = { enabled = true },
+      servers = {
+        ["*"] = {
+          keys = {
+            -- Disable default keymaps
+            { "<leader>cr", false },
+            { "<leader>cl", false },
+            -- Add custom rename keymap
+            {
+              "<leader>cr",
+              function()
+                local inc_rename = require("inc_rename")
+                return ":" .. inc_rename.config.cmd_name .. " "
+              end,
+              expr = true,
+              desc = "Rename (inc-rename.nvim)",
+              has = "rename",
+            },
+          },
+        },
+      },
     },
-  },
-  {
-    "neovim/nvim-lspconfig",
-    opts = function()
-      local keys = require("lazyvim.plugins.lsp.keymaps").get()
-      keys[#keys + 1] = {
-        "<leader>cr",
-        function()
-          local inc_rename = require("inc_rename")
-          return ":" .. inc_rename.config.cmd_name .. " "
-        end,
-        expr = true,
-        desc = "Rename (inc-rename.nvim)",
-        has = "rename",
-      }
-    end,
     keys = {
       { "<leader>dj", "]d" },
       { "<leader>dk", "[d" },

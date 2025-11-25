@@ -230,4 +230,25 @@ return {
       },
     },
   },
+  {
+    "rlch/remote-sshfs.nvim",
+    dev = true,
+    event = { "VeryLazy" },
+    dependencies = { "ibhagwan/fzf-lua" },
+    cmd = {
+      "RemoteSSHFSConnect",
+      "RemoteSSHFSDisconnect",
+      "RemoteSSHFSEdit",
+      "RemoteSSHFSFindFiles",
+      "RemoteSSHFSLiveGrep",
+    },
+    opts = {},
+    keys = {
+      { "<localleader>sc", "<cmd>RemoteSSHFSConnect<cr>", desc = "Connect to remote host" },
+      { "<localleader>sq", "<cmd>RemoteSSHFSDisconnect<cr>", desc = "Disconnect from remote host" },
+      { "<localleader>se", "<cmd>RemoteSSHFSEdit<cr>", desc = "Edit SSH config" },
+      { "<localleader>sff", "<cmd>RemoteSSHFSFindFiles<cr>", desc = "Find files on remote" },
+      { "<localleader>ssg", "<cmd>RemoteSSHFSLiveGrep<cr>", desc = "Live grep on remote" },
+    },
+  },
 }

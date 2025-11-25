@@ -12,6 +12,7 @@
     - $DIRS_PLAYGROUND
 - link:
     $BASE_DIR/.config/aerospace: config/aerospace
+    $BASE_DIR/.config/amp: config/amp
     $BASE_DIR/.config/borders: config/borders
     $HOME/.claude: config/claude
     $BASE_DIR/.config/fish: config/fish

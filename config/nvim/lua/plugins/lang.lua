@@ -47,7 +47,7 @@ return {
   },
   {
     "fang2hou/go-impl.nvim",
-    dev = true,
+    enabled = false,
     ft = "go",
     dependencies = {
       "MunifTanjim/nui.nvim",
@@ -268,6 +268,7 @@ return {
             end
           end,
         },
+        ---@diagnostic disable-next-line: missing-fields
         markdown = {
           headings = presets.headings.marker,
         },
@@ -278,6 +279,11 @@ return {
     "MeanderingProgrammer/render-markdown.nvim",
     enabled = false,
     opts = {
+      completions = {
+        lsp = {
+          enabled = true,
+        },
+      },
       render_modes = true,
       heading = {
         sign = false,
@@ -299,6 +305,12 @@ return {
         markdown = { "markdownlint-cli2" },
       },
     },
+  },
+  {
+    "davidmh/mdx.nvim",
+    event = "BufEnter *.mdx",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    config = true,
   },
 
   -- Scala
@@ -417,25 +429,6 @@ return {
     ft = { "polar" },
   },
 
-  -- Nix
-  {
-    "stevearc/conform.nvim",
-    opts = {
-      formatters_by_ft = {
-        nix = { "alejandra" },
-      },
-    },
-  },
-
-  -- PHP
-  {
-    "mason-org/mason.nvim",
-    opts = function(_, opts)
-      opts.ensure_installed = opts.ensure_installed or {}
-      vim.list_extend(opts.ensure_installed, { "phpactor" })
-    end,
-  },
-
   -- HTTP
   {
     "rest-nvim/rest.nvim",
@@ -523,12 +516,12 @@ return {
           command = "/Users/rjm/fvm/default/bin/flutter",
           use_lsp = true,
         },
+        -- require("rustaceanvim.neotest"),
       },
     },
   },
   {
     "fredrikaverpil/neotest-golang",
-    dev = true,
   },
 
   -- TypeScript
@@ -552,7 +545,7 @@ return {
     "neovim/nvim-lspconfig",
     opts = {
       servers = {
-        graphql = {},
+        -- graphql = {},
       },
     },
   },
@@ -619,7 +612,27 @@ return {
 
   -- Rust
   {
+    "mason-org/mason.nvim",
+    opts = function(_, opts)
+      opts.ensure_installed = opts.ensure_installed or {}
+    end,
+  },
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    dependencies = { "mason-org/mason.nvim", "mfussenegger/nvim-dap" },
+    lazy = false,
+    opts = {
+      automatic_installation = true,
+      ensure_installed = {
+        "codelldb",
+      },
+    },
+  },
+  {
     "mrcjkb/rustaceanvim",
+    lazy = false,
+    version = "^6",
+    build = "rustup component add rust-analyzer",
     keys = {
       {
         "<localleader>m",
@@ -628,34 +641,39 @@ return {
         ft = "rust",
       },
     },
+    init = function()
+      vim.g.rustaceanvim = {
+        tools = {},
+      }
+    end,
   },
 
-  -- Obsidian
-  {
-    "obsidian-nvim/obsidian.nvim",
-    version = "*", -- recommended, use latest release instead of latest commit
-    ft = "markdown",
-    -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
-    ---@module 'obsidian'
-    ---@type obsidian.config
-    opts = {
-      legacy_commands = false,
-      workspaces = {
-        {
-          name = "waku",
-          path = "~/Coding/Waku/vault/",
-        },
-      },
-      completion = {
-        -- Enables completion using nvim_cmp
-        nvim_cmp = false,
-        -- Enables completion using blink.cmp
-        blink = true,
-        -- Trigger completion at 2 chars.
-        min_chars = 2,
-        -- Set to false to disable new note creation in the picker
-        create_new = true,
-      },
-    },
-  },
+  -- -- Obsidian
+  -- {
+  --   "obsidian-nvim/obsidian.nvim",
+  --   version = "*", -- recommended, use latest release instead of latest commit
+  --   ft = "markdown",
+  --   -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+  --   ---@module 'obsidian'
+  --   ---@type obsidian.config
+  --   opts = {
+  --     legacy_commands = false,
+  --     workspaces = {
+  --       {
+  --         name = "waku",
+  --         path = "~/Coding/Waku/vault/",
+  --       },
+  --     },
+  --     completion = {
+  --       -- Enables completion using nvim_cmp
+  --       nvim_cmp = false,
+  --       -- Enables completion using blink.cmp
+  --       blink = true,
+  --       -- Trigger completion at 2 chars.
+  --       min_chars = 2,
+  --       -- Set to false to disable new note creation in the picker
+  --       create_new = true,
+  --     },
+  --   },
+  -- },
 }

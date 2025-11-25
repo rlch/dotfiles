@@ -87,13 +87,21 @@ return {
   },
   {
     "SmiteshP/nvim-navic",
+    lazy = false,
     init = function()
       vim.g.navic_silence = true
-      require("lazyvim.util").lsp.on_attach(function(client, bufnr)
-        if client.server_capabilities.documentSymbolProvider then
-          require("nvim-navic").attach(client, bufnr)
-        end
-      end)
+    end,
+    config = function(_, opts)
+      require("nvim-navic").setup(opts)
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          local bufnr = args.buf
+          if client and client.server_capabilities.documentSymbolProvider then
+            require("nvim-navic").attach(client, bufnr)
+          end
+        end,
+      })
     end,
     opts = function()
       local hls = {
@@ -144,11 +152,17 @@ return {
   },
   {
     "folke/noice.nvim",
-    opts = function(_, opts)
-      return vim.tbl_deep_extend("force", opts, {
-        presets = { inc_rename = true },
-      })
-    end,
+    opts = {
+      routes = {
+        {
+          filter = { event = "notify", find = "No information available" },
+          opts = { skip = true },
+        },
+      },
+      presets = {
+        inc_rename = true,
+      },
+    },
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
