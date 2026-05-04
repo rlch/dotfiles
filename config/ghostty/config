@@ -6,3 +6,5 @@ shell-integration = "fish"
 
 # Delete word
 keybind = alt+backspace=text:\x1b\x7f
+keybind = super+ctrl+f=unbind
+keybind = super+enter=unbind

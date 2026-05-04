@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(# Drill into Containers du -sh ~/Library/Containers/*/)",
+      "Bash(# Drill into Group Containers du -sh ~/Library/Group\\\\ Containers/*/)",
+      "Bash(# The big one - drill into Google \\(182GB!\\) du -sh ~/Library/Application\\\\ Support/Google/*/)",
+      "Bash(# Check OrbStack size du -sh ~/Library/Group\\\\ Containers/HUAQ24HBR6.dev.orbstack/*/)",
+      "Bash(# Check home directory top-level for any large hidden or project dirs du -sh ~/.[!.]* ~/*)",
+      "Bash(du:*)",
+      "Bash(pgrep:*)"
+    ]
+  }
+}

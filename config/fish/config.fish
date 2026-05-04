@@ -38,6 +38,7 @@ set -x GIT_EDITOR nvim
 set -x VISUAL nvim
 set -x MANPAGER 'nvim +Man!'
 set -x AMP_URL 'http://localhost:8317'
+set -x AMP_TOOLBOX /Users/rjm/.config/amp/toolbox
 
 # Development tools
 set -x GOPATH $HOME/go
@@ -67,15 +68,16 @@ abbr tf terraform
 abbr v "fg &>/dev/null || nvim"
 abbr zel zellij
 abbr gw worktree-tui
-abbr cld cl --dangerously-skip-permissions
 abbr n pnpm
 abbr frb flutter_rust_bridge_codegen
 abbr f flutter
-abbr ai amp --ide --dangerously-allow-all
+abbr ai amp --ide --dangerously-allow-all --visibility private
 # abbr ai opencode
 
 # System aliases
 alias intel="arch -x86_64"
+
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
 # Editor shortcuts
 alias org="cd ~/neorg/ && nvim index.norg"
@@ -86,9 +88,10 @@ alias vo="nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 alias cbo="tee /dev/tty | cb"
 alias fpg="flutter pub get"
 alias fc="flutter clean"
-alias frm="flutter run -d macos"
-alias frc="flutter run -d chrome"
-alias frcc="flutter run -d chrome --web-header=Cross-Origin-Opener-Policy=same-origin --web-header=Cross-Origin-Embedder-Policy=require-corp"
+alias frm="flutter-dtd-run -d macos"
+alias frc="flutter-dtd-run -d chrome"
+alias frcc="flutter-dtd-run -d chrome --web-header=Cross-Origin-Opener-Policy=same-origin --web-header=Cross-Origin-Embedder-Policy=require-corp"
+alias drb="dart run build_runner build --delete-conflicting-outputs"
 
 # Configuration management
 alias sfish="source ~/.config/fish/config.fish"
@@ -222,3 +225,12 @@ set -gx PATH $PATH /Users/rjm/.lmstudio/bin
 
 set -gx VOLTA_HOME "$HOME/.volta"
 set -gx PATH "$VOLTA_HOME/bin" $PATH
+
+# Amp CLI
+fish_add_path /Users/rjm/.amp/bin
+
+# Added by Antigravity
+fish_add_path /Users/rjm/.antigravity/antigravity/bin
+
+# OpenFang
+fish_add_path /Users/rjm/.openfang/bin

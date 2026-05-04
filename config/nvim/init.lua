@@ -4,5 +4,6 @@ vim.lsp.enable({
   "vtsls",
   "sourcekit",
   "mdx_analyzer",
+  "tanzo_css_lsp",
   -- "ts_ls",
 });

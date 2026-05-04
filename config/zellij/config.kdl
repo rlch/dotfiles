@@ -65,12 +65,12 @@ keybinds clear-defaults=true {
         bind "j" { GoToPreviousTab; }
         bind "k" { GoToNextTab; }
         bind "l" { GoToNextTab; }
-        bind "s" { ToggleActiveSyncTab; SwitchToMode "normal"; }
-        bind "Ctrl t" { SwitchToMode "normal"; }
         bind "x" { CloseTab; SwitchToMode "normal"; }
         bind "tab" { ToggleTab; }
         bind "H" { MoveTab "Left"; }
         bind "L" { MoveTab "Right"; }
+        bind "F3" { SwitchToMode "normal"; }
+        bind "Ctrl a" { SwitchToMode "normal"; }
     }
     resize {
         bind "left" { Resize "Increase left"; }
@@ -128,7 +128,8 @@ keybinds clear-defaults=true {
         bind "Ctrl b" { SwitchToMode "scroll"; }
     }
     shared_except "locked" "tab" {
-        bind "Ctrl t" { SwitchToMode "tab"; }
+        bind "Ctrl a" { SwitchToMode "tab"; }
+        bind "F3" { SwitchToMode "tab"; }
     }
     shared_except "locked" "pane" {
         bind "Ctrl s" { SwitchToMode "pane"; }

@@ -88,6 +88,14 @@
   "hooks": {
     "Notification": [
       {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/config/claude/notify.sh"
+          }
+        ]
+      },
+      {
         "matcher": "*",
         "hooks": [
           {
@@ -205,6 +213,14 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/dotfiles/config/claude/notify.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "python3 ~/.claude/hooks/claude-island-state.py"
           }
         ]
@@ -247,24 +263,23 @@
     "command": "/Users/rjm/.claude/statusline.sh"
   },
   "enabledPlugins": {
-    "bp@cavekit-local": true,
-    "caveman@caveman": true,
-    "ck@cavekit-local": true,
     "clangd-lsp@claude-plugins-official": true,
     "figma@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": false,
+    "rust-analyzer-lsp@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "worktrunk@worktrunk": true,
-    "ck@cavekit-marketplace": true
+    "caveman@caveman": true,
+    "ck@cavekit-local": true,
+    "bp@cavekit-local": true,
+    "gopls-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "cavekit-local": {
+    "worktrunk": {
       "source": {
-        "source": "directory",
-        "path": "/Users/rjm/.claude/plugins/local/cavekit-marketplace"
+        "source": "github",
+        "repo": "max-sixty/worktrunk"
       }
     },
     "caveman": {
@@ -273,25 +288,16 @@
         "repo": "JuliusBrussee/caveman"
       }
     },
-    "worktrunk": {
+    "cavekit-local": {
       "source": {
-        "source": "github",
-        "repo": "max-sixty/worktrunk"
-      }
-    },
-    "cavekit-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "juliusbrussee/cavekit"
+        "source": "directory",
+        "path": "/Users/rjm/.claude/plugins/local/cavekit-marketplace"
       }
     }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
-  "preferredNotifChannel": "ghostty",
-  "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": false,
   "keybindings": {
     "interrupt": "ctrl+c"
   }

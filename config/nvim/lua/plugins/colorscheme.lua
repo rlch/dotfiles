@@ -60,7 +60,7 @@ return {
           DiffDelete = { bg = "#3d1a1a", fg = "#cc7a7a" }, -- Subtle red for deleted lines
           DiffText = { bg = "#2a3f5f", fg = "#e6e6e6" }, -- Muted highlight for changed text
           -- Minimal git conflict highlighting
-          GitConflictCurrent = { bg = "#1a3d1a" }, -- Subtle green for current changes
+          GitConflictCurrent = { bg = "#1a3d1a" }, -- Subtle green fr current changes
           GitConflictIncoming = { bg = "#1a2633" }, -- Subtle blue for incoming changes
           -- Comment = { fg = colors.flamingo },
           -- TabLineSel = { bg = colors.pink },
@@ -73,6 +73,8 @@ return {
     config = function(_, opts)
       require("catppuccin").setup(opts)
       vim.cmd.colorscheme("catppuccin")
+      -- Clear LSP semantic token for strings in Go to allow treesitter injections (e.g., Cypher) to highlight
+      vim.api.nvim_set_hl(0, "@lsp.type.string.go", {})
     end,
   },
 }

@@ -495,8 +495,14 @@ return {
       "MisanthropicBit/neotest-busted",
       "fredrikaverpil/neotest-golang",
       "sidlatau/neotest-dart",
+      "rlch/scaf.nvim",
     },
     opts = {
+      log_level = vim.log.levels.DEBUG,
+      default_strategy = "integrated",  -- or try removing this line
+      run = {
+        enabled = true,
+      },
       output = {
         enabled = true,
         open_on_run = "short",
@@ -516,7 +522,8 @@ return {
           command = "/Users/rjm/fvm/default/bin/flutter",
           use_lsp = true,
         },
-        -- require("rustaceanvim.neotest"),
+        ["neotest-scaf"] = {},
+        ["rustaceanvim.neotest"] = {},
       },
     },
   },
@@ -610,6 +617,39 @@ return {
     },
   },
 
+  -- Scaf
+  {
+    "rlch/tree-sitter-scaf",
+    dev = true,
+    lazy = false,
+  },
+  {
+    "taekwombo/tree-sitter-cypher",
+    lazy = false,
+    build = {
+      "mkdir -p queries/cypher",
+      "mv queries/*.scm queries/cypher/ 2>/dev/null || true",
+      "cc -o ~/.local/share/nvim/site/parser/cypher.so -shared -fPIC -O2 src/parser.c -I src",
+    },
+  },
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters_by_ft = {
+        scaf = { "scaf_fmt" },
+      },
+      formatters = {
+        scaf_fmt = {
+          command = vim.fn.expand("~/go/bin/scaf"),
+          args = { "fmt" },
+          stdin = true,
+          exit_codes = { 0 },
+        },
+      },
+    },
+  },
+
   -- Rust
   {
     "mason-org/mason.nvim",
@@ -645,6 +685,16 @@ return {
       vim.g.rustaceanvim = {
         tools = {},
       }
+    end,
+  },
+
+  -- Scaf
+  {
+    "rlch/scaf.nvim",
+    dev = true,
+    ft = "scaf",
+    config = function()
+      require("scaf").setup()
     end,
   },
 

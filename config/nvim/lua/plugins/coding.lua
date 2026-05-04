@@ -231,9 +231,61 @@ return {
         desc = "Split/Join",
       },
     },
-    opts = {
-      max_join_length = 500,
-    },
+    opts = function(_, opts)
+      local lang_utils = require("treesj.langs.utils")
+
+      -- scaf language support
+      opts.langs = opts.langs or {}
+      opts.langs.scaf = {
+        list = lang_utils.set_preset_for_list({
+          both = { separator = "," },
+          split = { last_separator = true },
+          join = { last_separator = false },
+        }),
+        map = lang_utils.set_preset_for_dict({
+          both = { separator = "," },
+          split = { last_separator = true, recursive_ignore = { "map" } },
+          join = { last_separator = false },
+        }),
+        map_entry = { target_nodes = { "map", "list" } },
+        parameter_list = lang_utils.set_preset_for_args({
+          both = { separator = "," },
+          split = { last_separator = false },
+        }),
+        parameter = { target_nodes = { "parameter_list" } },
+        param_name = { target_nodes = { "parameter_list" } },
+        function_definition = { target_nodes = { "parameter_list" } },
+        test = lang_utils.set_preset_for_statement({
+          both = { separator = "", no_format_with = { "comment" } },
+          split = { last_separator = false, recursive_ignore = { "list", "map", "assertion" } },
+          join = { force_insert = "", space_in_brackets = true, space_separator = true },
+        }),
+        group = lang_utils.set_preset_for_statement({
+          both = { separator = "", no_format_with = { "comment" } },
+          split = { last_separator = false, recursive_ignore = { "test", "group" } },
+          join = { force_insert = "", space_in_brackets = true, space_separator = true },
+        }),
+        function_scope = lang_utils.set_preset_for_statement({
+          both = { separator = "", no_format_with = { "comment" } },
+          split = { last_separator = false, recursive_ignore = { "test", "group" } },
+          join = { force_insert = "", space_in_brackets = true, space_separator = true },
+        }),
+        assertion = lang_utils.set_preset_for_statement({
+          both = { separator = "" },
+          split = { last_separator = false },
+          join = { force_insert = "", space_in_brackets = true },
+        }),
+        assertion_conditions = lang_utils.set_preset_for_dict({
+          both = { separator = "" },
+          split = { last_separator = false },
+          join = { space_in_brackets = true, space_separator = true },
+        }),
+        statement = { target_nodes = { "list", "map" } },
+      }
+
+      opts.max_join_length = 500
+      return opts
+    end,
   },
   {
     "andythigpen/nvim-coverage",

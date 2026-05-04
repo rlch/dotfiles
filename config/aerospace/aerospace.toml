@@ -175,3 +175,15 @@ alt-shift-l = ['join-with right', 'mode main']
 [[on-window-detected]]
 if.app-id = 'com.apple.finder'
 run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.genvoy.tiling-manager-example'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.window-title-regex-substring = 'Glass Effect Demo'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.window-title-regex-substring = 'Glass Test'
+run = ['layout floating']

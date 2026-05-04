@@ -169,7 +169,6 @@ return {
   },
   {
     "nvim-treesitter/nvim-treesitter",
-    dev = true,
     opts = {
       indent = {
         disable = { "lua", "yaml" },
