@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Install slk (terminal Slack TUI) — not in brew, distributed as a Go binary
+# via GitHub releases. The upstream go.mod has replace directives so
+# `go install` won't work; using the official installer targeting
+# ~/.local/bin (which fish_add_path puts on PATH).
+#
+# `run_once_` = chezmoi runs this exactly once per install; bump the version
+# below and rename the file (or wipe chezmoi's run-once state) to re-run.
+
+set -euo pipefail
+
+if command -v slk >/dev/null 2>&1; then
+  exit 0
+fi
+
+curl -fsSL https://getslk.sh/install.sh | INSTALL_DIR="$HOME/.local/bin" sh
