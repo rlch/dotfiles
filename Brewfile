@@ -69,6 +69,7 @@ brew "rustup"               # Rust toolchain manager (rustc, cargo)
 brew "node"
 brew "go"
 brew "python@3.13"
+brew "uv"          # fast Python package/venv manager (pip + virtualenv replacement)
 
 # === Project + dev workflow ===
 brew "just"        # command runner, Make alternative
