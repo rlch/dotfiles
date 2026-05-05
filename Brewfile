@@ -97,6 +97,7 @@ cask "orbstack"
 # === AI dev tooling ===
 cask "claude-code"
 cask "codex"       # OpenAI's coding agent CLI
+brew "gemini-cli"  # Google's Gemini CLI
 
 # === Secrets ===
 cask "1password-cli"
