@@ -57,8 +57,11 @@ brew "hyperfine"
 brew "neovim"
 brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
 brew "stylua"               # Lua formatter — paired with lua-language-server
-brew "tree-sitter"          # CLI used by some treesitter parsers' install hooks
-brew "rust-analyzer"        # Rust LSP for nvim (no rustup needed)
+brew "luarocks"             # Lua package manager — needed by some nvim plugins
+brew "tree-sitter"          # library used by some treesitter parsers' install hooks
+brew "tree-sitter-cli"      # `tree-sitter` CLI binary (separate formula)
+brew "rust-analyzer"        # Rust LSP for nvim
+brew "rustup"               # Rust toolchain manager (rustc, cargo)
 
 # === Language runtimes ===
 # Available globally so mason.nvim (in nvim) can install LSPs/formatters that
