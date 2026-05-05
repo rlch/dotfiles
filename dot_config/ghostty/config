@@ -1,0 +1,26 @@
+# === Theme + visuals ===
+theme         = "Catppuccin Mocha"
+font-family   = "JetBrainsMono Nerd Font"
+cursor-style       = bar
+cursor-style-blink = false
+
+# === Window chrome ===
+macos-titlebar-style   = hidden
+window-padding-x       = 6
+window-padding-y       = 4
+window-padding-balance = true
+window-save-state      = always
+background-blur        = macos-glass-regular
+
+# === UX ===
+mouse-hide-while-typing        = true
+confirm-close-surface          = false
+clipboard-trim-trailing-spaces = true
+
+# === Keybinds ===
+# alt+backspace → delete word backwards. Without this, Option+Backspace sends
+# nothing useful to TUI apps (Claude Code, bash, readline) — Ghostty's
+# macos-option-as-alt is unset by default, so Option is a special-character
+# modifier rather than Alt. Surgical bind so Option's other behaviors stay
+# intact (no global macos-option-as-alt).
+keybind = alt+backspace=text:\x1b\x7f

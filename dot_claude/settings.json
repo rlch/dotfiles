@@ -1,0 +1,39 @@
+{
+  "skipAutoPermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "auto",
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(sudo rm -rf /)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)",
+      "Bash(halt:*)",
+      "Bash(poweroff:*)",
+      "Bash(sudo passwd:*)",
+      "Bash(sudo useradd:*)",
+      "Bash(sudo userdel:*)",
+      "Bash(sudo rm /etc/*)",
+      "Bash(sudo > /etc/*)",
+      "Bash(docker run --privileged:*)",
+      "Bash(docker run --pid=host:*)",
+      "Bash(docker run -v /:/host *)",
+      "Bash(git push --force origin main:*)",
+      "Bash(git push --force origin master:*)",
+      "Bash(git push -f origin main:*)",
+      "Bash(git push -f origin master:*)",
+      "Bash(cat ~/.aws/*)",
+      "Bash(cat ~/.ssh/id_*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/*secret*)",
+      "Read(**/*password*)"
+    ],
+    "additionalDirectories": [
+      "/Users/rjm/.config/nvim",
+      "/Users/rjm/.config/zellij"
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}

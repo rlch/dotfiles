@@ -1,0 +1,14 @@
+# Heavy-hardware-only brew bundle. Layered on top of ./Brewfile by the
+# install script when the machine's role is one with `heavyHardware = true`
+# (currently: role = "mbp"). The Mac mini skips this file entirely.
+#
+# Manual run:
+#   brew bundle install --file=~/dev/dotfiles/Brewfile.heavy
+
+# Local LLM backend (Ollama) + agent framework (Hermes Agent).
+# Hardware: M5 Max + 128GB unified memory — full SOTA model range available.
+# After install: open Ollama.app once to grant permissions, then follow
+# ~/.config/ollama/notes.md for env vars, model pulls, and the Hermes setup.
+cask "ollama-app"
+# Hermes Agent (NousResearch) is Python — installed via the official curl|bash
+# script or the contributor `setup-hermes.sh` path. Not on brew. See notes.

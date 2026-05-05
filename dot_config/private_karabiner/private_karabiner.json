@@ -1,0 +1,120 @@
+{
+    "global": { "show_in_menu_bar": false },
+    "profiles": [
+        {
+            "complex_modifications": {
+                "rules": [
+                    {
+                        "description": "Globe (fn): Hyper when held, Option+Tab when tapped",
+                        "manipulators": [
+                            {
+                                "from": { "key_code": "fn" },
+                                "to": [
+                                    {
+                                        "key_code": "left_shift",
+                                        "modifiers": ["left_command", "left_control", "left_option"]
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    { "key_code": "tab", "modifiers": ["left_option"] }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Map F4 to Command+Space",
+                        "manipulators": [
+                            {
+                                "from": { "key_code": "f4" },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "devices": [
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 125,
+                        "vendor_id": 5426
+                    },
+                    "ignore": true,
+                    "simple_modifications": [
+                        {
+                            "from": { "pointing_button": "button4" },
+                            "to": [{ "key_code": "escape" }]
+                        }
+                    ]
+                },
+                {
+                    "identifiers": {
+                        "is_game_pad": true,
+                        "product_id": 3302,
+                        "vendor_id": 1356
+                    },
+                    "ignore": false
+                },
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 835,
+                        "vendor_id": 1452
+                    },
+                    "manipulate_caps_lock_led": false
+                }
+            ],
+            "name": "Default profile",
+            "selected": true,
+            "simple_modifications": [
+                {
+                    "from": { "key_code": "caps_lock" },
+                    "to": [{ "key_code": "escape" }]
+                },
+                {
+                    "from": { "key_code": "f1" },
+                    "to": [{ "apple_vendor_keyboard_key_code": "brightness_down" }]
+                },
+                {
+                    "from": { "key_code": "f2" },
+                    "to": [{ "apple_vendor_keyboard_key_code": "brightness_up" }]
+                },
+                {
+                    "from": { "key_code": "f7" },
+                    "to": [{ "consumer_key_code": "rewind" }]
+                },
+                {
+                    "from": { "key_code": "f8" },
+                    "to": [{ "consumer_key_code": "play_or_pause" }]
+                },
+                {
+                    "from": { "key_code": "f9" },
+                    "to": [{ "consumer_key_code": "fast_forward" }]
+                },
+                {
+                    "from": { "key_code": "f10" },
+                    "to": [{ "consumer_key_code": "mute" }]
+                },
+                {
+                    "from": { "key_code": "f11" },
+                    "to": [{ "consumer_key_code": "volume_decrement" }]
+                },
+                {
+                    "from": { "key_code": "f12" },
+                    "to": [{ "consumer_key_code": "volume_increment" }]
+                }
+            ],
+            "virtual_hid_keyboard": {
+                "country_code": 0,
+                "keyboard_type_v2": "ansi"
+            }
+        }
+    ]
+}
