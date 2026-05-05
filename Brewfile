@@ -73,6 +73,10 @@ brew "watchexec"   # rerun a command when files change
 
 # === Network / HTTP ===
 brew "xh"          # friendlier curl / httpie alternative
+# sshpass — non-interactive ssh password auth (one-shot bootstrap of new hosts).
+# Removed from homebrew-core; lives in this third-party tap.
+tap "hudochenkov/sshpass"
+brew "hudochenkov/sshpass/sshpass"
 
 # === Git / Docker TUIs ===
 brew "lazygit"
