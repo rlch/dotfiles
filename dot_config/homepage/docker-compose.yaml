@@ -1,0 +1,21 @@
+---
+# Run from this directory: `docker compose up -d`
+# Then open http://localhost:3000
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app/config
+    env_file:
+      - .env
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "localhost:3000,127.0.0.1:3000"
+    # Tailscale MagicDNS doesn't reach inside Docker bridge networks, so map
+    # the mini's hostname to its tailnet IP. Tailscale device IPs are stable.
+    extra_hosts:
+      - "richards-mac-mini:100.122.156.98"
+    restart: unless-stopped

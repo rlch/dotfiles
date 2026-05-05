@@ -1,0 +1,5 @@
+---
+# Docker integration is intentionally empty: services run on the Mac mini, not
+# locally, so there's nothing useful to auto-discover from this host's daemon.
+# To enable remote discovery later, expose the mini's Docker socket over SSH
+# and add a host entry here.

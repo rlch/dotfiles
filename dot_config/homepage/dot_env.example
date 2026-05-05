@@ -1,0 +1,38 @@
+# Copy to .env in this directory and fill in. .env is NOT tracked by chezmoi.
+# Each var is exposed to the homepage container and referenced from
+# services.yaml as {{HOMEPAGE_VAR_NAME}}.
+#
+# Where to find each:
+#   Radarr / Sonarr / Prowlarr → cat /Users/rjm/Server/config/<svc>/config.xml on mini
+#                                  (the <ApiKey> element)
+#   Bazarr            → /Users/rjm/Server/config/bazarr/config/config.yaml → auth.apikey
+#   Plex token        → ssh richards-mac-mini 'defaults read com.plexapp.plexmediaserver PlexOnlineToken'
+#   Tautulli          → grep ^api_key /Users/rjm/Server/config/tautulli/config.ini  (auto-generated)
+#   Seerr             → grep apiKey /Users/rjm/Server/config/seerr/settings.json  (auto-generated;
+#                       complete first-run setup at http://richards-mac-mini:5055 first)
+#   Portainer         → User menu → My account → Access tokens → Add access token
+#   Transmission      → ~/.config/transmission-daemon/settings.json on the mini
+#                       (rpc-username / rpc-password). Default install: blank.
+#   Uptime Kuma slug  → create a public Status Page; the slug is the URL suffix
+#   Watchtower token  → set HTTP_API_TOKEN env on the watchtower container
+#                       (already wired in dot_config/homelab/docker-compose.yaml)
+#   Tailscale         → https://login.tailscale.com/admin/settings/keys (read-only API key)
+#                       deviceid: tailscale status --json | jq '.Self.ID'
+
+HOMEPAGE_VAR_RADARR_KEY=
+HOMEPAGE_VAR_SONARR_KEY=
+HOMEPAGE_VAR_BAZARR_KEY=
+HOMEPAGE_VAR_PROWLARR_KEY=
+HOMEPAGE_VAR_PORTAINER_KEY=
+HOMEPAGE_VAR_TRANSMISSION_USER=
+HOMEPAGE_VAR_TRANSMISSION_PASS=
+
+HOMEPAGE_VAR_PLEX_TOKEN=
+HOMEPAGE_VAR_TAUTULLI_KEY=
+HOMEPAGE_VAR_SEERR_KEY=
+
+HOMEPAGE_VAR_UPTIMEKUMA_SLUG=
+HOMEPAGE_VAR_WATCHTOWER_TOKEN=
+
+HOMEPAGE_VAR_TAILSCALE_KEY=
+HOMEPAGE_VAR_TAILSCALE_DEVICEID=

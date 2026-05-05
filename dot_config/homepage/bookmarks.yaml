@@ -1,0 +1,13 @@
+---
+- Developer:
+    - GitHub:
+        - abbr: GH
+          href: https://github.com/
+    - Anthropic Console:
+        - abbr: AN
+          href: https://console.anthropic.com/
+
+- Reference:
+    - Tailscale Admin:
+        - abbr: TS
+          href: https://login.tailscale.com/admin/machines

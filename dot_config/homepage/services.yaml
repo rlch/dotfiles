@@ -1,0 +1,129 @@
+---
+# Services run on the Mac mini (richards-mac-mini), reached over Tailscale
+# MagicDNS. API keys / tokens come from .env (HOMEPAGE_VAR_* — see .env.example).
+
+- Media:
+    - Plex:
+        icon: plex.png
+        href: http://richards-mac-mini:32400/web
+        description: Media server
+        widget:
+          type: plex
+          url: http://richards-mac-mini:32400
+          key: '{{HOMEPAGE_VAR_PLEX_TOKEN}}'
+
+    - Tautulli:
+        icon: tautulli.png
+        href: http://richards-mac-mini:8181
+        description: Plex stats
+        widget:
+          type: tautulli
+          url: http://richards-mac-mini:8181
+          key: '{{HOMEPAGE_VAR_TAUTULLI_KEY}}'
+
+    - Seerr:
+        icon: overseerr.png
+        href: http://richards-mac-mini:5055
+        description: Requests
+        widget:
+          type: jellyseerr
+          url: http://richards-mac-mini:5055
+          key: '{{HOMEPAGE_VAR_SEERR_KEY}}'
+
+- Library:
+    - Radarr:
+        icon: radarr.png
+        href: http://richards-mac-mini:7878
+        description: Movies
+        widget:
+          type: radarr
+          url: http://richards-mac-mini:7878
+          key: '{{HOMEPAGE_VAR_RADARR_KEY}}'
+          enableQueue: true
+
+    - Sonarr:
+        icon: sonarr.png
+        href: http://richards-mac-mini:8989
+        description: TV
+        widget:
+          type: sonarr
+          url: http://richards-mac-mini:8989
+          key: '{{HOMEPAGE_VAR_SONARR_KEY}}'
+          enableQueue: true
+
+    - Bazarr:
+        icon: bazarr.png
+        href: http://richards-mac-mini:6767
+        description: Subtitles
+        widget:
+          type: bazarr
+          url: http://richards-mac-mini:6767
+          key: '{{HOMEPAGE_VAR_BAZARR_KEY}}'
+
+- Downloads:
+    - Prowlarr:
+        icon: prowlarr.png
+        href: http://richards-mac-mini:9696
+        description: Indexers
+        widget:
+          type: prowlarr
+          url: http://richards-mac-mini:9696
+          key: '{{HOMEPAGE_VAR_PROWLARR_KEY}}'
+
+    - Transmission:
+        icon: transmission.png
+        href: http://richards-mac-mini:9091
+        description: Torrents
+        widget:
+          type: transmission
+          url: http://richards-mac-mini:9091
+          rpcUrl: /transmission/
+          username: '{{HOMEPAGE_VAR_TRANSMISSION_USER}}'
+          password: '{{HOMEPAGE_VAR_TRANSMISSION_PASS}}'
+
+- Monitoring:
+    - Uptime Kuma:
+        icon: uptime-kuma.png
+        href: http://richards-mac-mini:3001
+        description: Service status
+        widget:
+          type: uptimekuma
+          url: http://richards-mac-mini:3001
+          slug: '{{HOMEPAGE_VAR_UPTIMEKUMA_SLUG}}'
+
+    - Speedtest Tracker:
+        icon: speedtest-tracker.png
+        href: http://richards-mac-mini:8765
+        description: ISP history
+        widget:
+          type: speedtest
+          url: http://richards-mac-mini:8765
+
+    - Watchtower:
+        icon: watchtower.png
+        href: http://richards-mac-mini:8088
+        description: Container updates
+        widget:
+          type: watchtower
+          url: http://richards-mac-mini:8088
+          key: '{{HOMEPAGE_VAR_WATCHTOWER_TOKEN}}'
+
+- Infrastructure:
+    - Tailscale:
+        icon: tailscale.png
+        href: https://login.tailscale.com/admin/machines
+        description: Tailnet
+        widget:
+          type: tailscale
+          deviceid: '{{HOMEPAGE_VAR_TAILSCALE_DEVICEID}}'
+          key: '{{HOMEPAGE_VAR_TAILSCALE_KEY}}'
+
+    - Portainer:
+        icon: portainer.png
+        href: https://richards-mac-mini:9443
+        description: Docker on mini
+        widget:
+          type: portainer
+          url: https://richards-mac-mini:9443
+          env: 2
+          key: '{{HOMEPAGE_VAR_PORTAINER_KEY}}'

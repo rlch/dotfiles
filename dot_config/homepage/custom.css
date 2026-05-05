@@ -1,0 +1,33 @@
+/* Subtle glassmorphism on top of the background image set in settings.yaml.
+   Effects target the card containers homepage already exposes. */
+
+#information-widgets,
+.services-group,
+.bookmark-group {
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.service-card,
+.bookmark-card {
+  transition: transform 120ms ease-out, background 120ms ease-out;
+}
+
+.service-card:hover,
+.bookmark-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Tighten group titles a bit so the headers don't dominate. */
+.services-group > h2,
+.bookmark-group > h2 {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  opacity: 0.72;
+}

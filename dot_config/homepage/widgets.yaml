@@ -1,0 +1,43 @@
+---
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      dateStyle: long
+      hourCycle: h23
+
+- search:
+    provider: google
+    target: _blank
+    showSearchSuggestions: true
+
+# Glances on the Mac mini — full host monitoring (CPU, RAM, disk, temp, uptime).
+# Requires `brew install glances` + the launchd plist on the mini (see Brewfile
+# and dot_Library/LaunchAgents/sh.glances.plist).
+- glances:
+    url: http://richards-mac-mini:61208
+    version: 4
+    cpu: true
+    mem: true
+    cputemp: true
+    uptime: true
+    disk: /
+    label: mini
+
+# Local resources — keeps a quick eye on this MBP without leaving the page.
+- resources:
+    backend: resources
+    expanded: true
+    cpu: true
+    memory: true
+    disk: /
+    label: mbp
+
+# Free, no API key — uses your latitude/longitude. Update if you move.
+- openmeteo:
+    label: Melbourne
+    latitude: -37.8136
+    longitude: 144.9631
+    timezone: Australia/Melbourne
+    units: metric
+    cache: 5
