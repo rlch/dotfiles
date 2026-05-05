@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Re-runs whenever fish_plugins changes. Bootstraps fisher on first apply,
-# then runs `fisher update` to reconcile installed fish plugins with the
-# committed manifest (installs added, removes removed).
+# Re-runs whenever fish_plugins changes. Bootstraps fisher and reconciles the
+# committed plugin manifest with what's installed.
 #
 # Sorts after run_onchange_install-packages.sh so brew has already installed
 # fish by the time this runs.
+#
+# Note: upstream's one-liner (`curl … | source && fisher install …`) is
+# unreliable under fish 4.x — observed in the wild leaving fisher half-
+# installed when a plugin's on_exit handler fires before its functions are on
+# PATH. Writing fisher.fish straight to disk avoids that race. Trade-off: we
+# can't list `jorgebucaran/fisher` in fish_plugins because fisher refuses to
+# install over a file it didn't write — so fisher itself doesn't self-update.
+# To upgrade fisher: `rm ~/.config/fish/functions/fisher.fish && chezmoi apply`
+# (or just edit fish_plugins to retrigger this script).
 #
 # fish_plugins hash: {{ include "dot_config/fish/fish_plugins" | sha256sum }}
 
@@ -16,9 +24,24 @@ if [[ -z "$FISH" ]]; then
   exit 1
 fi
 
-if ! "$FISH" -c 'functions -q fisher' 2>/dev/null; then
-  echo "Bootstrapping fisher..."
-  "$FISH" -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
+FUNCTIONS_DIR="$HOME/.config/fish/functions"
+FISHER_FISH="$FUNCTIONS_DIR/fisher.fish"
+
+if [[ ! -f "$FISHER_FISH" ]]; then
+  echo "Bootstrapping fisher.fish..."
+  mkdir -p "$FUNCTIONS_DIR"
+  curl --fail --silent --show-error --location \
+    --output "$FISHER_FISH" \
+    https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish
 fi
 
-"$FISH" -c 'fisher update'
+if ! "$FISH" -c 'functions -q fisher' </dev/null; then
+  echo "fisher.fish is on disk but fish can't load it. Aborting." >&2
+  exit 1
+fi
+
+# fisher reads non-TTY stdin and appends it to argv, so when this script is
+# invoked by chezmoi (with stdin connected to whatever follows), fisher slurps
+# bytes of the script itself and treats them as plugin names. Redirecting fish
+# stdin to /dev/null prevents that.
+"$FISH" -c 'fisher update' </dev/null
