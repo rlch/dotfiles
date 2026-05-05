@@ -39,6 +39,7 @@ brew "eza"
 brew "bat"
 brew "git-delta"
 brew "sd"          # readable find-and-replace (sed for the 90% case)
+brew "tree"        # plain directory tree (when dust's size view is overkill)
 # JSON / data
 brew "jq"
 brew "tokei"       # code line counter by language
