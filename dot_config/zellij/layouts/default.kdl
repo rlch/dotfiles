@@ -1,0 +1,53 @@
+// Default layout: minimal zjstatus bar at top.
+// Left:  session name + tab list
+// Right: mode indicator
+// A subtle horizontal rule sits below the bar to separate it from content.
+//
+// pane size=2 because zjstatus draws the border inside the pane (one row
+// for content + one row for the border line).
+
+layout {
+    default_tab_template {
+        pane size=2 borderless=true {
+            plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
+                format_left   " #[fg=#89B4FA,bold]{session}#[fg=#CDD6F4] {tabs}"
+                format_center ""
+                format_right  "{mode} "
+                format_space  ""
+
+                border_enabled  "true"
+                border_char     "─"
+                border_format   "#[fg=#45475A]{char}"
+                border_position "bottom"
+
+                hide_frame_for_single_pane "false"
+
+                // Text labels (no Nerd Font glyphs, font-independent).
+                mode_normal       "#[bg=#89B4FA,fg=#181825,bold] NORMAL "
+                mode_locked       "#[bg=#F38BA8,fg=#181825,bold] LOCKED "
+                mode_resize       "#[bg=#94E2D5,fg=#181825,bold] RESIZE "
+                mode_pane         "#[bg=#A6E3A1,fg=#181825,bold] PANE "
+                mode_tab          "#[bg=#FAB387,fg=#181825,bold] TAB "
+                mode_scroll       "#[bg=#F9E2AF,fg=#181825,bold] SCROLL "
+                mode_enter_search "#[bg=#CBA6F7,fg=#181825,bold] SEARCH "
+                mode_search       "#[bg=#CBA6F7,fg=#181825,bold] SEARCH "
+                mode_rename_tab   "#[bg=#89DCEB,fg=#181825,bold] RENAME "
+                mode_rename_pane  "#[bg=#89DCEB,fg=#181825,bold] RENAME "
+                mode_session      "#[bg=#F5C2E7,fg=#181825,bold] SESSION "
+                mode_move         "#[bg=#FAE3B0,fg=#181825,bold] MOVE "
+                mode_default_to_mode "normal"
+
+                tab_normal            "#[fg=#6C7086] {name} "
+                tab_active            "#[fg=#CDD6F4,bold,italic] {name} "
+                tab_normal_sync       "#[fg=#6C7086] {name}{sync_indicator} "
+                tab_active_sync       "#[fg=#CDD6F4,bold,italic] {name}{sync_indicator} "
+                tab_normal_fullscreen "#[fg=#6C7086] {name}{fullscreen_indicator} "
+                tab_active_fullscreen "#[fg=#CDD6F4,bold,italic] {name}{fullscreen_indicator} "
+                tab_sync_indicator       " S"
+                tab_fullscreen_indicator " F"
+                tab_separator            "#[fg=#45475A]"
+            }
+        }
+        children
+    }
+}

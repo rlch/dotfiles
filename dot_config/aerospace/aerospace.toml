@@ -1,0 +1,148 @@
+start-at-login = true
+on-focus-changed = ['move-mouse window-lazy-center']
+automatically-unhide-macos-hidden-apps = true
+
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+accordion-padding = 30
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+[key-mapping]
+preset = 'qwerty'
+
+[gaps]
+inner.horizontal = 10
+inner.vertical = 10
+outer.left = 10
+outer.right = 10
+outer.top = 10
+outer.bottom = 10
+
+[mode.main.binding]
+# layouts
+alt-slash      = 'layout tiles horizontal vertical'
+alt-comma      = 'layout accordion horizontal vertical'
+alt-f          = 'fullscreen'
+ctrl-alt-f     = 'macos-native-fullscreen'
+alt-shift-f    = 'layout floating tiling'
+
+# focus + move (vim-style, cross-monitor)
+alt-h = 'focus left  --boundaries all-monitors-outer-frame'
+alt-j = 'focus down  --boundaries all-monitors-outer-frame'
+alt-k = 'focus up    --boundaries all-monitors-outer-frame'
+alt-l = 'focus right --boundaries all-monitors-outer-frame'
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+# resize
+alt-minus = 'resize smart -100'
+alt-equal = 'resize smart +100'
+
+# scratchpad — toggle a floating Ghostty window attached to a zellij session
+alt-backtick = 'exec-and-forget ~/.config/aerospace/scratchpad.sh'
+
+# workspaces (scheme A: monotonic 3-3-3 + iPad)
+ctrl-alt-1 = 'workspace 1'
+ctrl-alt-2 = 'workspace 2'
+ctrl-alt-3 = 'workspace 3'
+ctrl-alt-4 = 'workspace 4'
+ctrl-alt-5 = 'workspace 5'
+ctrl-alt-6 = 'workspace 6'
+ctrl-alt-7 = 'workspace 7'
+ctrl-alt-8 = 'workspace 8'
+ctrl-alt-9 = 'workspace 9'
+ctrl-alt-0 = 'workspace 0'
+alt-n      = 'workspace next'
+alt-p      = 'workspace prev'
+alt-tab    = 'workspace-back-and-forth'
+alt-shift-n = 'move-node-to-workspace next --focus-follows-window'
+alt-shift-p = 'move-node-to-workspace prev --focus-follows-window'
+
+# move window to workspace (mirrors workspace-switch chord)
+alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
+alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
+alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
+alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
+alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
+alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
+alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
+alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
+alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
+alt-shift-0 = 'move-node-to-workspace 0 --focus-follows-window'
+
+# focus monitors directly
+alt-1 = 'focus-monitor 1'
+alt-2 = 'focus-monitor 2'
+alt-3 = 'focus-monitor 3'
+alt-4 = 'focus-monitor 4'
+
+# enter service mode (now properly scoped, unlike old config)
+alt-shift-semicolon = 'mode service'
+
+[mode.service.binding]
+esc       = ['reload-config', 'mode main']
+r         = ['flatten-workspace-tree', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+f         = ['layout floating tiling', 'mode main']
+alt-shift-h = ['join-with left',  'mode main']
+alt-shift-j = ['join-with down',  'mode main']
+alt-shift-k = ['join-with up',    'mode main']
+alt-shift-l = ['join-with right', 'mode main']
+
+# scheme A: workspace number → monitor (with graceful fallback)
+# 1-3 = primary, 4-6 = second, 7-9 = third, 0 = iPad (or primary if absent)
+[workspace-to-monitor-force-assignment]
+1 = 1
+2 = 1
+3 = 1
+4 = [2, 1]
+5 = [2, 1]
+6 = [2, 1]
+7 = [3, 2, 1]
+8 = [3, 2, 1]
+9 = [3, 2, 1]
+0 = [4, 1]
+
+# float-by-default apps
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.calculator'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.1password.1password'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.superduper.superwhisper'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-Elements.Settings'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-EventViewer'
+run = 'layout floating'
+
+# Ghostty scratchpads — separate cloned bundle (~/Applications/Scratch.app)
+# built by .chezmoiscripts/run_after_create-ghostty-scratch.sh.tmpl. Different
+# bundle ID gives a distinct dock icon and zero risk of touching real Ghostty.
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty.scratch'
+run = 'layout floating'

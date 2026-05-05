@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Re-runs whenever fish_plugins changes. Bootstraps fisher on first apply,
+# then runs `fisher update` to reconcile installed fish plugins with the
+# committed manifest (installs added, removes removed).
+#
+# Sorts after run_onchange_install-packages.sh so brew has already installed
+# fish by the time this runs.
+#
+# fish_plugins hash: {{ include "dot_config/fish/fish_plugins" | sha256sum }}
+
+set -euo pipefail
+
+FISH=$(command -v fish || true)
+if [[ -z "$FISH" ]]; then
+  echo "fish not found on PATH; ensure Brewfile has installed it." >&2
+  exit 1
+fi
+
+if ! "$FISH" -c 'functions -q fisher' 2>/dev/null; then
+  echo "Bootstrapping fisher..."
+  "$FISH" -c 'curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher'
+fi
+
+"$FISH" -c 'fisher update'

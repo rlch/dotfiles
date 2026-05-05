@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Build ~/Applications/Scratch.app — a sibling Ghostty bundle with its
+# own bundle ID and a desaturated icon. The scratchpad toggle script targets
+# this bundle so aerospace can match by app-id (no fragile title regex) and
+# the dock visually distinguishes scratchpads from regular Ghostty windows.
+#
+# Idempotent: rebuilds only when /Applications/Ghostty.app's version differs
+# from the cloned app's. Runs after the brew-bundle install script so
+# imagemagick is already present.
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+SRC="/Applications/Ghostty.app"
+DST="$HOME/Applications/Scratch.app"
+BUNDLE_ID="com.mitchellh.ghostty.scratch"
+NAME="Scratch"
+
+if [[ ! -d "$SRC" ]]; then
+  exit 0
+fi
+
+src_ver=$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$SRC/Contents/Info.plist")
+dst_ver=""
+if [[ -d "$DST" ]]; then
+  dst_ver=$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$DST/Contents/Info.plist" 2>/dev/null || echo "")
+fi
+
+if [[ "$src_ver" == "$dst_ver" ]]; then
+  exit 0
+fi
+
+if ! command -v magick >/dev/null 2>&1; then
+  echo "imagemagick not installed; can't build scratch icon. Re-run chezmoi apply." >&2
+  exit 1
+fi
+
+echo "Building $DST from Ghostty $src_ver..."
+
+mkdir -p "$HOME/Applications"
+rm -rf "$DST"
+cp -R "$SRC" "$DST"
+
+plist="$DST/Contents/Info.plist"
+/usr/bin/plutil -replace CFBundleIdentifier  -string "$BUNDLE_ID" "$plist"
+/usr/bin/plutil -replace CFBundleName        -string "$NAME"      "$plist"
+/usr/bin/plutil -replace CFBundleDisplayName -string "$NAME"      "$plist"
+# Modern macOS prefers icons from Assets.car via CFBundleIconName. Removing
+# that key forces fallback to CFBundleIconFile, which points at our edited
+# .icns — without this, the dock keeps showing the original asset-catalog icon.
+/usr/bin/plutil -remove CFBundleIconName "$plist" 2>/dev/null || true
+
+icon_name=$(/usr/bin/plutil -extract CFBundleIconFile raw "$plist")
+icns="$DST/Contents/Resources/${icon_name}.icns"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+iconutil -c iconset "$icns" -o "$tmp/AppIcon.iconset"
+for png in "$tmp/AppIcon.iconset"/*.png; do
+  magick "$png" -modulate 100,20,100 -level 8%,92% "$png"
+done
+iconutil -c icns "$tmp/AppIcon.iconset" -o "$icns"
+
+# cp inherits the original signature; our edits invalidate it. Strip then
+# re-sign ad-hoc so macOS doesn't refuse to launch the bundle.
+codesign --remove-signature "$DST" 2>/dev/null || true
+codesign --force --deep --sign - "$DST"
+
+# Drop dock cache so the new icon shows up immediately rather than next login.
+killall Dock 2>/dev/null || true
+
+echo "Built $DST (Ghostty $src_ver)."
+{{- end }}

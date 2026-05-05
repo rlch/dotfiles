@@ -1,0 +1,9 @@
+# Files that live in the source repo but shouldn't be deployed to ~
+Brewfile
+Brewfile.heavy
+CLAUDE.md
+README.md
+LICENSE
+.git/
+.gitignore
+**/.DS_Store

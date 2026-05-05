@@ -1,0 +1,20 @@
+{{/*
+  Per-machine chezmoi config, generated on `chezmoi init`. The `role` value is
+  prompted once per machine and persisted to ~/.config/chezmoi/chezmoi.toml.
+
+  Roles:
+    mbp   — primary workstation (MacBook Pro M5 Max, heavy hardware)
+    mini  — Mac mini (lighter / shared-config secondary)
+
+  Edit values by hand at any time, or re-run `chezmoi init` to be re-prompted.
+*/}}
+{{- $role := promptStringOnce . "role" "Machine role (mbp|mini)" "mbp" -}}
+
+sourceDir = "/Users/rjm/dev/dotfiles"
+
+[edit]
+    apply = true
+
+[data]
+    role = {{ $role | quote }}
+    heavyHardware = {{ eq $role "mbp" }}

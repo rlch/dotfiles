@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Re-runs whenever this file's rendered content changes. The hash lines below
+# make external edits to Brewfile / Brewfile.heavy trigger this script
+# (otherwise `run_onchange` only sees the script itself, not files it includes).
+#
+# Brewfile hash:        {{ include "Brewfile"       | sha256sum }}
+# Brewfile.heavy hash:  {{ include "Brewfile.heavy" | sha256sum }}
+# Role:                 {{ .role }}
+# Heavy hardware:       {{ .heavyHardware }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+brew bundle install --file={{ .chezmoi.sourceDir }}/Brewfile
+
+{{ if .heavyHardware -}}
+brew bundle install --file={{ .chezmoi.sourceDir }}/Brewfile.heavy
+{{- end }}
+{{- end }}
