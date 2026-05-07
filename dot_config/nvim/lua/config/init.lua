@@ -21,6 +21,9 @@ require("lazy").setup({
       "LazyVim/LazyVim",
       import = "lazyvim.plugins",
       opts = {
+        -- catppuccin is loaded with priority=1000 in plugins/colorscheme.lua;
+        -- this just stops LazyVim's setup from trying tokyonight (disabled) first.
+        colorscheme = "catppuccin",
         defaults = {
           -- disable default autocmds and keymaps from LazyVim.
           autocmds = false,
