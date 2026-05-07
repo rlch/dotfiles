@@ -1,0 +1,86 @@
+# Yazi keymap — stock layout + a handful of plugin-driven additions.
+# Built-in bindings are inherited; we only PREPEND so user-overrides win.
+
+[mgr]
+prepend_keymap = [
+  # Smart Enter: open file OR cd into dir with one key.
+  { on = "<Enter>", run = "plugin smart-enter", desc = "Open / enter dir" },
+
+  # Smart Paste: never overwrite silently.
+  { on = "p", run = "plugin smart-paste", desc = "Paste (won't overwrite)" },
+
+  # Jump-to-char (vim 'f' style).
+  { on = "f", run = "plugin jump-to-char", desc = "Jump to char on screen" },
+
+  # chmod plugin — interactive permissions UI.
+  { on = ["c", "m"], run = "plugin chmod", desc = "chmod selection" },
+
+  # Toggle hidden files (stock binding lives at .h; mirror it on H).
+  { on = "H", run = "hidden toggle", desc = "Toggle hidden files" },
+
+  # Easymotion-style label jump to a filename. Type the label to land on it;
+  # `--autocd` cd's into a directory if the label points at one.
+  { on = "i", run = "plugin searchjump -- autocd", desc = "Searchjump (label-jump)" },
+
+  # Pane control.
+  { on = "T", run = "plugin toggle-pane min-preview", desc = "Toggle preview pane" },
+
+  # Diff hovered ↔ selected, copy patch to clipboard (great for Claude review).
+  { on = "<C-d>", run = "plugin diff", desc = "Diff selected ↔ hovered (clipboard)" },
+
+  # Filter to git-changed/tracked files (run inside a git repo).
+  { on = "<C-v>", run = "plugin vcs-files", desc = "Filter to VCS files" },
+
+  # OS mount manager — list/mount/unmount/eject. Useful with sshfs mounts.
+  { on = "M", run = "plugin mount", desc = "Mount manager" },
+
+  # Reveal in Finder (macOS).
+  { on = "<C-r>", run = 'shell -- open -R "$0"', desc = "Reveal in Finder" },
+
+  # Open in $EDITOR explicitly (bypass smart-enter).
+  { on = "e", run = 'shell -- $EDITOR "$@"', desc = "Edit in $EDITOR" },
+
+  # Shell out into the current directory (interactive, blocking).
+  { on = "!", run = 'shell -- $SHELL', desc = "Drop into shell here", block = true },
+
+  # Toggle full-border on the fly (`Z` for "zen-ish").
+  { on = "Z", run = "plugin full-border --args=toggle", desc = "Toggle full border" },
+
+  # Quit + write cwd (used by the fish `y` wrapper).
+  { on = "q", run = "quit", desc = "Quit (write cwd)" },
+  { on = "Q", run = "close", desc = "Close without writing cwd" },
+
+  # <C-y> as a yazi-side close fallback for contexts where the tmux
+  # binding doesn't fire first (e.g., yazi launched directly via the `y`
+  # fish wrapper outside the tmux popup). The popup-toggle path is
+  # actually handled by yazi-popup.sh killing the named inner session.
+  { on = "<C-y>", run = "close", desc = "Close yazi" },
+
+  # Pinned jumps — `g` is the "go" prefix. For ad-hoc favourites use the
+  # `b`-prefix yamb bookmarks below.
+  { on = ["g", "h"], run = "cd ~",            desc = "Go: home" },
+  { on = ["g", "d"], run = "cd ~/dev",        desc = "Go: ~/dev" },
+  { on = ["g", "c"], run = "cd ~/.config",    desc = "Go: ~/.config" },
+  { on = ["g", "/"], run = "cd /",            desc = "Go: /" },
+  { on = ["g", "s"], run = "cd ~/mnt/mini",   desc = "Go: mini media (sshfs; run mini-mount first)" },
+  { on = ["g", "i"], run = "plugin lazygit",  desc = "Open lazygit in cwd" },
+
+  # Bookmarks (yamb plugin) — `b` prefix. Persisted to ~/.config/yazi/bookmark.
+  { on = ["b", "a"], run = "plugin yamb -- save",          desc = "Bookmark: add cwd" },
+  { on = ["b", "f"], run = "plugin yamb -- jump_by_fzf",   desc = "Bookmark: jump (fzf)" },
+  { on = ["b", "j"], run = "plugin yamb -- jump_by_key",   desc = "Bookmark: jump by key" },
+  { on = ["b", "d"], run = "plugin yamb -- delete_by_fzf", desc = "Bookmark: delete (fzf)" },
+  { on = ["b", "r"], run = "plugin yamb -- rename_by_fzf", desc = "Bookmark: rename (fzf)" },
+
+  # tmux integration — `<C-w>` prefix mirrors vim's window-management chord.
+  # The wrapper script retargets actions at the *outer* session/pane when
+  # YAZI_OUTER_SESSION / YAZI_OUTER_PANE are set (Ctrl+Y popup path), else
+  # falls back to the current session/pane (regular yazi launch). Logged
+  # to /tmp/yazi-tmux.log. `--orphan` detaches so yazi's task tracker
+  # doesn't surface them in the quit dialog.
+  { on = ["<C-w>", "n"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$PWD"', 'quit'], desc = "tmux: new window at cwd" },
+  { on = ["<C-w>", "o"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$0"',   'quit'], desc = "tmux: new window at hovered dir" },
+  { on = ["<C-w>", "v"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh vsplit "$PWD"', 'quit'], desc = "tmux: vsplit at cwd" },
+  { on = ["<C-w>", "s"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh hsplit "$PWD"', 'quit'], desc = "tmux: hsplit at cwd" },
+  { on = "<C-o>",        run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh edit "$@"',     'quit'], desc = "tmux: edit selection in new window" },
+]
