@@ -24,6 +24,14 @@ src_ver=$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$SRC/Contents
 dst_ver=""
 if [[ -d "$DST" ]]; then
   dst_ver=$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$DST/Contents/Info.plist" 2>/dev/null || echo "")
+  # Force rebuild if the bundle was previously stamped as an agent app
+  # (LSUIElement=true). We removed that line because hiding the dock tile
+  # broke window cycling; an existing bundle still has the key, so blow it
+  # away to retrigger the build with a clean Info.plist.
+  if /usr/bin/plutil -extract LSUIElement raw "$DST/Contents/Info.plist" >/dev/null 2>&1; then
+    rm -rf "$DST"
+    dst_ver=""
+  fi
 fi
 
 if [[ "$src_ver" == "$dst_ver" ]]; then

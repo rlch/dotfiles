@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
+#
+# Diff strategy:
+#   - Inline panel  → delta (streaming ANSI). revdiff is a TUI; it can't drive
+#                     the small side-panel.
+#   - <c-d> in any  → revdiff fullscreen on the current selection. Annotations
+#     diff context     are written to ~/.config/revdiff/history/ on quit.
+
+gui:
+  nerdFontsVersion: "3"
+  showFileTree: true
+  showIcons: true
+  theme:
+    activeBorderColor: ["#89b4fa", "bold"]
+    inactiveBorderColor: ["#45475a"]
+    selectedLineBgColor: ["#313244"]
+    optionsTextColor: ["#89b4fa"]
+    cherryPickedCommitBgColor: ["#f9e2af"]
+    cherryPickedCommitFgColor: ["#1e1e2e"]
+    unstagedChangesColor: ["#f38ba8"]
+
+git:
+  paging:
+    colorArg: always
+    pager: delta --paging=never --dark
+  parseEmoji: false
+
+customCommands:
+  - key: "<c-d>"
+    description: "Review the selected file in revdiff"
+    context: "files"
+    command: 'revdiff --only={{.SelectedFile.Name | quote}}'
+    subprocess: true
+
+  - key: "<c-d>"
+    description: "Review the selected commit in revdiff"
+    context: "commits"
+    command: 'revdiff {{.SelectedLocalCommit.Sha}}~1 {{.SelectedLocalCommit.Sha}}'
+    subprocess: true
+
+  - key: "<c-d>"
+    description: "Review uncommitted changes in revdiff"
+    context: "global"
+    command: "revdiff"
+    subprocess: true

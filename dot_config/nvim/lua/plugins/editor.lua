@@ -62,6 +62,7 @@ return {
         ["dart"] = { "config.dart", "pearl_config.dart", "g.dart", "model.dart" },
       },
       filesystem = {
+        bind_to_cwd = false,
         filtered_items = {
           visible = true,
           hide_dotfiles = false,

@@ -10,8 +10,17 @@ directly — `chezmoi apply` will overwrite them. The flow is:
 
 1. Edit a file under `dot_config/`, `dot_claude/`, or root (`Brewfile`,
    `Brewfile.heavy`, `.chezmoiscripts/...`).
-2. `chezmoi apply` to deploy. Use `chezmoi diff` first if you want a preview.
+2. **Always run `chezmoi apply`** after every edit — the source isn't
+   live until it's deployed. Use `chezmoi diff` first if you want a preview.
+   For tmux/fish/etc. that have a running daemon, also reload (e.g.
+   `tmux source-file ~/.config/tmux/tmux.conf`, `exec fish`).
 3. Commit + push when stable.
+
+**Don't end a task assuming the user will apply later.** If you've changed
+files under this repo, run `chezmoi apply` (or scope it: `chezmoi apply
+~/.config/tmux`) before reporting done — otherwise nothing you wrote is
+actually in effect, and any "verification" you do is verifying the source
+copy, not the live one.
 
 The `dot_` prefix is a chezmoi requirement, not a style choice — files
 prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
@@ -27,7 +36,7 @@ Brewfile                    → base packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, notify.sh hook)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
-                              lazydocker, starship.toml, tridactyl, zellij)
+                              lazydocker, starship.toml, tmux, tridactyl)
 ```
 
 ## Multi-host
@@ -66,7 +75,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty                                             |
-| Multiplexer    | zellij                                              |
+| Multiplexer    | tmux (modal Ctrl-s/a/b/q, hjkl — ported from zellij)|
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
@@ -76,20 +85,28 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | Local LLM      | Ollama (heavy hardware only)                        |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
-| Browser        | Firefox + tridactyl                                 |
+| Browser        | Firefox (daily) + Chrome (Flutter web dev) + Brave (PWA host) |
 | Notes          | Obsidian                                            |
 | Launcher       | Raycast                                             |
 
 ## Conventions / invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in
-  aerospace, zellij, nvim, fish abbreviations, and tridactyl. Cosmetic refactors
-  fine; keybind changes are not.
+  aerospace, tmux (zellij-style modal), nvim, fish abbreviations, and tridactyl.
+  Cosmetic refactors fine; keybind changes are not.
 - **k9s `config.yaml` is global prefs only**, not cluster state. k9s rewrites
   cluster-specific sections at runtime — keeping them in source pollutes the
   Mac mini and stale-clusters them.
-- **Fish does not auto-attach zellij.** This was deliberately dropped from the
-  old config; don't re-introduce it.
+- **Fish does not auto-attach tmux.** This was deliberately dropped from the
+  zellij config and stays dropped; don't re-introduce it.
+- **tmux modal scheme is canonical** — `Ctrl-s` pane, `Ctrl-a`/`F3` tab,
+  `Ctrl-b` scroll, `Ctrl-q` session, hjkl/arrows everywhere, `Ctrl-1..9`
+  windows. Ported verbatim from the zellij config; don't switch back to a
+  prefix-based scheme without checking with the user.
+- **Window names auto-slugify to ≤10 chars** via `~/.config/tmux/slugify-title.py`
+  on the `window-renamed` hook. Claude Code's OSC titles get NLP-picked salient
+  tokens (proper nouns / ALLCAPS preferred); paths get basenamed; long words
+  get vowel-dropped. Idempotent.
 - **No floating/dropdown Ghostty.** Tried, rejected. Don't propose it.
 - **Brewfile and Brewfile.heavy are listed in `.chezmoiignore`** so they aren't
   deployed to `~`. They're consumed only by `brew bundle install` invoked from

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Install Hermes Agent (NousResearch) on heavy-hardware hosts. Hermes ships
+# its own Python installer that auto-provisions uv / Python 3.11 / Node 22 /
+# ripgrep / ffmpeg, so brew has nothing to do here — official curl|bash is
+# the only canonical path.
+#
+# Idempotent: skips if `hermes` is already on PATH. To force a reinstall,
+# `rm -rf ~/.hermes/hermes-agent ~/.local/bin/hermes` and re-run.
+#
+# Re-runs whenever this script's logic changes.
+#
+# Hermes installer URL pin (bump to refresh):
+#   https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh
+
+set -euo pipefail
+
+{{ if and (eq .chezmoi.os "darwin") .heavyHardware -}}
+if command -v hermes >/dev/null 2>&1; then
+  echo "hermes: already installed at $(command -v hermes) — skipping"
+  exit 0
+fi
+
+if [ ! -d "$HOME/.hermes/hermes-agent" ]; then
+  echo "hermes: running official installer"
+  curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+fi
+
+# Installer drops the binary at ~/.local/bin/hermes; fish config already has
+# this on PATH, but exec'd shells in this script don't, so verify directly.
+if [ ! -x "$HOME/.local/bin/hermes" ]; then
+  echo "hermes: installer ran but ~/.local/bin/hermes missing — investigate" >&2
+  exit 1
+fi
+
+echo "hermes: installed → $HOME/.local/bin/hermes"
+{{- end }}

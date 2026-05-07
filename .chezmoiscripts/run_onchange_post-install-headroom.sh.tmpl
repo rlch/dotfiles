@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Install / upgrade the Headroom Docker-native wrapper and ensure the persistent
+# Docker proxy deployment exists at the same local endpoint used by the shell env.
+#
+# Sorted to run AFTER `run_onchange_install-packages.sh.tmpl` (brew bundle)
+# so that Docker/OrbStack and Homebrew Bash are present.
+#
+# Re-runs whenever the version pin or this script's logic changes.
+#
+# headroom docker image: ghcr.io/chopratejas/headroom:latest
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v docker >/dev/null 2>&1; then
+  echo "headroom: docker not found on PATH — Brewfile/OrbStack not yet applied; skipping" >&2
+  exit 0
+fi
+
+if [ -x /opt/homebrew/bin/bash ]; then
+  bash_bin=/opt/homebrew/bin/bash
+else
+  bash_bin=$(command -v bash || true)
+fi
+
+if [ -z "${bash_bin:-}" ] || ! "$bash_bin" -c '((BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3)))'; then
+  echo "headroom: Bash 4.3+ not found — Brewfile not yet applied; skipping" >&2
+  exit 0
+fi
+
+old_headroom=$HOME/.local/bin/headroom
+if [ -x "$old_headroom" ]; then
+  status_output=$("$old_headroom" install status 2>/dev/null || true)
+  if printf '%s\n' "$status_output" | grep -Eq 'persistent-service|Runtime: python|Supervisor: launchd'; then
+    "$old_headroom" install remove >/dev/null 2>&1 || true
+  fi
+fi
+
+curl -fsSL https://raw.githubusercontent.com/chopratejas/headroom/main/scripts/install.sh | \
+  HEADROOM_DOCKER_IMAGE=ghcr.io/chopratejas/headroom:latest "$bash_bin"
+
+headroom=$HOME/.local/bin/headroom
+if ! [ -x "$headroom" ]; then
+  echo "headroom: Docker-native wrapper was not installed at $headroom" >&2
+  exit 1
+fi
+
+if "$headroom" install status --profile default >/dev/null 2>&1; then
+  current_status=$("$headroom" install status --profile default)
+  if ! printf '%s\n' "$current_status" | grep -q 'Runtime: docker' ||
+     ! printf '%s\n' "$current_status" | grep -q 'Port: 8787'; then
+    "$headroom" install remove --profile default >/dev/null 2>&1 || true
+  fi
+fi
+
+if ! "$headroom" install status --profile default >/dev/null 2>&1; then
+  "$headroom" install apply \
+    --preset persistent-docker \
+    --runtime docker \
+    --profile default \
+    --port 8787 \
+    --backend anthropic \
+    --mode token
+fi
+
+# Clean up orphaned Python proxies from the old uv/launchd install. The Docker
+# container owns the endpoint now, and stale Python workers can linger after the
+# launchd plist is removed.
+while IFS= read -r old_pid; do
+  kill "$old_pid" 2>/dev/null || true
+done < <(pgrep -f 'Python -m headroom\.cli proxy --host 127\.0\.0\.1 --port 8787' || true)
+{{- end }}

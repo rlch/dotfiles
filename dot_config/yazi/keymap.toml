@@ -76,11 +76,13 @@ prepend_keymap = [
   # The wrapper script retargets actions at the *outer* session/pane when
   # YAZI_OUTER_SESSION / YAZI_OUTER_PANE are set (Ctrl+Y popup path), else
   # falls back to the current session/pane (regular yazi launch). Logged
-  # to /tmp/yazi-tmux.log. `--orphan` detaches so yazi's task tracker
-  # doesn't surface them in the quit dialog.
-  { on = ["<C-w>", "n"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$PWD"', 'quit'], desc = "tmux: new window at cwd" },
-  { on = ["<C-w>", "o"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$0"',   'quit'], desc = "tmux: new window at hovered dir" },
-  { on = ["<C-w>", "v"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh vsplit "$PWD"', 'quit'], desc = "tmux: vsplit at cwd" },
-  { on = ["<C-w>", "s"], run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh hsplit "$PWD"', 'quit'], desc = "tmux: hsplit at cwd" },
-  { on = "<C-o>",        run = ['shell --orphan -- ~/.config/yazi/yazi-tmux.sh edit "$@"',     'quit'], desc = "tmux: edit selection in new window" },
+  # to /tmp/yazi-tmux.log. yazi-side `quit` is issued by the script via
+  # `ya emit-to "$YAZI_ID"` once the tmux action lands — keeping it OUT
+  # of the keymap because yazi (≥26.x) silently drops chord-on + array-run
+  # bindings, so the only safe shape here is single-string `run`.
+  { on = ["<C-w>", "n"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$PWD"', desc = "tmux: new window at cwd" },
+  { on = ["<C-w>", "o"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$0"',   desc = "tmux: new window at hovered dir" },
+  { on = ["<C-w>", "v"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh vsplit "$PWD"', desc = "tmux: vsplit at cwd" },
+  { on = ["<C-w>", "s"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh hsplit "$PWD"', desc = "tmux: hsplit at cwd" },
+  { on = "<C-o>",        run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh edit "$@"',     desc = "tmux: edit selection in new window" },
 ]

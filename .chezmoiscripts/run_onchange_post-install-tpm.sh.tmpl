@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Bootstrap tmux plugin manager (tpm) and install declared plugins.
+# Re-runs whenever dot_config/tmux/tmux.conf changes (hash embedded below).
+#
+# Sorted to run AFTER `run_onchange_install-packages.sh.tmpl` so that
+# `tmux` itself is on PATH.
+#
+# tmux.conf hash: {{ include "dot_config/tmux/tmux.conf" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tpm: tmux not found on PATH — Brewfile not yet applied; skipping" >&2
+  exit 0
+fi
+
+TPM_DIR="$HOME/.tmux/plugins/tpm"
+
+if [ ! -d "$TPM_DIR" ]; then
+  echo "tpm: cloning into $TPM_DIR"
+  git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM_DIR"
+fi
+
+# tpm's install_plugins reads `@plugin` declarations from the DEFAULT-socket
+# tmux server's running config. If a server is already running there, just
+# re-source our config into it (idempotent — `set -g` lines). Otherwise spin
+# up a temporary one with our config and tear it down after.
+if tmux info >/dev/null 2>&1; then
+  tmux source-file "$HOME/.config/tmux/tmux.conf" >/dev/null 2>&1 || true
+  started_server=0
+else
+  tmux -f "$HOME/.config/tmux/tmux.conf" start-server
+  started_server=1
+fi
+
+"$TPM_DIR/bin/install_plugins" >/dev/null || true
+"$TPM_DIR/bin/update_plugins" all >/dev/null || true
+
+if [ "$started_server" = "1" ]; then
+  tmux kill-server 2>/dev/null || true
+fi
+{{ end -}}

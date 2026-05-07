@@ -5,8 +5,8 @@ set modeindicator false
 set modeindicatormodes {"ignore":"false"}
 colourscheme midnight
 
-bind J tabprev
-bind K tabnext
+bind J tabnext
+bind K tabprev
 bind <C-j> scrollline 10
 bind <C-k> scrollline -10
 bind gi    composite focusinput -l | text.end_of_line

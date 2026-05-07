@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+
+default_csv_path() {
+  local xdg_csv="${data_home%/}/nficon/icons.csv"
+  local skill_csv="${script_dir}/icons.csv"
+  if [[ -f "$xdg_csv" ]]; then
+    printf '%s\n' "$xdg_csv"
+    return 0
+  fi
+  printf '%s\n' "$skill_csv"
+}
+
+csv_path="${NFICON_CSV:-$(default_csv_path)}"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  nficon <query...>                Search by icon name (regex, case-insensitive)
+  nficon --name <exact_name>       Print 1 matching record (exact name)
+  nficon --glyph <exact_name>      Print only the glyph for an icon name
+  nficon --codepoint <exact_name>  Print only the hex codepoint for an icon name
+  nficon --to-printf <hex>         Print a printf escape for a hex codepoint
+
+Environment:
+  NFICON_CSV=/path/to/icons.csv     Override icons library path
+
+Notes:
+  - Queries are treated as regular expressions.
+  - The first line of the CSV must be: name,codepoint_hex,glyph
+EOF
+}
+
+die() { echo "nficon: $*" >&2; exit 2; }
+
+if [[ ! -f "$csv_path" ]]; then
+  die "missing icons CSV: $csv_path (set NFICON_CSV to override)"
+fi
+
+mode="search"
+value=""
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+case "${1:-}" in
+  --name|--glyph|--codepoint)
+    [[ $# -ge 2 ]] || die "missing value for $1"
+    mode="${1#--}"
+    value="$2"
+    shift 2
+    ;;
+  --to-printf)
+    [[ $# -ge 2 ]] || die "missing hex codepoint for --to-printf"
+    mode="to-printf"
+    value="$2"
+    shift 2
+    ;;
+esac
+
+to_printf_escape() {
+  local hex="${1,,}"
+  hex="${hex#0x}"
+  [[ "$hex" =~ ^[0-9a-f]+$ ]] || die "invalid hex codepoint: $1"
+  if (( ${#hex} <= 4 )); then
+    printf "\\\\u%04s\n" "$hex" | tr ' ' '0'
+    return 0
+  fi
+  if (( ${#hex} <= 8 )); then
+    printf "\\\\U%08s\n" "$hex" | tr ' ' '0'
+    return 0
+  fi
+  die "hex codepoint too long (expected <= 8 hex digits): $1"
+}
+
+lookup_exact() {
+  local key="$1"
+  awk -F, -v key="$key" '
+    NR==1 { next }
+    $1 == key { print; found=1; exit }
+    END { if (!found) exit 1 }
+  ' "$csv_path"
+}
+
+case "$mode" in
+  to-printf)
+    to_printf_escape "$value"
+    exit 0
+    ;;
+  name)
+    lookup_exact "$value" || exit 1
+    ;;
+  glyph)
+    lookup_exact "$value" | awk -F, '{print $3}' || exit 1
+    ;;
+  codepoint)
+    lookup_exact "$value" | awk -F, '{print $2}' || exit 1
+    ;;
+  search)
+    [[ $# -ge 1 ]] || die "missing query (use --help)"
+    query="$(printf "%s" "$*" | tr ' ' '|')"
+    awk -F, -v q="$query" '
+      BEGIN { OFS="\t" }
+      NR==1 { next }
+      {
+        name=$1
+        code=$2
+        glyph=$3
+        n=tolower(name)
+        if (n ~ tolower(q)) print name, code, glyph
+      }
+    ' "$csv_path"
+    ;;
+  *)
+    die "unknown mode: $mode"
+    ;;
+esac

@@ -1,0 +1,113 @@
+# Catppuccin Macchiato — Soothing pastel theme for Hermes Agent
+# https://github.com/catppuccin/catppuccin
+# Palette: Macchiato (dark medium flavor)
+
+name: catppuccin-macchiato
+description: Catppuccin Macchiato — soothing pastel colors on a cool dark base, balanced contrast
+
+colors:
+  banner_border: "#c6a0f6"    # Mauve
+  banner_title: "#b7bdf8"     # Lavender
+  banner_accent: "#c6a0f6"    # Mauve
+  banner_dim: "#8087a2"       # Overlay 1
+  banner_text: "#cad3f5"      # Text
+  ui_accent: "#c6a0f6"        # Mauve
+  ui_label: "#8aadf4"         # Blue
+  ui_ok: "#a6da95"            # Green
+  ui_error: "#ed8796"         # Red
+  ui_warn: "#eed49f"          # Yellow
+  prompt: "#cad3f5"           # Text
+  input_rule: "#5b6078"       # Surface 2
+  response_border: "#c6a0f6"  # Mauve
+  session_label: "#b7bdf8"    # Lavender
+  session_border: "#494d64"   # Surface 1
+  status_bar_bg: "#1e2030"    # Mantle
+  status_bar_text: "#cad3f5"  # Text
+  status_bar_strong: "#b7bdf8" # Lavender
+  status_bar_dim: "#8087a2"   # Overlay 1
+  status_bar_good: "#a6da95"  # Green
+  status_bar_warn: "#eed49f"  # Yellow
+  status_bar_bad: "#f5a97f"   # Peach
+  status_bar_critical: "#ed8796" # Red
+  voice_status_bg: "#1e2030"  # Mantle
+  completion_menu_bg: "#24273a" # Base
+  completion_menu_current_bg: "#363a4f" # Surface 0
+  completion_menu_meta_bg: "#1e2030" # Mantle
+  completion_menu_meta_current_bg: "#5b6078" # Surface 2
+
+spinner:
+  waiting_faces:
+    - "(=^.^=)"
+    - "(=①ω①=)"
+    - "(=^-ω-^=)"
+    - "(=^◡^=)"
+  thinking_faces:
+    - "(=^.^=)"
+    - "(=^ω^=)"
+    - "(=^·^=)"
+    - "(=^-^=)"
+    - "(=◕ᴗ◕=)"
+  thinking_verbs:
+    - "brewing something warm"
+    - "curling up with data"
+    - "purring through tokens"
+    - "napping on the context"
+    - "kneading the response"
+    - "chasing a trailing thought"
+    - "stretching across layers"
+    - "whisker-sensing patterns"
+  wings:
+    - ["⟪◈", "◈⟫"]
+    - ["⟪●", "●⟫"]
+    - ["⟪◆", "◆⟫"]
+    - ["⟪⬡", "⬡⟫"]
+
+branding:
+  agent_name: "Hermes Agent"
+  welcome: "[bold #c6a0f6]W[/][bold #c6a2f6]e[/][bold #c7a4f6]l[/][bold #c8a6f7]c[/][bold #c8a8f7]o[/][bold #c9aaf7]m[/][bold #caacf7]e[/] [bold #cbaff7]i[/][bold #cbb1f7]n[/][bold #ccb3f8].[/] [bold #cdb7f8]I[/][bold #ceb9f8]t[/][bold #cfbcf8]'[/][bold #d0bef8]s[/] [bold #d1c2f9]w[/][bold #d2c4f9]a[/][bold #d3c8f9]r[/][bold #d4caf9]m[/] [bold #d5cefa]h[/][bold #d6d0fa]e[/][bold #d7d4fa]r[/][bold #d8d6fa]e[/][bold #dadafa].[/] [bold #dbdcfb]T[/][bold #dce0fb]y[/][bold #dde2fb]p[/][bold #dee6fc]e[/] [bold #e0e8fc]/[/][bold #e1ecfc]h[/][bold #e3eefc]e[/][bold #e5f2fd]l[/][bold #e7f4fd]p[/] [bold #eaf8fd]f[/][bold #f4dbd6]o[/][bold #f4dbd6]r[/] [bold #f4dbd6]c[/][bold #f4dbd6]o[/][bold #f4dbd6]m[/][bold #f4dbd6]m[/][bold #f4dbd6]a[/][bold #f4dbd6]n[/][bold #f4dbd6]d[/][bold #f4dbd6]s[/][bold #f4dbd6].[/]"
+  goodbye: "[bold #c6a0f6]S[/][bold #c7a3f4]e[/][bold #c8a6f2]e[/] [bold #c9aaf1]y[/][bold #caadef]o[/][bold #cbb0ed]u[/] [bold #ccb4eb]s[/][bold #cdb7e9]o[/][bold #cebae7]o[/][bold #cfbde5]n[/][bold #d0c1e3].[/]"
+  response_label: " ◈ Hermes "
+  prompt_symbol: "◈ ❯ "
+  help_header: "(◈) Available Commands"
+
+tool_prefix: "┊"
+
+tool_emojis:
+  terminal: "▸"
+  web_search: "◎"
+  read_file: "◇"
+  write_file: "◆"
+  search_files: "⬡"
+  execute_code: "⌁"
+  browser_navigate: "⊕"
+  delegate_task: "▣"
+  mixture_of_agents: "⚗"
+  memory: "◐"
+  clarify: "?"
+  cronjob: "↻"
+  process: "⚙"
+  todo: "☐"
+
+banner_logo: |
+  [#494d64]██╗  ██╗    ███████╗    ██████╗     ███╗   ███╗    ███████╗    ███████╗[/]
+  [#5b6078]██║  ██║    ██╔════╝    ██╔══██╗    ████╗ ████║    ██╔════╝    ██╔════╝[/]
+  [#8aadf4]███████║    █████╗      ██████╔╝    ██╔████╔██║    █████╗      ███████╗[/]
+  [#b7bdf8]██╔══██║    ██╔══╝      ██╔══██╗    ██║╚██╔╝██║    ██╔══╝      ╚════██║[/]
+  [#c6a0f6]██║  ██║    ███████╗    ██║  ██║    ██║ ╚═╝ ██║    ███████╗    ███████║[/]
+  [bold #f5bde6]╚═╝  ╚═╝    ╚══════╝    ╚═╝  ╚═╝    ╚═╝     ╚═╝    ╚══════╝    ╚══════╝[/]
+  [#939ab7]        c  a  t  p  p  u  c  c  i  n     m  a  c  c  h  i  a  t  o[/]
+  [bold #c6a0f6]                      ◈[/] [bold #b7bdf8]A G E N T[/] [bold #c6a0f6]◈[/]
+
+banner_hero: |
+  [#494d64]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠤⠤⠤⠤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#5b6078]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⢄⠀⠀⡠⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#8087a2]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠢⠔⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#c6a0f6]⠀⠀⠀⠀⠀⠀⠀⢰⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⡆⠀⣶⣶⡄⠀⠀⠀⠀⠀⠀[/]
+  [#b7bdf8]⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀[/]
+  [#8aadf4]⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀[/]
+  [#91d7e3]⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠿⠿⠃⠀⠀⠀⠀⠀⠀[/]
+  [#8bd5ca]⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#a6da95]⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#eed49f]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠿⠿⠿⠿⠿⠿⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#f5a97f]⠀⠀⠀⠀⠀⠀⠀⠀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]
+  [#939ab7]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀◈[/] [#8087a2]catppuccin macchiato[/] [#939ab7]◈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀[/]

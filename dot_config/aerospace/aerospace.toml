@@ -1,5 +1,11 @@
 start-at-login = true
-on-focus-changed = ['move-mouse window-lazy-center']
+# scratch-autoquit kills the Scratch.app process whenever focus moves to
+# a non-scratch window. tmux session "scratch" persists on the tmux
+# server, so the next alt-backtick attaches to the same session.
+on-focus-changed = [
+    'move-mouse window-lazy-center',
+    'exec-and-forget ~/.config/aerospace/scratch-autoquit.sh',
+]
 automatically-unhide-macos-hidden-apps = true
 
 enable-normalization-flatten-containers = true
@@ -42,43 +48,56 @@ alt-shift-l = 'move right'
 alt-minus = 'resize smart -100'
 alt-equal = 'resize smart +100'
 
-# scratchpad — toggle a floating Ghostty window attached to a zellij session
-alt-backtick = 'exec-and-forget ~/.config/aerospace/scratchpad.sh'
+# scratchpad — toggle the Scratch.app bundle. The script is ~10 lines:
+# kill if running, else spawn. Auto-park happens via scratch-autoquit.sh
+# in on-focus-changed, so re-pressing the toggle key is the only way you
+# typically need to close scratch (clicking elsewhere already kills it).
+# Karabiner also fires this directly on Globe/Caps-Lock tap (see
+# private_karabiner.json), so this aerospace binding is the alt-backtick
+# fallback for keyboards without a Globe key in scope.
+alt-backtick           = 'exec-and-forget ~/.config/aerospace/scratchpad.sh'
 
-# workspaces (scheme A: monotonic 3-3-3 + iPad)
-ctrl-alt-1 = 'workspace 1'
-ctrl-alt-2 = 'workspace 2'
-ctrl-alt-3 = 'workspace 3'
-ctrl-alt-4 = 'workspace 4'
-ctrl-alt-5 = 'workspace 5'
-ctrl-alt-6 = 'workspace 6'
-ctrl-alt-7 = 'workspace 7'
-ctrl-alt-8 = 'workspace 8'
-ctrl-alt-9 = 'workspace 9'
-ctrl-alt-0 = 'workspace 0'
-alt-n      = 'workspace next'
-alt-p      = 'workspace prev'
-alt-tab    = 'workspace-back-and-forth'
-alt-shift-n = 'move-node-to-workspace next --focus-follows-window'
-alt-shift-p = 'move-node-to-workspace prev --focus-follows-window'
+# workspaces — named roles. Aerospace's tray icon surfaces the active
+# workspace name in the menu bar, so digits are uninformative. Cycle order
+# (alt-n/p) is lexical; direct jumps via ctrl-alt-N still hit the right
+# workspace regardless of cycle position.
+ctrl-alt-1 = 'workspace code'
+ctrl-alt-2 = 'workspace browser'
+ctrl-alt-3 = 'workspace notes'
+ctrl-alt-4 = 'workspace comms'
+ctrl-alt-5 = 'workspace notion'
+ctrl-alt-6 = 'workspace dev'
+# alt-n/p cycle through workspaces ON THE FOCUSED MONITOR ONLY, in the
+# explicit order defined by ~/.config/aerospace/workspace_order.sh. The
+# focused_workspaces.sh helper filters the canonical order down to the
+# focused monitor's workspaces; --wrap-around is intentionally OFF so
+# pressing alt-n at the last workspace of the monitor does nothing
+# (rather than jumping to a workspace on a different monitor).
+alt-n       = 'exec-and-forget ~/.config/aerospace/focused_workspaces.sh | aerospace workspace next --stdin'
+alt-p       = 'exec-and-forget ~/.config/aerospace/focused_workspaces.sh | aerospace workspace prev --stdin'
+alt-tab     = 'workspace-back-and-forth'
+alt-shift-n = 'exec-and-forget ~/.config/aerospace/focused_workspaces.sh | aerospace move-node-to-workspace next --stdin --focus-follows-window'
+alt-shift-p = 'exec-and-forget ~/.config/aerospace/focused_workspaces.sh | aerospace move-node-to-workspace prev --stdin --focus-follows-window'
 
-# move window to workspace (mirrors workspace-switch chord)
-alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
-alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
-alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
-alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
-alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
-alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
-alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
-alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
-alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
-alt-shift-0 = 'move-node-to-workspace 0 --focus-follows-window'
+# move window to workspace (mirrors ctrl-alt-N workspace-switch chord)
+ctrl-alt-shift-1 = 'move-node-to-workspace code --focus-follows-window'
+ctrl-alt-shift-2 = 'move-node-to-workspace browser --focus-follows-window'
+ctrl-alt-shift-3 = 'move-node-to-workspace notes --focus-follows-window'
+ctrl-alt-shift-4 = 'move-node-to-workspace comms --focus-follows-window'
+ctrl-alt-shift-5 = 'move-node-to-workspace notion --focus-follows-window'
+ctrl-alt-shift-6 = 'move-node-to-workspace dev --focus-follows-window'
 
 # focus monitors directly
 alt-1 = 'focus-monitor 1'
 alt-2 = 'focus-monitor 2'
 alt-3 = 'focus-monitor 3'
 alt-4 = 'focus-monitor 4'
+
+# move window to monitor (mirrors alt-N focus-monitor chord)
+alt-shift-1 = 'move-node-to-monitor 1 --focus-follows-window'
+alt-shift-2 = 'move-node-to-monitor 2 --focus-follows-window'
+alt-shift-3 = 'move-node-to-monitor 3 --focus-follows-window'
+alt-shift-4 = 'move-node-to-monitor 4 --focus-follows-window'
 
 # enter service mode (now properly scoped, unlike old config)
 alt-shift-semicolon = 'mode service'
@@ -93,19 +112,78 @@ alt-shift-j = ['join-with down',  'mode main']
 alt-shift-k = ['join-with up',    'mode main']
 alt-shift-l = ['join-with right', 'mode main']
 
-# scheme A: workspace number → monitor (with graceful fallback)
-# 1-3 = primary, 4-6 = second, 7-9 = third, 0 = iPad (or primary if absent)
+# workspace → monitor (with graceful fallback when monitors absent)
 [workspace-to-monitor-force-assignment]
-1 = 1
-2 = 1
-3 = 1
-4 = [2, 1]
-5 = [2, 1]
-6 = [2, 1]
-7 = [3, 2, 1]
-8 = [3, 2, 1]
-9 = [3, 2, 1]
-0 = [4, 1]
+# Match by monitor *name regex* (not index) so the same config rides
+# across home/office without renumbering. Each entry is a fallback chain:
+# the first pattern that matches a connected monitor wins; "main" is the
+# last-resort fallback (the macOS-designated primary in Displays).
+#
+# Home setup (3 monitors):  DELL S2721DGF, HP 25x, Built-in Retina Display
+# Office setup: TODO — run `aerospace list-monitors` from the office and
+# add the office display name(s) into the chain ahead of "main".
+
+# Primary working monitor — large landscape external. Holds `code`.
+code    = ['DELL S2721DGF', 'main']
+
+# Secondary external — browser + Flutter dev (Chrome).
+browser = ['HP 25x', 'main']
+dev     = ['HP 25x', 'main']
+
+# Laptop screen — chat / notes / notion stay peripheral so external
+# workspace toggles don't churn. Falls back to "main" if the lid is
+# closed (clamshell mode → Built-in display absent).
+comms   = ['Built-in.*', 'main']
+notion  = ['Built-in.*', 'main']
+notes   = ['Built-in.*', 'main']
+
+# persistent app → workspace routing. Focus does not follow — apps land
+# in their slot silently, you switch via ctrl-alt-N.
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = 'move-node-to-workspace code'
+
+[[on-window-detected]]
+if.app-id = 'org.mozilla.firefox'
+run = 'move-node-to-workspace browser'
+
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = 'move-node-to-workspace notes'
+
+[[on-window-detected]]
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = 'move-node-to-workspace comms'
+
+# Gather is a PWA hosted in Brave (NOT Chrome — Chrome PWAs share the
+# parent browser's process tree, so quitting Chrome kills them; Brave is
+# a separate Chromium with its own lifecycle). Bundle is
+# `com.brave.Browser.app.<hash>` and is distinct from base Brave.
+# If reinstalling Gather changes the hash, refresh via `aerospace list-apps`.
+[[on-window-detected]]
+if.app-id = 'com.brave.Browser.app.monjdkojdghbbohnhnccccmkogahhgpj'
+run = 'move-node-to-workspace comms'
+
+# Notion (not yet installed; rule fires when its window first appears)
+[[on-window-detected]]
+if.app-id = 'notion.id'
+run = 'move-node-to-workspace notion'
+
+# Chrome → dev. Firefox is the daily-browse browser (workspace browser);
+# Chrome is reserved for Flutter web dev, devtools, etc.
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = 'move-node-to-workspace dev'
+
+# Flutter native desktop apps. Aerospace can only match by bundle-id /
+# app-name / window-title — there's no "links against Flutter framework"
+# matcher. Default match: Xcode's stock target name "Runner" (un-renamed
+# `flutter create` projects ship with this). For projects you've renamed,
+# add a per-bundle-id rule below — find the bundle id with
+# `aerospace list-apps` while the app is running.
+[[on-window-detected]]
+if.app-name-regex-substring = '^Runner$'
+run = 'move-node-to-workspace dev'
 
 # float-by-default apps
 [[on-window-detected]]
@@ -140,9 +218,11 @@ run = 'layout floating'
 if.app-id = 'org.pqrs.Karabiner-EventViewer'
 run = 'layout floating'
 
-# Ghostty scratchpads — separate cloned bundle (~/Applications/Scratch.app)
-# built by .chezmoiscripts/run_after_create-ghostty-scratch.sh.tmpl. Different
-# bundle ID gives a distinct dock icon and zero risk of touching real Ghostty.
+# Ghostty scratchpad — separate cloned bundle (~/Applications/Scratch.app)
+# built by .chezmoiscripts/run_after_create-ghostty-scratch.sh.tmpl.
+# Distinct bundle ID gives a distinct dock icon and zero risk of touching
+# real Ghostty. scratchpad.sh spawns it; scratch-autoquit.sh kills the
+# process on focus loss. tmux session "scratch" persists across spawns.
 [[on-window-detected]]
 if.app-id = 'com.mitchellh.ghostty.scratch'
-run = 'layout floating'
+run = ['layout floating']
