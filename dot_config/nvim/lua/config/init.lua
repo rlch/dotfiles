@@ -67,6 +67,11 @@ require("lazy").setup({
     { import = "lazyvim.plugins.extras.vscode" },
     { import = "plugins" },
   },
+  -- Lockfile lives in the dotfiles repo directly so `:Lazy sync` writes
+  -- straight into the source tree (committed for mbp/mini parity) and chezmoi
+  -- never round-trips it. Target `.config/nvim/lazy-lock.json` is in
+  -- .chezmoiignore.
+  lockfile = vim.fn.expand("~/dev/dotfiles/dot_config/nvim/lazy-lock.json"),
   defaults = {
     -- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.
     -- If you know what you're doing, you can set this to `true` to have all your custom plugins lazy-loaded by default.
