@@ -7,3 +7,12 @@ LICENSE
 .git/
 .gitignore
 **/.DS_Store
+
+# LazyVim mutates this file (news markers etc.); extras are declared in
+# lua/config/init.lua instead, so chezmoi has no reason to track it.
+.config/nvim/lazyvim.json
+
+# lazy.nvim writes its lockfile directly to the dotfiles source tree (see
+# `lockfile = ...` in lua/config/init.lua) so chezmoi must not deploy or
+# round-trip the live target.
+.config/nvim/lazy-lock.json
