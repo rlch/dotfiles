@@ -111,12 +111,6 @@ return {
     },
   },
   {
-    "stevearc/oil.nvim",
-    lazy = false,
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    opts = {},
-  },
-  {
     "ghillb/cybu.nvim",
     branch = "main", -- timely updates
     dependencies = { "nvim-tree/nvim-web-devicons", "nvim-lua/plenary.nvim" }, -- optional for icon support
