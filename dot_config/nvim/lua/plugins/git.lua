@@ -7,7 +7,7 @@ return {
       { "gh", [[:'<'>DiffviewFileHistory<cr>]], desc = "Open git file history", mode = "v" },
       {
         "<leader>gh",
-        "<cmd>kiffviewFileHistory<cr>",
+        "<cmd>DiffviewFileHistory<cr>",
         desc = "Open git file history",
         mode = "n",
       },
