@@ -14,7 +14,7 @@ return {
   },
   {
     "levouh/tint.nvim",
-    lazy = false,
+    event = "VeryLazy",
     opts = {
       tint = -10,
       saturation = 0.9,
@@ -74,7 +74,7 @@ return {
   },
   {
     "SmiteshP/nvim-navic",
-    lazy = false,
+    event = "LspAttach",
     init = function()
       vim.g.navic_silence = true
     end,
