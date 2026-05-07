@@ -1,4 +1,7 @@
 return {
+  -- LazyVim defaults pull tokyonight in as a fallback colorscheme; catppuccin
+  -- is set unconditionally below, so tokyonight is dead weight.
+  { "folke/tokyonight.nvim", enabled = false },
   {
     "catppuccin/nvim",
     priority = 1000,
