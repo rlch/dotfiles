@@ -14,3 +14,7 @@ dot_env.*
 !dot_env.example
 !dot_env.sample
 !dot_env.template
+
+# Runtime artefacts — playwright-mcp / chrome-devtools-mcp dump session
+# console logs in CWD when invoked from this repo. Not config; ignore.
+.playwright-mcp/
