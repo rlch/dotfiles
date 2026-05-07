@@ -1,0 +1,48 @@
+# Yazi virtual filesystem — built-in SFTP. Yazi does NOT read ~/.ssh/config,
+# so every host needs an explicit `[services.<name>]` block. Auth is via
+# 1Password's SSH agent (matches the IdentityAgent in ~/.ssh/config).
+#
+# Once defined, navigate to a service with one of:
+#   • shell:     yazi sftp://<name>
+#   • in-yazi:   `:` then `cd sftp://<name>` (or bind it in keymap.toml)
+#
+# Yank/paste (y/p) does upload+download as normal filesystem ops; smart-enter
+# opens remote files in $EDITOR. No `cwd`/`cd_root` key — you land at $HOME.
+#
+# Uncomment the block for the host you want before connecting.
+
+{{ if eq .role "mbp" -}}
+# Mac mini — currently disabled. Yazi's VFS SFTP is brand-new (Dec 2025) and
+# still rough on macOS (preview-misses, smart-enter cache quirks). The
+# sshfs mount via `mini-mount` (fish function) is the production path until
+# upstream stabilises; press `g s` inside yazi to jump to the mountpoint.
+# Re-enable this block when v26.x SFTP previewer bugs are resolved.
+# [services.mini]
+# type           = "sftp"
+# host           = "richards-mac-mini.local"
+# user           = "rjm"
+# port           = 22
+# identity_agent = "{{ .chezmoi.homeDir }}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+{{ else -}}
+# MBP — fill in `host` with the MBP's hostname/IP/Tailscale name when you
+# need it from the mini.
+# [services.mbp]
+# type           = "sftp"
+# host           = "TODO-mbp-hostname-or-tailscale.local"
+# user           = "rjm"
+# port           = 22
+# identity_agent = "{{ .chezmoi.homeDir }}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+{{ end }}
+# Templates for other auth styles:
+#
+# [services.with-key-file]
+# type     = "sftp"
+# host     = "1.2.3.4"
+# user     = "deploy"
+# key_file = "~/.ssh/id_ed25519"
+#
+# [services.with-password]
+# type     = "sftp"
+# host     = "1.2.3.4"
+# user     = "deploy"
+# password = "use-1password-cli-injection-instead-of-this"

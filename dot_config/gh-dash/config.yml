@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://gh-dash.dev/schema.json
+
+prSections:
+  - title: Mine
+    filters: is:open author:@me archived:false sort:updated-desc
+    layout:
+      author:
+        hidden: true
+  - title: Needs review
+    filters: is:open review-requested:@me archived:false sort:updated-desc
+  - title: Involved
+    filters: is:open involves:@me -author:@me -review-requested:@me archived:false sort:updated-desc
+  - title: MathGaps
+    filters: is:open org:MathGaps archived:false sort:updated-desc
+  - title: tanzolabs
+    filters: is:open org:tanzolabs archived:false sort:updated-desc
+
+issuesSections:
+  - title: Mine
+    filters: is:open author:@me sort:updated-desc
+  - title: Assigned
+    filters: is:open assignee:@me sort:updated-desc
+  - title: Mentions
+    filters: is:open mentions:@me -author:@me sort:updated-desc
+
+repoSections:
+  - title: dotfiles
+    filters: rlch/dotfiles
+  - title: tanzo
+    filters: tanzolabs/tanzo
+  - title: modality
+    filters: MathGaps/modality
+  - title: infrastructure
+    filters: MathGaps/infrastructure
+  - title: metarepo
+    filters: MathGaps/metarepo
+  - title: schools-app
+    filters: MathGaps/schools-app
+
+repoPaths:
+  rlch/dotfiles: ~/dev/dotfiles
+  tanzolabs/tanzo: ~/dev/tanzo
+  MathGaps/metarepo: ~/dev/tutero
+  rlch/*: ~/dev/*
+  tanzolabs/*: ~/dev/*
+  MathGaps/*: ~/dev/*
+
+defaults:
+  view: prs
+  refetchIntervalMinutes: 5
+  prsLimit: 30
+  issuesLimit: 30
+  preview:
+    open: true
+    width: 60
+  layout:
+    prs:
+      base:
+        hidden: true
+
+# Custom keybindings.
+# `e` opens the selected PR in `gh enhance` (Actions TUI) inside a new
+# tmux window so the dashboard stays mounted.
+keybindings:
+  prs:
+    - key: e
+      command: >-
+        tmux new-window 'gh enhance -R {{.RepoName}} {{.PrNumber}}'
+
+smartFilteringAtLaunch: true
+
+# Catppuccin Mocha — matches tmux/ghostty.
+theme:
+  ui:
+    sectionsShowCount: true
+    table:
+      compact: false
+      showSeparator: true
+  colors:
+    text:
+      primary: "#cdd6f4"
+      secondary: "#b4befe"
+      inverted: "#1e1e2e"
+      faint: "#7f849c"
+      warning: "#f9e2af"
+      success: "#a6e3a1"
+    background:
+      selected: "#313244"
+    border:
+      primary: "#89b4fa"
+      secondary: "#585b70"
+      faint: "#313244"

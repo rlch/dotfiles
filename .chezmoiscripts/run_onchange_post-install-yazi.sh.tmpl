@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Install yazi flavors + plugins via `ya pkg add` (idempotent: no-op if the
+# package is already in ~/.config/yazi/package.toml).
+#
+# Why not commit package.toml itself? Because `ya pkg install` rewrites it
+# in place to add rev+hash lock entries — chezmoi then sees the file as
+# "modified" and prompts on every subsequent apply. Owning the manifest
+# from this script sidesteps that round-trip entirely; the script's source
+# is the source of truth for "which plugins are installed".
+#
+# Re-runs whenever this script changes. To pull latest commits of every
+# plugin, run `ya pkg upgrade --discard` manually (cheap; pins move forward).
+#
+# yazi-config hash: {{ include "dot_config/yazi/init.lua" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v ya >/dev/null 2>&1; then
+  echo "yazi: \`ya\` CLI not found on PATH — Brewfile not yet applied; skipping" >&2
+  exit 0
+fi
+
+# Plugins (yazi-rs official + community).
+plugins=(
+  # Core UX
+  yazi-rs/plugins:smart-enter
+  yazi-rs/plugins:smart-paste
+  yazi-rs/plugins:smart-filter
+  yazi-rs/plugins:full-border
+  yazi-rs/plugins:jump-to-char
+  yazi-rs/plugins:chmod
+  yazi-rs/plugins:git
+  yazi-rs/plugins:mime-ext       # extension-based MIME (perf)
+  yazi-rs/plugins:piper          # custom shell-cmd previewers
+  yazi-rs/plugins:mount          # OS-level mount manager (sshfs/USB/dmg)
+  yazi-rs/plugins:diff           # diff selected vs hovered → clipboard
+  yazi-rs/plugins:vcs-files      # filter to git-tracked / changed files
+  yazi-rs/plugins:toggle-pane    # show/hide/maximize preview pane
+  # Community
+  h-hg/yamb                      # persistent bookmarks
+  Rolv-Apneseth/starship         # status bar via starship prompt
+  Lil-Dank/lazygit               # spawn lazygit in cwd
+  DreamMaoMao/searchjump         # easymotion-style label-jump to filenames
+)
+
+# Flavors.
+flavors=(
+  yazi-rs/flavors:catppuccin-macchiato
+)
+
+echo "yazi: ensuring ${#plugins[@]} plugins + ${#flavors[@]} flavors are installed"
+for pkg in "${plugins[@]}" "${flavors[@]}"; do
+  ya pkg add "$pkg" 2>&1 | grep -vE 'already exists|is already added' || true
+done
+{{ end -}}

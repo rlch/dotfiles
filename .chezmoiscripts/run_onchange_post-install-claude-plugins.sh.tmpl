@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Install Claude Code plugins declared in dot_claude/settings.json
+# (`enabledPlugins` + `extraKnownMarketplaces`). Re-running is idempotent —
+# `claude plugin install` is a no-op if already installed.
+#
+# Sorted to run AFTER `run_onchange_install-packages.sh.tmpl` (brew bundle)
+# so that the `claude` CLI and node/npm exist.
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v claude >/dev/null 2>&1; then
+  echo "claude-plugins: claude CLI not found; skipping" >&2
+  exit 0
+fi
+
+if command -v npm >/dev/null 2>&1; then
+  npm install -g \
+    ccstatusline \
+    chrome-devtools-mcp \
+    @playwright/mcp
+else
+  echo "claude-plugins: npm not found; skipping global MCP/status helpers" >&2
+fi
+
+# claude-plugins-official marketplace is registered automatically via
+# extraKnownMarketplaces in settings.json — no explicit `marketplace add` here.
+plugins=(
+  # Language servers (mirror Brewfile language toolchain)
+  "lua-lsp@claude-plugins-official"
+  "rust-analyzer-lsp@claude-plugins-official"
+  "gopls-lsp@claude-plugins-official"
+  "pyright-lsp@claude-plugins-official"
+  "typescript-lsp@claude-plugins-official"
+
+  # Browser automation + runtime introspection
+  "playwright@claude-plugins-official"
+  "chrome-devtools-mcp@claude-plugins-official"
+
+  # Knowledge / iteration
+  "context7@claude-plugins-official"      # version-pinned doc retrieval
+  "ralph-loop@claude-plugins-official"    # autonomous re-run-until-converged
+
+  # Workflow / authoring
+  "claude-md-management@claude-plugins-official"
+  "skill-creator@claude-plugins-official"
+  "commit-commands@claude-plugins-official"
+  "hookify@claude-plugins-official"
+
+  # Cavekit (spec-driven dev + caveman compression)
+  "ck@cavekit-marketplace"
+
+  # revdiff — review piped diffs / branch state with inline annotations
+  # that get fed back to the Claude session. Marketplace is umputun/revdiff.
+  "revdiff@revdiff"
+)
+
+for p in "${plugins[@]}"; do
+  claude plugin install "$p" 2>&1 | tail -1 || true
+done
+{{- end }}

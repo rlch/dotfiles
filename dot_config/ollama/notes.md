@@ -4,10 +4,13 @@ Hardware: **M5 Max, 128GB unified memory, 40 GPU cores**. Full open-weights
 range fits, including 120B-class. (`Brewfile.heavy` only — mbp role, not mini.)
 
 Stack:
-- **Ollama** — local LLM daemon on `:11434`. One source of truth for models.
-- **Hermes Agent** (NousResearch) — agent framework with self-improving skills,
-  cross-session memory, cron scheduler, MCP, and messaging gateways
-  (Telegram/Discord/Slack/WhatsApp/Signal/Email).
+- **Hermes Agent** (NousResearch) — primary AI CLI. Cloud-first: OpenAI
+  `gpt-5.5-codex` for the heavy lifting, `gpt-5-mini` for auxiliary
+  classifiers/summarisers. OpenRouter + Cerebras wired as alternates.
+  Self-improving skills, cross-session memory, cron scheduler, MCP, and
+  messaging gateways (Telegram/Discord/Slack/WhatsApp/Signal/Email).
+- **Ollama** — local LLM daemon on `:11434`. Used for offline / privacy /
+  experimentation. Reachable from Hermes as `/model custom:ollama:<id>`.
 
 Docs: <https://hermes-agent.nousresearch.com/docs/>
 
@@ -53,72 +56,54 @@ probably Q3 2026. Check with `ollama show <model>` → look for `engine: mlx`.
 
 ## 2. Hermes Agent install
 
-Per the official docs, **the canonical install is the curl|bash script** —
-there is no brew tap, no `.pkg`, no first-class manual path documented for
-end-users (only the contributor `setup-hermes.sh` for clones).
+**Automated by chezmoi** on heavy-hardware hosts:
+[`.chezmoiscripts/run_onchange_install-hermes.sh.tmpl`](../../.chezmoiscripts/run_onchange_install-hermes.sh.tmpl)
+runs the official curl|bash installer the first time `chezmoi apply` sees
+`hermes` missing from PATH. The installer auto-provisions `uv`, Python 3.11,
+Node.js 22, ripgrep, ffmpeg. **Only prerequisite: git.**
 
-Pick **one**:
-
-### Option A — official one-liner
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
-exec fish   # reload PATH (installer adds ~/.local/bin to your rc)
-hermes setup
-```
-
-The installer auto-provisions `uv`, Python 3.11, Node.js 22, ripgrep, ffmpeg.
-**Only prerequisite: git.**
-
-### Option B — manual via `setup-hermes.sh` (contributor path, equivalent)
+Force a reinstall with:
 
 ```sh
-git clone https://github.com/NousResearch/hermes-agent.git ~/.hermes/hermes-agent
-cd ~/.hermes/hermes-agent
-./setup-hermes.sh   # installs uv, creates venv, runs `uv pip install -e ".[all]"`,
-                    # symlinks ~/.local/bin/hermes
-hermes setup
+rm -rf ~/.hermes/hermes-agent ~/.local/bin/hermes
+chezmoi apply
 ```
 
-### Default install layout
+### Layout
 
-| Path | What |
-|---|---|
-| `~/.hermes/hermes-agent/` | Source code |
-| `~/.local/bin/hermes` | Binary symlink (already on $PATH from fish config) |
-| `~/.hermes/` | Data root: `config.yaml`, `.env`, `memories/`, `skills/`, `cron/`, `logs/`, `auth.json` |
+| Path | Tracked? | What |
+|---|---|---|
+| `~/.hermes/config.yaml` | ✅ `dot_hermes/config.yaml.tmpl` | Main config — providers, aux models, agent behaviour |
+| `~/.hermes/.env` | ❌ secrets | `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `CEREBRAS_API_KEY`, etc. |
+| `~/.hermes/hermes-agent/` | ❌ | Source code (installer-managed) |
+| `~/.local/bin/hermes` | ❌ | Binary symlink (on $PATH via fish config) |
+| `~/.hermes/{memories,skills,cron,logs,auth.json}` | ❌ | Hermes-managed runtime state |
 
-### Wiring Ollama into Hermes
+### Bootstrapping `.env`
 
-Ollama is **not a first-class provider** — wire via the Custom endpoint path.
+Secrets live in `~/.hermes/.env` (not in this repo). After first install:
 
 ```sh
-hermes model
-# Provider:        Custom endpoint
-# Base URL:        http://localhost:11434/v1     ← /v1 matters
-# API key:         anything                       (Ollama ignores it)
-# Model name:      qwen3-coder-next:30b           (bare, no `ollama/` prefix)
-# Context length:  65536                          (match OLLAMA_CONTEXT_LENGTH)
+cat > ~/.hermes/.env <<'EOF'
+OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-v1-...
+CEREBRAS_API_KEY=csk-...
+EOF
+chmod 600 ~/.hermes/.env
 ```
 
-That writes into `~/.hermes/config.yaml`:
+Or run `hermes setup` and let the wizard write them.
 
-```yaml
-model:
-  default: qwen3-coder-next:30b
-  provider: custom
-  base_url: http://localhost:11434/v1
-  context_length: 65536
+### Switching to Ollama (offline / privacy work)
+
+Ollama is wired in `config.yaml` as a named custom provider. Switch with:
+
+```sh
+/model custom:ollama:qwen3-coder-next:30b
 ```
 
-**Why ≥64k:** Hermes's quickstart says multi-step tool workflows need ≥64,000
-tokens of context. A 7B at default 8k will misbehave. Hermes also auto-relaxes
-its stream timeout (1800s vs 120s) when it detects a localhost endpoint.
-
-**Why explicit context:** Ollama's `/api/show` reports the model's *maximum*
-context, not the current `num_ctx`. Hermes will believe the max and over-pack
-the prompt unless you set both `OLLAMA_CONTEXT_LENGTH` (daemon) and
-`context_length` (Hermes config) to the same number.
+`hermes model` for an interactive picker. Match the model's `num_ctx` to
+`OLLAMA_CONTEXT_LENGTH` (65536) — Ollama lies about effective context (see §10).
 
 ---
 

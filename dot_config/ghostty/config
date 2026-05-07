@@ -1,6 +1,7 @@
 # === Theme + visuals ===
 theme         = "Catppuccin Mocha"
 font-family   = "JetBrainsMono Nerd Font"
+font-size     = 15
 cursor-style       = bar
 cursor-style-blink = false
 
@@ -17,6 +18,13 @@ mouse-hide-while-typing        = true
 confirm-close-surface          = false
 clipboard-trim-trailing-spaces = true
 
+# === SSH terminfo propagation ===
+# Defaults are: cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path
+# Opt into the two ssh-* features so remote hosts get correct TERM and a
+# bundled xterm-ghostty terminfo (cached per host) — otherwise SSH targets
+# without the entry render undercurl/italics/colors as garbage.
+shell-integration-features = ssh-env,ssh-terminfo
+
 # === Keybinds ===
 # alt+backspace → delete word backwards. Without this, Option+Backspace sends
 # nothing useful to TUI apps (Claude Code, bash, readline) — Ghostty's
@@ -24,3 +32,47 @@ clipboard-trim-trailing-spaces = true
 # modifier rather than Alt. Surgical bind so Option's other behaviors stay
 # intact (no global macos-option-as-alt).
 keybind = alt+backspace=text:\x1b\x7f
+
+# ctrl+slash → emit CSI-u so tmux can distinguish it from ctrl+_. Ghostty's
+# encoder silently drops this key by default (no byte emitted at all), so
+# we manually send the CSI-u sequence via csi: (which builds ESC [ ... and
+# doesn't depend on text-escape interpretation). 47 = '/' codepoint,
+# 5 = ctrl modifier per CSI-u spec. Tmux with `extended-keys on` decodes
+# this as C-/ and fires the session+window switcher (with preview).
+keybind = ctrl+slash=csi:47;5u
+
+# ctrl+space → emit CSI-u so tmux's prefix2=C-Space binding fires reliably.
+# Legacy encoding maps Ctrl+Space to NUL (0x00) which tmux can match, but
+# Ghostty's encoder is unreliable here (same family of bugs as ctrl+slash).
+# 32 = ' ' codepoint, 5 = ctrl modifier.
+keybind = ctrl+space=csi:32;5u
+
+# ctrl+y → emit CSI-u so tmux's `bind C-y display-popup yazi` fires.
+# Karabiner remaps the spotlight key (F4 / apple_vendor `spotlight` /
+# `launchpad`) to ctrl+y inside Ghostty. The legacy Ctrl+Y byte (0x19) is
+# the emacs/fish "yank" character — by upgrading to CSI-u via this
+# keybind, tmux intercepts before fish and the yank shortcut is sacrificed
+# only inside tmux. 121 = 'y' codepoint, 5 = ctrl modifier.
+keybind = ctrl+y=csi:121;5u
+
+# cmd+1..9 → emit CSI-u so tmux's `bind -T root C-1..9 select-window` fires
+# (zellij GoToTab N). Tmux has no native cmd modifier, so we masquerade the
+# keypress as ctrl+digit on the wire — Ghostty captures cmd+digit, sends
+# CSI-u with codepoints 49..57 ('1'..'9') and modifier 5 (ctrl), and tmux
+# reads it as C-N. The user-facing key is cmd; tmux never knows.
+#
+# Trigger spelling matters: Ghostty's default `super+digit_N=goto_tab:N`
+# uses the physical-digit key code, distinct from the character keysym
+# `super+N`. Spelling our override as `cmd+one` parses as `super+1`
+# (character form) which leaves the goto_tab default *unshadowed*, and
+# cmd+digit just switches Ghostty native tabs. Use `cmd+digit_N` to land
+# on the same trigger as the default and properly override it.
+keybind = cmd+digit_1=text:\x1b[49;5u
+keybind = cmd+digit_2=text:\x1b[50;5u
+keybind = cmd+digit_3=text:\x1b[51;5u
+keybind = cmd+digit_4=text:\x1b[52;5u
+keybind = cmd+digit_5=text:\x1b[53;5u
+keybind = cmd+digit_6=text:\x1b[54;5u
+keybind = cmd+digit_7=text:\x1b[55;5u
+keybind = cmd+digit_8=text:\x1b[56;5u
+keybind = cmd+digit_9=text:\x1b[57;5u

@@ -39,7 +39,7 @@ not the deployed copies in `~` — the next `chezmoi apply` will overwrite them.
 | Manager        | chezmoi                                             |
 | Shell          | fish 4 + fisher                                     |
 | Terminal       | Ghostty                                             |
-| Multiplexer    | zellij                                              |
+| Multiplexer    | tmux                                                |
 | Window manager | AeroSpace                                           |
 | Editor         | Neovim (LazyVim base, no AI plugins)                |
 | Prompt         | starship                                            |
@@ -73,3 +73,34 @@ content changes).
 
 See [`CLAUDE.md`](./CLAUDE.md) for the agent-oriented deep dive (conventions,
 invariants, common tasks).
+
+## Subtitle pipeline (headless)
+
+`subflow` runs a headless fetch -> EN/ZH merge -> push flow.
+
+Examples:
+
+```sh
+# Movie
+subflow fetch movie "Oppenheimer 2023"
+
+# TV episode (explicit show + episode tag)
+subflow fetch tv "Breaking Bad S01E01" --show "Breaking Bad" --season-episode S01E01
+
+# Prefer WEB/AMZN releases, avoid BluRay/DVD
+subflow fetch tv "Succession S02E01" --show "Succession" --season-episode S02E01 --prefer-tag web --prefer-tag amzn --avoid-tag bluray --avoid-tag dvd
+
+# Shift an already-downloaded subtitle by +1.5s
+subflow shift ~/Downloads/subtitleflow/Succession.S02E01.zh.srt --seconds 1.5
+
+# Test without uploading to mini
+subflow fetch tv "Severance S02E01" --show "Severance" --season-episode S02E01 --dry-run
+```
+
+Defaults:
+- push host: `richards-mac-mini`
+- movie dir: `/Users/rjm/Server/data/media/movies`
+- tv dir: `/Users/rjm/Server/data/media/tv`
+- TV output filename: `<show>[.<SxxExx>].zh.srt`
+- merged cue text format: English first line, Chinese second line
+

@@ -1,0 +1,34 @@
+# Yazi theme — Catppuccin Macchiato.
+#
+# The flavor itself ships powerline "bubble" separators around the mode
+# indicator (left  / right ). We override them to empty strings to get a
+# flat block style that matches the rest of the bar.
+
+[flavor]
+dark  = "catppuccin-macchiato"
+light = "catppuccin-macchiato"
+
+# Block-style mode indicator — kill the rounded powerline caps the flavor
+# ships. The colored block stays; only the ear-shaped separators go away.
+# Yazi 26.x uses `sep_left`/`sep_right` (was `separator_open`/`_close` pre-25).
+[mode]
+sep_left  = { open = " ", close = " " }
+sep_right = { open = " ", close = " " }
+
+# Same treatment for the status bar so nothing in the bottom strip has
+# powerline ears.
+[status]
+sep_left  = { open = " ", close = " " }
+sep_right = { open = " ", close = " " }
+
+# Yazi's stock [tabs] defaults are rounded powerline glyphs (/),
+# and the catppuccin flavor doesn't override them — so the active tab and
+# the active-pane row indicator render as bubbles. Flatten both pairs.
+[tabs]
+sep_inner = { open = " ", close = " " }
+sep_outer = { open = " ", close = " " }
+
+# The pane-row indicator bar uses [indicator] padding for its end caps.
+# Default is also rounded; override to flat.
+[indicator]
+padding = { open = " ", close = " " }

@@ -1,0 +1,103 @@
+# Hermes Agent — main config. Source of truth lives in dotfiles; chezmoi
+# renders this to ~/.hermes/config.yaml. Secrets are NOT here — they live
+# in ~/.hermes/.env (not tracked). See ~/.config/ollama/notes.md for the
+# bootstrap walk-through.
+#
+# Edits made through `hermes setup` / `hermes model` / `hermes config set`
+# write directly to ~/.hermes/config.yaml and will show as drift against
+# this template. Re-add with `chezmoi re-add ~/.hermes/config.yaml` if
+# you want to keep an interactive change.
+
+# ─── Primary model ───────────────────────────────────────────────────────────
+# gpt-5.3-codex via OpenAI Codex OAuth — uses the ChatGPT plan's OAuth token
+# (same auth as the `codex` CLI). Authenticate once with `hermes auth`,
+# stored in ~/.hermes/auth.json. No per-token OpenAI API spend.
+model:
+  provider: openai-codex
+  default: gpt-5.3-codex
+
+# ─── Fallback ────────────────────────────────────────────────────────────────
+# Activates automatically on rate-limit / server-error / auth failure of the
+# primary. Fires at most once per session, preserves conversation context.
+# Same model, but routed through OpenAI API (OPENAI_API_KEY in .env) — so
+# when the ChatGPT plan throttles, work continues on per-token billing.
+fallback_model:
+  provider: openai
+  model: gpt-5.5-codex
+
+# ─── Auxiliary models ────────────────────────────────────────────────────────
+# Use OpenRouter with gpt-5.3-codex for auxiliary workloads.
+# Requires OPENROUTER_API_KEY in ~/.hermes/.env.
+auxiliary:
+  vision:
+    provider: openrouter
+    model: gpt-5.3-codex
+    timeout: 120
+  web_extract:
+    provider: openrouter
+    model: gpt-5.3-codex
+    timeout: 360
+  approval:
+    provider: openrouter
+    model: gpt-5.3-codex
+    timeout: 30
+  compression:
+    provider: openrouter
+    model: gpt-5.3-codex
+  session_search:
+    provider: openrouter
+    model: gpt-5.3-codex
+    timeout: 30
+    max_concurrency: 3
+  skills_hub:
+    provider: openrouter
+    model: gpt-5.3-codex
+  mcp:
+    provider: openrouter
+    model: gpt-5.3-codex
+
+# Compression triggers and tail protection (separate from auxiliary.compression
+# which only sets the summarization model).
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+  protect_last_n: 20
+  provider: openrouter
+  model: gpt-5.3-codex
+
+# ─── Alternate providers (switch with /model <provider>:<id>) ────────────────
+# openrouter is built-in; just needs OPENROUTER_API_KEY in .env.
+# cerebras + ollama are OpenAI-compatible — wired as named custom providers
+# so /model custom:cerebras:<id> and /model custom:ollama:<id> work.
+custom_providers:
+  - name: cerebras
+    base_url: https://api.cerebras.ai/v1
+    key_env: CEREBRAS_API_KEY
+    api_mode: chat_completions
+{{- if .heavyHardware }}
+  - name: ollama
+    base_url: http://localhost:11434/v1
+    api_mode: chat_completions
+    # No api_key — Ollama ignores it. Match OLLAMA_CONTEXT_LENGTH (65536) on
+    # any model selected here; see ~/.config/ollama/notes.md.
+{{- end }}
+
+# ─── Agent behaviour ─────────────────────────────────────────────────────────
+agent:
+  max_turns: 90
+
+# Redact obvious secret patterns from logs/transcripts.
+security:
+  redact_secrets: true
+
+# Show tool progress + reasoning summaries in the TUI.
+display:
+  tool_progress: true
+  show_reasoning: true
+  skin: catppuccin-macchiato
+
+# Persistent memory + user profile across sessions.
+memory:
+  memory_enabled: true
+  user_profile_enabled: true

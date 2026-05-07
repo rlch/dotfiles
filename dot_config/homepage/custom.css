@@ -1,33 +1,150 @@
-/* Subtle glassmorphism on top of the background image set in settings.yaml.
-   Effects target the card containers homepage already exposes. */
+/* Apple-style glassmorphism for homepage. References:
+   - macOS Sonoma sidebar: backdrop-filter blur(40px) saturate(180%)
+   - Liquid Glass language: heavy blur, low alpha bg, hairline border,
+     subtle inset highlight on top edge, shadow softens to nothing on bottom.
+   See https://developer.apple.com/design/human-interface-guidelines/materials */
+
+/* Fira Sans — the default Bonjourr (bonjourr.fr) typography. Loaded direct
+   from Google Fonts since homepage's container has internet access. */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+html,
+body,
+input,
+button,
+select,
+textarea {
+  font-family:
+    'Fira Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'Segoe UI',
+    sans-serif !important;
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --glass-bg: rgba(28, 30, 36, 0.32);
+  --glass-bg-hover: rgba(48, 50, 58, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 16px 40px -16px rgba(0, 0, 0, 0.7),
+    0 4px 14px -4px rgba(0, 0, 0, 0.45);
+  --radius-lg: 20px;
+  --radius-md: 12px;
+}
+
+/* ---------- group containers (the big rounded rectangles) ---------- */
 
 #information-widgets,
 .services-group,
 .bookmark-group {
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 14px;
-  padding: 14px;
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 18px 18px 16px 18px;
 }
+
+/* Section titles read like macOS sidebar headers — uppercase, low contrast. */
+.services-group > h2,
+.bookmark-group > h2 {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.55;
+  margin: 0 0 12px 4px;
+}
+
+/* ---------- individual cards (each service tile) ---------- */
 
 .service-card,
 .bookmark-card {
-  transition: transform 120ms ease-out, background 120ms ease-out;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 4px 12px -6px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
 }
 
 .service-card:hover,
 .bookmark-card:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--glass-border-strong);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 10px 24px -8px rgba(0, 0, 0, 0.5);
 }
 
-/* Tighten group titles a bit so the headers don't dominate. */
-.services-group > h2,
-.bookmark-group > h2 {
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  opacity: 0.72;
+/* Stat numbers inside service tiles — make them feel like the reference's
+   bold metric text rather than the default thin aliased look. */
+.service-card .text-2xl,
+.service-card [class*="text-3xl"] {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.service-card [class*="uppercase"] {
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+/* ---------- header info widget row ---------- */
+
+#information-widgets {
+  margin-bottom: 18px;
+}
+
+#information-widgets > div {
+  border-radius: var(--radius-md);
+}
+
+/* ---------- search bar ---------- */
+
+input[name="search"],
+input[type="search"] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+input[name="search"]:focus,
+input[type="search"]:focus {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* ---------- chart panels (Glances CPU / Memory / Network) ---------- */
+
+/* Make sparkline cards a touch taller so the chart breathes. */
+.service-card svg[class*="recharts"] {
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.06));
+}
+
+/* Soften the chart line to a more macOS-y stroke colour. */
+.service-card .recharts-area-area {
+  fill-opacity: 0.18 !important;
+}
+
+/* ---------- group separation ---------- */
+
+.services-group + .services-group {
+  margin-top: 14px;
 }

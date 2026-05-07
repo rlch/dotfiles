@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Install dlvhdr's gh extensions (gh-dash, gh-enhance). Neither is on
+# homebrew-core; both ship as `gh extension`s. Idempotent: skips if
+# `gh extension list` already shows the extension.
+#
+# Sorted to run AFTER `run_onchange_install-packages.sh.tmpl` (brew bundle)
+# so that `gh` is on PATH.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "gh-extensions: gh not found on PATH — Brewfile not applied; skipping"
+  exit 0
+fi
+
+ensure_extension() {
+  local repo="$1"
+  if gh extension list 2>/dev/null | awk '{print $3}' | grep -qx "$repo"; then
+    echo "gh-extensions: $repo already installed"
+    return 0
+  fi
+  echo "gh-extensions: installing $repo"
+  gh extension install "$repo"
+}
+
+ensure_extension dlvhdr/gh-dash
+ensure_extension dlvhdr/gh-enhance

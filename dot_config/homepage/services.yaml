@@ -2,6 +2,65 @@
 # Services run on the Mac mini (richards-mac-mini), reached over Tailscale
 # MagicDNS. API keys / tokens come from .env (HOMEPAGE_VAR_* — see .env.example).
 
+# Glances split across 5 widget tiles to match Glances-style monitor rows
+# (info, top processes, CPU chart, network chart, memory bar).
+- Mini Glances:
+    - Info:
+        icon: mdi-information-outline-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: info
+
+    - Top Processes:
+        icon: mdi-format-list-numbered-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: process
+
+    - CPU Usage:
+        icon: mdi-cpu-64-bit-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: cpu
+          chart: true
+          pointsLimit: 30
+
+    - Network Usage:
+        icon: mdi-network-outline-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: network:eth0
+          chart: true
+          pointsLimit: 30
+
+    - Memory:
+        icon: mdi-memory-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: memory
+          chart: true
+          pointsLimit: 30
+
+    - Disk I/O:
+        icon: mdi-harddisk-#a1a1aa
+        widget:
+          type: glances
+          url: http://richards-mac-mini:61208
+          version: 4
+          metric: disk:vda
+          chart: true
+          pointsLimit: 30
+
 - Media:
     - Plex:
         icon: plex.png
@@ -60,6 +119,34 @@
           url: http://richards-mac-mini:6767
           key: '{{HOMEPAGE_VAR_BAZARR_KEY}}'
 
+- Recently Added:
+    - Plex:
+        widget:
+          type: iframe
+          src: http://richards-mac-mini:5566
+          classes: w-full h-96
+          referrerPolicy: no-referrer
+          allowScrolling: yes
+          loading: lazy
+          name: plex-recent
+
+- Calendar:
+    - Upcoming Releases:
+        icon: mdi-calendar-month-outline-#a1a1aa
+        widget:
+          type: calendar
+          firstDayInWeek: monday
+          view: agenda
+          maxEvents: 6
+          showTime: true
+          integrations:
+            - type: sonarr
+              service_group: Library
+              service_name: Sonarr
+            - type: radarr
+              service_group: Library
+              service_name: Radarr
+
 - Downloads:
     - Prowlarr:
         icon: prowlarr.png
@@ -109,15 +196,6 @@
           key: '{{HOMEPAGE_VAR_WATCHTOWER_TOKEN}}'
 
 - Infrastructure:
-    - Tailscale:
-        icon: tailscale.png
-        href: https://login.tailscale.com/admin/machines
-        description: Tailnet
-        widget:
-          type: tailscale
-          deviceid: '{{HOMEPAGE_VAR_TAILSCALE_DEVICEID}}'
-          key: '{{HOMEPAGE_VAR_TAILSCALE_KEY}}'
-
     - Portainer:
         icon: portainer.png
         href: https://richards-mac-mini:9443

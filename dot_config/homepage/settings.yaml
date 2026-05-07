@@ -2,20 +2,33 @@
 title: Homelab
 favicon: https://gethomepage.dev/img/favicon.ico
 
+# Foggy mountain — genuinely monochrome, plenty of grey for glass cards.
+# https://unsplash.com/photos/aerial-photography-of-foggy-mountains-yQorCngxzwI
 background:
-  image: https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=2400&q=80
-  blur: sm
-  saturate: 50
-  brightness: 50
-  opacity: 65
+  image: https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?auto=format&fit=crop&w=2400&q=80
+  blur: lg
+  saturate: 20
+  brightness: 35
+  opacity: 70
 
+# Group columns. 6-tile glances row spreads the chart-heavy widgets;
+# Calendar gets columns:1 so the agenda fills width without empty siblings.
 layout:
+  Mini Glances:
+    style: row
+    columns: 6
   Media:
     style: row
     columns: 3
   Library:
     style: row
     columns: 3
+  Recently Added:
+    style: row
+    columns: 1
+  Calendar:
+    style: row
+    columns: 1
   Downloads:
     style: row
     columns: 2
@@ -24,12 +37,11 @@ layout:
     columns: 3
   Infrastructure:
     style: row
-    columns: 2
+    columns: 1
 
 theme: dark
 color: slate
 
 iconStyle: gradient
-fiveColumns: false
 disableCollapse: false
 hideVersion: true

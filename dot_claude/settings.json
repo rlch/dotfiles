@@ -32,8 +32,84 @@
     ],
     "additionalDirectories": [
       "/Users/rjm/.config/nvim",
-      "/Users/rjm/.config/zellij"
+      "/Users/rjm/.config/tmux"
     ]
   },
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": true,
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "chrome-devtools-mcp",
+      "args": [
+        "--browser-url=http://127.0.0.1:9222",
+        "--no-category-extensions"
+      ]
+    },
+    "playwright": {
+      "command": "playwright-mcp",
+      "args": [
+        "--cdp-endpoint=http://127.0.0.1:9222"
+      ]
+    }
+  },
+  "extraKnownMarketplaces": {
+    "cavekit-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/cavekit"
+      }
+    },
+    "revdiff": {
+      "source": {
+        "source": "github",
+        "repo": "umputun/revdiff"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "lua-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "hookify@claude-plugins-official": true,
+    "ck@cavekit-marketplace": true,
+    "revdiff@revdiff": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/agent-done-hook.sh"
+          }
+        ]
+      }
+    ]
+  }
 }

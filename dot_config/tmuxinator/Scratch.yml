@@ -1,0 +1,21 @@
+# `tmuxinator start Scratch` — invoked by ~/.config/scratchpad/attach.sh.
+# Window names get slugified to <=10 chars by ~/.config/tmux/slugify-title.py.
+#
+# socket_name pins this whole session onto a dedicated tmux server
+# (`tmux -L scratch …`) so it cannot collide with the user's main tmux
+# session. Without this, any `tmux switch-client` or `tmux attach` from
+# within scratch can hijack the main client; with it, the two servers
+# share nothing and the main session is untouchable from inside scratch.
+socket_name: scratch
+name: Scratch
+root: ~/
+startup_window: Agent
+
+windows:
+  - Agent: hermes
+  - Files: yazi
+  - Activity: btop
+  - Dotfiles:
+      root: ~/dev/dotfiles
+      panes:
+        - claude

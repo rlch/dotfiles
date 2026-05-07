@@ -1,7 +1,7 @@
 function _tabjump --description 'rename current tab only if a new target tab is being created; then zl'
     set target_tab_name (_get_tab_name)
     set tab_exists 0
-    for existing_tab in (zellij action query-tab-names)
+    for existing_tab in (tmux list-windows -F '#W' 2>/dev/null)
         if test "$existing_tab" = "$target_tab_name"
             set tab_exists 1
             break

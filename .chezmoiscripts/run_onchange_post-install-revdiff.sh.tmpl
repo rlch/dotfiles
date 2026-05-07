@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Initialize revdiff bundled themes (catppuccin-mocha, etc.) into
+# ~/.config/revdiff/themes/. Reruns whenever the Brewfile hash changes
+# (i.e. after a new `revdiff` install on a fresh machine).
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v revdiff >/dev/null 2>&1; then
+  echo "revdiff: not on PATH — Brewfile not yet applied; skipping"
+  exit 0
+fi
+
+THEMES_DIR="$HOME/.config/revdiff/themes"
+
+if [ -f "$THEMES_DIR/catppuccin-mocha.toml" ] || [ -f "$THEMES_DIR/catppuccin-mocha.yaml" ] || [ -f "$THEMES_DIR/catppuccin-mocha.yml" ]; then
+  echo "revdiff: themes already present in $THEMES_DIR"
+  exit 0
+fi
+
+echo "revdiff: writing bundled themes to $THEMES_DIR"
+revdiff --init-themes

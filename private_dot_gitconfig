@@ -1,0 +1,32 @@
+[user]
+	name = Richard Mathieson
+	email = 35163478+rlch@users.noreply.github.com
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK/3lfbxfOS5lm/Q5IgUHpMNYz0wFc4W/deR5rLPWtxm
+
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+	allowedSignersFile = ~/.config/git/allowed_signers
+
+[commit]
+	gpgsign = true
+
+; revdiff isn't a stdin pager — it generates diffs from refs itself, so
+; we don't wire pager.diff/show. delta stays as the streaming pager for
+; commands like `git log -p` and as the diffFilter for `git add -p`.
+[pager]
+	log = delta
+	reflog = delta
+
+[delta]
+	navigate = true
+	line-numbers = true
+	syntax-theme = Catppuccin Mocha
+
+[interactive]
+	diffFilter = delta --color-only --paging=never
+
+[diff]
+	colorMoved = default
+	algorithm = histogram
