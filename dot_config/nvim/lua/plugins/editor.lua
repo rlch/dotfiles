@@ -44,7 +44,7 @@ return {
             last_indent_marker = "└",
             highlight = "NeoTreeIndentMarker",
             with_expanders = nil,
-            epander_collapsed = " ",
+            expander_collapsed = " ",
             expander_expanded = " ",
             expander_highlight = "NeoTreeExpander",
           },
