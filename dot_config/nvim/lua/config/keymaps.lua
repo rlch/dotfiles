@@ -136,3 +136,19 @@ map("n", "<leader>-", "<C-W>s", { desc = "Split window below", remap = true })
 map("n", "<leader>|", "<C-W>v", { desc = "Split window right", remap = true })
 
 map("n", "<leader>!", ":Say ", {desc = "Say "})
+
+-- Ctrl-C exits if and only if no buffers have unsaved changes.
+map("n", "<C-c>", function()
+  local modified = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
+      local name = vim.api.nvim_buf_get_name(buf)
+      table.insert(modified, name ~= "" and vim.fn.fnamemodify(name, ":~:.") or ("[No Name " .. buf .. "]"))
+    end
+  end
+  if #modified > 0 then
+    vim.notify("Unsaved: " .. table.concat(modified, ", "), vim.log.levels.WARN)
+    return
+  end
+  vim.cmd("qa")
+end, { desc = "Quit if no unsaved buffers" })

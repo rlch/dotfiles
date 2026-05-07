@@ -4,6 +4,7 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 import urllib.parse
@@ -338,6 +339,93 @@ def translate_srt_locally(source_srt: str, target_lang: str = "zh-CN", sleep_s: 
     return render_srt(out)
 
 
+def get_gcp_access_token() -> str:
+    token = os.environ.get("GCP_ACCESS_TOKEN", "").strip()
+    if token:
+        return token
+    try:
+        p = subprocess.run(
+            ["gcloud", "auth", "print-access-token"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        tok = p.stdout.strip()
+        if tok:
+            return tok
+    except Exception:
+        pass
+    raise RuntimeError("Could not obtain GCP access token. Set GCP_ACCESS_TOKEN or run: gcloud auth login")
+
+
+def gcp_translate_texts(contents: List[str], target_lang: str, source_lang: Optional[str], project: str, location: str = "global") -> List[str]:
+    if not contents:
+        return []
+    token = get_gcp_access_token()
+    url = f"https://translation.googleapis.com/v3/projects/{urllib.parse.quote(project, safe='')}/locations/{urllib.parse.quote(location, safe='')}:translateText"
+    payload = {
+        "targetLanguageCode": target_lang,
+        "mimeType": "text/plain",
+        "contents": contents,
+    }
+    if source_lang:
+        payload["sourceLanguageCode"] = source_lang
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "User-Agent": UA,
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "x-goog-user-project": project,
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=90) as r:
+        raw = r.read().decode("utf-8", "ignore")
+    data = json.loads(raw)
+    out = [x.get("translatedText", "") for x in data.get("translations", [])]
+    if len(out) != len(contents):
+        raise RuntimeError(f"Unexpected translation count from GCP: {len(out)} != {len(contents)}")
+    return out
+
+
+def translate_srt_gcp(
+    source_srt: str,
+    target_lang: str = "zh-CN",
+    source_lang: Optional[str] = "en",
+    project: Optional[str] = None,
+    location: str = "global",
+    batch_size: int = 120,
+) -> str:
+    project = (project or os.environ.get("GCP_PROJECT") or os.environ.get("GOOGLE_CLOUD_PROJECT") or "").strip()
+    if not project:
+        raise RuntimeError("Missing GCP project. Set --project or env GCP_PROJECT/GOOGLE_CLOUD_PROJECT")
+
+    cues = parse_srt(source_srt)
+    if not cues:
+        return source_srt
+
+    texts = [c.text for c in cues]
+    translated: List[str] = []
+    bs = max(1, batch_size)
+    for i in range(0, len(texts), bs):
+        chunk = texts[i : i + bs]
+        translated.extend(
+            gcp_translate_texts(
+                chunk,
+                target_lang=target_lang,
+                source_lang=source_lang,
+                project=project,
+                location=location,
+            )
+        )
+
+    out = [Cue(idx=c.idx, timecode=c.timecode, text=t) for c, t in zip(cues, translated)]
+    return render_srt(out)
+
+
 def merge_two_lang(top_srt: str, bottom_srt: str) -> str:
     top_cues = parse_srt(top_srt)
     bottom_cues = parse_srt(bottom_srt)
@@ -557,6 +645,16 @@ def main() -> int:
     infer.add_argument("--line", required=True, help="A snippet of spoken subtitle text")
     infer.add_argument("--at", required=True, dest="observed_at", help="Observed playback time when line is spoken (e.g. 00:12:34.500)")
 
+    tr = sub.add_parser("translate-gcp", help="Translate subtitle via Google Cloud Translate v3 (batched)")
+    tr.add_argument("input", help="Source .srt path")
+    tr.add_argument("--output", required=True, help="Output .srt path")
+    tr.add_argument("--source-lang", default="en")
+    tr.add_argument("--target-lang", default="zh-CN")
+    tr.add_argument("--project", default="")
+    tr.add_argument("--location", default="global")
+    tr.add_argument("--batch-size", type=int, default=120)
+    tr.add_argument("--merge-bilingual", action="store_true", help="Write EN top + translated bottom")
+
     args = p.parse_args()
 
     if args.cmd == "shift":
@@ -597,6 +695,29 @@ def main() -> int:
         print(f"Suggested delay seconds: {delay_s:+.3f}")
         print("Apply with:")
         print(f"  subflow shift {sh_quote(str(in_path))} --seconds {delay_s:+.3f} --in-place")
+        return 0
+
+    if args.cmd == "translate-gcp":
+        in_path = Path(args.input).expanduser()
+        out_path = Path(args.output).expanduser()
+        if not in_path.exists():
+            print(f"Input file not found: {in_path}", file=sys.stderr)
+            return 2
+        src = in_path.read_text(encoding="utf-8", errors="ignore")
+        translated = translate_srt_gcp(
+            src,
+            target_lang=args.target_lang,
+            source_lang=(args.source_lang or None),
+            project=(args.project or None),
+            location=args.location,
+            batch_size=args.batch_size,
+        )
+        final_out = merge_two_lang(src, translated) if args.merge_bilingual else translated
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(final_out, encoding="utf-8")
+        print(f"Translated subtitle written: {out_path}")
+        if args.merge_bilingual:
+            print("Format: EN top + translated bottom")
         return 0
 
     if args.cmd == "fetch":
