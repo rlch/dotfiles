@@ -202,6 +202,10 @@ return {
   },
 
   -- Markdown
+  -- LazyVim's lang.markdown extra ships render-markdown.nvim + markdown-preview.nvim;
+  -- markview is the chosen renderer, so disable the extras to avoid double-render.
+  { "MeanderingProgrammer/render-markdown.nvim", enabled = false },
+  { "iamcco/markdown-preview.nvim", enabled = false },
   {
     "OXY2DEV/markview.nvim",
     -- Lazy-load on the filetypes markview actually previews. `lazy = false`
