@@ -1,0 +1,19 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-keybindings.json",
+  "$docs": "https://code.claude.com/docs/en/keybindings",
+  "bindings": [
+    {
+      "context": "Global",
+      "bindings": {
+        "ctrl+b": "app:toggleTranscript"
+      }
+    },
+    {
+      "context": "Transcript",
+      "bindings": {
+        "ctrl+b": "app:toggleTranscript",
+        "ctrl+f": null
+      }
+    }
+  ]
+}
