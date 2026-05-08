@@ -1,12 +1,20 @@
 [user]
 	name = Richard Mathieson
 	email = 35163478+rlch@users.noreply.github.com
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK/3lfbxfOS5lm/Q5IgUHpMNYz0wFc4W/deR5rLPWtxm
+	; Standalone signing key — passphrase-less Ed25519 sitting behind
+	; FileVault + macOS login. Path form (not literal pubkey): tells git
+	; to drive `ssh-keygen -Y sign` directly off this file rather than
+	; probing whichever ssh-agent SSH_AUTH_SOCK points at (which is
+	; 1Password's, where this key isn't loaded). Verification keeps the
+	; "Verified" badge on GitHub once the matching .pub is uploaded as a
+	; Signing Key. No Touch ID prompt per commit.
+	signingkey = ~/.ssh/git_signing.pub
 
 [gpg]
 	format = ssh
 [gpg "ssh"]
-	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+	; Empty/unset `program` makes git use system `ssh-keygen -Y sign`,
+	; bypassing 1Password's op-ssh-sign and its biometric prompt entirely.
 	allowedSignersFile = ~/.config/git/allowed_signers
 
 [commit]
