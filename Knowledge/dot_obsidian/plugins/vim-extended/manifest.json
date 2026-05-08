@@ -1,0 +1,9 @@
+{
+  "id": "vim-extended",
+  "name": "Vim Extended",
+  "version": "1.0.2",
+  "minAppVersion": "1.5.0",
+  "description": "Extended Vim-like reading navigation and pane controls.",
+  "author": "Hermes Local",
+  "isDesktopOnly": false
+}
