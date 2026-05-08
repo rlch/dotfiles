@@ -126,3 +126,4 @@ brew bundle check --file=Brewfile.heavy  # verify heavy bundle satisfied
 When adding a new tool: install via Brewfile (or Brewfile.heavy), add config
 under `dot_config/<tool>/`, run `chezmoi apply`. The install script auto-runs
 when the Brewfile hash changes.
+
