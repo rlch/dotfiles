@@ -52,6 +52,11 @@ set -x REVDIFF_WORD_DIFF    true
 # this var, so OpenSSH behaviour is unchanged.
 set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 
+# Claude Code — flicker-free fullscreen TUI (alt-screen renderer with
+# virtualized scrollback). Equivalent to `/tui fullscreen`, but persistent
+# across sessions. https://code.claude.com/docs/en/env-vars
+set -gx CLAUDE_CODE_NO_FLICKER 1
+
 # Headroom — local LLM context-compression proxy. Persistent Docker container
 # managed by the Docker-native `headroom install` wrapper.
 set -gx HEADROOM_PORT     8787
