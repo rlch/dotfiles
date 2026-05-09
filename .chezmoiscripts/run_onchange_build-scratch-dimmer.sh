@@ -88,12 +88,24 @@ let opacity: Double = {
     return 0.4
 }()
 
-// Optional monitor scoping. When SCRATCH_DIMMER_SCREEN_IDX is set, the
-// dimmer only overlays windows whose CG bounds intersect the named
-// NSScreen's CGDisplayBounds (1-indexed to match aerospace's
-// monitor-appkit-nsscreen-screens-id and scratch-axpos). Unset / 0 / out
-// of range = legacy behaviour: dim every screen.
-let targetScreenCG: CGRect? = {
+// Monitor scoping. The env-var hint (SCRATCH_DIMMER_SCREEN_IDX, set by
+// scratchpad.sh from aerospace's focused monitor) is what scratchpad.sh
+// _intended_ scratch to land on, but ghostty/macOS occasionally place
+// the window on a different screen (e.g. macOS NSWindowLastPosition
+// autosave winning over our --window-position-x CLI arg, app-bundle
+// launch services restoring an old space, etc.). When that happens we
+// must follow scratch — not the env hint — or we end up dimming the
+// wrong monitor while scratch sits on a fully-bright one.
+//
+// Strategy: prefer the screen scratch's actual frame center lands on
+// (computed lazily, after we've found scratch's window). The env hint
+// is a fallback only if scratch's frame can't be mapped to any screen
+// (impossible in practice, but keeps the code path well-defined).
+//
+// 1-indexed monitor IDs match aerospace's monitor-appkit-nsscreen-
+// screens-id and scratch-axpos.
+
+func screenCGFromEnv() -> CGRect? {
     guard let s = ProcessInfo.processInfo.environment["SCRATCH_DIMMER_SCREEN_IDX"],
           let idx = Int(s), idx > 0,
           NSScreen.screens.indices.contains(idx - 1)
@@ -102,7 +114,20 @@ let targetScreenCG: CGRect? = {
     guard let n = scr.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
     else { return nil }
     return CGDisplayBounds(n.uint32Value)
-}()
+}
+
+func screenCGContaining(_ cgFrame: CGRect) -> CGRect? {
+    let center = CGPoint(x: cgFrame.midX, y: cgFrame.midY)
+    for s in NSScreen.screens {
+        guard let n = s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        else { continue }
+        let b = CGDisplayBounds(n.uint32Value)
+        if b.contains(center) { return b }
+    }
+    return nil
+}
+
+let envScreenCG: CGRect? = screenCGFromEnv()
 
 // We initially tried bumping scratch's window above the overlays via the
 // private CGSSetWindowLevel API — modern macOS hardened it against
@@ -203,6 +228,32 @@ final class DimOverlay {
     }
 }
 
+// Custom NSWindow subclass that aggressively declines focus. Even though
+// .borderless windows have canBecomeKey == false by default, AppKit's
+// "find next key window" sweep after a transient overlay dismisses
+// (e.g. cmd-shift-4 screencapture, accent-character popover, IME
+// candidate window) walks the on-screen window list by z-order and may
+// briefly latch onto an overlay before falling back to the right
+// window. The result, observed: scratch stays visible but its NSWindow
+// loses key status, so the next keystroke hits no first responder and
+// macOS plays the system beep ("funk"). Overriding all three
+// canBecome*/acceptsFirstResponder hooks makes the overlay completely
+// invisible to that sweep and forces AppKit to skip past us back to
+// scratch.
+//
+// Also overriding acceptsFirstMouse so click-through still works even
+// if our app momentarily isn't active (defence in depth — the overlay
+// already has ignoresMouseEvents = true, but if AppKit ever decides to
+// route a click here, we'd rather it pass through than activate us).
+final class IgnoringWindow: NSWindow {
+    // canBecomeKey/Main are NSWindow properties — overriding them is the
+    // direct way to opt out of AppKit's key-window sweep. acceptsFirstX
+    // are NSView/NSResponder concerns and ignoresMouseEvents = true on
+    // the window already takes care of click routing.
+    override var canBecomeKey:  Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 // Build the mask path for an overlay of size `overlayFrame` (AppKit
 // coords) with an optional cutout at scratch's CG frame. Pulled out so
 // the same code runs at create time and on every scratch-frame change.
@@ -234,7 +285,15 @@ func buildMaskPath(overlayFrame: NSRect, scratchCG: CGRect?) -> CGPath {
 
 func makeOverlay(forCGFrame cg: CGRect, opacity: Double, level: NSWindow.Level, scratchCG: CGRect?) -> DimOverlay? {
     let frame = appKitFrame(forCGFrame: cg)
-    let w = NSWindow(
+    // IgnoringWindow (vs plain NSWindow) overrides canBecomeKey/Main/
+    // acceptsFirstResponder so AppKit's "find next key window" sweep
+    // can't latch onto an overlay after a transient grabber (cmd-shift-4
+    // screencapture, accent popover, etc.) dismisses. See class docs
+    // above. styleMask = .borderless on its own is necessary but not
+    // sufficient: the canBecomeKey default is `false` for borderless
+    // _content_ windows but the sweep can still consider them in some
+    // build configurations and macOS versions.
+    let w = IgnoringWindow(
         contentRect: frame,
         styleMask:   .borderless,
         backing:     .buffered,
@@ -360,6 +419,30 @@ DispatchQueue.global(qos: .background).async {
     } else {
         log("scratch frame not found — overlays will not cut a hole, scratch may appear dimmed")
     }
+
+    // Resolve the actual target screen NOW that we know where scratch
+    // landed. Prefer scratch's frame center over the env hint so we
+    // follow ghostty when it places the window somewhere unexpected
+    // (e.g. macOS NSWindowLastPosition winning over --window-position-x).
+    // Env hint is only used as a fallback if scratch's frame is missing
+    // or — pathologically — outside every screen.
+    let targetScreenCG: CGRect? = {
+        if let s = scratchCG, let actual = screenCGContaining(s) {
+            if let env = envScreenCG, env != actual {
+                log("target screen: derived from scratch frame "
+                  + "(env hint disagreed: env=\(env), actual=\(actual))")
+            } else {
+                log("target screen: derived from scratch frame = \(actual)")
+            }
+            return actual
+        }
+        if let env = envScreenCG {
+            log("target screen: env hint fallback = \(env) (scratch frame unmappable)")
+            return env
+        }
+        log("target screen: none — dimming all monitors")
+        return nil
+    }()
 
     // 3. Snapshot all on-screen layer-0 windows EXCEPT scratch's, build
     //    one overlay per window. Wallpaper / Finder desktop / menu bar /
