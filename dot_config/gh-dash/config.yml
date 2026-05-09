@@ -1,18 +1,79 @@
 # yaml-language-server: $schema=https://gh-dash.dev/schema.json
 
 prSections:
+  # GitHub's GraphQL search (used by gh-dash) does NOT support `OR` between
+  # qualifiers — every filter line is implicitly AND. So "PRs requested from
+  # me OR already reviewed by me OR with no reviewer" must be split into
+  # separate sections.
+  #
+  # Two flavors of section:
+  #   - Per-repo (cwd-scoped): "Needs review", "No reviewer". These rely on
+  #     `smartFilteringAtLaunch: true` to add `repo:<cwd-repo>` at launch
+  #     so the section only shows PRs from the repo I'm currently in.
+  #     If launched outside a git repo (no GH_REPO, no remote), these
+  #     fall back to unscoped — which is too broad for "No reviewer". So
+  #     prefer launching dash from inside a repo.
+  #   - Global: "Mine", "Involved", "MathGaps", "tanzolabs". These are
+  #     intended to span repos. Smart filtering will scope them at launch
+  #     too — press `t` to toggle the smart filter off when you want the
+  #     full cross-repo view.
+  - title: Needs review
+    # Per-repo. `involves:@me` catches both review-requested:@me AND
+    # reviewed-by:@me (so already-approved-but-still-open PRs stay visible).
+    filters: is:open involves:@me -author:@me archived:false sort:updated-desc
+  - title: No reviewer
+    # Per-repo. PRs with no review submitted yet — orphans anyone can pick
+    # up. Drafts excluded so we only see ready-for-review work. Relies on
+    # smartFilteringAtLaunch to add `repo:<cwd>`; without it, `review:none`
+    # unscoped matches ~80M public PRs.
+    filters: is:open review:none -author:@me -is:draft archived:false sort:updated-desc
   - title: Mine
+    # Global.
     filters: is:open author:@me archived:false sort:updated-desc
     layout:
       author:
         hidden: true
-  - title: Needs review
-    filters: is:open review-requested:@me archived:false sort:updated-desc
   - title: Involved
-    filters: is:open involves:@me -author:@me -review-requested:@me archived:false sort:updated-desc
+    # Global. Catches mentions/comments where I'm not author and not a reviewer.
+    filters: is:open involves:@me -author:@me -review-requested:@me -reviewed-by:@me archived:false sort:updated-desc
   - title: MathGaps
-    filters: is:open org:MathGaps archived:false sort:updated-desc
+    # Global, curated to the repos I actually work on:
+    #   - modality (the frontend lib for whiteboard/worksheet/lesson)
+    #   - all 23 backend repos (apps under backend/app + libraries under
+    #     backend/library in the tutero metarepo)
+    # Excluded MathGaps repos: all frontend apps + libs (incl. schools-app),
+    # frontend tools, infrastructure, misc. Multiple `repo:` qualifiers are
+    # OR'd. Keep this list in sync if backend repos are added — `git config
+    # --file ~/dev/tutero/.gitmodules --get-regexp 'submodule\.backend.*\.url'`
+    # lists them.
+    filters: >-
+      is:open archived:false sort:updated-desc
+      repo:MathGaps/modality
+      repo:MathGaps/accounts
+      repo:MathGaps/curriculum
+      repo:MathGaps/diagnostics
+      repo:MathGaps/learning
+      repo:MathGaps/resources
+      repo:MathGaps/snapshotter
+      repo:MathGaps/teaching
+      repo:MathGaps/tutoring
+      repo:MathGaps/tutoring-admin
+      repo:MathGaps/ai-tooling
+      repo:MathGaps/authorization
+      repo:MathGaps/cockroach-tooling
+      repo:MathGaps/core
+      repo:MathGaps/elastic-tooling
+      repo:MathGaps/firebase-tooling
+      repo:MathGaps/graphql-tooling
+      repo:MathGaps/grpc-tooling
+      repo:MathGaps/kafka-tooling
+      repo:MathGaps/nats-tooling
+      repo:MathGaps/neo4j-tooling
+      repo:MathGaps/notification-tooling
+      repo:MathGaps/prompting
+      repo:MathGaps/rest-tooling
   - title: tanzolabs
+    # Global.
     filters: is:open org:tanzolabs archived:false sort:updated-desc
 
 issuesSections:
@@ -58,14 +119,49 @@ defaults:
       base:
         hidden: true
 
-# Custom keybindings.
-# `e` opens the selected PR in `gh enhance` (Actions TUI) inside a new
+# Custom keybindings. Lowercase `e` and `r` are intentionally left as
+# gh-dash defaults (expand PR description; refresh current section).
+# `E` opens the selected PR in `gh enhance` (Actions TUI) inside a new
 # tmux window so the dashboard stays mounted.
+# `R` runs the seamless revdiff PR-review flow: checks out the PR, fetches
+# existing inline review comments and preloads them into revdiff so prior
+# threads are visible while you annotate, then on quit auto-posts your new
+# annotations as one batched review (no confirmation prompt). This shadows
+# gh-dash's default "Refresh All Sections" on `R` — `r` (refresh current
+# section) is still available; `s` switches view.
+# `m` overrides the default interactive merge to a one-press squash + delete
+# branch — no merge-method or delete-branch prompt. The merge runs in a
+# new tmux window so any error output stays visible (window auto-closes
+# on success).
 keybindings:
   prs:
-    - key: e
+    - key: E
       command: >-
         tmux new-window 'gh enhance -R {{.RepoName}} {{.PrNumber}}'
+    - key: R
+      name: revdiff review
+      # Repo path is auto-discovered by the script (cwd → cache → fd-scan
+      # under $REVDIFF_REPO_SEARCH_ROOTS, default ~/dev). No reliance on
+      # gh-dash's repoPaths — the user's actual on-disk layout is messy
+      # enough that auto-discovery is more reliable.
+      command: tmux new-window -n "{{.RepoName}}#{{.PrNumber}}" "revdiff-pr-review {{.RepoName}} {{.PrNumber}}"
+    - key: m
+      name: squash + delete
+      # Runs `gh-merge-confirm` in the foreground. gh-dash suspends its TUI
+      # for the ~1 sec it takes to type y/n, then resumes — same handover
+      # mechanic as the built-in `m` and any other tea.ExecProcess command.
+      #
+      # Why a custom keybinding at all: gh-dash's built-in `m` is hardcoded
+      # to bare `gh pr merge` (interactive method+delete prompts; no native
+      # config for defaults — issues dlvhdr/gh-dash#805 and #486). This
+      # bakes in --squash --delete-branch and a single-keypress y/N.
+      #
+      # `$TMUX_PANE` is gh-dash's pane (custom commands run via $SHELL -c,
+      # which inherits it). Wrapper sends `r` to that pane after a merge
+      # so gh-dash refreshes — custom keybindings don't get the in-app row
+      # update the built-in merge does. Absolute path so we don't depend
+      # on $SHELL having ~/.local/bin on PATH (fish -c sometimes doesn't).
+      command: $HOME/.local/bin/gh-merge-confirm {{.PrNumber}} {{.RepoName}} $TMUX_PANE
 
 smartFilteringAtLaunch: true
 
