@@ -74,7 +74,7 @@ chezmoi apply
 | Path | Tracked? | What |
 |---|---|---|
 | `~/.hermes/config.yaml` | ✅ `dot_hermes/config.yaml.tmpl` | Main config — providers, aux models, agent behaviour |
-| `~/.hermes/.env` | ❌ secrets | `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `CEREBRAS_API_KEY`, etc. |
+| `~/.hermes/.env` | ❌ secrets | `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `CEREBRAS_API_KEY`, `FIRECRAWL_API_KEY`, etc. |
 | `~/.hermes/hermes-agent/` | ❌ | Source code (installer-managed) |
 | `~/.local/bin/hermes` | ❌ | Binary symlink (on $PATH via fish config) |
 | `~/.hermes/{memories,skills,cron,logs,auth.json}` | ❌ | Hermes-managed runtime state |

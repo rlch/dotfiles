@@ -9,12 +9,12 @@
 # you want to keep an interactive change.
 
 # ─── Primary model ───────────────────────────────────────────────────────────
-# gpt-5.3-codex via OpenAI Codex OAuth — uses the ChatGPT plan's OAuth token
+# gpt-5.5-codex via OpenAI Codex OAuth — uses the ChatGPT plan's OAuth token
 # (same auth as the `codex` CLI). Authenticate once with `hermes auth`,
 # stored in ~/.hermes/auth.json. No per-token OpenAI API spend.
 model:
   provider: openai-codex
-  default: gpt-5.3-codex
+  default: gpt-5.5-codex
 
 # ─── Fallback ────────────────────────────────────────────────────────────────
 # Activates automatically on rate-limit / server-error / auth failure of the
@@ -82,6 +82,14 @@ custom_providers:
     # No api_key — Ollama ignores it. Match OLLAMA_CONTEXT_LENGTH (65536) on
     # any model selected here; see ~/.config/ollama/notes.md.
 {{- end }}
+
+# ─── Web backend ─────────────────────────────────────────────────────────────
+# Use Firecrawl for web search + extraction. Requires FIRECRAWL_API_KEY in
+# ~/.hermes/.env (or FIRECRAWL_API_URL for self-hosted Firecrawl).
+web:
+  backend: firecrawl
+  search_backend: searxng
+  extract_backend: firecrawl
 
 # ─── Agent behaviour ─────────────────────────────────────────────────────────
 agent:
