@@ -1,0 +1,731 @@
+#!/usr/bin/env python3
+"""revdiff-pr-review — review a GitHub PR in revdiff, post annotations seamlessly.
+
+Designed to be invoked from gh-dash with one keypress. The end-to-end flow:
+
+  1. locate a local clone of OWNER/REPO via cwd → cache → fd-scan; never
+     auto-clones (you control which repos exist on disk)
+  2. inside that clone: `git fetch origin pull/N/head:refs/pulls/N/head`
+     (read-only — your branches and dirty files are never touched)
+  3. `git worktree add` a temp checkout at ~/.cache/revdiff/worktrees/
+     so the review happens in an isolated dir
+  4. fetch the PR's existing inline review comments and preload them
+     into revdiff with `[@author]` attribution
+  5. run `revdiff base..HEAD` in the worktree
+  6. on quit, route each annotation: preloaded comments whose body was
+     edited get PATCHed in place via /pulls/comments/{id}; genuinely new
+     annotations are batched into ONE atomic /pulls/N/reviews POST;
+     unchanged preloaded comments are skipped
+  7. tear down the worktree (and prune stale worktrees from prior runs)
+
+Usage:
+  revdiff-pr-review OWNER/REPO PR_NUMBER
+
+Search roots for repo discovery: $REVDIFF_REPO_SEARCH_ROOTS (colon-separated;
+default ~/dev). The fd-scan checks each `.git/config`'s `[remote "origin"]`
+URL — fast, no per-repo `git` subprocess. Results cached at
+~/.cache/revdiff/repo-locations.json. To force rediscovery, delete that file.
+"""
+
+from __future__ import annotations
+
+import argparse
+import configparser
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+
+CACHE_DIR = Path.home() / ".cache" / "revdiff"
+CACHE_LOCATIONS = CACHE_DIR / "repo-locations.json"
+WORKTREE_DIR = CACHE_DIR / "worktrees"
+STALE_WORKTREE_DAYS = 7
+
+HEADER_RE = re.compile(
+    r"^##\s+(?P<path>.+?)(?::(?P<start>\d+)(?:-(?P<end>\d+))?)?\s+"
+    r"\((?P<type>file-level|\+|-)\)\s*$"
+)
+
+# Trailing metadata marker embedded in preloaded comment bodies so we can
+# round-trip the GitHub comment id through revdiff and tell edits apart from
+# new comments on quit. Sits on its own line at the end of each body.
+GH_MARKER_RE = re.compile(r"\n?<!-- revdiff-gh:(\d+) -->\s*$")
+
+# Author attribution prefix that existing_to_revdiff prepends to preloaded
+# bodies, e.g. "[@rlch] " or "[@rlch · outdated] ". Stripped before any
+# PATCH/POST so it doesn't get re-emitted as literal comment text.
+PREFIX_RE = re.compile(r"^\[@[^\]]+\]\s*")
+
+
+def err(msg: str) -> None:
+    sys.stderr.write(msg + "\n")
+
+
+# ─────────────────────────── annotation parsing ──────────────────────────────
+
+
+@dataclass
+class Annotation:
+    path: str
+    start: int | None
+    end: int | None
+    side: str  # 'RIGHT' / 'LEFT' / 'FILE'
+    body: str = ""
+    gh_id: int | None = None  # set when this annotation was preloaded from a
+                              # real GitHub review comment (round-tripped via
+                              # the revdiff-gh marker); enables PATCH-on-edit
+
+    @property
+    def loc(self) -> str:
+        if self.start is None:
+            return self.path
+        if self.end and self.end != self.start:
+            return f"{self.path}:{self.start}-{self.end}"
+        return f"{self.path}:{self.start}"
+
+
+def parse_annotations(text: str) -> list[Annotation]:
+    annos: list[Annotation] = []
+    cur: Annotation | None = None
+    body_lines: list[str] = []
+
+    def flush() -> None:
+        nonlocal cur, body_lines
+        if cur is None:
+            return
+        body = "\n".join(body_lines).strip()
+        m = GH_MARKER_RE.search(body)
+        if m:
+            cur.gh_id = int(m.group(1))
+            body = body[: m.start()].rstrip()
+        cur.body = body
+        if cur.body or cur.gh_id is not None:
+            annos.append(cur)
+        cur = None
+        body_lines = []
+
+    for line in text.splitlines():
+        m = HEADER_RE.match(line)
+        if m:
+            flush()
+            t = m.group("type")
+            side = {"+": "RIGHT", "-": "LEFT", "file-level": "FILE"}[t]
+            start = int(m.group("start")) if m.group("start") else None
+            end = int(m.group("end")) if m.group("end") else start
+            cur = Annotation(
+                path=m.group("path").strip().lstrip("./"),
+                start=start, end=end, side=side,
+            )
+            continue
+        if cur is not None:
+            if line.startswith(" ## "):
+                line = line[1:]
+            body_lines.append(line)
+    flush()
+    return annos
+
+
+# ───────────────────────────── gh API helpers ────────────────────────────────
+
+
+def gh_api(args: list[str], stdin: str | None = None) -> dict | list:
+    res = subprocess.run(
+        ["gh", "api", *args], input=stdin, capture_output=True, text=True
+    )
+    if res.returncode != 0:
+        err(f"gh api failed: {res.stderr}")
+        sys.exit(2)
+    return json.loads(res.stdout) if res.stdout.strip() else {}
+
+
+def fetch_pr_meta(repo: str, pr: int) -> tuple[str, str]:
+    res = subprocess.run(
+        ["gh", "pr", "view", str(pr), "--repo", repo,
+         "--json", "baseRefName,headRefOid"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        err(f"gh pr view failed: {res.stderr}")
+        sys.exit(2)
+    j = json.loads(res.stdout)
+    return j["baseRefName"], j["headRefOid"]
+
+
+
+
+def fetch_pr_hunks(repo: str, pr: int) -> dict[str, list[tuple[int, int]]]:
+    files = gh_api(
+        ["-H", "Accept: application/vnd.github+json",
+         f"repos/{repo}/pulls/{pr}/files", "--paginate"]
+    )
+    if not isinstance(files, list):
+        return {}
+    hunks: dict[str, list[tuple[int, int]]] = {}
+    hunk_re = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.M)
+    for f in files:
+        ranges: list[tuple[int, int]] = []
+        for m in hunk_re.finditer(f.get("patch") or ""):
+            start = int(m.group(1))
+            count = int(m.group(2)) if m.group(2) else 1
+            ranges.append((start, start + max(count - 1, 0)))
+        hunks[f["filename"]] = ranges
+    return hunks
+
+
+def fetch_existing_comments(repo: str, pr: int) -> list[dict]:
+    res = gh_api(
+        ["-H", "Accept: application/vnd.github+json",
+         f"repos/{repo}/pulls/{pr}/comments", "--paginate"]
+    )
+    return res if isinstance(res, list) else []
+
+
+# ─────────────────── existing-comments → revdiff format ──────────────────────
+
+
+def existing_to_revdiff(comments: list[dict]) -> str:
+    blocks: list[str] = []
+    for c in comments:
+        path = c.get("path")
+        if not path:
+            continue
+        line = c.get("line") or c.get("original_line")
+        start = c.get("start_line") or c.get("original_start_line")
+        side = c.get("side") or c.get("original_side") or "RIGHT"
+        subject_type = c.get("subject_type") or "line"
+        outdated = c.get("line") is None and c.get("original_line") is not None
+
+        marker = "+" if side == "RIGHT" else "-"
+        if subject_type == "file" or line is None:
+            header = f"## {path} (file-level)"
+        elif start and start != line:
+            header = f"## {path}:{start}-{line} ({marker})"
+        else:
+            header = f"## {path}:{line} ({marker})"
+
+        author = c.get("user", {}).get("login") or "unknown"
+        body = (c.get("body") or "").rstrip()
+        body = "\n".join(
+            (" " + ln) if ln.startswith("## ") else ln for ln in body.splitlines()
+        )
+        prefix = f"[@{author}{' · outdated' if outdated else ''}] "
+        gh_id = c.get("id")
+        marker = f"\n<!-- revdiff-gh:{gh_id} -->" if gh_id else ""
+        prose = f"{prefix}{body}" if body else f"{prefix}(empty)"
+        blocks.append(f"{header}\n{prose}{marker}")
+    return "\n\n".join(blocks) + ("\n" if blocks else "")
+
+
+# ─────────────────────────── repo discovery + cache ──────────────────────────
+
+
+def _normalize_repo_url(url: str) -> str | None:
+    url = url.strip().rstrip("/")
+    if url.endswith(".git"):
+        url = url[: -len(".git")]
+    m = re.search(r"[:/]([\w.\-]+/[\w.\-]+)$", url)
+    return m.group(1) if m else None
+
+
+def _resolve_git_dir(dot_git: Path) -> Path | None:
+    """Resolve `.git` (which may be a dir or a `gitdir: PATH` file) to the
+    actual git directory containing config/HEAD/etc."""
+    if dot_git.is_dir():
+        return dot_git
+    if dot_git.is_file():
+        try:
+            text = dot_git.read_text().strip()
+        except OSError:
+            return None
+        m = re.match(r"gitdir:\s*(.+)", text)
+        if not m:
+            return None
+        gitdir = Path(m.group(1).strip())
+        if not gitdir.is_absolute():
+            gitdir = (dot_git.parent / gitdir).resolve()
+        return gitdir if gitdir.is_dir() else None
+    return None
+
+
+def _origin_url(dot_git: Path) -> str | None:
+    """Read origin URL from a clone's .git (dir or gitdir: file)."""
+    git_dir = _resolve_git_dir(dot_git)
+    if git_dir is None:
+        return None
+    # Submodule git dirs nest under modules/...; find the nearest config.
+    cfg = git_dir / "config"
+    if not cfg.is_file():
+        # commondir-style worktree: config lives in commondir
+        commondir = git_dir / "commondir"
+        if commondir.is_file():
+            try:
+                rel = commondir.read_text().strip()
+                cd = (git_dir / rel).resolve() if not Path(rel).is_absolute() else Path(rel)
+                cfg = cd / "config"
+            except OSError:
+                return None
+    if not cfg.is_file():
+        return None
+    cp = configparser.ConfigParser(strict=False)
+    try:
+        cp.read(cfg)
+    except configparser.Error:
+        return None
+    section = 'remote "origin"'
+    if section in cp.sections():
+        return cp[section].get("url")
+    return None
+
+
+def _origin_repo(repo_root: Path) -> str | None:
+    dot_git = repo_root / ".git"
+    if not dot_git.exists():
+        return None
+    url = _origin_url(dot_git)
+    return _normalize_repo_url(url) if url else None
+
+
+def _load_cache() -> dict:
+    if not CACHE_LOCATIONS.is_file():
+        return {}
+    try:
+        return json.loads(CACHE_LOCATIONS.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _save_cache(cache: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_LOCATIONS.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n")
+
+
+def _search_roots() -> list[Path]:
+    raw = os.environ.get("REVDIFF_REPO_SEARCH_ROOTS")
+    if raw:
+        roots = raw.split(":")
+    else:
+        roots = ["~/dev"]
+    out: list[Path] = []
+    for r in roots:
+        p = Path(os.path.expanduser(r)).resolve()
+        if p.is_dir():
+            out.append(p)
+    return out
+
+
+def _scan_for_repo(repo: str, roots: list[Path]) -> Path | None:
+    """Use fd to find every .git/ dir under the search roots, then scan
+    each one's config for the origin URL. First match wins."""
+    if not roots:
+        return None
+    target = repo.lower()
+    # Match BOTH `.git` directories (regular clones) and `.git` files
+    # (submodules / linked worktrees — common in monorepos).
+    cmd = [
+        "fd", "-H", "--max-depth", "10",
+        "-E", "node_modules", "-E", ".venv", "-E", "venv",
+        "-E", "target", "-E", "build", "-E", "dist", "-E", ".cache",
+        "^\\.git$",
+        *(str(r) for r in roots),
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode != 0:
+        err(f"fd scan failed: {res.stderr.strip()}")
+        return None
+    for line in res.stdout.splitlines():
+        dot_git = Path(line)
+        if not (dot_git.is_dir() or dot_git.is_file()):
+            continue
+        url = _origin_url(dot_git)
+        if not url:
+            continue
+        normalized = _normalize_repo_url(url)
+        if normalized and normalized.lower() == target:
+            return dot_git.parent
+    return None
+
+
+def find_clone(repo: str) -> Path:
+    """Find a local clone of `repo` via cwd → cache → fd-scan."""
+    cwd = Path.cwd().resolve()
+    if _origin_repo(cwd) and _origin_repo(cwd).lower() == repo.lower():  # type: ignore[union-attr]
+        err(f"› using cwd: {cwd}")
+        return cwd
+
+    cache = _load_cache()
+    cached = cache.get(repo)
+    if cached:
+        p = Path(cached)
+        if _origin_repo(p) and _origin_repo(p).lower() == repo.lower():  # type: ignore[union-attr]
+            err(f"› using cached path: {p}")
+            return p
+        err(f"› cache stale for {repo}; rescanning")
+        cache.pop(repo, None)
+        _save_cache(cache)
+
+    roots = _search_roots()
+    err(f"› scanning for {repo} under {', '.join(str(r) for r in roots)}…")
+    found = _scan_for_repo(repo, roots)
+    if found is None:
+        err(
+            f"\nno local clone of {repo} found under search roots\n"
+            f"  → clone it manually wherever you'd like, e.g.:\n"
+            f"      gh repo clone {repo} ~/dev/{repo.split('/')[-1]}\n"
+            f"  → or set $REVDIFF_REPO_SEARCH_ROOTS to include the right dir"
+        )
+        sys.exit(1)
+    err(f"› found: {found}")
+    cache[repo] = str(found)
+    _save_cache(cache)
+    return found
+
+
+# ──────────────────────────── worktree management ────────────────────────────
+
+
+def _safe_repo_slug(repo: str) -> str:
+    return repo.replace("/", "-")
+
+
+def _worktree_path(repo: str, pr: int) -> Path:
+    return WORKTREE_DIR / f"{_safe_repo_slug(repo)}-pr-{pr}"
+
+
+def prune_stale_worktrees() -> None:
+    """Remove worktree dirs older than STALE_WORKTREE_DAYS or whose parent
+    repo no longer recognizes them."""
+    if not WORKTREE_DIR.is_dir():
+        return
+    cutoff = time.time() - STALE_WORKTREE_DAYS * 86400
+    for entry in WORKTREE_DIR.iterdir():
+        if not entry.is_dir():
+            continue
+        # If older than cutoff OR git worktree list doesn't know it, kill it.
+        too_old = entry.stat().st_mtime < cutoff
+        is_orphan = _is_orphan_worktree(entry)
+        if too_old or is_orphan:
+            err(f"› pruning stale worktree: {entry.name}")
+            _remove_worktree(entry)
+
+
+def _is_orphan_worktree(wt: Path) -> bool:
+    """A worktree is orphan if its parent repo doesn't list it."""
+    git_file = wt / ".git"
+    if not git_file.exists():
+        return True
+    try:
+        text = git_file.read_text()
+    except OSError:
+        return True
+    m = re.match(r"gitdir:\s*(.+)", text.strip())
+    if not m:
+        return True
+    gitdir = Path(m.group(1).strip())
+    # gitdir typically: /path/to/main/.git/worktrees/NAME
+    # Parent repo's main .git is two levels up.
+    main_git_dir = gitdir.parent.parent
+    if not main_git_dir.is_dir():
+        return True
+    res = subprocess.run(
+        ["git", "--git-dir", str(main_git_dir), "worktree", "list", "--porcelain"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        return True
+    return str(wt) not in res.stdout
+
+
+def _remove_worktree(wt: Path) -> None:
+    """Best-effort worktree removal: try `git worktree remove --force`
+    against the parent repo, fall back to rm -rf."""
+    git_file = wt / ".git"
+    if git_file.is_file():
+        try:
+            text = git_file.read_text().strip()
+            m = re.match(r"gitdir:\s*(.+)", text)
+            if m:
+                gitdir = Path(m.group(1).strip())
+                main_git_dir = gitdir.parent.parent
+                if main_git_dir.is_dir():
+                    subprocess.run(
+                        ["git", "--git-dir", str(main_git_dir),
+                         "worktree", "remove", "--force", str(wt)],
+                        capture_output=True,
+                    )
+        except OSError:
+            pass
+    if wt.exists():
+        shutil.rmtree(wt, ignore_errors=True)
+
+
+def setup_worktree(clone: Path, repo: str, pr: int, base_ref: str) -> tuple[Path, str]:
+    """Fetch the PR head AND base branch into the clone, create an isolated
+    worktree on the PR head, and compute the merge-base SHA — that's the
+    commit GitHub uses as the PR's "before" state, so revdiff <merge>..HEAD
+    produces the exact same diff (and file set) GitHub does."""
+    err(f"› fetching PR #{pr} head + base ({base_ref}) into {clone.name}…")
+    res = subprocess.run(
+        ["git", "-C", str(clone), "fetch", "origin",
+         f"pull/{pr}/head:refs/pulls/{pr}/head",
+         f"+{base_ref}:refs/pulls/{pr}/base"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        err(f"git fetch failed: {res.stderr}")
+        sys.exit(2)
+
+    WORKTREE_DIR.mkdir(parents=True, exist_ok=True)
+    wt = _worktree_path(repo, pr)
+    if wt.exists():
+        err(f"› clearing previous worktree for this PR: {wt}")
+        _remove_worktree(wt)
+
+    err(f"› creating worktree → {wt}")
+    res = subprocess.run(
+        ["git", "-C", str(clone), "worktree", "add", "--detach",
+         str(wt), f"refs/pulls/{pr}/head"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        err(f"git worktree add failed: {res.stderr}")
+        sys.exit(2)
+
+    res = subprocess.run(
+        ["git", "-C", str(wt), "merge-base",
+         f"refs/pulls/{pr}/base", "HEAD"],
+        capture_output=True, text=True,
+    )
+    if res.returncode != 0 or not res.stdout.strip():
+        err(f"git merge-base failed: {res.stderr.strip() or 'no common ancestor'}")
+        sys.exit(2)
+    merge_base = res.stdout.strip()
+    err(f"› merge-base: {merge_base[:8]}")
+    return wt, merge_base
+
+
+# ─────────────────────────── plan + payload build ────────────────────────────
+
+
+@dataclass
+class Plan:
+    inline: list[dict] = field(default_factory=list)
+    body_notes: list[str] = field(default_factory=list)
+
+
+def in_any_range(line: int, ranges: list[tuple[int, int]]) -> bool:
+    return any(s <= line <= e for s, e in ranges)
+
+
+def build_plan(
+    annos: list[Annotation],
+    hunks: dict[str, list[tuple[int, int]]],
+) -> Plan:
+    plan = Plan()
+    for a in annos:
+        if a.side == "FILE":
+            plan.body_notes.append(f"**Note on `{a.path}`:** {a.body}")
+            continue
+        if a.side == "LEFT":
+            plan.body_notes.append(f"**(removed line) `{a.loc}`:** {a.body}")
+            continue
+        ranges = hunks.get(a.path, [])
+        if not ranges:
+            plan.body_notes.append(f"**(file not in PR diff) `{a.loc}`:** {a.body}")
+            continue
+        start_in = a.start is not None and in_any_range(a.start, ranges)
+        end_in = a.end is not None and in_any_range(a.end, ranges)
+        if not (start_in and end_in):
+            plan.body_notes.append(f"**(out-of-hunk) `{a.loc}`:** {a.body}")
+            continue
+        comment: dict = {
+            "path": a.path, "side": a.side, "line": a.end, "body": a.body,
+        }
+        if a.start is not None and a.end is not None and a.start != a.end:
+            comment["start_line"] = a.start
+            comment["start_side"] = a.side
+        plan.inline.append(comment)
+    return plan
+
+
+def build_payload(plan: Plan, commit: str, event: str) -> dict:
+    payload: dict = {
+        "commit_id": commit, "event": event, "comments": plan.inline,
+    }
+    if plan.body_notes:
+        payload["body"] = "\n\n".join(plan.body_notes)
+    return payload
+
+
+def post_review(repo: str, pr: int, payload: dict) -> dict:
+    return gh_api(
+        ["-X", "POST",
+         "-H", "Accept: application/vnd.github+json",
+         f"repos/{repo}/pulls/{pr}/reviews",
+         "--input", "-"],
+        stdin=json.dumps(payload),
+    )
+
+
+def patch_comment(repo: str, comment_id: int, body: str) -> dict:
+    """Edit an existing inline review comment in place."""
+    return gh_api(
+        ["-X", "PATCH",
+         "-H", "Accept: application/vnd.github+json",
+         f"repos/{repo}/pulls/comments/{comment_id}",
+         "--input", "-"],
+        stdin=json.dumps({"body": body}),
+    )
+
+
+def normalize_for_post(a: Annotation) -> str:
+    """Return the user-authored body for an annotation, suitable for sending
+    back to GitHub. Strips the [@author] attribution prefix, but only when
+    the annotation was preloaded (has gh_id) — fresh annotations the user
+    typed themselves are passed through unchanged."""
+    body = a.body
+    if a.gh_id is not None:
+        body = PREFIX_RE.sub("", body, count=1)
+        if body.strip() == "(empty)":
+            return ""
+    return body.strip()
+
+
+# ───────────────────────────────── main ──────────────────────────────────────
+
+
+def run_revdiff(merge_base: str, anno_in: Path, anno_out: Path) -> int:
+    """Run revdiff against the GitHub-side merge-base so the file/line set
+    matches what /pulls/N/files returns."""
+    cmd = ["revdiff", f"{merge_base}..HEAD",
+           f"--annotations={anno_in}", "-o", str(anno_out)]
+    return subprocess.run(cmd).returncode
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("repo", help="OWNER/REPO")
+    p.add_argument("pr", type=int, help="PR number")
+    p.add_argument(
+        "--event",
+        default="COMMENT",
+        choices=["COMMENT", "APPROVE", "REQUEST_CHANGES"],
+        help="review verdict (default COMMENT)",
+    )
+    args = p.parse_args()
+
+    if shutil.which("revdiff") is None:
+        err("revdiff not on PATH"); return 1
+    if shutil.which("gh") is None:
+        err("gh not on PATH"); return 1
+    if shutil.which("fd") is None:
+        err("fd not on PATH (needed for repo discovery)"); return 1
+
+    prune_stale_worktrees()
+
+    err(f"› looking up local clone of {args.repo}…")
+    clone = find_clone(args.repo)
+
+    err(f"› fetching PR #{args.pr} metadata…")
+    base_ref, head_sha = fetch_pr_meta(args.repo, args.pr)
+
+    wt, merge_base = setup_worktree(clone, args.repo, args.pr, base_ref)
+    head_sha = subprocess.run(
+        ["git", "-C", str(wt), "rev-parse", "HEAD"],
+        capture_output=True, text=True,
+    ).stdout.strip()
+    os.chdir(wt)
+
+    err("› fetching existing review comments…")
+    existing_comments = fetch_existing_comments(args.repo, args.pr)
+    err(f"  found {len(existing_comments)} existing inline comment(s)")
+
+    try:
+        with tempfile.TemporaryDirectory(prefix=f"revdiff-pr-{args.pr}-") as tmp:
+            tmpdir = Path(tmp)
+            existing_path = tmpdir / "existing.md"
+            new_path = tmpdir / "new.md"
+            existing_path.write_text(existing_to_revdiff(existing_comments))
+
+            err(f"› launching revdiff against merge-base {merge_base[:8]} (PR base: {base_ref})…")
+            rc = run_revdiff(merge_base, existing_path, new_path)
+            if rc != 0:
+                err(f"revdiff exited {rc}; not posting")
+                return rc
+
+            if not new_path.exists() or not new_path.read_text().strip():
+                err("no annotations on quit; nothing to post")
+                return 0
+
+            all_annos = parse_annotations(new_path.read_text())
+
+            # Route each annotation: preloaded comments (gh_id set) become
+            # PATCH-or-skip depending on whether the body changed; everything
+            # else flows through the normal review POST path.
+            existing_by_id = {c["id"]: c for c in existing_comments if c.get("id")}
+            edits: list[tuple[int, str]] = []
+            new_annos: list[Annotation] = []
+            unchanged = 0
+            for a in all_annos:
+                if a.gh_id is not None and a.gh_id in existing_by_id:
+                    new_body = normalize_for_post(a)
+                    original = (existing_by_id[a.gh_id].get("body") or "").rstrip()
+                    if new_body == original:
+                        unchanged += 1
+                    else:
+                        edits.append((a.gh_id, new_body))
+                else:
+                    new_annos.append(a)
+
+            for gh_id, body in edits:
+                patch_comment(args.repo, gh_id, body)
+                err(f"  ✓ patched comment {gh_id}")
+            if edits:
+                err(f"› edited {len(edits)} existing comment(s)")
+
+            if not new_annos:
+                if not edits:
+                    err("only existing comments present; nothing to post")
+                return 0
+
+            err(f"› {len(new_annos)} new annotation(s) — fetching diff hunks…")
+            hunks = fetch_pr_hunks(args.repo, args.pr)
+            plan = build_plan(new_annos, hunks)
+            payload = build_payload(plan, head_sha, args.event)
+
+            err(
+                f"› posting review on {args.repo}#{args.pr} @ {head_sha[:8]} "
+                f"(inline: {len(plan.inline)}, body bullets: {len(plan.body_notes)})"
+            )
+            if not (plan.inline or plan.body_notes):
+                err("plan empty after filtering; nothing to post")
+                return 0
+            res = post_review(args.repo, args.pr, payload)
+            url = res.get("html_url", "<unknown url>")
+            err(f"✓ review submitted: {url}")
+            return 0
+    finally:
+        # cd out of the worktree before removing it (chdir is process-wide,
+        # removing cwd makes some shells unhappy)
+        os.chdir(Path.home())
+        err(f"› tearing down worktree {wt.name}")
+        _remove_worktree(wt)
+
+
+if __name__ == "__main__":
+    rc = 1
+    try:
+        rc = main()
+    except SystemExit as e:
+        rc = e.code if isinstance(e.code, int) else 1
+    except Exception as e:  # noqa: BLE001
+        err(f"unexpected error: {e}")
+    sys.exit(rc)
