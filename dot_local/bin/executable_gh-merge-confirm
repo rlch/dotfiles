@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Wrapper invoked by the gh-dash `m` keybinding. Asks for explicit
+# confirmation, then runs `gh pr merge --squash --delete-branch`.
+# On failure, pauses so the error stays visible; on cancel/success the
+# tmux popup auto-closes and gh-dash regains focus.
+#
+# Optional 3rd arg is the tmux pane id of the gh-dash pane (passed as
+# `$TMUX_PANE` from the keybinding). When set, we send `r` to that pane
+# after a successful merge so gh-dash refreshes the section instead of
+# waiting for the next refetch interval — the built-in `m` does this via
+# an in-app PR row update, but custom keybindings only get a generic
+# "command finished" signal back, so we have to nudge it externally.
+set -u
+
+pr=${1:?usage: gh-merge-confirm <pr-number> <owner/repo> [refresh-pane]}
+repo=${2:?usage: gh-merge-confirm <pr-number> <owner/repo> [refresh-pane]}
+refresh_pane=${3:-}
+
+printf 'squash + merge %s#%s and delete branch? [y/N] ' "$repo" "$pr"
+read -n1 -r ans
+echo
+case "$ans" in
+  [yY]) ;;
+  *) echo 'cancelled.'; exit 0 ;;
+esac
+
+if ! gh pr merge "$pr" --squash --delete-branch -R "$repo"; then
+  echo
+  read -n1 -r -p 'merge failed — press any key to close '
+  exit 1
+fi
+
+if [[ -n "$refresh_pane" ]] && command -v tmux >/dev/null 2>&1; then
+  tmux send-keys -t "$refresh_pane" r 2>/dev/null || true
+fi
