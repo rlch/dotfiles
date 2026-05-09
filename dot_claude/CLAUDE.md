@@ -1,5 +1,9 @@
 @RTK.md
 
+# Dotfiles
+
+When editing anything under `~/.config/`, `~/.claude/`, `~/.local/`, or `~/dev/dotfiles/` — read `~/dev/dotfiles/CLAUDE.md` before making changes. It's the source-of-truth guide for the chezmoi flow (edit source in `~/dev/dotfiles/`, never the deployed files; `chezmoi apply` after every edit).
+
 # Git workflow (global)
 
 - **Commit messages**: conventional commits with scope — `type(scope): subject`.
