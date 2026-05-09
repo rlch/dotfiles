@@ -16,3 +16,11 @@ LICENSE
 # `lockfile = ...` in lua/config/init.lua) so chezmoi must not deploy or
 # round-trip the live target.
 .config/nvim/lazy-lock.json
+
+# OpenD (moomoo trading gateway) only runs on the mbp per SPEC §C in
+# ~/dev/trading ("M5 Max now, mini later"). The mini has no OpenD
+# install, so the LaunchAgent would loop trying to launch a missing
+# binary and burn moomoo's anti-rate-limit budget.
+{{ if ne .role "mbp" -}}
+Library/LaunchAgents/com.moomoo.opend.plist
+{{- end }}

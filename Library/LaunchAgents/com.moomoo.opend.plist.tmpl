@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent for moomoo OpenD — keeps a single OpenD process alive
+  for the lifetime of the user session so that:
+
+    1. The Rust client (moomoo-rs) can connect/disconnect freely over
+       127.0.0.1:11111 without ever re-doing the OpenD-to-moomoo-backend
+       login handshake. moomoo's anti-abuse system rate-limits the
+       upstream login, NOT the local TCP — so as long as OpenD stays
+       up, we never trip CAPTCHAs.
+    2. KeepAlive { SuccessfulExit = false } restarts only on crashes,
+       not on `launchctl unload` or `pkill`. ThrottleInterval = 60
+       gates crash-loops so a wedged session can't burn the
+       moomoo backend with reconnect attempts.
+    3. Logs land at ~/.com.moomoo.OpenD/launchd.{out,err}.log so they
+       sit alongside OpenD's own crashpad / .ftlog files.
+
+  Sourced from ~/dev/dotfiles via chezmoi. The plist is gated to the
+  "mbp" host role in .chezmoiignore.tmpl — the mini doesn't have an
+  OpenD install yet (per SPEC §C "M5 Max now, mini later").
+
+  Manual lifecycle (rare):
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.moomoo.opend.plist
+    launchctl bootout    gui/$(id -u)/com.moomoo.opend
+    launchctl kickstart  -k gui/$(id -u)/com.moomoo.opend   # restart
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.moomoo.opend</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{ .chezmoi.homeDir }}/Applications/OpenD/OpenD.app/Contents/MacOS/OpenD</string>
+        <string>-cfg_file={{ .chezmoi.homeDir }}/Applications/OpenD/OpenD.xml</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>{{ .chezmoi.homeDir }}/Applications/OpenD</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!--
+      Restart on crash but NOT on clean exit. A clean exit means the
+      user (or us) deliberately stopped it; KeepAlive should respect
+      that. Crashes / signals re-fire the launch.
+    -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!--
+      Anti-rate-limit: if OpenD wedges into a crash-loop, don't relaunch
+      faster than once a minute. Default is 10s, which can hammer
+      moomoo's backend during a partial outage and trigger CAPTCHAs or
+      worse. 60s leaves room for a session-warmup window between attempts.
+    -->
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+
+    <!--
+      ExitTimeOut: how long launchd waits between SIGTERM and SIGKILL
+      on shutdown. OpenD's Qt teardown is reasonably quick; 20s gives
+      the crashpad / Appdata.dat flush room without dragging logout.
+    -->
+    <key>ExitTimeOut</key>
+    <integer>20</integer>
+
+    <!--
+      ProcessType: Adaptive lets macOS App Nap / energy management
+      modulate it normally. Background would be too aggressive for
+      a service that needs to maintain heartbeats with a remote.
+    -->
+    <key>ProcessType</key>
+    <string>Adaptive</string>
+
+    <key>StandardOutPath</key>
+    <string>{{ .chezmoi.homeDir }}/.com.moomoo.OpenD/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .chezmoi.homeDir }}/.com.moomoo.OpenD/launchd.err.log</string>
+</dict>
+</plist>
