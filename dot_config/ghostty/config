@@ -76,3 +76,14 @@ keybind = cmd+digit_6=text:\x1b[54;5u
 keybind = cmd+digit_7=text:\x1b[55;5u
 keybind = cmd+digit_8=text:\x1b[56;5u
 keybind = cmd+digit_9=text:\x1b[57;5u
+
+# ctrl+[ / ctrl+] — jump to prev/next window with Claude's "awaiting reply"
+# bell (or any TUI hardware bell). ctrl+shift+[ / ctrl+shift+] do the same
+# across all sessions. Sent as CSI-u so tmux can distinguish them — without
+# this, ctrl+[ collapses to the ESC byte (0x1B) and shift on a non-letter
+# key never reaches the wire. Codepoints: 91 = '[', 93 = ']'. Modifiers:
+# 5 = ctrl, 6 = ctrl+shift. Tmux binds them as C-[ / C-] / C-S-[ / C-S-].
+keybind = ctrl+bracket_left=csi:91;5u
+keybind = ctrl+bracket_right=csi:93;5u
+keybind = ctrl+shift+bracket_left=csi:91;6u
+keybind = ctrl+shift+bracket_right=csi:93;6u
