@@ -111,8 +111,14 @@ brew "lazydocker"
 # revdiff — file-tree TUI for reviewing diffs, with inline annotations and a
 # Claude Code plugin. Replaced diffnav (delta-based pager) for richer review
 # UX. Lives in umputun's tap.
+#
+# Currently using a local dev build from ~/dev/forks/revdiff (`make build`
+# + `make install-local` symlinks .bin/revdiff into ~/.local/bin). The
+# brew formula is commented out so `brew bundle install` doesn't re-link
+# umputun's release version over the dev symlink. Re-enable when off the
+# fork.
 tap "umputun/apps"
-brew "umputun/apps/revdiff"
+# brew "umputun/apps/revdiff"
 
 # === GitHub + macOS app stores ===
 brew "gh"          # GitHub CLI
