@@ -115,7 +115,7 @@ alias frm  "flutter run -d macos"
 alias frc  "flutter run -d chrome"
 alias frcc "flutter run -d chrome --web-header=Cross-Origin-Opener-Policy=same-origin --web-header=Cross-Origin-Embedder-Policy=require-corp"
 
-# Docker compose (the `d` function handles bare `docker` / `lazydocker`)
+# Docker compose
 alias dcub "docker compose up --build -d && lazydocker"
 alias dcd  "docker compose down"
 
