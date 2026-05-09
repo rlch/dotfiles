@@ -119,23 +119,35 @@ alt-shift-l = ['join-with right', 'mode main']
 # the first pattern that matches a connected monitor wins; "main" is the
 # last-resort fallback (the macOS-designated primary in Displays).
 #
-# Home setup (3 monitors):  DELL S2721DGF, HP 25x, Built-in Retina Display
-# Office setup: TODO — run `aerospace list-monitors` from the office and
-# add the office display name(s) into the chain ahead of "main".
+# Home setup (3 monitors):    DELL S2721DGF, HP 25x, Built-in Retina Display
+# Office setup (3 monitors):  L27e-40 (1), L27e-40 (2), Built-in Retina Display
+#   The two Lenovos are identical, so aerospace disambiguates them with
+#   `(1)` / `(2)` suffixes derived from macOS's display-arrangement order.
+#   If the physical layout feels swapped (e.g. you sit looking at "(2)"
+#   when typing in `code`), swap the (1)/(2) digits below — no other
+#   change needed.
+#
+# The chain fall-through naturally encodes "home gets X, office gets Y":
+# list the home-only monitor first when home should win, list the
+# office-only monitor first when office should win. The other site's
+# monitor is absent at runtime so the chain falls past it.
 
-# Primary working monitor — large landscape external. Holds `code`.
-code    = ['DELL S2721DGF', 'main']
+# Primary working surface. At home this is the big DELL landscape; at
+# the office it collapses onto the laptop (centered between the two
+# L27es, so Built-in plays the primary role).
+code    = ['DELL S2721DGF', 'Built-in.*', 'main']
 
-# Secondary external — browser + Flutter dev (Chrome).
-browser = ['HP 25x', 'main']
-dev     = ['HP 25x', 'main']
+# Secondary external — browser + Flutter dev (Chrome). Home: HP 25x.
+# Office: L27e-40 (1), the more prominent of the two Lenovos.
+browser = ['HP 25x', 'L27e-40 \(1\)', 'main']
+dev     = ['HP 25x', 'L27e-40 \(1\)', 'main']
 
-# Laptop screen — chat / notes / notion stay peripheral so external
-# workspace toggles don't churn. Falls back to "main" if the lid is
-# closed (clamshell mode → Built-in display absent).
-comms   = ['Built-in.*', 'main']
-notion  = ['Built-in.*', 'main']
-notes   = ['Built-in.*', 'main']
+# Peripheral — chat / notes / notion. Home: laptop screen. Office:
+# L27e-40 (2), the off-side Lenovo. Office takes priority in the chain
+# because at home L27e-40 is absent, so it falls through to Built-in.
+comms   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
+notion  = ['L27e-40 \(2\)', 'Built-in.*', 'main']
+notes   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 
 # persistent app → workspace routing. Focus does not follow — apps land
 # in their slot silently, you switch via ctrl-alt-N.
