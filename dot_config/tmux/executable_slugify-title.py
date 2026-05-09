@@ -6,6 +6,12 @@ Reads the current name via `tmux display-message`, slugifies, renames if
 different. Idempotent: slugify(slug) == slug, so the recursive hook fires
 on rename but exits early on the equality check.
 
+Pure text only — tab status badges (agent sparkle, agent-done bell, zoom
+fullscreen) are rendered around #W by window-status-format / -current
+in tmux.conf via @tab-prefix and @tab-badge. The window name itself is
+never decorated here; toggling a badge is just `tmux set-option -w
+@<flag>`, and the format picks it up within status-interval.
+
 Pipeline (first match wins):
   1. SHORT          length <= MAX and not path-like                    → pass
   2. PREFIX-STRIP   matches "Claude Code[: —-]+..." or "claude:..."    → recurse
@@ -21,19 +27,6 @@ import subprocess
 import sys
 
 MAX_LEN = 10
-
-# Glyph prepended to the window name when the window has @agent set
-# (driven by tmux-send fish wrapper and the agent-action-hook.sh Claude
-# Code hook). U+F0674 = nf-md-creation, the de-facto "AI / generation"
-# sparkle icon.
-#
-# Glyph appended when @agent-done is set (Claude Code Stop hook fired,
-# agent is awaiting your reply). U+F009E = nf-md-bell_ring. Cleared on
-# pane-focus-in via clear-agent-done.sh.
-#
-# Both are 4-byte Plane 15 codepoints, survive the Edit/Write pipeline.
-AGENT_PREFIX = "󰙴 "
-DONE_SUFFIX  = " 󰂞"
 
 STOP_TOKENS = {
     "a", "an", "the", "to", "for", "in", "of", "and", "or", "on", "at",
@@ -148,33 +141,6 @@ def slugify(title: str, max_len: int = MAX_LEN) -> str:
     return compressed[:max_len]
 
 
-def window_has_agent(wid: str) -> bool:
-    # True if the window has @agent set (tab-scoped, per the design call:
-    # "we wont have multiple different agents acting on the same tab").
-    # Set by the tmux-send fish wrapper and agent-action-hook.sh.
-    try:
-        out = subprocess.check_output(
-            ["tmux", "show-options", "-wv", "-t", wid, "@agent"],
-            stderr=subprocess.DEVNULL,
-        ).decode().strip()
-    except Exception:
-        return False
-    return bool(out)
-
-
-def window_done_pending(wid: str) -> bool:
-    # True if the window has @agent-done set (Stop hook fired, awaiting
-    # user reply). Cleared on pane-focus-in by clear-agent-done.sh.
-    try:
-        out = subprocess.check_output(
-            ["tmux", "show-options", "-wv", "-t", wid, "@agent-done"],
-            stderr=subprocess.DEVNULL,
-        ).decode().strip()
-    except Exception:
-        return False
-    return bool(out)
-
-
 def main() -> int:
     if len(sys.argv) < 2:
         return 0
@@ -189,25 +155,12 @@ def main() -> int:
     if not name:
         return 0
 
-    # Strip both the agent prefix and the done suffix so re-renames operate
-    # on the bare name and stay idempotent regardless of which flags flip.
-    bare = name
-    if bare.startswith(AGENT_PREFIX):
-        bare = bare[len(AGENT_PREFIX):]
-    if bare.endswith(DONE_SUFFIX):
-        bare = bare[:-len(DONE_SUFFIX)]
-    slug = slugify(bare)
-    if not slug:
-        return 0
-
-    prefix = AGENT_PREFIX if window_has_agent(wid)    else ""
-    suffix = DONE_SUFFIX  if window_done_pending(wid) else ""
-    final  = prefix + slug + suffix
-    if final == name:
+    slug = slugify(name)
+    if not slug or slug == name:
         return 0
 
     subprocess.run(
-        ["tmux", "rename-window", "-t", wid, "--", final],
+        ["tmux", "rename-window", "-t", wid, "--", slug],
         check=False,
         stderr=subprocess.DEVNULL,
     )

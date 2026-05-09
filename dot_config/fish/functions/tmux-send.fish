@@ -4,11 +4,10 @@ function tmux-send --description 'send-keys to a tmux pane and mark its window a
     #
     # Sets @agent on the target pane's WINDOW (tab-scoped per the user's
     # design call: "we wont have multiple different agents acting on the
-    # same tab"); writes a deadline timestamp into @agent-ts. Triggers a
-    # window rename so slugify-title.py re-runs and prepends the agent
-    # glyph (nf-md-creation, U+F0674) to the window name. The glyph
-    # propagates to Ghostty's tab title and tmux's window list because
-    # both render #W.
+    # same tab"); writes a deadline timestamp into @agent-ts. The sparkle
+    # glyph (nf-md-creation, U+F0674) appears in the tab status via
+    # @tab-prefix in tmux.conf — the format re-evaluates on its own; no
+    # rename-to-refresh dance.
     #
     # Auto-clear: @agent-ts is a deadline (now + 30s). A backgrounded
     # timer waits 30s, re-reads @agent-ts, and only clears if the
@@ -51,9 +50,7 @@ function tmux-send --description 'send-keys to a tmux pane and mark its window a
     tmux set-option -w -t $win @agent        "$agent_name" >/dev/null
     tmux set-option -w -t $win @agent-action "$label"      >/dev/null
     tmux set-option -w -t $win @agent-ts     "$deadline"   >/dev/null
-
-    set -l current (tmux display-message -p -t $win '#W' 2>/dev/null)
-    tmux rename-window -t $win -- "$current" 2>/dev/null
+    tmux refresh-client -S 2>/dev/null
 
     tmux send-keys -t $target $rest
 
@@ -66,8 +63,7 @@ function tmux-send --description 'send-keys to a tmux pane and mark its window a
             tmux set-option -wu -t $win @agent 2>/dev/null
             tmux set-option -wu -t $win @agent-action 2>/dev/null
             tmux set-option -wu -t $win @agent-ts 2>/dev/null
-            set -l name (tmux display-message -p -t $win '#W' 2>/dev/null)
-            and tmux rename-window -t $win -- \"\$name\" 2>/dev/null
+            tmux refresh-client -S 2>/dev/null
         end
     " >/dev/null 2>&1 &
     disown

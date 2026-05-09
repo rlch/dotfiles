@@ -32,8 +32,7 @@ function tmux-agent --description 'manually mark/clear the agent indicator on a 
             set -l deadline (math (date +%s)" + 30")
             tmux set-option -w -t $win @agent "$agent_name" >/dev/null
             tmux set-option -w -t $win @agent-ts "$deadline" >/dev/null
-            set -l name (tmux display-message -p -t $win '#W')
-            tmux rename-window -t $win -- "$name"
+            tmux refresh-client -S 2>/dev/null
         case clear
             set -l target $argv[2]
             test -z "$target"; and set target (tmux display-message -p '#{pane_id}')
@@ -42,8 +41,7 @@ function tmux-agent --description 'manually mark/clear the agent indicator on a 
             tmux set-option -wu -t $win @agent 2>/dev/null
             tmux set-option -wu -t $win @agent-action 2>/dev/null
             tmux set-option -wu -t $win @agent-ts 2>/dev/null
-            set -l name (tmux display-message -p -t $win '#W')
-            tmux rename-window -t $win -- "$name"
+            tmux refresh-client -S 2>/dev/null
         case status
             set -l target $argv[2]
             test -z "$target"; and set target (tmux display-message -p '#{pane_id}')
