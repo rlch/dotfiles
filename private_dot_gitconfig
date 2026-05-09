@@ -28,9 +28,32 @@
 	reflog = delta
 
 [delta]
+	features = catppuccin-mocha decorations
 	navigate = true
 	line-numbers = true
+
+[delta "catppuccin-mocha"]
 	syntax-theme = Catppuccin Mocha
+	minus-style = syntax "#3e1e26"
+	minus-emph-style = syntax "#5a2a35"
+	plus-style = syntax "#1e3528"
+	plus-emph-style = syntax "#2a5238"
+
+[delta "decorations"]
+	true-color = always
+	relative-paths = true
+	whitespace-error-style = "#1e1e2e" reverse "#f38ba8"
+	file-style = bold "#89b4fa"
+	file-decoration-style = "#45475a" ul
+	file-modified-label = ""
+	file-added-label = ""
+	file-removed-label = ""
+	file-renamed-label = ""
+	hunk-header-style = syntax
+	hunk-header-decoration-style = "#585b70" ul
+	hunk-header-file-style = "#cdd6f4"
+	hunk-header-line-number-style = "#89b4fa"
+	hunk-label = ""
 
 [interactive]
 	diffFilter = delta --color-only --paging=never
