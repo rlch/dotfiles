@@ -1,0 +1,92 @@
+/* Force Catppuccin Macchiato palette */
+.theme-dark {
+  --rosewater: #f4dbd6;
+  --flamingo: #f0c6c6;
+  --pink: #f5bde6;
+  --mauve: #c6a0f6;
+  --red: #ed8796;
+  --maroon: #ee99a0;
+  --peach: #f5a97f;
+  --yellow: #eed49f;
+  --green: #a6da95;
+  --teal: #8bd5ca;
+  --sky: #91d7e3;
+  --sapphire: #7dc4e4;
+  --blue: #8aadf4;
+  --lavender: #b7bdf8;
+
+  --text: #cad3f5;
+  --subtext1: #b8c0e0;
+  --subtext0: #a5adcb;
+  --overlay2: #939ab7;
+  --overlay1: #8087a2;
+  --overlay0: #6e738d;
+  --surface2: #5b6078;
+  --surface1: #494d64;
+  --surface0: #363a4f;
+
+  --base: #24273a;
+  --mantle: #1e2030;
+  --crust: #181926;
+
+  /* Base nav vars (fallback) */
+  --nav-item-background-active: rgb(var(--ctp-lavender));
+  --nav-item-background-selected: rgb(var(--ctp-lavender));
+  --nav-item-background-hover: rgb(var(--ctp-lavender), 24%);
+}
+
+/* Force file-tree selected + hover visuals directly */
+.nav-file-title.is-active,
+.nav-folder-title.is-active,
+.tree-item-self.is-selected,
+.tree-item-self.is-active,
+.ctp-full-palette .nav-file-title.is-active,
+.ctp-full-palette .nav-folder-title.is-active,
+.ctp-full-palette .tree-item-self.is-selected,
+.ctp-full-palette .tree-item-self.is-active {
+  --nav-item-background-active: rgb(var(--ctp-lavender)) !important;
+  --nav-item-background-selected: rgb(var(--ctp-lavender)) !important;
+  background-color: rgb(var(--ctp-lavender)) !important;
+}
+
+.tree-item-self.is-clickable:hover,
+.ctp-full-palette .tree-item-self.is-clickable:hover {
+  --nav-item-background-hover: rgb(var(--ctp-surface0)) !important;
+  --nav-item-color-hover: var(--nav-item-color) !important;
+  background-color: rgb(var(--ctp-surface0)) !important;
+  color: var(--nav-item-color) !important;
+}
+
+/* Focus cue for active pane (clean, cool tones)
+   Draw ring at workspace-leaf level (not view-content) and raise active leaf above siblings
+   so the border doesn't get occluded by adjacent panes. */
+.theme-dark .workspace-leaf {
+  position: relative;
+  z-index: 0;
+}
+
+.theme-dark .workspace-leaf.mod-active {
+  z-index: 40;
+}
+
+.theme-dark .workspace-leaf::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 41;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 120ms ease;
+}
+
+/* Active pane: periwinkle/lavender, not pink */
+.theme-dark .workspace-leaf.mod-active::after {
+  border-color: rgb(var(--ctp-lavender), 0.72);
+}
+
+/* Inactive panes: faint neutral frame so active stands out */
+.theme-dark .workspace-leaf:not(.mod-active)::after {
+  border-color: rgb(var(--ctp-surface1), 0.42);
+}
+
