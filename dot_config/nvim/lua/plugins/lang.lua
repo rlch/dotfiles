@@ -230,7 +230,11 @@ return {
             "quarto",
           },
           ignore_buftypes = {},
-          modes = { "n", "no", "c", "i" },
+          -- "i" (insert) deliberately omitted: markview conceals surround
+          -- markup (** / * / ~~ / `) which makes editing impossible to follow
+          -- in insert mode. Normal / operator-pending / command get preview;
+          -- insert reverts to raw markdown so what you type is what you see.
+          modes = { "n", "no", "c" },
           debounce = 0,
           condition = function(buffer)
             local bt = vim.bo[buffer].bt

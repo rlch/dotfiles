@@ -1,5 +1,5 @@
 return {
-  dir = "/Users/rjm/dev/nvim/patchwork.nvim",
+  dir = "/Users/rjm/dev/plugins/nvim/patchwork.nvim",
   name = "patchwork",
   event = "VeryLazy",
   cmd = { "PatchworkStart", "PatchworkStop", "PatchworkStatus", "PatchworkSend" },
