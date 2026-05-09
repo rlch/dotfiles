@@ -1,4 +1,4 @@
-function cl --wraps claude --description 'claude --ide; restores tmux window title on exit (Claude OSCs its own title in-session)'
+function cl --wraps claude --description 'claude --ide; restores tmux window title on exit'
     if set -q TMUX
         set -l prev (tmux display-message -p '#W')
         claude --ide $argv
