@@ -18,6 +18,14 @@ mouse-hide-while-typing        = true
 confirm-close-surface          = false
 clipboard-trim-trailing-spaces = true
 
+# Drop OSC 9 / OSC 777 desktop-notification escape sequences. Claude Code's
+# `auto` notif channel, plus any other CLI tool that asks the terminal to
+# pop a macOS banner, route through this — flipping it false short-circuits
+# the lot at the terminal level. Tmux's bell only sets the in-status badge
+# (@tab-transient in tmux.conf); it doesn't go through OSC 9, so the in-tmux
+# "agent awaiting reply" glyph still works.
+desktop-notifications = false
+
 # === SSH terminfo propagation ===
 # Defaults are: cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path
 # Opt into the two ssh-* features so remote hosts get correct TERM and a
@@ -76,6 +84,20 @@ keybind = cmd+digit_6=text:\x1b[54;5u
 keybind = cmd+digit_7=text:\x1b[55;5u
 keybind = cmd+digit_8=text:\x1b[56;5u
 keybind = cmd+digit_9=text:\x1b[57;5u
+
+# cmd+shift+digit_N — jump to Nth session (alphabetical order). Same
+# trick as cmd+digit_N above, but modifier 6 (ctrl+shift) instead of 5
+# (ctrl), so tmux reads it as C-S-1..9 and the corresponding
+# `bind -T root C-S-N run-shell tmux-switch-session.sh N` fires.
+keybind = cmd+shift+digit_1=text:\x1b[49;6u
+keybind = cmd+shift+digit_2=text:\x1b[50;6u
+keybind = cmd+shift+digit_3=text:\x1b[51;6u
+keybind = cmd+shift+digit_4=text:\x1b[52;6u
+keybind = cmd+shift+digit_5=text:\x1b[53;6u
+keybind = cmd+shift+digit_6=text:\x1b[54;6u
+keybind = cmd+shift+digit_7=text:\x1b[55;6u
+keybind = cmd+shift+digit_8=text:\x1b[56;6u
+keybind = cmd+shift+digit_9=text:\x1b[57;6u
 
 # ctrl+[ / ctrl+] — jump to prev/next window with Claude's "awaiting reply"
 # bell (or any TUI hardware bell). ctrl+shift+[ / ctrl+shift+] do the same

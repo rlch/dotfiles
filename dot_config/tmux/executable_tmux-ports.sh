@@ -84,7 +84,11 @@ case "${1:-}" in
             printf "tmux display-message 'no listening ports'"
             exit 0
         fi
-        cmd="tmux display-menu -T '#[align=centre] listening ports ' -x M -y S"
+        # `-x R` anchors the menu's right edge to the screen's right edge,
+        # so it drops down underneath the ports count (which lives on the
+        # right side of the top status row). `-y S` puts it directly below
+        # the status line.
+        cmd="tmux display-menu -T '#[align=centre] listening ports ' -x R -y S"
         while IFS=$'\t' read -r port pid command; do
             [ -n "$port" ] || continue
             label="$command :$port — pid $pid"
