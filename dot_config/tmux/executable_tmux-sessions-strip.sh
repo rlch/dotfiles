@@ -32,10 +32,14 @@ out=""
 while IFS= read -r s; do
     [ -n "$s" ] || continue
     sup=$("$bells" session "$s" 2>/dev/null || true)
+    # `range=user|session:<name>` makes the segment clickable; the
+    # MouseDown1Status binding in tmux.conf parses `mouse_status_range`
+    # to dispatch `switch-client -t <name>` (no native handler — sessions
+    # don't have one like `range=window|N` does).
     if [ "$s" = "$ATTACHED" ]; then
-        seg="#[$ACTIVE_STYLE]${s}${sup}#[default]"
+        seg="#[range=user|session:${s},$ACTIVE_STYLE]${s}${sup}#[norange,default]"
     else
-        seg="#[$INACTIVE_STYLE]${s}${sup}#[default]"
+        seg="#[range=user|session:${s},$INACTIVE_STYLE]${s}${sup}#[norange,default]"
     fi
     if [ -n "$out" ]; then
         out="${out}${SEPARATOR}${seg}"

@@ -30,9 +30,11 @@ fmt='#{window_index}	#{window_active}	#{window_name}	#{E:@tab-badge}'
 
 while IFS=$'\t' read -r idx active name badge; do
     [ -z "$idx" ] && continue
+    # `range=window|<idx>` is a tmux-native click range — left-click
+    # selects the window, no custom binding needed.
     if [ "$active" = "1" ]; then
-        printf '#[%s] %s%s #[default]' "$ACTIVE_STYLE" "$name" "$badge"
+        printf '#[range=window|%s,%s] %s%s #[norange,default]' "$idx" "$ACTIVE_STYLE" "$name" "$badge"
     else
-        printf '#[%s] %s%s #[default]' "$INACTIVE_STYLE" "$name" "$badge"
+        printf '#[range=window|%s,%s] %s%s #[norange,default]' "$idx" "$INACTIVE_STYLE" "$name" "$badge"
     fi
 done < <(tmux list-windows -t "$session" -F "$fmt" 2>/dev/null)
