@@ -17,6 +17,9 @@ cask "jurplel/tap/instant-space-switcher"
 cask "ghostty"
 brew "tmux"
 brew "tmuxinator"  # YAML-defined tmux session layouts; configs in ~/.config/tmuxinator/
+# GUI SSH client. Hosts are still sourced from ~/.ssh/config so terminal SSH
+# and Termius stay in sync.
+cask "termius"
 
 # === Shell ===
 brew "bash"        # newer Bash for installers that need 4.3+ (Headroom Docker-native)
@@ -64,6 +67,12 @@ cask "macos-fuse-t/cask/fuse-t-sshfs"
 # Benchmarking
 brew "hyperfine"
 
+# === Diagrams / docs authoring ===
+# d2 — diagram-as-code, renders ```d2 blocks to SVG. Used by the seam docs
+# site's remark-d2 plugin (~/dev/seam/docs/src/plugins/remark-d2.mjs) and
+# any future Astro + Starlight project that wants the same.
+brew "d2"
+
 # === Editor ===
 brew "neovim"
 brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
@@ -74,6 +83,15 @@ brew "tree-sitter-cli"      # `tree-sitter` CLI binary (separate formula)
 brew "rust-analyzer"        # Rust LSP for nvim
 brew "rustup"               # Rust toolchain manager (rustc, cargo)
 brew "wasm-pack"            # Rust→WASM build/bundle tool
+# Cargo subcommands consumed by ~/dev/trading and any other Rust project.
+# Brew (vs. `cargo install`) so they upgrade with `brew upgrade` and don't
+# fight over ~/.cargo/bin/ between toolchains. cargo-fuzz also needs
+# nightly Rust at runtime: `rustup install nightly`.
+# Note: cargo-insta is not on Homebrew — installed via
+# .chezmoiscripts/run_onchange_post-install-cargo-tools.sh.
+brew "cargo-nextest"        # 2-3× faster test runner; used by `just test`
+brew "cargo-llvm-cov"       # line coverage via LLVM; used by `just cov`
+brew "cargo-fuzz"           # libFuzzer driver for codec fuzzing
 
 # === Language runtimes ===
 # Available globally so mason.nvim (in nvim) can install LSPs/formatters that
@@ -95,6 +113,7 @@ brew "watchexec"   # rerun a command when files change
 
 # === Network / HTTP ===
 brew "xh"          # friendlier curl / httpie alternative
+cask "tailscale-app"  # Tailscale mesh VPN; Termius uses 100.x hosts when off LAN
 # sshpass — non-interactive ssh password auth (one-shot bootstrap of new hosts).
 # Removed from homebrew-core; lives in this third-party tap.
 tap "hudochenkov/sshpass"
