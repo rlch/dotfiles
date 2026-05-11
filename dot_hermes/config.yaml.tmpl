@@ -9,12 +9,12 @@
 # you want to keep an interactive change.
 
 # ─── Primary model ───────────────────────────────────────────────────────────
-# gpt-5.5-codex via OpenAI Codex OAuth — uses the ChatGPT plan's OAuth token
+# gpt-5.5 via OpenAI Codex OAuth — uses the ChatGPT plan's OAuth token
 # (same auth as the `codex` CLI). Authenticate once with `hermes auth`,
 # stored in ~/.hermes/auth.json. No per-token OpenAI API spend.
 model:
   provider: openai-codex
-  default: gpt-5.5-codex
+  default: gpt-5.5
 
 # ─── Fallback ────────────────────────────────────────────────────────────────
 # Activates automatically on rate-limit / server-error / auth failure of the
@@ -23,7 +23,7 @@ model:
 # when the ChatGPT plan throttles, work continues on per-token billing.
 fallback_model:
   provider: openai
-  model: gpt-5.5-codex
+  model: gpt-5.5
 
 # ─── Auxiliary models ────────────────────────────────────────────────────────
 # Use OpenRouter with gpt-5.3-codex for auxiliary workloads.
