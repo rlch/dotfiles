@@ -14,5 +14,5 @@ set -eu
 n="${1:-}"
 [ -z "$n" ] && { echo "usage: $0 <N>" >&2; exit 2; }
 
-target=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | awk -v n="$n" 'NR==n')
+target=$(tmux list-sessions -F '#{session_name}' -f '#{!=:#{m:*-hold,#{session_name}},1}' 2>/dev/null | awk -v n="$n" 'NR==n')
 [ -n "$target" ] && tmux switch-client -t "$target"
