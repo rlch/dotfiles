@@ -1,0 +1,45 @@
+# Added by OrbStack: 'orb' SSH host for Linux machines
+# This only works if it's at the top of ssh_config (before any Host blocks).
+# This won't be added again if you remove it.
+Include ~/.orbstack/ssh/config
+
+# Home Mac mini over local network / Tailscale DNS.
+# Uses a dedicated passphrase-less key so Termius/remote sessions do not need
+# an interactive 1Password approval prompt.
+Host richards-mac-mini
+    HostName richards-mac-mini.local
+    User rjm
+    Port 22
+    IdentityAgent none
+    IdentityFile ~/.ssh/richards_mac_mini_ed25519
+    IdentitiesOnly yes
+
+# Mac mini via Tailscale. Prefer this from Termius/iPhone when off LAN.
+Host richards-mac-mini-ts
+    HostName 100.122.156.98
+    User rjm
+    Port 22
+    IdentityAgent none
+    IdentityFile ~/.ssh/richards_mac_mini_ed25519
+    IdentitiesOnly yes
+
+# This laptop. Useful for importing into Termius and for loopback/LAN testing.
+Host richards-macbook-pro
+    HostName Richards-MacBook-Pro-2.local
+    User rjm
+    Port 22
+    IdentityAgent none
+    IdentityFile ~/.ssh/richards_macbook_pro_ed25519
+    IdentitiesOnly yes
+
+# This laptop via Tailscale. Prefer this from Termius/iPhone when off LAN.
+Host richards-macbook-pro-ts
+    HostName 100.101.47.84
+    User rjm
+    Port 22
+    IdentityAgent none
+    IdentityFile ~/.ssh/richards_macbook_pro_ed25519
+    IdentitiesOnly yes
+
+Host *
+    IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
