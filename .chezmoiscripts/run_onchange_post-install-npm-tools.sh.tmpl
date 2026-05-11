@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Install npm global packages that aren't on Homebrew. Reruns whenever the
+# Brewfile hash changes (so additions to the npm block stay in sync).
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm-tools: npm not on PATH — Brewfile not applied; skipping"
+  exit 0
+fi
+
+# `npm install -g` upgrades; the version check first keeps the script
+# fast on subsequent runs.
+need=(@fission-ai/openspec)
+
+for pkg in "${need[@]}"; do
+  if npm ls -g --depth=0 --json 2>/dev/null | grep -q "\"${pkg}\":"; then
+    echo "npm-tools: ${pkg} already installed"
+  else
+    echo "npm-tools: installing ${pkg}@latest"
+    npm install -g "${pkg}@latest"
+  fi
+done
