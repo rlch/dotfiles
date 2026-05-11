@@ -15,10 +15,14 @@ if ! command -v claude >/dev/null 2>&1; then
 fi
 
 if command -v npm >/dev/null 2>&1; then
+  # Globals consumed by Claude Code: status line, browser MCPs, and the
+  # ACP wrapper that lets non-Claude clients (obsidian-agent-client, Zed,
+  # etc.) drive Claude Code as a stdio JSON-RPC agent.
   npm install -g \
     ccstatusline \
     chrome-devtools-mcp \
-    @playwright/mcp
+    @playwright/mcp \
+    @agentclientprotocol/claude-agent-acp@latest
 else
   echo "claude-plugins: npm not found; skipping global MCP/status helpers" >&2
 fi
