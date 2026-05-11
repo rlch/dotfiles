@@ -1,0 +1,9 @@
+{
+  "layoutEngine": "dagre",
+  "debounce": 500,
+  "theme": 200,
+  "apiToken": "",
+  "d2Path": "",
+  "pad": 100,
+  "sketch": true
+}

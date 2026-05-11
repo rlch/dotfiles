@@ -1,0 +1,10 @@
+{
+  "translucency": false,
+  "cssTheme": "Catppuccin",
+  "enabledCssSnippets": [
+    "catppuccin-macchiato"
+  ],
+  "interfaceFontFamily": "",
+  "textFontFamily": "Inter",
+  "monospaceFontFamily": ""
+}
