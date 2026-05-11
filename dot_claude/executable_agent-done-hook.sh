@@ -25,11 +25,6 @@ command -v tmux >/dev/null 2>&1 || exit 0
 
 wid="$(tmux display-message -p -t "$TMUX_PANE" '#{window_id}' 2>/dev/null)" || exit 0
 
-# Clear the in-progress hourglass unconditionally — Claude finished its
-# turn, regardless of whether the user is looking. (Set by
-# agent-working-hook.sh on UserPromptSubmit; rendered via @tab-working.)
-tmux set-option -wu -t "$wid" @agent-working >/dev/null 2>&1
-
 # Skip the bell when the user is already looking at this window. The bell
 # exists to nudge focus back; it's pure noise when there's nothing to
 # nudge to. pane-focus-in won't fire (no focus change), so the bell would
@@ -41,7 +36,7 @@ tmux set-option -wu -t "$wid" @agent-working >/dev/null 2>&1
 # "unseen" until the client reattaches.
 state="$(tmux display-message -p -t "$wid" '#{window_active}/#{session_attached}' 2>/dev/null || true)"
 case "$state" in
-  1/[1-9]*) tmux refresh-client -S 2>/dev/null; exit 0 ;;
+  1/[1-9]*) exit 0 ;;
 esac
 
 tmux set-option -w -t "$wid" @agent-done "1" >/dev/null 2>&1 || exit 0
