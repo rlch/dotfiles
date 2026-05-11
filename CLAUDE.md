@@ -30,13 +30,17 @@ prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
 
 ```
 .chezmoi.toml.tmpl          → renders ~/.config/chezmoi/chezmoi.toml on init
-.chezmoiignore              → files in this repo NOT to deploy
+.chezmoiignore.tmpl         → files in this repo NOT to deploy (templated by role)
 .chezmoiscripts/            → run-on-change install hooks
+.chezmoitemplates/          → shared partials referenced by `{{ template ... }}`
+                              (e.g. obsidian-shared/ — see "Obsidian vaults" below)
 Brewfile                    → base packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, notify.sh hook)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
                               lazydocker, starship.toml, tmux, tridactyl)
+Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
+dev/trading/vault/          → ~/dev/trading/vault/.obsidian/ (per-project vault)
 ```
 
 ## Multi-host
@@ -111,6 +115,53 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 - **Brewfile and Brewfile.heavy are listed in `.chezmoiignore`** so they aren't
   deployed to `~`. They're consumed only by `brew bundle install` invoked from
   the install script.
+
+## Obsidian vaults
+
+Multiple Obsidian vaults live across the filesystem (the main `~/Knowledge/`
+plus per-project vaults like `~/dev/trading/vault/`). They all share **one
+canonical config** so plugins, themes, hotkeys, and snippets behave
+identically everywhere.
+
+The pattern is plain chezmoi — no custom script, no `.chezmoiignore` exclusion:
+
+- **Canonical content** lives in `.chezmoitemplates/obsidian-shared/`.
+  This is chezmoi's official directory for shared partial templates;
+  it's never deployed to a literal path.
+- **Per-vault wrappers** live at `<vault-source-path>/dot_obsidian/<file>.tmpl`
+  and contain a single `{{- template "obsidian-shared/<file>" . -}}` line.
+  Chezmoi expands the template into each destination, so `chezmoi diff`
+  shows real per-file diffs.
+- **Plugin/theme symlinks** use chezmoi's `symlink_<name>.tmpl` files.
+  Their contents are the link target (typically
+  `{{ .chezmoi.homeDir }}/dev/plugins/obsidian/<plugin>` or, for the
+  Catppuccin theme, the Knowledge vault's themes dir — Knowledge is the
+  one place the real theme dir lives, every other vault symlinks to it).
+
+**Why copy JSON but symlink themes/plugins**: per [pjeby/obsidian-symlinks](https://github.com/pjeby/obsidian-symlinks),
+Obsidian writes JSON config without re-reading on disk, so symlinking
+shared JSON between vaults will silently corrupt settings as different
+vaults clobber each other. Read-only assets (CSS snippets, plugin code,
+theme dirs) are safe to symlink.
+
+To add a new vault:
+
+1. Copy an existing wrapper tree:
+   ```sh
+   cp -r ~/dev/dotfiles/Knowledge/dot_obsidian \
+         ~/dev/dotfiles/<source-path-of-new-vault>/dot_obsidian
+   ```
+   `<source-path-of-new-vault>` is the home-relative path with `dot_` for
+   leading dots — e.g. `dev/myproject/notes/dot_obsidian` deploys to
+   `~/dev/myproject/notes/.obsidian/`.
+2. Decide whether the new vault needs the Catppuccin theme symlink under
+   `themes/symlink_Catppuccin.tmpl` (only Knowledge holds the real dir;
+   every other vault symlinks).
+3. `chezmoi apply <full-path-to-new-vault>/.obsidian` to deploy.
+
+To change a setting that should propagate everywhere: edit
+`.chezmoitemplates/obsidian-shared/<file>` and `chezmoi apply`. Both
+vaults update.
 
 ## Common tasks
 

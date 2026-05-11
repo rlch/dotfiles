@@ -80,13 +80,24 @@
   transition: border-color 120ms ease;
 }
 
-/* Active pane: periwinkle/lavender, not pink */
+/* Active pane: periwinkle/lavender, not pink. Inset by the border width
+   so the ring doesn't overlap the split resize handle on the leaf edge. */
 .theme-dark .workspace-leaf.mod-active::after {
   border-color: rgb(var(--ctp-lavender), 0.72);
+  inset: 1px;
 }
 
 /* Inactive panes: faint neutral frame so active stands out */
 .theme-dark .workspace-leaf:not(.mod-active)::after {
   border-color: rgb(var(--ctp-surface1), 0.42);
+}
+
+/* Keep the split resize handles above the active-leaf stacking context
+   so dragging the divider stays hit-testable. Active leaves use z-index 40
+   above; the handles must beat that. */
+.theme-dark .workspace-split > .workspace-leaf-resize-handle,
+.theme-dark .workspace-tabs > .workspace-leaf-resize-handle,
+.theme-dark .workspace-leaf > .workspace-leaf-resize-handle {
+  z-index: 50;
 }
 
