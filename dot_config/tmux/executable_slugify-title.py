@@ -141,6 +141,9 @@ def slugify(title: str, max_len: int = MAX_LEN) -> str:
     return compressed[:max_len]
 
 
+MOSAIC_INTERNAL_PREFIXES = ("hold-", "__mosaic_")
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         return 0
@@ -153,6 +156,13 @@ def main() -> int:
     except Exception:
         return 0
     if not name:
+        return 0
+
+    # Skip windows mosaic uses for its rebuild bookkeeping. Mosaic
+    # references them by exact name during reconcile (`hold-<pane>`,
+    # `__mosaic_keepalive_*`, `__mosaic_orphaned_*`); slugifying would
+    # rename them out from under it and break swap-pane/kill-window.
+    if name.startswith(MOSAIC_INTERNAL_PREFIXES):
         return 0
 
     slug = slugify(name)

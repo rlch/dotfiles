@@ -46,5 +46,5 @@ while IFS= read -r s; do
     else
         out="$seg"
     fi
-done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+done < <(tmux list-sessions -F '#{session_name}' -f '#{!=:#{m:*-hold,#{session_name}},1}' 2>/dev/null)
 printf '%s' "$out"
