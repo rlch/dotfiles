@@ -40,7 +40,7 @@ dot_claude/                 → ~/.claude/ (settings.json, notify.sh hook)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
                               lazydocker, starship.toml, tmux, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
-dev/trading/Trading/        → ~/dev/trading/Trading/.obsidian/ (per-project vault)
+dev/trading/                → ~/dev/trading/.obsidian/ (per-project vault — vault root is the repo root, all .md across the repo become wikilinkable)
 ```
 
 ## Multi-host
@@ -119,7 +119,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 ## Obsidian vaults
 
 Multiple Obsidian vaults live across the filesystem (the main `~/Knowledge/`
-plus per-project vaults like `~/dev/trading/Trading/`). They all share **one
+plus per-project vaults where the vault root is the project repo root, e.g. `~/dev/trading/` with `.obsidian/` at the repo root). They all share **one
 canonical config** so plugins, themes, hotkeys, and snippets behave
 identically everywhere.
 
