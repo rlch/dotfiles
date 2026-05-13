@@ -13,7 +13,12 @@ fi
 
 # `cargo install` is idempotent: skips if already installed at the requested
 # version. --locked uses the crate's Cargo.lock for reproducible builds.
-need=(cargo-insta)
+#
+# - cargo-insta: snapshot-test review TUI.
+# - inferno:     flamegraph/flamechart renderer. Provides `inferno-flamegraph`
+#                used by `trading-agents --trace-out` + `just trace-svg` to
+#                render tracing-flame folded-stack output to SVG waterfalls.
+need=(cargo-insta inferno)
 
 for crate in "${need[@]}"; do
   if cargo install --list | grep -q "^${crate} v"; then
