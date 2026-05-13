@@ -1,0 +1,47 @@
+# nats-server configuration — managed by chezmoi.
+#
+# Source-of-truth: ~/dev/dotfiles/dot_config/nats-server/nats.conf
+# Deployed to:     ~/.config/nats-server/nats.conf
+# Launched by:     ~/Library/LaunchAgents/com.synadia.nats-server.plist
+#
+# Used by the agent-signal-strategy-live design in ~/dev/trading. A
+# single `trading` JetStream stream carries every workspace subject
+# (signals.>, orders.>, fills.>, risk.>, ops.>, positions.>). The
+# stream itself is created idempotently from Rust by
+# `nats_bus::bootstrap_trading_stream` — this file only configures
+# the server, not the streams.
+
+# Listen on the loopback interface only. The bus is for inter-process
+# coordination between agent-pipeline, strategy, execution and ops
+# binaries running on the same host; there is no remote consumer.
+host: "127.0.0.1"
+port: 4222
+
+# HTTP monitoring endpoint — `curl http://127.0.0.1:8222/jsz` returns
+# JetStream status, handy for `just nats-status` and ad-hoc debugging.
+http: "127.0.0.1:8222"
+
+# Identify the server in logs so `launchctl print` output is
+# unambiguous even when other NATS instances run via OrbStack etc.
+server_name: "trading-{{ .role }}"
+
+# Account-level message-size ceiling. Signals are < 1 KB; positions
+# / fills payloads peak around a few KB. 8 MiB leaves comfortable
+# headroom for ad-hoc snapshot publishing (equity exports etc.)
+# without ever silently truncating.
+max_payload: 8MB
+
+# JetStream — file storage in ~/.local/share/nats/jetstream so we
+# inherit user-scope macOS time-machine inclusion and don't pollute
+# /var. Caps are global ceilings; per-stream caps (90d retention,
+# 1 GiB) are set in code via `bootstrap_trading_stream`.
+jetstream {
+  store_dir: "{{ .chezmoi.homeDir }}/.local/share/nats/jetstream"
+  max_memory_store: 256MB
+  max_file_store: 4GB
+}
+
+# Per-server log to ~/Library/Logs alongside launchd stdout/stderr.
+logfile: "{{ .chezmoi.homeDir }}/Library/Logs/nats-server.log"
+debug: false
+trace: false

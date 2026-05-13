@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent for nats-server — keeps a single JetStream instance
+  alive for the lifetime of the user session so that:
+
+    1. ~/dev/trading binaries (agent pipeline, strategy, execution,
+       ops) can publish/consume to 127.0.0.1:4222 without owning the
+       server lifecycle themselves. The `trading` stream's durable
+       consumers track per-process progress server-side, which only
+       works if the server stays up across producer restarts.
+    2. JetStream's `Nats-Msg-Id` dedup window (1h, set per stream in
+       Rust) is meaningful — restarting the server doesn't wipe the
+       dedup table, but a long downtime defeats it.
+    3. Logs land in ~/Library/Logs/nats-server.{out,err,log} (the
+       last from the server's own logger, the first two from
+       launchd's stdio capture).
+
+  Sourced from ~/dev/dotfiles via chezmoi. The plist is gated to the
+  "mbp" host role in .chezmoiignore.tmpl — the mini doesn't run the
+  trading workspace yet (per SPEC §C "M5 Max now, mini later").
+
+  Manual lifecycle (rare):
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.synadia.nats-server.plist
+    launchctl bootout    gui/$(id -u)/com.synadia.nats-server
+    launchctl kickstart  -k gui/$(id -u)/com.synadia.nats-server   # restart
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.synadia.nats-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/nats-server</string>
+        <string>-c</string>
+        <string>{{ .chezmoi.homeDir }}/.config/nats-server/nats.conf</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>{{ .chezmoi.homeDir }}</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!--
+      Restart on crash but NOT on clean exit. `just nats-unload`
+      should stay unloaded; only segfaults / signals re-fire the
+      launch.
+    -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!--
+      ThrottleInterval=60 prevents a wedged JetStream store
+      (corrupt file, full disk) from crash-looping the launch agent
+      multiple times per second.
+    -->
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+
+    <!--
+      ExitTimeOut: how long launchd waits between SIGTERM and SIGKILL
+      on shutdown. nats-server flushes JetStream state on SIGTERM;
+      20s is comfortably more than the few hundred ms we see in
+      practice with this stream's footprint.
+    -->
+    <key>ExitTimeOut</key>
+    <integer>20</integer>
+
+    <!--
+      ProcessType Interactive: this is a low-latency message bus.
+      Adaptive / Background would let App Nap throttle it under load,
+      which adds tail latency to publish_ack RTTs. We want the
+      kernel scheduler to treat it like a foreground daemon.
+    -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <key>StandardOutPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/nats-server.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/nats-server.err.log</string>
+</dict>
+</plist>
