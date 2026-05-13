@@ -100,6 +100,8 @@ brew "node"
 brew "go"
 brew "python@3.13"
 brew "uv"          # fast Python package/venv manager (pip + virtualenv replacement)
+# uv-managed Python CLIs (euporie, etc.) install via
+# .chezmoiscripts/run_onchange_post-install-uv-tools.sh — not on homebrew-core.
 
 # === Flutter ===
 # Per-project Flutter SDK pinning via .fvmrc (mise doesn't manage Flutter).
@@ -113,7 +115,13 @@ brew "watchexec"   # rerun a command when files change
 
 # === Network / HTTP ===
 brew "xh"          # friendlier curl / httpie alternative
-cask "tailscale-app"  # Tailscale mesh VPN; Termius uses 100.x hosts when off LAN
+# Tailscale mesh VPN — install manually (not via Brewfile). The cask uses a
+# .pkg installer that requires `sudo /usr/sbin/installer`, which can't read a
+# password from chezmoi's non-interactive shell, so every `chezmoi apply` would
+# stall + purge brew's Caskroom entry and re-try forever. The app auto-updates
+# itself via Sparkle, so brew adds nothing once installed.
+# On a fresh host: open Ghostty and run `brew install --cask tailscale-app`
+# (Touch ID / password prompts in the real tty).
 # sshpass — non-interactive ssh password auth (one-shot bootstrap of new hosts).
 # Removed from homebrew-core; lives in this third-party tap.
 tap "hudochenkov/sshpass"
@@ -148,6 +156,17 @@ brew "mas"         # Mac App Store CLI (lets MAS apps live in this Brewfile)
 
 # === Containers ===
 cask "orbstack"
+
+# === Trading / message bus ===
+# nats-server hosts the JetStream message bus used by the
+# agent-signal-strategy-live design in ~/dev/trading — single `trading`
+# stream, 127.0.0.1:4222, file storage, 90d retention. Managed by
+# launchd (~/Library/LaunchAgents/com.synadia.nats-server.plist) via
+# `just nats-{load,unload,status,bootstrap}` in the trading workspace.
+# `nats` is the CLI used by `nats stream ls` / `nats stream view`.
+brew "nats-server"
+tap "nats-io/nats-tools"
+brew "nats-io/nats-tools/nats"
 
 # === Cloud SDKs ===
 # gcloud + gsutil + bq + friends. Auth via `gcloud auth login`. Components
