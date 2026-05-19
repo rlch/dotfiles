@@ -1,0 +1,21 @@
+# RTK config (~/Library/Application Support/rtk/config.toml).
+#
+# Why this exists: RTK hooks into Claude Code via PreToolUse Bash, wrapping
+# every shell command. Its default behaviour is harmless for short ops, but
+# for cargo (and rustc directly) it captures the entire build's stdout
+# stream through a tee + token-optimisation pipeline. For full workspace
+# builds that produce thousands of lines (every "Compiling X" + linker
+# messages), the tee/analyse pass became the bottleneck — a `cargo check
+# -p trading-types` taking 15:38 wall clock vs 17.6s of actual cargo work,
+# observed 2026-05-19.
+#
+# Cargo doesn't need RTK's compression — its output is already structured
+# (cargo --message-format=json is the way to programmatically read it) and
+# rustc errors are short. Excluding cargo + rustc here returns the entire
+# 14-minute gap to cargo.
+#
+# Everything else stays at RTK defaults (the savings on git/find/ls/grep
+# are real — see `rtk gain`).
+
+[hooks]
+exclude_commands = ["cargo", "rustc", "rustup", "rust-analyzer"]

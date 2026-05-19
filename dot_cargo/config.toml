@@ -1,0 +1,55 @@
+# Cargo global config (~/.cargo/config.toml). Applies to every workspace.
+#
+# Why this exists: the four big workspaces on this machine (tanzo, trading,
+# tutero/frontend/library/modality, mosaic) all default to debug=2 + 600-1000
+# transitive deps each, producing 100-200 GB `target/` dirs and slow inner
+# loops. Settings here apply uniformly without editing each project's
+# Cargo.toml; per-project Cargo.toml overrides still win where present.
+
+# ---------------------------------------------------------------------------
+# Fast-dev profile
+# ---------------------------------------------------------------------------
+# debug = false:
+#   No debug symbols in dev artifacts. Cuts dev build wall-clock 20-40% and
+#   slashes target/debug/deps size. Trade-off: panic backtraces show raw
+#   addresses, lldb is useless. When you need a debugger, build with
+#   `cargo build --profile=debug-full`. Switch to debug = "line-tables-only"
+#   if you want backtraces with file:line but no variable inspection.
+#
+# split-debuginfo = "unpacked":
+#   macOS default; emits .dSYM bundles separately so linking doesn't pay the
+#   debuginfo cost. Kept explicit so it survives future debug=true overrides.
+#
+# incremental = true:
+#   Cargo's native incremental cache. The right inner-loop tool for local
+#   dev. sccache was tried and reversed — it's a CI tool (cross-runner
+#   artifact dedup); for one-machine dev it disables incremental in
+#   exchange for cross-worktree dedup that's not worth the trade-off.
+#
+# [profile.dev.package."*"] opt-level = 1:
+#   First-party crates stay at opt-level=0 (fast to compile). Dependencies
+#   compile once at opt-level=1 — small one-time build hit, big test
+#   runtime win because deps execute many times during a test run.
+[profile.dev]
+debug = false
+split-debuginfo = "unpacked"
+incremental = true
+
+[profile.dev.package."*"]
+opt-level = 1
+
+# Opt-in profile for when a debugger is actually needed.
+[profile.debug-full]
+inherits = "dev"
+debug = "full"
+
+# ---------------------------------------------------------------------------
+# Aliases
+# ---------------------------------------------------------------------------
+# Replace cargo's built-in test runner with cargo-nextest. Process-per-test
+# parallelism, structured output, faster failure surfacing. brew-installed
+# (see ~/dev/dotfiles/Brewfile). Caveat: nextest does not run doctests; use
+# `cargo test --doc` for those (which routes through the alias but to
+# nextest's no-doc path — invoke `command cargo test --doc` to bypass).
+[alias]
+test = "nextest run"

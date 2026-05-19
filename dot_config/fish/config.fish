@@ -63,7 +63,7 @@ set -gx HEADROOM_PORT     8787
 set -gx HEADROOM_HOST     127.0.0.1
 set -gx HEADROOM_MODE     token
 set -gx HEADROOM_BACKEND  anthropic
-set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
+#t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
 
 # fzf — Catppuccin Mocha (matches tmux + ghostty)
 set -gx FZF_DEFAULT_OPTS "\
@@ -95,6 +95,7 @@ abbr f   yazi
 abbr j   just
 abbr bt  btop
 abbr we  watchexec
+abbr cgc cargo-gc
 
 # chezmoi (dotfiles management)
 abbr cz   'chezmoi apply -v'

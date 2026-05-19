@@ -89,7 +89,8 @@ brew "wasm-pack"            # Rust→WASM build/bundle tool
 # nightly Rust at runtime: `rustup install nightly`.
 # Note: cargo-insta is not on Homebrew — installed via
 # .chezmoiscripts/run_onchange_post-install-cargo-tools.sh.
-brew "cargo-nextest"        # 2-3× faster test runner; used by `just test`
+brew "cargo-nextest"        # 2-3× faster test runner; used by `just test` and
+                            # aliased as `cargo test` via ~/.cargo/config.toml.
 brew "cargo-llvm-cov"       # line coverage via LLVM; used by `just cov`
 brew "cargo-fuzz"           # libFuzzer driver for codec fuzzing
 
