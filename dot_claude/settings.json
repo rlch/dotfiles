@@ -1,6 +1,9 @@
 {
   "skipAutoPermissionPrompt": true,
   "preferredNotifChannel": "notifications_disabled",
+  "worktree": {
+    "baseRef": "head"
+  },
   "permissions": {
     "defaultMode": "auto",
     "deny": [
