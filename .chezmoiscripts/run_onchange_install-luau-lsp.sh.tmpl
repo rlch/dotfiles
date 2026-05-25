@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Install luau-lsp (JohnnyMorganz/luau-lsp) — the Luau LSP server, used by
+# nvim's luau_lsp config (dot_config/nvim/lsp/luau_lsp.lua) for grift's
+# Luau-authored content (assets/effects/*.luau, assets/abilities/*.luau,
+# assets/scripts/*.luau).
+#
+# Distributed as a versioned binary from GitHub releases; no brew formula
+# exists. We pin a version and reinstall on bump.
+#
+# Idempotent: skips if ~/.local/bin/luau-lsp is already at the pinned
+# version. Bumping LUAU_LSP_VERSION re-runs the script and reinstalls.
+#
+# To force a reinstall:
+#   rm ~/.local/bin/luau-lsp && chezmoi apply
+#
+# Version pin — bump to refresh. Latest at
+# https://github.com/JohnnyMorganz/luau-lsp/releases
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+LUAU_LSP_VERSION="1.68.0"
+LUAU_LSP_BIN="$HOME/.local/bin/luau-lsp"
+
+if [ -x "$LUAU_LSP_BIN" ]; then
+  installed_version="$("$LUAU_LSP_BIN" --version 2>/dev/null | head -1 | tr -d ' \r\n' || echo unknown)"
+  if [ "$installed_version" = "$LUAU_LSP_VERSION" ]; then
+    echo "luau-lsp: already installed at $LUAU_LSP_BIN (v$installed_version) — skipping"
+    exit 0
+  fi
+  echo "luau-lsp: installed v$installed_version differs from pin v$LUAU_LSP_VERSION — reinstalling"
+fi
+
+echo "luau-lsp: downloading v$LUAU_LSP_VERSION from GitHub releases"
+TMPDIR="$(mktemp -d)"
+cleanup() { rm -rf "$TMPDIR"; }
+trap cleanup EXIT
+
+# luau-lsp release asset naming as of 1.68.x: `luau-lsp-macos.zip` (universal
+# binary covering both arm64 + x86_64). If this changes in a future release,
+# update the asset name below.
+asset="luau-lsp-macos.zip"
+
+curl -fsSL -o "$TMPDIR/luau-lsp.zip" \
+  "https://github.com/JohnnyMorganz/luau-lsp/releases/download/$LUAU_LSP_VERSION/$asset"
+
+echo "luau-lsp: extracting"
+unzip -q "$TMPDIR/luau-lsp.zip" -d "$TMPDIR/extracted"
+
+# Tolerate minor layout shifts in the zip — the binary may be at the root or
+# in a subdir depending on release.
+src="$(find "$TMPDIR/extracted" -maxdepth 3 -name "luau-lsp" -type f | head -1)"
+if [ -z "$src" ]; then
+  echo "luau-lsp: binary not found in release zip — release layout may have changed" >&2
+  find "$TMPDIR/extracted" -maxdepth 4 >&2
+  exit 1
+fi
+
+mkdir -p "$HOME/.local/bin"
+install -m 0755 "$src" "$LUAU_LSP_BIN"
+
+# Strip quarantine attribute — curl bypasses Gatekeeper's user attestation.
+xattr -dr com.apple.quarantine "$LUAU_LSP_BIN" 2>/dev/null || true
+
+echo "luau-lsp: installed → $LUAU_LSP_BIN (v$LUAU_LSP_VERSION)"
+{{- end }}
