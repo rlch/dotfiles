@@ -229,21 +229,19 @@ return {
             "latex",
             "quarto",
           },
-          ignore_buftypes = {},
+          ignore_buftypes = { "nofile", "terminal", "quickfix", "prompt", "help" },
           -- "i" (insert) deliberately omitted: markview conceals surround
           -- markup (** / * / ~~ / `) which makes editing impossible to follow
           -- in insert mode. Normal / operator-pending / command get preview;
           -- insert reverts to raw markdown so what you type is what you see.
           modes = { "n", "no", "c" },
           debounce = 0,
-          condition = function(buffer)
-            local bt = vim.bo[buffer].bt
-            if bt == "nofile" then
-              return false
-            else
-              return true
-            end
-          end,
+          -- No `condition` override: returning `true` makes markview attach
+          -- without checking the filetype list, and BufAdd (fired by neo-tree
+          -- before filetype detection) hits treesitter.start() with no lang
+          -- → "Parser not found, language could not be determined". Letting
+          -- markview fall back to its default ignore_buftypes + filetypes
+          -- check skips those bare buffers correctly.
         },
         ---@diagnostic disable-next-line: missing-fields
         markdown = {
