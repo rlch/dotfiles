@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Install deep-filter (Rikorose/DeepFilterNet) — SOTA real-time speech
+# denoiser used by ~/dev/youtube/scripts/enhance.sh for channel VO cleanup.
+# Lightweight ONNX-based runtime (~50 MB), Apple Silicon native, no PyTorch
+# fragility. Replaces resemble-enhance which crashed under MPS+CPU memory
+# bouncing on M-series.
+#
+# Distributed as a single pre-compiled binary from GitHub releases (the
+# crate workspace isn't directly cargo-installable by name). We pin a
+# version and reinstall on bump.
+#
+# Idempotent: skips if ~/.local/bin/deep-filter is already at the pinned
+# version. Bumping DEEP_FILTER_VERSION re-runs and reinstalls.
+#
+# To force a reinstall:
+#   rm ~/.local/bin/deep-filter && chezmoi apply
+#
+# Version pin — bump to refresh. Latest at
+# https://github.com/Rikorose/DeepFilterNet/releases
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+DEEP_FILTER_VERSION="0.5.6"
+DEEP_FILTER_BIN="$HOME/.local/bin/deep-filter"
+
+if [ -x "$DEEP_FILTER_BIN" ]; then
+  installed_version="$("$DEEP_FILTER_BIN" --version 2>/dev/null | awk '{print $NF}' | tr -d ' \r\n' || echo unknown)"
+  if [ "$installed_version" = "$DEEP_FILTER_VERSION" ]; then
+    echo "deep-filter: already installed at $DEEP_FILTER_BIN (v$installed_version) — skipping"
+    exit 0
+  fi
+  echo "deep-filter: installed v$installed_version differs from pin v$DEEP_FILTER_VERSION — reinstalling"
+fi
+
+# Both this machine (M5 Max) and the Mac mini are Apple Silicon — hardcode
+# aarch64. Revisit if an Intel mac ever joins the rotation.
+asset="deep-filter-${DEEP_FILTER_VERSION}-aarch64-apple-darwin"
+
+echo "deep-filter: downloading v$DEEP_FILTER_VERSION from GitHub releases"
+TMPDIR="$(mktemp -d)"
+cleanup() { rm -rf "$TMPDIR"; }
+trap cleanup EXIT
+
+curl -fsSL -o "$TMPDIR/deep-filter" \
+  "https://github.com/Rikorose/DeepFilterNet/releases/download/v${DEEP_FILTER_VERSION}/${asset}"
+
+mkdir -p "$HOME/.local/bin"
+install -m 0755 "$TMPDIR/deep-filter" "$DEEP_FILTER_BIN"
+
+# Strip quarantine attribute — curl bypasses Gatekeeper's user attestation
+# that a browser download would set.
+xattr -dr com.apple.quarantine "$DEEP_FILTER_BIN" 2>/dev/null || true
+
+echo "deep-filter: installed → $DEEP_FILTER_BIN (v$DEEP_FILTER_VERSION)"
+{{- end }}
