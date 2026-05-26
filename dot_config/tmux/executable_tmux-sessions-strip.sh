@@ -22,6 +22,15 @@
 set -eu
 
 ATTACHED="${1:-}"
+# Bail if the caller passed no attached-session name. Otherwise no row
+# matches `[ "$s" = "$ATTACHED" ]` and EVERY session renders in the
+# inactive grey style — the strip looks valid but loses its blue active
+# highlight entirely. `#{q:client_session}` can be empty in transient
+# contexts (mid switch-client, just-attaching client, etc.); silently
+# emitting a blank strip for that one frame is much better than
+# emitting a wrong-but-plausible all-grey one that the `#()` cache
+# would then pin in place until the next status-interval.
+[ -z "$ATTACHED" ] && exit 0
 ACTIVE_STYLE="${TMUX_SESSION_ACTIVE_STYLE:-fg=#89B4FA,bold}"
 INACTIVE_STYLE="${TMUX_SESSION_INACTIVE_STYLE:-fg=#6C7086}"
 SEPARATOR="${TMUX_SESSION_SEPARATOR:-  }"
