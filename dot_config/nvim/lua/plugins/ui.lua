@@ -1,6 +1,8 @@
 ---@diagnostic disable: undefined-field
 return {
 
+  { "akinsho/bufferline.nvim", enabled = false },
+
   {
     "nvim-mini/mini.indentscope",
     opts = {
