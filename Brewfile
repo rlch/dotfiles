@@ -72,6 +72,9 @@ brew "hyperfine"
 # site's remark-d2 plugin (~/dev/seam/docs/src/plugins/remark-d2.mjs) and
 # any future Astro + Starlight project that wants the same.
 brew "d2"
+# asciinema — record terminal sessions to .cast for playback in
+# ~/dev/youtube/apps/terminal-scene/ TerminalScene via asciinema-player.
+brew "asciinema"
 
 # === Editor ===
 brew "neovim"
@@ -113,6 +116,13 @@ brew "leoafarias/fvm/fvm"
 brew "just"        # command runner, Make alternative
 brew "direnv"      # per-directory env vars / shell hooks
 brew "watchexec"   # rerun a command when files change
+
+# === Native build tools ===
+# C/C++ build toolchain for compiling-from-source apps (e.g. Aseprite from
+# ~/dev/refs/aseprite) and any native dep that ships a CMakeLists.txt. Xcode
+# Command Line Tools provide clang + the SDK; brew adds the build driver.
+brew "cmake"
+brew "ninja"
 
 # === Network / HTTP ===
 brew "xh"          # friendlier curl / httpie alternative
@@ -181,6 +191,14 @@ cask "codex"       # OpenAI's coding agent CLI
 brew "gemini-cli"  # Google's Gemini CLI
 brew "rtk"         # CLI proxy that compresses dev-tool output before it reaches the agent's context
 brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
+brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
+
+# === Game dev / 2D editors ===
+# LDtk (Level Designer Toolkit) — free open-source 2D level + tileset editor.
+# Used by grift for room templates (assets/rooms/*.ldtk) and the tile-asset
+# pipeline (atlas + autotile rules). Not on brew — installed by
+# .chezmoiscripts/run_onchange_install-ldtk.sh.tmpl from GitHub releases.
+# Version pin lives in that script.
 
 # === Secrets ===
 cask "1password-cli"
@@ -190,6 +208,23 @@ cask "1password-cli"
 # Menu-bar app, default global hotkey Cmd-Shift-X (watch for conflicts with
 # Ghostty/aerospace/tridactyl bindings). Auto-updates.
 cask "macshot"
+
+# === Archive utilities ===
+# Handles RAR, 7z, tar.zst, and the long-tail formats macOS's built-in
+# Archive Utility can't extract. Native Finder integration; "Open With"
+# default once installed. Free, by MacPaw.
+cask "the-unarchiver"
+
+# === Security ===
+# Malwarebytes — second-opinion on-demand scanner. Complements XProtect/MRT
+# (signature-based, silent) with a manual full-disk scan when something
+# unsigned has been run. Install manually (not via Brewfile): the cask uses a
+# .pkg installer that requires `sudo /usr/sbin/installer`, which can't read a
+# password from chezmoi's non-interactive shell, so every `chezmoi apply`
+# would stall + purge brew's Caskroom entry and re-try forever (same trap as
+# the tailscale-app cask above). On a fresh host:
+#   brew install --cask malwarebytes
+# Free tier covers manual scans; no resident agent needed.
 
 # === Apps ===
 cask "firefox"
