@@ -109,3 +109,12 @@ display:
 memory:
   memory_enabled: true
   user_profile_enabled: true
+
+# Plugins installed under ~/.hermes/plugins/<name>/ and enabled here. The
+# `herdr-agent-state` plugin is installed by `herdr integration install
+# hermes` (run from .chezmoiscripts/run_onchange_post-install-herdr-
+# integrations.sh.tmpl) — emits state pings (working/idle/blocked/release)
+# to herdr's socket so the agent panel reflects hermes turn state.
+plugins:
+  enabled:
+    - herdr-agent-state
