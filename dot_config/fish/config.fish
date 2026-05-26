@@ -96,6 +96,7 @@ abbr j   just
 abbr bt  btop
 abbr we  watchexec
 abbr cgc cargo-gc
+abbr ct  'cargo nextest run'        # cargo test alias is blocked by built-in shadowing (cargo#10049)
 
 # chezmoi (dotfiles management)
 abbr cz   'chezmoi apply -v'

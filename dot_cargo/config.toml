@@ -7,6 +7,33 @@
 # Cargo.toml; per-project Cargo.toml overrides still win where present.
 
 # ---------------------------------------------------------------------------
+# Outer parallelism
+# ---------------------------------------------------------------------------
+# Machine has 18 cores (6P + 12E). Default cargo `jobs = ncpus` plus any
+# per-rustc parallel front-end (`-Z threads=N` set in nightly projects)
+# can spawn 100+ contending threads. 14 outer jobs saturates the perf
+# cores + half the efficiency cores while leaving headroom for the OS,
+# tmux, browser, Claude sessions, etc.
+[build]
+jobs = 14
+
+# ---------------------------------------------------------------------------
+# Linker — Homebrew lld for Mach-O
+# ---------------------------------------------------------------------------
+# Apple ld-prime is fine for small bins but link time dominates incremental
+# builds for big workspaces (modality's `modality-dev` pulls 600 crates into
+# one debug binary). lld is dramatically faster on Mach-O link.
+#
+# Install: `brew install lld` (provides /opt/homebrew/opt/lld/bin/ld64.lld).
+# Stable-compatible — no -Z flags here. Per-project .cargo/config.toml can
+# ADD nightly flags to this array (cargo merges rustflags across config
+# files at the same target level — doesn't replace).
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld64.lld",
+]
+
+# ---------------------------------------------------------------------------
 # Fast-dev profile
 # ---------------------------------------------------------------------------
 # debug = false:
@@ -26,17 +53,27 @@
 #   artifact dedup); for one-machine dev it disables incremental in
 #   exchange for cross-worktree dedup that's not worth the trade-off.
 #
-# [profile.dev.package."*"] opt-level = 1:
-#   First-party crates stay at opt-level=0 (fast to compile). Dependencies
-#   compile once at opt-level=1 — small one-time build hit, big test
-#   runtime win because deps execute many times during a test run.
+# [profile.dev.package."*"] opt-level = 0:
+#   Both workspace crates AND deps stay at the default 0. We don't care
+#   about runtime speed in dev — the user is iterating, not benchmarking.
+#   Optimizing deps would buy faster test runs at the cost of slower
+#   first-compile of each dep version. Not a trade we want.
+#
+# [profile.dev.build-override] opt-level = 3:
+#   Proc-macros and build scripts run AT compile time — their "runtime"
+#   IS your compile time. Compiling them once at opt=3 makes every
+#   subsequent #[derive] expansion / build.rs invocation faster. Pure
+#   compile-time win.
 [profile.dev]
 debug = false
 split-debuginfo = "unpacked"
 incremental = true
 
 [profile.dev.package."*"]
-opt-level = 1
+opt-level = 0
+
+[profile.dev.build-override]
+opt-level = 3
 
 # Opt-in profile for when a debugger is actually needed.
 [profile.debug-full]
@@ -44,12 +81,15 @@ inherits = "dev"
 debug = "full"
 
 # ---------------------------------------------------------------------------
-# Aliases
+# Aliases — INTENTIONALLY EMPTY
 # ---------------------------------------------------------------------------
-# Replace cargo's built-in test runner with cargo-nextest. Process-per-test
-# parallelism, structured output, faster failure surfacing. brew-installed
-# (see ~/dev/dotfiles/Brewfile). Caveat: nextest does not run doctests; use
-# `cargo test --doc` for those (which routes through the alias but to
-# nextest's no-doc path — invoke `command cargo test --doc` to bypass).
-[alias]
-test = "nextest run"
+# Don't try to add `test = "nextest run"` here. Cargo refuses to let user
+# aliases shadow built-in commands (`test` is a built-in alias for the
+# test runner) and silently ignores the entry with a warning. This is
+# documented behavior, not a bug — rust-lang/cargo#10049.
+#
+# Use one of these instead:
+#   - `ct` fish abbreviation (this dotfiles repo: dot_config/fish/config.fish)
+#   - `j test` in projects with a justfile recipe
+#   - `cargo nextest run` typed in full
+# Nextest does not run doctests; use `cargo test --doc` (or `j test-docs`).
