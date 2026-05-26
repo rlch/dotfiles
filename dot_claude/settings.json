@@ -1,10 +1,147 @@
 {
-  "skipAutoPermissionPrompt": true,
-  "preferredNotifChannel": "notifications_disabled",
-  "worktree": {
-    "baseRef": "head"
+  "agentPushNotifEnabled": false,
+  "enableAllProjectMcpServers": true,
+  "enabledPlugins": {
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "ck@cavekit-marketplace": true,
+    "clangd-lsp@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "hookify@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "revdiff@revdiff": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "cavekit-marketplace": {
+      "source": {
+        "repo": "JuliusBrussee/cavekit",
+        "source": "github"
+      }
+    },
+    "revdiff": {
+      "source": {
+        "repo": "umputun/revdiff",
+        "source": "github"
+      }
+    }
+  },
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "rtk hook claude",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/lsp-cleanup-hook.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      },
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/agent-done-hook.sh",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      },
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ]
+  },
+  "mcpServers": {
+    "chrome-devtools": {
+      "args": [
+        "--browser-url=http://127.0.0.1:9222",
+        "--no-category-extensions"
+      ],
+      "command": "chrome-devtools-mcp"
+    },
+    "playwright": {
+      "args": [
+        "--cdp-endpoint=http://127.0.0.1:9222"
+      ],
+      "command": "playwright-mcp"
+    }
   },
   "permissions": {
+    "additionalDirectories": [
+      "/Users/rjm/.config/nvim",
+      "/Users/rjm/.config/tmux"
+    ],
     "defaultMode": "auto",
     "deny": [
       "Bash(rm -rf /)",
@@ -33,98 +170,17 @@
       "Read(**/secrets/**)",
       "Read(**/*secret*)",
       "Read(**/*password*)"
-    ],
-    "additionalDirectories": [
-      "/Users/rjm/.config/nvim",
-      "/Users/rjm/.config/tmux"
     ]
   },
-  "enableAllProjectMcpServers": true,
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "chrome-devtools-mcp",
-      "args": [
-        "--browser-url=http://127.0.0.1:9222",
-        "--no-category-extensions"
-      ]
-    },
-    "playwright": {
-      "command": "playwright-mcp",
-      "args": [
-        "--cdp-endpoint=http://127.0.0.1:9222"
-      ]
-    }
-  },
-  "extraKnownMarketplaces": {
-    "cavekit-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/cavekit"
-      }
-    },
-    "revdiff": {
-      "source": {
-        "source": "github",
-        "repo": "umputun/revdiff"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "lua-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "chrome-devtools-mcp@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true,
-    "ck@cavekit-marketplace": true,
-    "revdiff@revdiff": true
-  },
+  "preferredNotifChannel": "notifications_disabled",
+  "skipAutoPermissionPrompt": true,
   "statusLine": {
-    "type": "command",
     "command": "ccstatusline",
     "padding": 0,
-    "refreshInterval": 10
+    "refreshInterval": 10,
+    "type": "command"
   },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/agent-done-hook.sh"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/lsp-cleanup-hook.sh"
-          }
-        ]
-      }
-    ]
+  "worktree": {
+    "baseRef": "head"
   }
 }
