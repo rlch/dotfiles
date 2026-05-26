@@ -7,6 +7,7 @@ cat <<'EOF'
 code
 dev
 browser
+trading
 notes
 comms
 notion

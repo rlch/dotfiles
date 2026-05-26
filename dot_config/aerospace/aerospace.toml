@@ -67,6 +67,7 @@ ctrl-alt-3 = 'workspace notes'
 ctrl-alt-4 = 'workspace comms'
 ctrl-alt-5 = 'workspace notion'
 ctrl-alt-6 = 'workspace dev'
+ctrl-alt-7 = 'workspace trading'
 # alt-n/p cycle through workspaces ON THE FOCUSED MONITOR ONLY, in the
 # explicit order defined by ~/.config/aerospace/workspace_order.sh. The
 # focused_workspaces.sh helper filters the canonical order down to the
@@ -86,6 +87,7 @@ ctrl-alt-shift-3 = 'move-node-to-workspace notes --focus-follows-window'
 ctrl-alt-shift-4 = 'move-node-to-workspace comms --focus-follows-window'
 ctrl-alt-shift-5 = 'move-node-to-workspace notion --focus-follows-window'
 ctrl-alt-shift-6 = 'move-node-to-workspace dev --focus-follows-window'
+ctrl-alt-shift-7 = 'move-node-to-workspace trading --focus-follows-window'
 
 # focus monitors directly
 alt-1 = 'focus-monitor 1'
@@ -149,6 +151,10 @@ comms   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 notion  = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 notes   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 
+# Trading — MooMoo lives on the secondary external (same chain as
+# browser/dev). Home: HP 25x. Office: L27e-40 (1).
+trading = ['HP 25x', 'L27e-40 \(1\)', 'main']
+
 # persistent app → workspace routing. Focus does not follow — apps land
 # in their slot silently, you switch via ctrl-alt-N.
 [[on-window-detected]]
@@ -196,6 +202,11 @@ run = 'move-node-to-workspace dev'
 [[on-window-detected]]
 if.app-name-regex-substring = '^Runner$'
 run = 'move-node-to-workspace dev'
+
+# MooMoo → trading
+[[on-window-detected]]
+if.app-id = 'com.moomoo.mm.mac.au'
+run = 'move-node-to-workspace trading'
 
 # float-by-default apps
 [[on-window-detected]]
