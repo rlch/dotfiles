@@ -104,9 +104,12 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 - **Fish does not auto-attach tmux.** This was deliberately dropped from the
   zellij config and stays dropped; don't re-introduce it.
 - **tmux modal scheme is canonical** — `Ctrl-s` pane, `Ctrl-a`/`F3` tab,
-  `Ctrl-b` scroll, `Ctrl-q` session, hjkl/arrows everywhere, `Ctrl-1..9`
-  windows. Ported verbatim from the zellij config; don't switch back to a
-  prefix-based scheme without checking with the user.
+  `Ctrl-b` scroll (with a Claude-Code passthrough), `Ctrl-q` session,
+  hjkl/arrows everywhere, `Ctrl-1..9` windows. Ported verbatim from the
+  zellij config; don't switch back to a prefix-based scheme without
+  checking with the user. **`Ctrl-e`** is herdr's prefix — tmux doesn't
+  bind it at root, so it passes through to whatever's in the focused pane
+  (herdr in herdr panes; fish's end-of-line elsewhere).
 - **Window names auto-slugify to ≤10 chars** via `~/.config/tmux/slugify-title.py`
   on the `window-renamed` hook. Claude Code's OSC titles get NLP-picked salient
   tokens (proper nouns / ALLCAPS preferred); paths get basenamed; long words
