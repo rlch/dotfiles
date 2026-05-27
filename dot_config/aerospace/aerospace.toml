@@ -155,6 +155,13 @@ notes   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 # browser/dev). Home: HP 25x. Office: L27e-40 (1).
 trading = ['HP 25x', 'L27e-40 \(1\)', 'main']
 
+# Grift — the game window from `cargo run -p game` (~/dev/grift). Pinned
+# to the laptop screen exclusively so it never disrupts whichever
+# external monitor the user is actively working on. No second-choice
+# external; falls through to `main` only when no laptop is connected
+# (which on these two hosts is impossible — both have Built-in.*).
+grift   = ['Built-in.*', 'main']
+
 # persistent app → workspace routing. Focus does not follow — apps land
 # in their slot silently, you switch via ctrl-alt-N.
 [[on-window-detected]]
@@ -207,6 +214,15 @@ run = 'move-node-to-workspace dev'
 [[on-window-detected]]
 if.app-id = 'com.moomoo.mm.mac.au'
 run = 'move-node-to-workspace trading'
+
+# Grift game window → grift workspace (pinned to laptop screen above).
+# The Bevy binary's macOS app id depends on packaging (debug `cargo run`
+# inherits from the parent shell, packaged builds use Info.plist), so
+# match by window title which is set unconditionally by Bevy's
+# WindowPlugin to "grift (NvM)" — see `crates/game/src/lib.rs`.
+[[on-window-detected]]
+if.window-title-regex-substring = '^grift'
+run = 'move-node-to-workspace grift'
 
 # float-by-default apps
 [[on-window-detected]]
