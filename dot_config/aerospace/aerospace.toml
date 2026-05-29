@@ -155,12 +155,20 @@ notes   = ['L27e-40 \(2\)', 'Built-in.*', 'main']
 # browser/dev). Home: HP 25x. Office: L27e-40 (1).
 trading = ['HP 25x', 'L27e-40 \(1\)', 'main']
 
-# Grift — the game window from `cargo run -p game` (~/dev/grift). Pinned
-# to the laptop screen exclusively so it never disrupts whichever
-# external monitor the user is actively working on. No second-choice
-# external; falls through to `main` only when no laptop is connected
-# (which on these two hosts is impossible — both have Built-in.*).
-grift   = ['Built-in.*', 'main']
+# Game — the Bevy window from `cargo run -p game` (~/dev/grift; the
+# repo may be renamed but the workspace stays generic). Pinned to the
+# laptop screen exclusively so it never disrupts whichever external
+# monitor the user is actively working on. No second-choice external;
+# falls through to `main` only when no laptop is connected (which on
+# these two hosts is impossible — both have Built-in.*).
+game    = ['Built-in.*', 'main']
+
+# Blender — 3D authoring for Curations (~/dev/grift/assets/curations).
+# Same pin as `game`: laptop-only so a connected external isn't
+# hijacked when Blender opens. Heavy GPU app but the M5 Max + Built-in
+# Retina handles it; using the external would still be a single-window
+# context-switch hit when alt-tabbing back to code.
+blender = ['Built-in.*', 'main']
 
 # persistent app → workspace routing. Focus does not follow — apps land
 # in their slot silently, you switch via ctrl-alt-N.
@@ -215,14 +223,23 @@ run = 'move-node-to-workspace dev'
 if.app-id = 'com.moomoo.mm.mac.au'
 run = 'move-node-to-workspace trading'
 
-# Grift game window → grift workspace (pinned to laptop screen above).
+# Bevy game window → game workspace (pinned to laptop screen above).
 # The Bevy binary's macOS app id depends on packaging (debug `cargo run`
 # inherits from the parent shell, packaged builds use Info.plist), so
-# match by window title which is set unconditionally by Bevy's
-# WindowPlugin to "grift (NvM)" — see `crates/game/src/lib.rs`.
+# match by window title which Bevy's `WindowPlugin` sets unconditionally
+# to the package name + window counter ("grift (NvM)"). The substring
+# match survives a future repo rename — update the regex when the
+# Bevy `WindowPlugin` title changes.
 [[on-window-detected]]
 if.window-title-regex-substring = '^grift'
-run = 'move-node-to-workspace grift'
+run = 'move-node-to-workspace game'
+
+# Blender → blender workspace (pinned to laptop). Match by bundle id;
+# Blender's window title varies with the loaded .blend file so it isn't
+# a stable matcher.
+[[on-window-detected]]
+if.app-id = 'org.blenderfoundation.blender'
+run = 'move-node-to-workspace blender'
 
 # float-by-default apps
 [[on-window-detected]]
