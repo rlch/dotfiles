@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+"""
+cargo-target-warmup — hardlink immutable registry/git deps from a donor
+target/ into this worktree to skip cold rebuilds.
+
+Why this exists: every `git worktree add` gives the new worktree an empty
+target/, forcing a multi-minute cold rebuild of 600+ workspace deps.
+CARGO_TARGET_DIR sharing solves the cold-rebuild but serialises concurrent
+builds across worktrees (cargo holds target/.cargo-lock). That's a non-starter
+for agent-heavy workflows where 3+ worktrees may build at once.
+
+The trick: registry+/git+ deps are content-addressed and IMMUTABLE — every
+worktree of the same repo at the same Cargo.lock has byte-identical artifacts
+for those deps. Workspace crates are mutable and per-worktree. So: HARDLINK
+the dep artifacts (deps/, .fingerprint/, build/ subtrees whose package name
+matches a registry/git package), leave workspace crates untouched. <1s warmup,
+0 GB extra disk, no lock contention, cargo's incremental cache stays intact.
+
+Credit: howardjohn — blog.howardjohn.info/posts/shared-rust-build/. This is a
+near-verbatim copy of his cargo-registry-deps.py, with --dry-run / --verbose
+flags added.
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        prog="cargo-target-warmup",
+        description="Hardlink immutable deps from a donor target/ into this worktree.",
+    )
+    ap.add_argument("src", help="donor target/ dir (parent — contains debug/)")
+    ap.add_argument("dst", help="dest target/ dir (parent — contains debug/)")
+    ap.add_argument("-n", "--dry-run", action="store_true", help="print without writing")
+    ap.add_argument("-v", "--verbose", action="store_true", help="log every link")
+    args = ap.parse_args()
+
+    src = os.path.join(args.src, "debug")
+    dst = os.path.join(args.dst, "debug")
+
+    if not os.path.isdir(src):
+        print(f"cargo-target-warmup: donor not a directory: {src}", file=sys.stderr)
+        return 1
+
+    try:
+        meta = json.loads(
+            subprocess.check_output(["cargo", "metadata", "--format-version", "1"])
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"cargo-target-warmup: `cargo metadata` failed: {e}", file=sys.stderr)
+        return 1
+
+    # Build the registry set: package names + target names for every package
+    # whose source is `registry+...` or `git+...`. Normalised to the underscore
+    # form cargo uses in artifact filenames.
+    registry = set()
+    for pkg in meta["packages"]:
+        s = pkg.get("source") or ""
+        if s.startswith("registry+") or s.startswith("git+"):
+            registry.add(pkg["name"].replace("-", "_"))
+            for target in pkg["targets"]:
+                registry.add(target["name"].replace("-", "_"))
+
+    if not registry:
+        print("cargo-target-warmup: empty registry set (no external deps?)", file=sys.stderr)
+        return 1
+
+    if args.verbose:
+        print(f"cargo-target-warmup: src={src} dst={dst}")
+        print(f"cargo-target-warmup: registry set has {len(registry)} entries")
+
+    re_lib = re.compile(r"^lib")
+    re_ext = re.compile(r"\.[^.]*$")
+    re_hash = re.compile(r"-[^-]+$")
+
+    def pkg_name(f: str) -> str:
+        return re_hash.sub("", re_ext.sub("", re_lib.sub("", f)))
+
+    def makedirs(dst_dir: str) -> None:
+        if not args.dry_run:
+            os.makedirs(dst_dir, exist_ok=True)
+
+    def syncdirtime(src_dir: str, dst_dir: str) -> None:
+        if args.dry_run:
+            return
+        st = os.stat(src_dir)
+        os.utime(dst_dir, ns=(st.st_atime_ns, st.st_mtime_ns))
+
+    def link(src_path: str, dst_path: str, rel: str) -> None:
+        if args.verbose:
+            print(f"  link {rel}")
+        if args.dry_run:
+            return
+        try:
+            os.link(src_path, dst_path)
+        except FileExistsError:
+            os.unlink(dst_path)
+            os.link(src_path, dst_path)
+
+    linked = 0
+    skipped = 0
+
+    # ---- deps/: per-file. Filename = libNAME-HASH.ext or NAME-HASH.ext.
+    if os.path.isdir(os.path.join(src, "deps")):
+        makedirs(os.path.join(dst, "deps"))
+        for f in os.scandir(os.path.join(src, "deps")):
+            if pkg_name(f.name) in registry:
+                link(f.path, os.path.join(dst, "deps", f.name), f"deps/{f.name}")
+                linked += 1
+            else:
+                skipped += 1
+
+    # ---- .fingerprint/: per-directory. Dirname = NAME-HASH.
+    if os.path.isdir(os.path.join(src, ".fingerprint")):
+        makedirs(os.path.join(dst, ".fingerprint"))
+        for d in os.scandir(os.path.join(src, ".fingerprint")):
+            name = re_hash.sub("", d.name).replace("-", "_")
+            if name in registry:
+                makedirs(os.path.join(dst, ".fingerprint", d.name))
+                for f in os.scandir(d.path):
+                    link(
+                        f.path,
+                        os.path.join(dst, ".fingerprint", d.name, f.name),
+                        f".fingerprint/{d.name}/{f.name}",
+                    )
+                    linked += 1
+                # syncdirtime: cargo's freshness check stat()s the fingerprint
+                # dir itself, not just the files in it. Mtime must match donor.
+                syncdirtime(d.path, os.path.join(dst, ".fingerprint", d.name))
+            else:
+                skipped += 1
+
+    # ---- build/: per-directory, recursive. Dirname = NAME-HASH.
+    if os.path.isdir(os.path.join(src, "build")):
+        makedirs(os.path.join(dst, "build"))
+        for d in os.scandir(os.path.join(src, "build")):
+            name = re_hash.sub("", d.name).replace("-", "_")
+            if name in registry:
+                for root, dirs, files in os.walk(d.path):
+                    rel = os.path.relpath(root, os.path.join(src, "build"))
+                    makedirs(os.path.join(dst, "build", rel))
+                    for f in files:
+                        link(
+                            os.path.join(root, f),
+                            os.path.join(dst, "build", rel, f),
+                            f"build/{rel}/{f}",
+                        )
+                        linked += 1
+                    syncdirtime(root, os.path.join(dst, "build", rel))
+            else:
+                skipped += 1
+
+    print(
+        f"cargo-target-warmup: {linked} file(s) linked, {skipped} dep(s) skipped "
+        f"(not in registry set or no donor entry)"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
