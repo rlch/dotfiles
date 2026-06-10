@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# Install the OFFICIAL Blender Lab MCP integration end-to-end (no Claude
+# Desktop required — runs through Claude Code).
+#
+# Architecture (from projects.blender.org/lab/blender_mcp readme):
+#
+#   MCP Client (Claude Code)
+#     ⇅  stdio
+#   blender-mcp  (host bridge, run via `uv --directory <clone>/mcp run`)
+#     ⇅  TCP socket on localhost:9876
+#   Blender add-on  (installed as a Blender 5.x *extension* under
+#                    user_default, NOT the legacy scripts/addons path)
+#
+# Why we run the host bridge from a local clone (not `uv tool install`):
+#   - Trivial `git pull` for updates without re-installing.
+#   - Lets us hack on the bridge for channel-specific tools (asset bake
+#     helpers, palette pickers, etc.) without forking + republishing.
+#   - `uv --directory <path> run` builds + caches a venv on first use,
+#     then re-uses it — same startup cost as a tool install after that.
+#
+# This script handles (idempotent):
+#   1. Clone (or fast-forward) projects.blender.org/lab/blender_mcp into
+#      ~/mcp/blender_mcp.
+#   2. Warm the uv venv at <clone>/mcp/.venv so first MCP launch isn't
+#      a 10-second wait.
+#   3. Reminder to install the Blender add-on via the official drag-drop
+#      from blender.org/lab/mcp-server — see step 3 below for why we
+#      don't script this.
+#   4. claude mcp add to register the bridge with Claude Code (user
+#      scope, stdio transport).
+#
+# After this script runs, the user STILL needs to (one-time per host):
+#   - Install the Blender add-on via drag-drop from
+#     https://www.blender.org/lab/mcp-server/ (sets up the
+#     lab_blender_org repo + installs + enables in one flow).
+#   - Confirm the "MCP" extension is enabled in
+#     Edit > Preferences > Extensions.
+#   - Press N in 3D viewport > BlenderMCP sidebar > "Start MCP Server"
+#     (or set auto-start in the addon's preferences panel).
+#   - Restart Claude Code so the new MCP server loads into the tool list.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+BLENDER_MCP_REPO="https://projects.blender.org/lab/blender_mcp.git"
+BLENDER_MCP_CLONE="$HOME/mcp/blender_mcp"
+BLENDER_APP="/Applications/Blender.app/Contents/MacOS/Blender"
+
+# ---- 1. Clone (or fast-forward) the repo ----------------------------------
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "blender-mcp: uv not on PATH — Brewfile not applied; skipping"
+  exit 0
+fi
+
+if [ ! -d "$BLENDER_MCP_CLONE/.git" ]; then
+  echo "blender-mcp: cloning $BLENDER_MCP_REPO → $BLENDER_MCP_CLONE"
+  mkdir -p "$(dirname "$BLENDER_MCP_CLONE")"
+  git clone --depth 1 "$BLENDER_MCP_REPO" "$BLENDER_MCP_CLONE"
+else
+  # Fast-forward only. Won't fight uncommitted local hacks.
+  if git -C "$BLENDER_MCP_CLONE" diff --quiet && git -C "$BLENDER_MCP_CLONE" diff --cached --quiet; then
+    echo "blender-mcp: fast-forwarding existing clone"
+    git -C "$BLENDER_MCP_CLONE" pull --ff-only --quiet || \
+      echo "blender-mcp: ff-only pull failed (local divergence?) — leaving clone alone"
+  else
+    echo "blender-mcp: clone has uncommitted changes — skipping pull"
+  fi
+fi
+
+# ---- 2. Warm the uv venv ---------------------------------------------------
+
+VENV="$BLENDER_MCP_CLONE/mcp/.venv"
+if [ ! -d "$VENV" ]; then
+  echo "blender-mcp: warming uv venv at $VENV (one-time, ~30s)"
+  uv --directory "$BLENDER_MCP_CLONE/mcp" sync --quiet
+else
+  echo "blender-mcp: venv already at $VENV — skipping warmup"
+fi
+
+# ---- 3. Blender add-on — MANUAL step, intentionally not scripted ---------
+#
+# The Blender add-on lives in a special `lab_blender_org` extension repo
+# which is created by Blender's drag-drop install flow from
+# blender.org/lab/mcp-server. That flow does three things at once:
+#   1. Adds a local `lab_blender_org` extension repository to Blender.
+#   2. Downloads the add-on zip from projects.blender.org/lab/blender_mcp.
+#   3. Installs + enables the add-on under that repo.
+#
+# We previously tried to script this via `blender --command extension
+# install-file -r user_default -e <zip>`, which works but installs into
+# the wrong repo (user_default), creating a duplicate that doesn't
+# auto-update with the rest of the lab_blender_org bundle. The drag-drop
+# is the official path and the UX Blender Lab supports.
+#
+# So: install the add-on manually, ONCE per host:
+#   - Open https://www.blender.org/lab/mcp-server/ in a browser
+#   - Drag the "Install Add-on" link into a running Blender window
+#   - When Blender prompts to allow the lab extension repository, accept
+#   - Drag the same link in a second time; Blender installs the add-on
+#
+# After install, the add-on shows up enabled in Edit > Preferences >
+# Extensions. The "MCP" panel is in the 3D viewport sidebar (press N).
+
+if [ -x "$BLENDER_APP" ] && [ ! -d "$HOME/Library/Application Support/Blender"/*/extensions/lab_blender_org/mcp 2>/dev/null ]; then
+  cat <<'EOF'
+blender-mcp: Blender add-on not detected under lab_blender_org repo.
+             Install manually (one-time): drag the link from
+             https://www.blender.org/lab/mcp-server/ into Blender.
+EOF
+fi
+
+# ---- 4. Claude Code MCP registration --------------------------------------
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "blender-mcp: claude CLI not on PATH (cask not installed?) — skipping registration"
+  exit 0
+fi
+
+if claude mcp list 2>/dev/null | grep -q '^blender:'; then
+  echo "blender-mcp: already registered with Claude Code — skipping"
+else
+  echo "blender-mcp: registering with Claude Code (user scope, stdio)"
+  claude mcp add -s user blender -- \
+    uv --directory "$BLENDER_MCP_CLONE/mcp" run blender-mcp
+fi
+
+echo "blender-mcp: setup complete."
+echo "blender-mcp: NEXT — in Blender, open the 3D viewport sidebar (N)"
+echo "             > BlenderMCP tab > Start MCP Server. Then restart"
+echo "             Claude Code so the mcp__blender__* tools load."
+
+{{- end }}
