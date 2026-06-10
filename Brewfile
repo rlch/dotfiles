@@ -47,9 +47,9 @@ brew "sd"          # readable find-and-replace (sed for the 90% case)
 brew "tree"        # plain directory tree (when dust's size view is overkill)
 # JSON / data
 brew "jq"
+brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
 brew "tokei"       # code line counter by language
-# Image manipulation — used by scratchpad-Ghostty icon builder
-brew "imagemagick"
+brew "imagemagick" # image manipulation (convert, magick) — pulled in by misc one-off scripts
 brew "chafa"       # terminal image viewer (sixel/kitty/ansi)
 # Disk / process / system
 brew "dust"        # du, but tree-shaped
@@ -184,6 +184,9 @@ brew "nats-io/nats-tools/nats"
 # (kubectl, beta, etc.) install on demand into /opt/homebrew/share/google-
 # cloud-sdk/bin — already on PATH via the brew shim.
 cask "gcloud-cli"
+# Cloudflare Workers CLI — deploys ~/dev/org/infra/ai-gateway
+# (and jwt-worker) via `wrangler deploy`. Auth via `wrangler login`.
+brew "cloudflare-wrangler"
 
 # === AI dev tooling ===
 cask "claude-code"
@@ -200,6 +203,19 @@ brew "herdr"       # terminal workspace manager for AI agents (claude/codex/herm
 # .chezmoiscripts/run_onchange_install-ldtk.sh.tmpl from GitHub releases.
 # Version pin lives in that script.
 
+# === 3D / video / animation ===
+# Blender — used by the YouTube channel (~/dev/youtube) as an offline asset
+# factory for non-parametric scenes (cave / creature / Liquid Glass cameo)
+# and for baking Komikaze halftone/hatching/stippling plates that get
+# sampled in the Remotion WGSL shaders. Renders are exported to
+# assets/blender/ as image sequences; the .blend sources live outside the
+# repo (gitignored). Brew cask is currently 5.1.2 — recent enough for the
+# official Blender Lab MCP add-on (≥5.1) and for the community blender-mcp
+# server (≥3.0). We wire the latter via Claude Code's mcpServers config;
+# see .chezmoiscripts/run_onchange_install-blender-mcp.sh.tmpl for the
+# Blender-side add-on install.
+cask "blender"
+
 # === Secrets ===
 cask "1password-cli"
 
@@ -214,17 +230,6 @@ cask "macshot"
 # Archive Utility can't extract. Native Finder integration; "Open With"
 # default once installed. Free, by MacPaw.
 cask "the-unarchiver"
-
-# === Security ===
-# Malwarebytes — second-opinion on-demand scanner. Complements XProtect/MRT
-# (signature-based, silent) with a manual full-disk scan when something
-# unsigned has been run. Install manually (not via Brewfile): the cask uses a
-# .pkg installer that requires `sudo /usr/sbin/installer`, which can't read a
-# password from chezmoi's non-interactive shell, so every `chezmoi apply`
-# would stall + purge brew's Caskroom entry and re-try forever (same trap as
-# the tailscale-app cask above). On a fresh host:
-#   brew install --cask malwarebytes
-# Free tier covers manual scans; no resident agent needed.
 
 # === Apps ===
 cask "firefox"
