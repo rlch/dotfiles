@@ -1,13 +1,5 @@
 start-at-login = true
-# reap-phantoms.sh closes window nodes whose owning process is already dead
-# (AeroSpace misses the destroy event for winit/egui/Bevy apps that
-# process::exit() out of their event loop, leaving ghosts that tile and
-# squeeze real windows). Runs on every focus change so tiling self-heals the
-# instant you move focus after quitting such an app.
-on-focus-changed = [
-    'move-mouse window-lazy-center',
-    'exec-and-forget ~/.config/aerospace/reap-phantoms.sh',
-]
+on-focus-changed = ['move-mouse window-lazy-center']
 automatically-unhide-macos-hidden-apps = true
 
 enable-normalization-flatten-containers = true
