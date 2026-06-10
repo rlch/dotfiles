@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Install uv-managed Python CLIs that aren't on Homebrew. Reruns whenever
+# this script's contents change (e.g. when a tool is added to `need=`).
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv-tools: uv not on PATH — Brewfile not applied; skipping"
+  exit 0
+fi
+
+# `uv tool install` is idempotent: re-running with the same spec is a no-op.
+need=(euporie)
+
+for pkg in "${need[@]}"; do
+  if uv tool list 2>/dev/null | grep -q "^${pkg} v"; then
+    echo "uv-tools: ${pkg} already installed"
+  else
+    echo "uv-tools: installing ${pkg}"
+    uv tool install "${pkg}"
+  fi
+done
