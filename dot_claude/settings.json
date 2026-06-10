@@ -19,6 +19,9 @@
     "skill-creator@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "extraKnownMarketplaces": {
     "cavekit-marketplace": {
       "source": {
@@ -137,6 +140,7 @@
       "command": "playwright-mcp"
     }
   },
+  "model": "claude-fable-5[1m]",
   "permissions": {
     "additionalDirectories": [
       "/Users/rjm/.config/nvim",
@@ -180,6 +184,7 @@
     "refreshInterval": 10,
     "type": "command"
   },
+  "teammateMode": "tmux",
   "worktree": {
     "baseRef": "head"
   }
