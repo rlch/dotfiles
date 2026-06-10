@@ -11,14 +11,19 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 0
 fi
 
-# `uv tool install` is idempotent: re-running with the same spec is a no-op.
-need=(euporie)
+# Each entry: "<package> [extra-with-deps...]". Trailing tokens are injected into
+# the tool's own venv via `uv tool install --with`. jupyterlab is the browser
+# frontend for the drift experiment notebooks (evcxr rust kernel); jupyterlab-vim
+# adds vim keybindings (prebuilt extension, auto-enabled in JupyterLab 4). Reinstall
+# unconditionally so `--with` deps stay in sync; this script only reruns on change.
+need=(
+  "jupyterlab jupyterlab-vim"
+)
 
-for pkg in "${need[@]}"; do
-  if uv tool list 2>/dev/null | grep -q "^${pkg} v"; then
-    echo "uv-tools: ${pkg} already installed"
-  else
-    echo "uv-tools: installing ${pkg}"
-    uv tool install "${pkg}"
-  fi
+for spec in "${need[@]}"; do
+  read -r pkg withs <<<"${spec}"
+  with_args=()
+  for w in ${withs}; do with_args+=(--with "${w}"); done
+  echo "uv-tools: installing ${pkg}${withs:+ (with: ${withs})}"
+  uv tool install "${with_args[@]}" "${pkg}"
 done
