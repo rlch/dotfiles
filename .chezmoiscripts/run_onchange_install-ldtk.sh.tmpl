@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Install LDtk (Level Designer Toolkit) — free open-source 2D level + tileset
+# editor used by grift (assets/rooms/*.ldtk) and the AI tile-asset pipeline.
+# Distributed as a .dmg-inside-a-zip from GitHub releases; no brew formula.
+#
+# Idempotent: skips if /Applications/LDtk.app is already at the pinned
+# version. Bumping LDTK_VERSION re-runs the script and reinstalls.
+#
+# To force a reinstall:
+#   rm -rf /Applications/LDtk.app && chezmoi apply
+#
+# Version pin — bump to refresh. Latest at
+# https://github.com/deepnight/ldtk/releases
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+LDTK_VERSION="1.5.3"
+LDTK_APP="/Applications/LDtk.app"
+
+if [ -d "$LDTK_APP" ]; then
+  installed_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$LDTK_APP/Contents/Info.plist" 2>/dev/null || echo unknown)"
+  if [ "$installed_version" = "$LDTK_VERSION" ]; then
+    echo "ldtk: already installed at $LDTK_APP (v$installed_version) — skipping"
+    exit 0
+  fi
+  echo "ldtk: installed v$installed_version differs from pin v$LDTK_VERSION — reinstalling"
+  rm -rf "$LDTK_APP"
+fi
+
+echo "ldtk: downloading v$LDTK_VERSION from GitHub releases"
+TMPDIR="$(mktemp -d)"
+MOUNTPOINT=""
+cleanup() {
+  if [ -n "$MOUNTPOINT" ] && [ -d "$MOUNTPOINT" ]; then
+    hdiutil detach "$MOUNTPOINT" -quiet 2>/dev/null || true
+  fi
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
+
+curl -fsSL -o "$TMPDIR/ldtk.zip" \
+  "https://github.com/deepnight/ldtk/releases/download/v$LDTK_VERSION/mac-distribution.zip"
+
+echo "ldtk: extracting"
+unzip -q "$TMPDIR/ldtk.zip" -d "$TMPDIR/extracted"
+
+# Zip contains a single .dmg installer at top level. Find it dynamically so
+# we tolerate minor renames between versions.
+dmg="$(find "$TMPDIR/extracted" -maxdepth 2 -name "*.dmg" -type f | head -1)"
+if [ -z "$dmg" ]; then
+  echo "ldtk: no .dmg found in extracted zip — release layout may have changed" >&2
+  find "$TMPDIR/extracted" -maxdepth 3 >&2
+  exit 1
+fi
+
+echo "ldtk: mounting $(basename "$dmg")"
+MOUNTPOINT="$TMPDIR/mount"
+mkdir -p "$MOUNTPOINT"
+hdiutil attach "$dmg" -mountpoint "$MOUNTPOINT" -nobrowse -quiet
+
+src="$(find "$MOUNTPOINT" -maxdepth 2 -name "LDtk.app" -type d | head -1)"
+if [ -z "$src" ]; then
+  echo "ldtk: LDtk.app not found in mounted dmg" >&2
+  ls -la "$MOUNTPOINT" >&2
+  exit 1
+fi
+
+echo "ldtk: copying LDtk.app to /Applications"
+cp -R "$src" "$LDTK_APP"
+
+# Strip quarantine attribute — the curl path bypasses Gatekeeper's user-
+# attestation that a browser download would set.
+xattr -dr com.apple.quarantine "$LDTK_APP" 2>/dev/null || true
+
+echo "ldtk: installed → $LDTK_APP (v$LDTK_VERSION)"
+{{- end }}
