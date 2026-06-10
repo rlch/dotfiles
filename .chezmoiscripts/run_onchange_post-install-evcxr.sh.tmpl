@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Install the evcxr Rust Jupyter kernel and register its kernelspec, so euporie
+# (and any Jupyter frontend) can run Rust notebooks. Reruns whenever this script
+# changes. Pair: euporie itself is installed via the uv-tools script.
+#
+# version: 1
+
+set -euo pipefail
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "evcxr: cargo not on PATH — run 'rustup default stable' first; skipping"
+  exit 0
+fi
+
+# Cargo-installed binaries land in CARGO_HOME/bin (~/.cargo/bin by default);
+# make sure it's reachable for the --install step below.
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+
+# evcxr expands types/macros against the std source, so rust-src is required.
+if command -v rustup >/dev/null 2>&1; then
+  rustup component add rust-src >/dev/null 2>&1 || true
+fi
+
+# `cargo install` is idempotent: skips if already present at the requested version.
+if cargo install --list | grep -q "^evcxr_jupyter v"; then
+  echo "evcxr: evcxr_jupyter already installed"
+else
+  echo "evcxr: installing evcxr_jupyter"
+  cargo install --locked evcxr_jupyter
+fi
+
+# Register the kernelspec (idempotent). Frontends discover it under
+# ~/.local/share/jupyter/kernels/rust.
+if command -v evcxr_jupyter >/dev/null 2>&1; then
+  evcxr_jupyter --install
+  echo "evcxr: kernel registered"
+else
+  echo "evcxr: evcxr_jupyter not on PATH after install — check CARGO_HOME/bin"
+fi

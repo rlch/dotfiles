@@ -1,0 +1,4 @@
+// evcxr startup commands (REPL + Jupyter kernel). Runs before every session.
+// Keep a compiled-dependency cache across sessions so re-opening a notebook
+// doesn't recompile the world. sccache is deprecated for evcxr (dylib model).
+:cache 500
