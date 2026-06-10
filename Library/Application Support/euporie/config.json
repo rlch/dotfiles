@@ -1,0 +1,33 @@
+{
+  "color_scheme": "custom",
+  "custom_background_color": "#1e1e2e",
+  "custom_foreground_color": "#cdd6f4",
+  "accent_color": "#cba6f7",
+  "syntax_theme": "one-dark",
+  "color_depth": 24,
+  "graphics": "kitty",
+  "multiplexer_passthrough": true,
+  "edit_mode": "vi",
+  "show_status_bar": true,
+  "line_numbers": true,
+  "custom_styles": {
+    "logo": "fg:#cba6f7",
+    "cell input prompt": "fg:#89b4fa",
+    "cell output prompt": "fg:#f38ba8",
+    "line-number": "fg:#585b70 bg:#1e1e2e noreverse",
+    "line-number.current": "fg:#fab387 bg:#1e1e2e bold noreverse",
+    "line-number edge": "fg:#1e1e2e bg:#1e1e2e",
+    "line-number.current edge": "fg:#1e1e2e bg:#1e1e2e",
+    "placeholder": "fg:#6c7086",
+    "overflow": "fg:#6c7086",
+    "tab": "fg:#45475a",
+    "trailing-whitespace": "fg:#45475a",
+    "matching-bracket.cursor": "fg:#f9e2af bold",
+    "matching-bracket.other": "fg:#f9e2af bold",
+    "incsearch": "bg:#f9e2af fg:#1e1e2e",
+    "incsearch.current": "bg:#a6e3a1 fg:#1e1e2e",
+    "cursor-line incsearch": "bg:#f9e2af fg:#1e1e2e",
+    "cursor-line incsearch.current": "bg:#a6e3a1 fg:#1e1e2e",
+    "hr": "fg:#f38ba8"
+  }
+}
