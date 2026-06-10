@@ -1,13 +1,14 @@
-# `tmuxinator start Scratch` — invoked by ~/.config/scratchpad/attach.sh.
+# `tmuxinator start Scratch` — invoked by ~/.config/tmux/scratch-toggle.sh
+# on first toggle, then plain `switch-client -t scratch` thereafter.
 # Window names get slugified to <=10 chars by ~/.config/tmux/slugify-title.py.
 #
-# socket_name pins this whole session onto a dedicated tmux server
-# (`tmux -L scratch …`) so it cannot collide with the user's main tmux
-# session. Without this, any `tmux switch-client` or `tmux attach` from
-# within scratch can hijack the main client; with it, the two servers
-# share nothing and the main session is untouchable from inside scratch.
-socket_name: scratch
-name: Scratch
+# Lives on the default tmux socket (no `socket_name:` here): the toggle
+# is a `switch-client` against the focused client, so scratch has to be
+# on the same server as whatever session you're currently attached to.
+# Tmuxinator project name is the filename ("Scratch") — invoked as
+# `tmuxinator start Scratch`. The `name:` here sets the tmux SESSION
+# name (lowercase to match `switch-client -t scratch` in the toggle).
+name: scratch
 root: ~/
 startup_window: Agent
 

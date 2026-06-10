@@ -1,11 +1,5 @@
 start-at-login = true
-# scratch-autoquit kills the Scratch.app process whenever focus moves to
-# a non-scratch window. tmux session "scratch" persists on the tmux
-# server, so the next alt-backtick attaches to the same session.
-on-focus-changed = [
-    'move-mouse window-lazy-center',
-    'exec-and-forget ~/.config/aerospace/scratch-autoquit.sh',
-]
+on-focus-changed = ['move-mouse window-lazy-center']
 automatically-unhide-macos-hidden-apps = true
 
 enable-normalization-flatten-containers = true
@@ -47,15 +41,6 @@ alt-shift-l = 'move right'
 # resize
 alt-minus = 'resize smart -100'
 alt-equal = 'resize smart +100'
-
-# scratchpad — toggle the Scratch.app bundle. The script is ~10 lines:
-# kill if running, else spawn. Auto-park happens via scratch-autoquit.sh
-# in on-focus-changed, so re-pressing the toggle key is the only way you
-# typically need to close scratch (clicking elsewhere already kills it).
-# Karabiner also fires this directly on Globe/Caps-Lock tap (see
-# private_karabiner.json), so this aerospace binding is the alt-backtick
-# fallback for keyboards without a Globe key in scope.
-alt-backtick           = 'exec-and-forget ~/.config/aerospace/scratchpad.sh'
 
 # workspaces — named roles. Aerospace's tray icon surfaces the active
 # workspace name in the menu bar, so digits are uninformative. Cycle order
@@ -227,11 +212,13 @@ run = 'move-node-to-workspace trading'
 # The Bevy binary's macOS app id depends on packaging (debug `cargo run`
 # inherits from the parent shell, packaged builds use Info.plist), so
 # match by window title which Bevy's `WindowPlugin` sets unconditionally
-# to the package name + window counter ("grift (NvM)"). The substring
-# match survives a future repo rename — update the regex when the
-# Bevy `WindowPlugin` title changes.
+# to "drift" (crates/game/src/lib.rs). The `^` anchor still matches if a
+# window counter is ever appended ("drift (1)"). Update the regex if the
+# Bevy `WindowPlugin` title changes. (Was `^grift` before the grift→drift
+# repo rename — the stale matcher silently stopped pinning the window,
+# leaking it onto whatever external monitor was focused.)
 [[on-window-detected]]
-if.window-title-regex-substring = '^grift'
+if.window-title-regex-substring = '^drift'
 run = 'move-node-to-workspace game'
 
 # Blender → blender workspace (pinned to laptop). Match by bundle id;
@@ -274,11 +261,3 @@ run = 'layout floating'
 if.app-id = 'org.pqrs.Karabiner-EventViewer'
 run = 'layout floating'
 
-# Ghostty scratchpad — separate cloned bundle (~/Applications/Scratch.app)
-# built by .chezmoiscripts/run_after_create-ghostty-scratch.sh.tmpl.
-# Distinct bundle ID gives a distinct dock icon and zero risk of touching
-# real Ghostty. scratchpad.sh spawns it; scratch-autoquit.sh kills the
-# process on focus loss. tmux session "scratch" persists across spawns.
-[[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty.scratch'
-run = ['layout floating']

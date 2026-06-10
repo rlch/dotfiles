@@ -55,6 +55,16 @@ keybind = ctrl+slash=csi:47;5u
 # 32 = ' ' codepoint, 5 = ctrl modifier.
 keybind = ctrl+space=csi:32;5u
 
+# ctrl+shift+g → emit CSI-u so tmux's `bind -T root C-S-g` (scratch
+# session toggle) fires. Karabiner remaps a Globe (fn) tap and a
+# Moonlander caps-lock tap to ctrl+shift+g when Ghostty is frontmost
+# (private_karabiner.json). 103 = 'g' codepoint (lowercase — CSI-u
+# encodes the unshifted character), 6 = ctrl+shift modifier. Without
+# this binding the chord still encodes, but `extended-keys`-style
+# routing is unreliable for ctrl+shift+letter on some Ghostty paths;
+# the explicit csi: spelling matches the rest of the family.
+keybind = ctrl+shift+g=csi:103;6u
+
 # ctrl+y → emit CSI-u so tmux's `bind C-y display-popup yazi` fires.
 # Karabiner remaps the spotlight key (F4 / apple_vendor `spotlight` /
 # `launchpad`) to ctrl+y inside Ghostty. The legacy Ctrl+Y byte (0x19) is
