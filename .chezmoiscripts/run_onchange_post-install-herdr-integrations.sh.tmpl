@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Install herdr's agent integrations (claude/codex/hermes) once herdr itself
+# is on PATH. Idempotent: skipped if `herdr integration status` reports the
+# integration as `current`; re-runs on outdated/missing.
+#
+# The integration installer writes:
+#   claude → ~/.claude/hooks/herdr-agent-state.sh + edits to ~/.claude/settings.json
+#   codex  → ~/.codex/herdr-agent-state.sh + ~/.codex/hooks.json + ~/.codex/config.toml
+#   hermes → ~/.hermes/plugins/herdr-agent-state/ + plugins.enabled in ~/.hermes/config.yaml
+#
+# The settings/config-side edits are tracked separately in source
+# (dot_claude/settings.json, dot_hermes/config.yaml.tmpl). This script handles
+# the binary-side hook scripts that chezmoi shouldn't copy — they're
+# version-coupled to the herdr binary and should be regenerated, not mirrored.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+if ! command -v herdr >/dev/null 2>&1; then
+  echo "herdr-integrations: herdr not on PATH — Brewfile not yet applied; skipping"
+  exit 0
+fi
+
+# `herdr integration status` prints one line per known integration:
+#   claude: current (v3) (/path/to/hook)
+#   codex:  not installed (/path/to/hook)
+#   hermes: outdated (v0 → v1) (/path/to/hook)
+# We install only the ones that are NOT current.
+needs_install() {
+  local name="$1"
+  local line
+  line=$(herdr integration status 2>/dev/null | awk -v n="${name}:" '$1 == n { $1=""; print substr($0,2); exit }')
+  case "$line" in
+    "current"*) return 1 ;;
+    *)          return 0 ;;
+  esac
+}
+
+for integration in claude codex hermes; do
+  if needs_install "$integration"; then
+    echo "herdr-integrations: installing $integration"
+    herdr integration install "$integration"
+  else
+    echo "herdr-integrations: $integration already current"
+  fi
+done

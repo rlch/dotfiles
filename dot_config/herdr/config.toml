@@ -1,0 +1,91 @@
+# herdr — agent multiplexer (tmux-for-AI-agents). Source of truth lives
+# in dotfiles; chezmoi renders this to ~/.config/herdr/config.toml.
+#
+# Practical deployment: herdr runs nested inside a tmux window when you
+# want to multiplex Claude Code / Codex / Hermes agents in panes within
+# one tmux window. tmux remains the outer multiplexer for sessions /
+# windows / status bar / mosaic / agent bells (see ~/.config/tmux/tmux.conf).
+#
+# To edit: `chezmoi edit ~/.config/herdr/config.toml` → chezmoi apply.
+# Live reload: `herdr server reload-config` (or `herdr --default-config`
+# to dump the current default schema as a reference).
+
+# Skip the first-run onboarding overlay — already gone through it.
+onboarding = false
+
+[theme]
+# Inherit from the host terminal (Ghostty's Catppuccin Mocha palette).
+# Picking the `terminal` theme means herdr follows whatever ghostty is
+# set to — change Ghostty's theme later and herdr automatically tracks.
+name = "terminal"
+
+[terminal]
+# Inherit cwd from the focused pane when spawning new panes/tabs/workspaces,
+# matching the tmux behavior the user expects.
+new_cwd = "follow"
+
+[keys]
+# Prefix: ctrl+e. Chosen because it's NOT bound by tmux at root, so tmux
+# passes it through unchanged to the focused pane — herdr panes see it
+# (as its prefix) and shell panes still get fish's end-of-line. No tmux
+# interception logic required (unlike the C-Space/C-b swap that didn't
+# work cleanly).
+#
+# In a fish pane: C-e = move-to-end-of-line (unchanged).
+# In a herdr pane: C-e = herdr's prefix → followed by the action key
+# (h/v/-/x/z/r/c/w/?/etc.).
+prefix = "ctrl+e"
+
+# Vim-only navigation. Herdr's defaults are already hjkl (and letter-keyed
+# for everything else — no arrow keys exposed), but bound explicitly here
+# to lock the intent into source: this config never uses arrow keys.
+# Resize-mode inside herdr (entered via `prefix+r`) is also hjkl natively.
+focus_pane_left  = "prefix+h"
+focus_pane_down  = "prefix+j"
+focus_pane_up    = "prefix+k"
+focus_pane_right = "prefix+l"
+
+
+[ui]
+# Named color so the accent follows the terminal palette in lock-step
+# with the `terminal` theme above — no hex lock-in. Ghostty's `blue`
+# slot is Catppuccin Mocha blue today; change ghostty's theme and this
+# tracks without a config edit.
+accent = "blue"
+
+# Show all detected agent rows in the sidebar (not just the focused
+# workspace's) — useful when multiple workspaces have active agents.
+agent_panel_scope = "all"
+
+# tmux already has `set -g mouse on` and a custom MouseDown1Status handler
+# (`~/.config/tmux/tmux-mouse-status.sh`). With herdr nested, both layers
+# capturing mouse causes ambiguous clicks (e.g. status-bar segments tmux
+# wants to route get swallowed by herdr's UI). Defer to tmux — inner panes
+# (lazygit, btop, claude TUI) still receive mouse when they request it.
+mouse_capture = false
+
+# Show the per-pane agent label (claude/codex/hermes) in the pane border.
+# Cheap visual cue to know which agent owns the focused split without
+# checking the sidebar.
+show_agent_labels_on_pane_borders = true
+
+[ui.toast]
+# In-app toasts only. The outer tmux already has a flash widget
+# (`@flash_text` / `@flash_set_at` — see tmux.conf:275-352) for transient
+# status messages; routing herdr notifications to the OS would double-notify.
+delivery = "herdr"
+
+[ui.sound]
+# Audible cue when an agent in a background workspace changes state. Useful
+# when juggling multiple agents and the tmux status badges aren't in view.
+enabled = true
+
+[worktrees]
+# Sibling of tmux's mosaic worktrees / git worktrees the user already keeps
+# under ~/. Default is fine; pinned explicitly so it's discoverable.
+directory = "~/.herdr/worktrees"
+
+[experimental]
+# Nested herdr (herdr inside a herdr-managed pane) would be confusing —
+# tmux + herdr is the intended nesting depth.
+allow_nested = false
