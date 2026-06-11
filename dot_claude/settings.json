@@ -1,5 +1,6 @@
 {
   "agentPushNotifEnabled": false,
+  "effortLevel": "xhigh",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
     "chrome-devtools-mcp@claude-plugins-official": true,
@@ -54,6 +55,16 @@
         "hooks": [
           {
             "command": "rtk hook claude",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/git-push-guard.sh",
+            "timeout": 10,
             "type": "command"
           }
         ],
@@ -146,6 +157,9 @@
       "/Users/rjm/.config/nvim",
       "/Users/rjm/.config/tmux"
     ],
+    "ask": [
+      "Bash(git push:*)"
+    ],
     "defaultMode": "auto",
     "deny": [
       "Bash(rm -rf /)",
@@ -178,6 +192,8 @@
   },
   "preferredNotifChannel": "notifications_disabled",
   "skipAutoPermissionPrompt": true,
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
   "statusLine": {
     "command": "ccstatusline",
     "padding": 0,

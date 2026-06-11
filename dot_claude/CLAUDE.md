@@ -13,6 +13,7 @@ When editing anything under `~/.config/`, `~/.claude/`, `~/.local/`, or `~/dev/d
 - **Branching**: rebase, never merge. Pull with `--rebase`. Resolve in-place; do not create merge commits.
 - **PRs**: squash-merge only. The PR title is the squashed commit subject — make it conform to the commit format above.
 - **Force-push**: allowed on personal branches; never on `main` / `master`.
+- **Pushing**: every `git push` needs my explicit per-instance approval — never auto-push, never treat an earlier approval as standing (enforced by a `permissions.ask` rule + the `~/.claude/git-push-guard.sh` PreToolUse hook). **Never push from a Claude worktree** (any tree under `.claude/worktrees/`): worktree work lands via the parent checkout's `main`. A worktree push is how `origin/main` silently diverged 50-vs-15 commits from local `main` (2026-06-12, drift) — the guard hook hard-denies it.
 - **No `git stash` on `main`**: I work on `main` concurrently with you in another editor / window, so `git stash` (even with `-- <pathspec>`) silently captures whatever else I happened to be editing at that moment. When you need to set aside agent scope-creep or unauthorized changes, prefer one of these instead:
   - `git checkout -- <specific paths>` to revert only the files outside the agent's brief. Discards the bad changes without touching anything else in the working tree. Use this by default.
   - Commit to a side branch (`git switch -c agent-overreach/<topic>; git add <paths>; git commit; git switch main`) when the agent work is worth keeping for review.
