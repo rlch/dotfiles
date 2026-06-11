@@ -2,6 +2,15 @@ start-at-login = true
 on-focus-changed = ['move-mouse window-lazy-center']
 automatically-unhide-macos-hidden-apps = true
 
+# Reap ghost windows left behind by AeroSpace bug #1615 (macOS Tahoe stops
+# delivering window-close events, so closed windows linger as empty-title
+# nodes that slice the layout). reap-ghosts.sh closes them, debounced + with
+# the focused window skipped + an app exclude-list (Gather is title-less when
+# unfocused) so it never closes a real window. Backgrounded (`&`) so it never
+# delays the workspace switch.
+exec-on-workspace-change = ['/bin/bash', '-c',
+    '~/.config/aerospace/reap-ghosts.sh >/dev/null 2>&1 &']
+
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
