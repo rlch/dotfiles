@@ -19,10 +19,13 @@ running in, so the user can look at it without leaving the conversation.
   right; the rest stack vertically in that right-hand column, so the
   window stays tidy. Don't call the script once per image in a loop.
 - Each viewer pane shows the filename in its border title and a dim
-  `<name> — Enter closes` footer. Pressing **Enter inside the pane**
-  closes it. Focus stays with the Claude pane when the splits open;
-  the user clicks a viewer (mouse is on) or uses `Ctrl-s h/l` to focus
-  it before pressing Enter.
+  `<name> — Enter closes · focus pane for hi-res` footer. Pressing
+  **Enter inside the pane** closes it. Focus stays with the Claude pane
+  when the splits open; the user clicks a viewer (mouse is on) or uses
+  `Ctrl-s h/l` to focus it before pressing Enter.
+- Images display automatically (cell-art render); focusing a viewer
+  pane upgrades it to pixel-perfect kitty graphics for as long as it
+  stays focused.
 
 ## When to use
 
@@ -41,7 +44,20 @@ running in, so the user can look at it without leaving the conversation.
 
 ## How it renders
 
-`chafa` with `-f kitty --passthrough tmux` when the outer terminal is
-Ghostty (tmux.conf sets `allow-passthrough on`, so real pixels reach the
-terminal); otherwise chafa's auto-detected symbols output. Animated GIFs
-show their first frame only.
+Two layers, both via chafa (empirically tested in Ghostty + tmux 3.6):
+
+- **symbols** (always): unicode cell art written into tmux's grid, so
+  it displays automatically and survives every redraw, window switch,
+  and visibility change.
+- **kitty pixels** (while the pane is focused + visible): overdrawn on
+  top for full fidelity. Kitty passthrough places pixels at the OUTER
+  terminal's cursor (which tracks the focused pane) and any tmux repaint
+  wipes them — so it can only ever be a focused-pane enhancement, never
+  the base layer.
+
+Dead ends, so nobody retries them: sixel (Ghostty doesn't decode it —
+tmux.conf force-declares the sixel terminal-feature, don't trust
+`client_termfeatures`), kitty Unicode placeholders (Ghostty doesn't
+render them), and absolutely-positioned kitty placements (tmux repaints
+wipe them even when correctly positioned). Animated GIFs show their
+first frame only.
