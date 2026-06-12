@@ -1,6 +1,6 @@
 ---
 name: show-image
-description: Show an image to the user in a tmux split pane beside the conversation. Use whenever the user needs to SEE an image — a render, screenshot, golden/SSIM diff, plot, chart, generated asset, BRP/Blender capture, downloaded picture — rather than describing it in words. The split renders via chafa (pixel-perfect kitty-graphics passthrough to Ghostty), and the pane closes when the user presses Enter in it. NOT for images Claude itself needs to inspect — use the Read tool for that.
+description: Show an image to the user in a tmux split pane beside the conversation. Use whenever the user needs to SEE an image — a render, screenshot, golden/SSIM diff, plot, chart, generated asset, BRP/Blender capture, downloaded picture — rather than describing it in words. The split renders via chafa (pixel-perfect kitty-graphics passthrough to Ghostty); panes self-close once handled (focused then unfocused, or replaced by the next show-image batch; Enter = instant close). NOT for images Claude itself needs to inspect — use the Read tool for that.
 ---
 
 # show-image
@@ -19,13 +19,21 @@ running in, so the user can look at it without leaving the conversation.
   right; the rest stack vertically in that right-hand column, so the
   window stays tidy. Don't call the script once per image in a loop.
 - Each viewer pane shows the filename in its border title and a dim
-  `<name> — Enter closes · focus pane for hi-res` footer. Pressing
-  **Enter inside the pane** closes it. Focus stays with the Claude pane
-  when the splits open; the user clicks a viewer (mouse is on) or uses
-  `Ctrl-s h/l` to focus it before pressing Enter.
+  `<name> — focus for hi-res · unfocus closes · Enter closes` footer.
+  Focus stays with the Claude pane when the splits open; the user clicks
+  a viewer (mouse is on) or uses `Ctrl-s h/l` to focus it.
 - Images display automatically (cell-art render); focusing a viewer
   pane upgrades it to pixel-perfect kitty graphics for as long as it
   stays focused.
+- **Panes close themselves once handled** — no manual dismissal needed:
+  - A pane that has been focused closes when focus lands back OUTSIDE
+    the viewer column (walking down a stack of viewers doesn't close
+    the ones behind you; returning to the conversation closes all the
+    inspected ones).
+  - A new show-image invocation replaces any viewers still open in the
+    window (the cleanup path for images read as cell art without ever
+    focusing). Never assume a previous batch is still on screen.
+  - **Enter inside a pane** still closes it instantly.
 
 ## When to use
 
