@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Build + install clodcurrent (the concurrent multi-account Claude Code launcher
+# that replaced cswap/claude-hub) and refresh each account dir's shared-config
+# symlinks. MBP-only: the multi-account setup (per-dir Keychain entries + the
+# ~/.claude-<slug> dirs) lives on this host.
+#
+# This bootstraps the binary and re-runs `ensure` on every apply. Code changes to
+# clodcurrent are reinstalled manually (`cargo install --path ~/dev/clodcurrent
+# --force`) — cargo treats the unchanged version as already-installed otherwise.
+# One-time account migration is `clodcurrent import-cswap` (not scripted: needs cswap).
+{{ if eq .role "mbp" -}}
+set -euo pipefail
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "clodcurrent: cargo not on PATH; skipping"
+  exit 0
+fi
+
+SRC="$HOME/dev/clodcurrent"
+if [ ! -d "$SRC" ]; then
+  echo "clodcurrent: source not found at $SRC; skipping"
+  exit 0
+fi
+
+echo "clodcurrent: ensuring install from $SRC"
+cargo install --path "$SRC" 2>&1 | tail -2 || true
+
+# Re-link shared config (settings.json, CLAUDE.md, hooks, skills, ...) into each
+# account dir. No-op until accounts have been imported.
+if command -v clodcurrent >/dev/null 2>&1; then
+  clodcurrent ensure || true
+fi
+{{- else -}}
+# clodcurrent is mbp-only; nothing to do on this host.
+exit 0
+{{- end }}
