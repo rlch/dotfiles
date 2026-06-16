@@ -45,6 +45,7 @@ brew "bat"
 brew "git-delta"
 brew "sd"          # readable find-and-replace (sed for the 90% case)
 brew "tree"        # plain directory tree (when dust's size view is overkill)
+brew "coreutils"   # GNU coreutils (g-prefixed: gtimeout, grealpath, …). Provides `timeout` via the timeout.fish wrapper — NOT gnubin-on-PATH, to avoid shadowing every BSD coreutil
 # JSON / data
 brew "jq"
 brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
