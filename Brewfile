@@ -188,6 +188,9 @@ cask "gcloud-cli"
 # Cloudflare Workers CLI — deploys ~/dev/org/infra/ai-gateway
 # (and jwt-worker) via `wrangler deploy`. Auth via `wrangler login`.
 brew "cloudflare-wrangler"
+# OpenTofu — Terraform-compatible IaC. Manages stateful Cloudflare resources
+# (R2/D1/KV) for ~/dev/ausvisa; `tofu` CLI, worker code still ships via wrangler.
+brew "opentofu"
 
 # === AI dev tooling ===
 cask "claude-code"
