@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Make Neovide the default LaunchServices handler for text-based filetypes, so
+# double-clicking a source/config/text file in Finder opens it in Neovim's GUI.
+#
+# Reruns whenever the Brewfile hash changes (i.e. after a fresh `neovide-app` /
+# `duti` install on a new machine). duti -s is idempotent, so a rerun just
+# re-asserts the same handlers.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+BUNDLE_ID="com.neovide.neovide"
+APP="/Applications/Neovide.app"
+
+if ! command -v duti >/dev/null 2>&1; then
+  echo "neovide-defaults: duti not on PATH — Brewfile not yet applied; skipping"
+  exit 0
+fi
+
+if [ ! -d "$APP" ]; then
+  echo "neovide-defaults: $APP missing — neovide-app cask not installed; skipping"
+  exit 0
+fi
+
+# Nudge LaunchServices to register the freshly-installed bundle so duti can
+# resolve $BUNDLE_ID to its path on a first-run machine.
+LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+[ -x "$LSREGISTER" ] && "$LSREGISTER" -f "$APP" || true
+
+# Broad UTIs — catch whole families in one shot. Role `all` = viewer + editor.
+UTIS=(
+  public.plain-text
+  public.text
+  public.source-code
+  public.script
+  public.shell-script
+  public.xml
+  public.json
+  public.make-source
+  public.c-source
+  public.c-header
+  public.objective-c-source
+  public.c-plus-plus-source
+  public.python-script
+  public.ruby-script
+  public.perl-script
+  public.php-script
+  com.netscape.javascript-source
+)
+
+# Per-extension — many apps claim their own UTI that doesn't conform to the
+# families above, so set the common ones explicitly. Extensions, no leading dot.
+EXTS=(
+  txt text log csv tsv md markdown mdx rst org adoc asciidoc tex bib
+  json jsonc json5 yaml yml toml ini conf cfg env properties plist lock
+  html htm xml css scss sass less svg
+  sh bash zsh fish ps1 bat cmd
+  c h cc cpp cxx hpp hxx m mm cs java kt kts scala clj cljs cljc edn
+  go rs py pyi rb pl pm php lua vim vimrc swift dart
+  ex exs erl hrl hs ml mli fs fsx fsi r jl nim zig v sql
+  graphql gql proto sol
+  js jsx mjs cjs ts tsx mts cts vue svelte astro
+  mk cmake gradle nix star bzl tf tfvars hcl
+  gitignore gitattributes editorconfig npmrc babelrc eslintrc prettierrc
+  diff patch
+)
+
+for uti in "${UTIS[@]}"; do
+  duti -s "$BUNDLE_ID" "$uti" all 2>/dev/null || true
+done
+
+for ext in "${EXTS[@]}"; do
+  duti -s "$BUNDLE_ID" ".$ext" all 2>/dev/null || true
+done
+
+echo "neovide-defaults: set Neovide as default handler for ${#UTIS[@]} UTIs and ${#EXTS[@]} extensions"
+{{- end }}

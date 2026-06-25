@@ -79,6 +79,10 @@ brew "asciinema"
 
 # === Editor ===
 brew "neovim"
+cask "neovide-app"          # GPU Neovim GUI — set as default handler for text
+                            # filetypes by post-install-neovide-defaults.sh.
+brew "duti"                 # set macOS default-app (LaunchServices) handlers by
+                            # UTI/extension — drives the neovide-defaults script.
 brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
 brew "stylua"               # Lua formatter — paired with lua-language-server
 brew "luarocks"             # Lua package manager — needed by some nvim plugins
@@ -234,6 +238,19 @@ cask "macshot"
 # Archive Utility can't extract. Native Finder integration; "Open With"
 # default once installed. Free, by MacPaw.
 cask "the-unarchiver"
+
+# === Cloud storage ===
+# Google Drive (Drive for Desktop) — mounts the account's Drive as a local
+# filesystem at ~/Library/CloudStorage/GoogleDrive-<account>/ (files stream on
+# demand; right-click → "Available offline" to pin). Install manually, NOT via
+# this Brewfile: the cask ships a GoogleDrive.pkg, and Homebrew runs pkgs with
+# `sudo /usr/sbin/installer`, which can't read a password from chezmoi's
+# non-interactive `brew bundle` — every `chezmoi apply` would stall + purge the
+# Caskroom entry and retry forever (same reason Tailscale is manual above). The
+# app self-updates via Google's own updater, so brew adds nothing once present.
+# On a fresh host: open Ghostty and run `brew install --cask google-drive`
+# (Touch ID / password prompt in the real tty), then launch Google Drive and
+# sign in to establish the mount.
 
 # === Apps ===
 cask "firefox"
