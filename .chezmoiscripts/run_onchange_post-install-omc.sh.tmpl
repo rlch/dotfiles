@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Sync oh-my-claudecode (OMC) into ~/.claude after the `omc` CLI is installed
+# (see post-install-npm-tools.sh, which runs first alphabetically). `omc setup`
+# is idempotent: it installs/refreshes OMC's 19 agents, 37 skills, hooks, the
+# CLAUDE.md <!-- OMC:START/END --> block, and the unified MCP registry
+# (~/.claude.json + ~/.codex/config.toml). OMC runs ON Claude Code with your
+# existing subscription auth — no third-party OAuth (that's why we picked it
+# over OMO-on-opencode). Launched in cmux via `cmux omc`.
+#
+# The OMC block is also committed into dot_claude/CLAUDE.md so a `chezmoi apply`
+# doesn't strip it between setup runs; this script keeps it (and everything
+# else) in sync after OMC version bumps.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+# omc ships via mise's global node; its shims aren't on PATH in chezmoi's
+# non-login shell — prepend them so the CLI resolves.
+export PATH="$HOME/.local/share/mise/shims:$PATH"
+
+if ! command -v omc >/dev/null 2>&1; then
+  echo "omc: omc CLI not on PATH (npm-tools not yet applied) — skipping"
+  exit 0
+fi
+
+echo "omc: syncing components (omc setup --quiet)"
+omc setup --quiet || echo "omc: setup reported issues (non-fatal) — run 'omc doctor'"
+{{- end }}

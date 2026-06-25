@@ -13,7 +13,11 @@ fi
 
 # `npm install -g` upgrades; the version check first keeps the script
 # fast on subsequent runs.
-need=(@fission-ai/openspec)
+# oh-my-claude-sisyphus — the `omc` CLI for oh-my-claudecode (OMC), the
+# multi-agent harness that runs ON your already-authenticated Claude Code (no
+# third-party OAuth). Launched in cmux via `cmux omc`. See
+# post-install-omc.sh for the Claude Code plugin + cmux shim wiring.
+need=(@fission-ai/openspec oh-my-claude-sisyphus)
 
 for pkg in "${need[@]}"; do
   if npm ls -g --depth=0 --json 2>/dev/null | grep -q "\"${pkg}\":"; then

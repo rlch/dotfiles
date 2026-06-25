@@ -22,3 +22,6 @@ dot_env.*
 # Python bytecode caches (slugify-title.py et al.).
 __pycache__/
 *.pyc
+
+# oh-my-claudecode runtime state (regenerated; never committed)
+.omc/
