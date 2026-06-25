@@ -16,15 +16,49 @@ fi
 # awkward regex escaping.
 npm_root=$(npm root -g)
 
+# Each entry is either a bare package name (tracks @latest, install-once) or a
+# pinned "name@version" (enforced — reinstalled when a different version is present).
+#
+# @fission-ai/openspec — PINNED. Kept in lockstep with the user-level shadow of
+#   the `spec-driven` schema (~/.local/share/openspec/schemas/spec-driven), which
+#   is a verbatim fork of THIS version's artifacts plus a team-based `apply:`
+#   block (routes every `openspec apply` through a cmux claude-teams team).
+#   Bumping this pin means re-forking that schema from the new package and
+#   re-running `openspec schema validate spec-driven`. Unpinned @latest would let
+#   the forked artifacts silently rot against a newer package.
 # @inbox-zero/cli — self-hosted Inbox Zero manager; wraps setup/start/stop/logs
-# for the Dockerized AI email assistant (requires Docker + Node 24+).
-need=(@fission-ai/openspec @inbox-zero/cli)
+#   for the Dockerized AI email assistant (requires Docker + Node 24+).
+need=(@fission-ai/openspec@1.4.1 @inbox-zero/cli)
 
-for pkg in "${need[@]}"; do
-  if [ -d "${npm_root}/${pkg}" ]; then
-    echo "npm-tools: ${pkg} already installed"
+for spec in "${need[@]}"; do
+  # Split into name + version. The version is the segment after the LAST '@', but
+  # only when that '@' falls after the final '/', so scoped names like
+  # "@scope/pkg" aren't misread as a version.
+  base="${spec##*/}"
+  if [[ "${base}" == *@* ]]; then
+    version="${base##*@}"
+    name="${spec%@*}"
   else
-    echo "npm-tools: installing ${pkg}@latest"
-    npm install -g "${pkg}@latest"
+    version="latest"
+    name="${spec}"
+  fi
+
+  pkg_dir="${npm_root}/${name}"
+  if [ "${version}" = "latest" ]; then
+    if [ -d "${pkg_dir}" ]; then
+      echo "npm-tools: ${name} already installed (latest, install-once)"
+    else
+      echo "npm-tools: installing ${name}@latest"
+      npm install -g "${name}@latest"
+    fi
+  else
+    installed=""
+    [ -f "${pkg_dir}/package.json" ] && installed=$(node -p "require('${pkg_dir}/package.json').version" 2>/dev/null || echo "")
+    if [ "${installed}" = "${version}" ]; then
+      echo "npm-tools: ${name}@${version} already installed"
+    else
+      echo "npm-tools: installing ${name}@${version} (was: ${installed:-none})"
+      npm install -g "${name}@${version}"
+    fi
   fi
 done
