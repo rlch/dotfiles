@@ -242,6 +242,12 @@ run = 'move-node-to-workspace blender'
 if.app-id = 'com.apple.finder'
 run = 'layout floating'
 
+# Neovide opens as a quick popup editor (default handler for text filetypes —
+# see Brewfile + post-install-neovide-defaults.sh), so keep it out of the tiles.
+[[on-window-detected]]
+if.app-id = 'com.neovide.neovide'
+run = 'layout floating'
+
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
 run = 'layout floating'
