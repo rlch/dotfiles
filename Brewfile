@@ -79,10 +79,13 @@ brew "asciinema"
 
 # === Editor ===
 brew "neovim"
-cask "neovide-app"          # GPU Neovim GUI — set as default handler for text
-                            # filetypes by post-install-neovide-defaults.sh.
-brew "duti"                 # set macOS default-app (LaunchServices) handlers by
-                            # UTI/extension — drives the neovide-defaults script.
+cask "neovide-app"          # GPU Neovim GUI. Opens code/text files via its OWN
+                            # Info.plist associations — do NOT add a duti script to
+                            # force broad filetypes: setting the html/web handlers
+                            # cascaded Neovide into the default *browser* slot and
+                            # hijacked Slack/url opens (2026-06-25). Kept minimal.
+brew "duti"                 # macOS default-app (LaunchServices) handler management,
+                            # used ad-hoc (e.g. reset web types back to Firefox).
 brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
 brew "stylua"               # Lua formatter — paired with lua-language-server
 brew "luarocks"             # Lua package manager — needed by some nvim plugins
