@@ -100,6 +100,16 @@
       {
         "hooks": [
           {
+            "command": "~/.claude/improvement-capture.py",
+            "timeout": 15,
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      },
+      {
+        "hooks": [
+          {
             "command": "~/.claude/lsp-cleanup-hook.sh",
             "type": "command"
           }
