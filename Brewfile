@@ -193,8 +193,13 @@ cask "gcloud-cli"
 # (and jwt-worker) via `wrangler deploy`. Auth via `wrangler login`.
 brew "cloudflare-wrangler"
 # OpenTofu — Terraform-compatible IaC. Manages stateful Cloudflare resources
-# (R2/D1/KV) for ~/dev/ausvisa; `tofu` CLI, worker code still ships via wrangler.
+# (R2/D1/KV) for ~/dev/ausvisa + ~/dev/project/app; `tofu` CLI, worker
+# code still ships via wrangler.
 brew "opentofu"
+# Apify CLI — deploys ~/dev/project/app's actor plane via `apify push`
+# (the impit/Cloudflare-bypass scrapers that can't run on the edge worker).
+# Auth via `apify login`.
+brew "apify-cli"
 
 # === AI dev tooling ===
 cask "claude-code"
