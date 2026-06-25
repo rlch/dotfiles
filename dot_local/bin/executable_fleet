@@ -1,0 +1,458 @@
+#!/usr/bin/env python3
+"""fleet — manage the standing estate of long-lived cmux surfaces.
+
+The estate is the set of long-lived, oversight-worthy processes — servers,
+watchers, REPLs, task browsers — running as *named tabs* in cmux. Mostly they
+live in the agent's current workspace; a shared `ops` workspace holds the
+always-on cross-project daemons (nats / OpenD / ollama).
+
+Model: READ-ALL, CLAIM-TO-WRITE.
+  • Any instance may `ls` / `read` any surface.
+  • `send` / `key` REQUIRE holding an explicit claim on the target.
+  • Claims are keyed by surface UUID (stable across ref renumbering) and
+    rendered as a lock status badge on the tab, so the lock is also UI.
+
+Membership: a surface is "in the fleet" iff its tab title is role-prefixed
+(srv: db: watch: repl: web: mon: job: svc:) or it lives in the `ops`
+workspace. `fleet spawn` names tabs that way automatically; `fleet ls
+--all-surfaces` shows everything so you can adopt one with `fleet name`.
+
+This is a thin wrapper over the `cmux` CLI — cmux is the daemon that actually
+holds the surfaces, so visibility and handoff work across every instance.
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+from urllib.parse import urlparse
+
+ROLE_PREFIXES = ("srv", "db", "watch", "repl", "web", "mon", "job", "svc")
+OPS_TITLE   = "ops"
+CLAIM_KEY   = "fleet.claim"
+CLAIM_ICON  = "lock"
+CLAIM_COLOR = "#cba6f7"          # Catppuccin Mocha mauve
+CLAIM_TTL   = 1800               # seconds; older claims are treated as stale
+ENTER_KEY   = "return"
+TYPE_ABBR   = {"terminal": "term", "browser": "web", "agent-session": "agent"}
+STATE_DIR   = os.path.expanduser("~/.local/state/cmux-fleet")
+CLAIMS_PATH = os.path.join(STATE_DIR, "claims.json")
+SHELLS = {"fish", "bash", "zsh", "sh", "-fish", "-bash", "-zsh", "login", "caffeinate"}
+
+
+# ---------- plumbing ----------
+def die(msg, code=1):
+    print(f"fleet: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def cmux(*args, want_json=False, check=True):
+    env = dict(os.environ, CMUX_QUIET="1")
+    p = subprocess.run(["cmux", *args], capture_output=True, text=True, env=env)
+    if check and p.returncode != 0:
+        die(f"`cmux {' '.join(args)}` failed:\n{(p.stderr or p.stdout).strip()}")
+    return json.loads(p.stdout) if want_json else p.stdout
+
+
+def parse_ref(text, kind):
+    m = re.search(rf"{kind}:\d+", text)
+    return m.group(0) if m else None
+
+
+def clean(title):
+    """Strip cmux's leading live-activity glyph (spinner / ✳) from a title."""
+    return re.sub(r"^[^\w]+", "", title or "").strip() or (title or "")
+
+
+def tree():
+    return cmux("tree", "--json", "--id-format", "both", want_json=True)
+
+
+def identity():
+    info = cmux("identify", "--id-format", "both", want_json=True)
+    return info.get("caller") or info.get("focused") or {}
+
+
+# ---------- surface model ----------
+def iter_surfaces(t=None):
+    t = t or tree()
+    for w in t.get("windows", []):
+        for ws in w.get("workspaces", []):
+            for pane in ws.get("panes", []):
+                for s in pane.get("surfaces", []):
+                    yield {
+                        "id": s.get("id"), "ref": s.get("ref"),
+                        "title": s.get("title") or "", "type": s.get("type") or "",
+                        "url": s.get("url"), "tty": s.get("tty"), "here": s.get("here"),
+                        "ws_ref": ws.get("ref"), "ws_id": ws.get("id"),
+                        "ws_title": ws.get("title") or "", "pane_ref": pane.get("ref"),
+                    }
+
+
+def all_surface_ids(t=None):
+    return {s["id"] for s in iter_surfaces(t)}
+
+
+def is_member(s):
+    head = s["title"].split(":", 1)[0].strip() if ":" in s["title"] else ""
+    return head in ROLE_PREFIXES or s["ws_title"].strip().lower() == OPS_TITLE
+
+
+def resolve(target, t=None):
+    t = t or tree()
+    surfaces = list(iter_surfaces(t))
+    for s in surfaces:                                   # exact ref / uuid
+        if target in (s["ref"], s["id"]):
+            return s
+    exact = [s for s in surfaces if s["title"] == target]
+    if len(exact) == 1:
+        return exact[0]
+    if len(exact) > 1:
+        die(f"ambiguous: {len(exact)} surfaces titled {target!r}")
+    pref = [s for s in surfaces if s["title"].startswith(target)]
+    if len(pref) == 1:
+        return pref[0]
+    if len(pref) > 1:
+        die(f"ambiguous {target!r}: " + ", ".join(repr(s["title"]) for s in pref))
+    die(f"no surface matching {target!r} (try: fleet ls --all)")
+
+
+def proc_map():
+    """surface_ref -> headline (most interesting direct child) process name."""
+    tsv = cmux("top", "--processes", "--format", "tsv", check=False)
+    direct = {}
+    for line in tsv.splitlines():
+        cols = line.split("\t")
+        if len(cols) < 7 or cols[3] != "process":
+            continue
+        _, _, _, _, _, parent, name = cols[:7]
+        if parent.startswith("surface:"):
+            direct.setdefault(parent, []).append(name)
+    head = {}
+    for ref, names in direct.items():
+        interesting = [n for n in names if n not in SHELLS]
+        head[ref] = (interesting or names or ["—"])[0]
+    return head
+
+
+# ---------- claims ----------
+def load_claims():
+    try:
+        with open(CLAIMS_PATH) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_claims(c):
+    os.makedirs(STATE_DIR, exist_ok=True)
+    tmp = CLAIMS_PATH + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(c, f, indent=2)
+    os.replace(tmp, CLAIMS_PATH)
+
+
+def active_claim(sid, claims=None, live_ids=None):
+    """The claim dict if a non-stale claim exists for sid, else None."""
+    claims = claims if claims is not None else load_claims()
+    c = claims.get(sid)
+    if not c:
+        return None
+    if time.time() - c.get("ts", 0) > CLAIM_TTL:
+        return None                                      # expired
+    if live_ids is not None and c.get("owner_id") not in live_ids:
+        return None                                      # owner surface gone
+    return c
+
+
+def me(t=None):
+    """(surface_uuid, human_label) for the agent invoking fleet."""
+    ident = identity()
+    sid = ident.get("surface_id")
+    label = os.environ.get("FLEET_AGENT")
+    if not label:
+        label = ident.get("workspace_ref") or "agent"
+        for s in iter_surfaces(t):                       # prefer the task title
+            if s["id"] == sid and s["ws_title"]:
+                label = clean(s["ws_title"])
+                break
+    return sid, label
+
+
+# ---------- commands ----------
+def cmd_claim(target, steal=False, quiet=False):
+    t = tree()
+    s = resolve(target, t)
+    my_id, my_label = me(t)
+    claims = load_claims()
+    cur = active_claim(s["id"], claims, all_surface_ids(t))
+    if cur and cur["owner_id"] != my_id and not steal:
+        die(f"{s['title']!r} is claimed by {cur['owner_label']!r} — "
+            f"use `fleet claim --steal {s['title']}` to take it")
+    claims[s["id"]] = {"owner_id": my_id, "owner_label": my_label,
+                       "ts": time.time(), "ref": s["ref"], "title": s["title"]}
+    save_claims(claims)
+    cmux("set-status", CLAIM_KEY, my_label, f"--icon={CLAIM_ICON}",
+         f"--color={CLAIM_COLOR}", f"--tab={s['ref']}", check=False)
+    if not quiet:
+        print(f"claimed {s['title']} ({s['ref']}) as {my_label}")
+    return s
+
+
+def cmd_release(target, force=False):
+    t = tree()
+    s = resolve(target, t)
+    my_id, _ = me(t)
+    claims = load_claims()
+    cur = claims.get(s["id"])
+    if cur and cur["owner_id"] != my_id and not force:
+        die(f"{s['title']!r} is claimed by {cur['owner_label']!r} — "
+            f"use `fleet release --force {s['title']}`")
+    claims.pop(s["id"], None)
+    save_claims(claims)
+    cmux("clear-status", CLAIM_KEY, f"--tab={s['ref']}", check=False)
+    print(f"released {s['title']} ({s['ref']})")
+
+
+def _require_my_claim(s, t):
+    cur = active_claim(s["id"], None, all_surface_ids(t))
+    my_id, _ = me(t)
+    if cur is None:
+        die(f"{s['title']!r} is not claimed — run: fleet claim {s['title']}")
+    if cur["owner_id"] != my_id:
+        die(f"{s['title']!r} is claimed by {cur['owner_label']!r}, not you — "
+            f"wait, or: fleet claim --steal {s['title']}")
+
+
+def cmd_send(target, text, enter=True, claim_first=False):
+    t = tree()
+    s = resolve(target, t)
+    if claim_first:
+        cmd_claim(s["ref"], quiet=True)
+    _require_my_claim(s, t)
+    cmux("send", "--surface", s["ref"], "--workspace", s["ws_ref"], text, check=False)
+    if enter:
+        cmux("send-key", "--surface", s["ref"], "--workspace", s["ws_ref"], ENTER_KEY, check=False)
+    print(f"sent to {s['title']} ({s['ref']})")
+
+
+def cmd_key(target, key, claim_first=False):
+    t = tree()
+    s = resolve(target, t)
+    if claim_first:
+        cmd_claim(s["ref"], quiet=True)
+    _require_my_claim(s, t)
+    cmux("send-key", "--surface", s["ref"], "--workspace", s["ws_ref"], key, check=False)
+    print(f"key {key!r} -> {s['title']} ({s['ref']})")
+
+
+def cmd_read(target, lines=None, scrollback=False):
+    s = resolve(target)
+    args = ["read-screen", "--surface", s["ref"], "--workspace", s["ws_ref"]]
+    if scrollback:
+        args.append("--scrollback")
+    if lines:
+        args += ["--lines", str(lines)]
+    sys.stdout.write(cmux(*args, check=False))
+
+
+def ensure_ops(t):
+    for win in t.get("windows", []):
+        for ws in win.get("workspaces", []):
+            if (ws.get("title") or "").strip().lower() == OPS_TITLE:
+                return ws["ref"]
+    out = cmux("new-workspace", "--name", OPS_TITLE, "--focus", "false", check=False)
+    ref = parse_ref(out, "workspace")
+    if not ref:
+        die(f"could not create ops workspace (cmux said: {out.strip()})")
+    return ref
+
+
+def cmd_ops():
+    print(ensure_ops(tree()))
+
+
+def _caller_ws(t):
+    return identity().get("workspace_ref")
+
+
+def cmd_spawn(name, cmd, ws=None, ops=False, split=None):
+    t = tree()
+    if ops:
+        ws = ensure_ops(t)
+        t = tree()
+    ws = ws or _caller_ws(t)
+    if split:
+        out = cmux("new-split", split, "--workspace", ws, "--focus", "false", check=False)
+    else:
+        out = cmux("new-surface", "--type", "terminal", "--workspace", ws,
+                   "--focus", "false", check=False)
+    ref = parse_ref(out, "surface")
+    if not ref:                                          # new-split may report a pane
+        pane = parse_ref(out, "pane")
+        for s in iter_surfaces():
+            if s["pane_ref"] == pane:
+                ref = s["ref"]
+                break
+    if not ref:
+        die(f"could not create surface (cmux said: {out.strip()})")
+    cmux("rename-tab", "--surface", ref, "--workspace", ws, name, check=False)
+    if cmd:
+        cmux("send", "--surface", ref, "--workspace", ws, cmd, check=False)
+        cmux("send-key", "--surface", ref, "--workspace", ws, ENTER_KEY, check=False)
+    cmd_claim(ref, quiet=True)                           # spawner owns it
+    print(f"spawned {name} -> {ref} in {ws}" + (f"  ({cmd})" if cmd else ""))
+
+
+def cmd_browser(url, ws=None, split=None, name=None):
+    t = tree()
+    ws = ws or _caller_ws(t)
+    if split:
+        out = cmux("new-pane", "--type", "browser", "--url", url, "--direction", split,
+                   "--workspace", ws, "--focus", "false", check=False)
+    else:
+        out = cmux("new-surface", "--type", "browser", "--url", url, "--workspace", ws,
+                   "--focus", "false", check=False)
+    ref = parse_ref(out, "surface")
+    if ref:                                              # make it a fleet member
+        name = name or "web:" + (urlparse(url).netloc or url)
+        cmux("rename-tab", "--surface", ref, "--workspace", ws, name, check=False)
+    print(f"browser {url} -> {ref or out.strip()}" + (f"  ({name})" if ref else ""))
+
+
+def cmd_name(target, new_name):
+    """Adopt / rename a surface into the fleet."""
+    s = resolve(target)
+    cmux("rename-tab", "--surface", s["ref"], "--workspace", s["ws_ref"], new_name, check=False)
+    print(f"renamed {s['ref']} -> {new_name}")
+
+
+def cmd_ls(scope_all=False, ws_filter=None, all_surfaces=False):
+    t = tree()
+    procs = proc_map()
+    claims = load_claims()
+    live = all_surface_ids(t)
+    caller, ops = _caller_ws(t), None
+    for win in t.get("windows", []):
+        for ws in win.get("workspaces", []):
+            if (ws.get("title") or "").strip().lower() == OPS_TITLE:
+                ops = ws["ref"]
+    rows = []
+    for s in iter_surfaces(t):
+        if ws_filter and s["ws_ref"] != ws_filter:
+            continue
+        if not all_surfaces and not is_member(s):
+            continue
+        if not scope_all and not ws_filter and s["ws_ref"] not in (caller, ops):
+            continue
+        c = active_claim(s["id"], claims, live)
+        if c:
+            claim = f"lock {c['owner_label'][:14]}"
+        elif s["id"] in claims:
+            claim = "(stale)"
+        else:
+            claim = ""
+        proc = (s["url"] or "browser") if s["type"] == "browser" else procs.get(s["ref"], "—")
+        rows.append([clean(s["title"])[:34], s["ref"], TYPE_ABBR.get(s["type"], s["type"][:5]),
+                     (proc or "—")[:18], claim[:20], clean(s["ws_title"])[:22]])
+    if not rows:
+        hint = "" if all_surfaces else " (use `fleet ls --all-surfaces` to see everything)"
+        print("fleet: no managed surfaces" + hint)
+        return
+    hdr = ["NAME", "REF", "TYPE", "PROC", "CLAIM", "WORKSPACE"]
+    w = [max(len(hdr[i]), max(len(r[i]) for r in rows)) for i in range(len(hdr))]
+    line = lambda r: "  ".join(r[i].ljust(w[i]) for i in range(len(hdr)))
+    print(line(hdr))
+    for r in rows:
+        print(line(r))
+
+
+# ---------- cli ----------
+def build_parser():
+    p = argparse.ArgumentParser(prog="fleet", description="cmux estate manager (read-all, claim-to-write)")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    s = sub.add_parser("ls", help="list managed surfaces")
+    s.add_argument("--all", action="store_true", dest="scope_all", help="every workspace, not just current + ops")
+    s.add_argument("--all-surfaces", action="store_true", help="include non-fleet (unnamed) surfaces")
+    s.add_argument("--ws", help="filter to one workspace ref")
+
+    s = sub.add_parser("read", help="dump a surface's screen")
+    s.add_argument("target")
+    s.add_argument("-n", "--lines", type=int)
+    s.add_argument("--scrollback", action="store_true")
+
+    s = sub.add_parser("claim", help="claim write access to a surface")
+    s.add_argument("target")
+    s.add_argument("--steal", action="store_true", help="take it even if someone else holds it")
+
+    s = sub.add_parser("release", help="release your claim")
+    s.add_argument("target")
+    s.add_argument("--force", action="store_true", help="release even if you don't own it")
+
+    s = sub.add_parser("send", help="send a command (claim required)")
+    s.add_argument("target")
+    s.add_argument("text", nargs="+")
+    s.add_argument("--no-enter", action="store_true", help="type without pressing return")
+    s.add_argument("--claim", action="store_true", dest="claim_first", help="claim then send in one step")
+
+    s = sub.add_parser("key", help="send a key/chord (claim required)")
+    s.add_argument("target")
+    s.add_argument("key")
+    s.add_argument("--claim", action="store_true", dest="claim_first")
+
+    s = sub.add_parser("spawn", help="open a named tab running a command")
+    s.add_argument("name", help="role-prefixed, e.g. srv:vite")
+    s.add_argument("--ws", help="target workspace ref (default: current)")
+    s.add_argument("--ops", action="store_true", help="put it in the shared ops workspace")
+    s.add_argument("--split", choices=["left", "right", "up", "down"], help="split instead of a tab")
+    # command after `--` is handled in main()
+
+    s = sub.add_parser("browser", help="open a browser surface")
+    s.add_argument("url")
+    s.add_argument("--name", help="fleet name (default web:<host>)")
+    s.add_argument("--ws")
+    s.add_argument("--split", choices=["left", "right", "up", "down"])
+
+    s = sub.add_parser("name", help="rename/adopt a surface into the fleet")
+    s.add_argument("target")
+    s.add_argument("new_name")
+
+    sub.add_parser("ops", help="print (creating if needed) the ops workspace ref")
+    return p
+
+
+def main():
+    argv = sys.argv[1:]
+    spawn_cmd = None
+    if argv and argv[0] == "spawn" and "--" in argv:      # split off `-- <command>`
+        i = argv.index("--")
+        argv, spawn_cmd = argv[:i], " ".join(argv[i + 1:])
+    args = build_parser().parse_args(argv)
+
+    if args.cmd == "ls":
+        cmd_ls(args.scope_all, args.ws, args.all_surfaces)
+    elif args.cmd == "read":
+        cmd_read(args.target, args.lines, args.scrollback)
+    elif args.cmd == "claim":
+        cmd_claim(args.target, args.steal)
+    elif args.cmd == "release":
+        cmd_release(args.target, args.force)
+    elif args.cmd == "send":
+        cmd_send(args.target, " ".join(args.text), not args.no_enter, args.claim_first)
+    elif args.cmd == "key":
+        cmd_key(args.target, args.key, args.claim_first)
+    elif args.cmd == "spawn":
+        cmd_spawn(args.name, spawn_cmd, args.ws, args.ops, args.split)
+    elif args.cmd == "browser":
+        cmd_browser(args.url, args.ws, args.split, args.name)
+    elif args.cmd == "name":
+        cmd_name(args.target, args.new_name)
+    elif args.cmd == "ops":
+        cmd_ops()
+
+
+if __name__ == "__main__":
+    main()
