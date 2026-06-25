@@ -48,6 +48,8 @@ brew "tree"        # plain directory tree (when dust's size view is overkill)
 brew "coreutils"   # GNU coreutils (g-prefixed: gtimeout, grealpath, …). Provides `timeout` via the timeout.fish wrapper — NOT gnubin-on-PATH, to avoid shadowing every BSD coreutil
 # JSON / data
 brew "jq"
+brew "yq"          # jq for YAML/TOML/XML — deterministic query/edit of structured configs
+brew "gron"        # flatten JSON to greppable `path = value` lines (`gron | rg`; reverse with -u)
 brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
 brew "tokei"       # code line counter by language
 brew "imagemagick" # image manipulation (convert, magick) — pulled in by misc one-off scripts
@@ -154,6 +156,8 @@ cask "owenthereal/upterm/upterm"
 # === Git / Docker TUIs ===
 brew "lazygit"
 brew "lazydocker"
+brew "git-absorb"  # auto-slot `git add -p`'d review fixes into the right ancestor commit (`git absorb --and-rebase`)
+brew "difftastic"  # structural/syntax-aware diff, invoked on demand as `git dft` (delta stays the pager)
 # revdiff — file-tree TUI for reviewing diffs, with inline annotations and a
 # Claude Code plugin. Replaced diffnav (delta-based pager) for richer review
 # UX. Lives in umputun's tap.
