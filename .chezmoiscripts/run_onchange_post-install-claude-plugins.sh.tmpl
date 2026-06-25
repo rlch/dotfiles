@@ -57,6 +57,12 @@ plugins=(
   # revdiff — review piped diffs / branch state with inline annotations
   # that get fed back to the Claude session. Marketplace is umputun/revdiff.
   "revdiff@revdiff"
+
+  # Personal skills — handoff, nerd-fonts-icons, tmp-cleanup, tmux.
+  # Local "directory" marketplace at ~/dev/skills (personal-skills); registered via
+  # extraKnownMarketplaces in settings.json. Phase 1 is local-only (no github
+  # repo yet), so a clean machine needs ~/dev/skills checked out for this.
+  "rjm@personal-skills"
 )
 
 for p in "${plugins[@]}"; do

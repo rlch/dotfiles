@@ -17,6 +17,7 @@
     "pyright-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "revdiff@revdiff": true,
+    "rjm@personal-skills": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
@@ -42,6 +43,12 @@
         "path": "/Users/rjm/dev/org/infra/claude-plugins",
         "repo": "your-org/claude-plugins",
         "source": "github"
+      }
+    },
+    "personal-skills": {
+      "source": {
+        "path": "/Users/rjm/dev/skills",
+        "source": "directory"
       }
     }
   },
