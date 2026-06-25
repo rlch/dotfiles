@@ -89,6 +89,15 @@ abbr cld 'cl --dangerously-skip-permissions'
 abbr n   pnpm
 abbr frb flutter_rust_bridge_codegen
 abbr ai  cl
+abbr iz  inbox-zero
+
+# Git (rebase-heavy; gp routes through the per-push approval hook)
+abbr gl  'git pull --rebase'
+abbr gp  'git push'
+abbr gst 'git status -sb'
+abbr glo 'git log --oneline --graph --decorate -20'
+abbr grc 'git rebase --continue'
+abbr gra 'git rebase --abort'
 
 # CLI utilities
 abbr f   yazi
