@@ -26,16 +26,17 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     command -q clodcurrent; or set runner claude
 
     # In a cmux pane (CMUX_SURFACE_ID is exported by cmux), route the launch
-    # through `cmux omc` so OMC team mode + agent panes become native cmux
-    # splits. clodcurrent honors CLODCURRENT_LAUNCHER — it still picks the best
-    # account and sets CLAUDE_CONFIG_DIR, then exec's the launcher instead of
-    # claude. Without clodcurrent, invoke `cmux omc` directly. Outside cmux
+    # through `cmux claude-teams` so Claude Code's native agent teams render as
+    # native cmux splits (sets up the tmux shim + CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).
+    # clodcurrent honors CLODCURRENT_LAUNCHER — it still picks the best account
+    # and sets CLAUDE_CONFIG_DIR, then exec's the launcher instead of claude.
+    # Without clodcurrent, invoke `cmux claude-teams` directly. Outside cmux
     # (plain terminal, real tmux, ssh), nothing changes.
     if set -q CMUX_SURFACE_ID
         if test "$runner" = clodcurrent
-            set -fx CLODCURRENT_LAUNCHER 'cmux omc'
+            set -fx CLODCURRENT_LAUNCHER 'cmux claude-teams'
         else
-            set runner cmux omc
+            set runner cmux claude-teams
         end
     end
 
