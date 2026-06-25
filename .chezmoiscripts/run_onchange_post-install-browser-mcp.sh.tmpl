@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Register the browser-automation MCP servers as USER-scope (~/.claude.json),
+# attached to the ungoogled-Chromium debug instance on 127.0.0.1:9222 (the
+# `chrome-debug` fish function). The official claude-plugins versions
+# (chrome-devtools-mcp@/playwright@) ship without --browser-url, so they launch
+# their OWN Chrome — violating the visual-separation invariant in CLAUDE.md.
+# We disable those plugins (settings.json enabledPlugins) and own these instead,
+# same idiom as install-blender-mcp.sh.
+#
+# Idempotent: remove any stale user-scope entry, then add the :9222 version.
+# A "failed to connect" in `claude mcp list` just means chrome-debug isn't
+# running yet — start it with the `chrome-debug` fish function.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v claude >/dev/null 2>&1; then
+  echo "browser-mcp: claude CLI not on PATH — claude-code not yet installed; skipping"
+  exit 0
+fi
+
+add_mcp() {  # <name> <command> [args...]
+  local name="$1"; shift
+  claude mcp remove "$name" -s user >/dev/null 2>&1 || true
+  echo "browser-mcp: registering user-scope '$name' (attaches to :9222)"
+  claude mcp add -s user "$name" -- "$@"
+}
+
+add_mcp chrome-devtools chrome-devtools-mcp --browser-url=http://127.0.0.1:9222 --no-category-extensions
+add_mcp playwright      playwright-mcp      --cdp-endpoint=http://127.0.0.1:9222
+{{- end }}
