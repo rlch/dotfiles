@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""improvement-digest — Phase 0 human-facing view of the self-improvement queue.
+
+Reads $HOME/.claude/improvement/queue.jsonl (written by the side-effect-free
+improvement-capture hook) and prints a deduped, grouped summary of observed
+session friction. READ-ONLY: it never mutates memory/CLAUDE.md/hooks/skills and
+never auto-applies anything — a human reads this and decides.
+
+Usage:
+  improvement-digest                 # full digest, newest first
+  improvement-digest --since 7d      # only candidates from the last 7 days (or YYYY-MM-DD)
+  improvement-digest --signal user-correction
+  improvement-digest --provenance user-authored
+  improvement-digest --limit 20
+  improvement-digest --json          # machine-readable deduped records
+
+Tiers (proposed only; synthesis would refine): T0 memory · T1 CLAUDE.md/rules ·
+T2 hooks · T3 skills.
+"""
+
+import sys, os, json, argparse, datetime
+
+HOME = os.path.expanduser("~")
+QUEUE = os.path.join(HOME, ".claude", "improvement", "queue.jsonl")
+
+SIGNAL_LABEL = {
+    "user-correction": "User corrections",
+    "repeated-tool-failure": "Repeated tool failures",
+    "blocked-then-retried": "Blocked-then-retried",
+    "test-red-green": "Test red→green",
+}
+
+
+def parse_since(s):
+    if not s:
+        return None
+    s = s.strip()
+    now = datetime.datetime.now(datetime.timezone.utc)
+    if s.endswith("d") and s[:-1].isdigit():
+        return now - datetime.timedelta(days=int(s[:-1]))
+    if s.endswith("h") and s[:-1].isdigit():
+        return now - datetime.timedelta(hours=int(s[:-1]))
+    try:
+        return datetime.datetime.fromisoformat(s).replace(tzinfo=datetime.timezone.utc)
+    except Exception:
+        return None
+
+
+def load(path):
+    recs = []
+    if not os.path.isfile(path):
+        return recs
+    with open(path, errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                recs.append(json.loads(line))
+            except Exception:
+                continue
+    return recs
+
+
+def ts_of(r):
+    try:
+        return datetime.datetime.fromisoformat(r.get("ts", "")).astimezone(
+            datetime.timezone.utc
+        )
+    except Exception:
+        return None
+
+
+def main():
+    ap = argparse.ArgumentParser(add_help=True, description=__doc__)
+    ap.add_argument("--since")
+    ap.add_argument("--signal")
+    ap.add_argument("--provenance")
+    ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--queue", default=QUEUE)
+    args = ap.parse_args()
+
+    recs = load(args.queue)
+    since = parse_since(args.since)
+
+    # filter
+    filtered = []
+    for r in recs:
+        if args.signal and r.get("signal") != args.signal:
+            continue
+        if args.provenance and r.get("provenance") != args.provenance:
+            continue
+        if since:
+            t = ts_of(r)
+            if t and t < since:
+                continue
+        filtered.append(r)
+
+    # dedupe by dedupe_key, keep newest, count occurrences + sessions
+    byk = {}
+    for r in filtered:
+        k = r.get("dedupe_key") or json.dumps(r, sort_keys=True)
+        e = byk.get(k)
+        if not e:
+            byk[k] = {"rec": r, "count": 1, "sessions": {r.get("session_id")},
+                      "last": ts_of(r)}
+        else:
+            e["count"] += 1
+            e["sessions"].add(r.get("session_id"))
+            t = ts_of(r)
+            if t and (e["last"] is None or t > e["last"]):
+                e["last"] = t
+                e["rec"] = r
+
+    items = sorted(byk.values(), key=lambda e: (e["last"] or datetime.datetime.min.replace(
+        tzinfo=datetime.timezone.utc)), reverse=True)
+    if args.limit:
+        items = items[: args.limit]
+
+    if args.json:
+        out = []
+        for e in items:
+            r = dict(e["rec"])
+            r["_occurrences"] = e["count"]
+            r["_sessions"] = len([s for s in e["sessions"] if s])
+            out.append(r)
+        print(json.dumps(out, indent=2, ensure_ascii=False))
+        return 0
+
+    # human-facing
+    if not os.path.isfile(args.queue):
+        print("improvement-digest: no queue yet at", args.queue)
+        print("(The capture hook writes here once it's wired into settings.json.)")
+        return 0
+    if not items:
+        print("improvement-digest: no candidates match the current filter.")
+        return 0
+
+    total = sum(e["count"] for e in items)
+    print(f"# Improvement digest  ({len(items)} distinct · {total} occurrences)")
+    print(f"  queue: {args.queue}")
+    if since:
+        print(f"  since: {args.since}")
+    print("  NOTE: capture-only. Nothing here has been applied. Review and act manually.")
+    print()
+
+    # group by signal
+    order = ["user-correction", "repeated-tool-failure", "blocked-then-retried",
+             "test-red-green"]
+    groups = {}
+    for e in items:
+        groups.setdefault(e["rec"].get("signal", "other"), []).append(e)
+
+    for sig in order + [g for g in groups if g not in order]:
+        es = groups.get(sig)
+        if not es:
+            continue
+        print(f"## {SIGNAL_LABEL.get(sig, sig)}  ({len(es)})")
+        for e in es:
+            r = e["rec"]
+            prov = r.get("provenance", "?")
+            tier = r.get("proposed_tier", "?")
+            when = e["last"].strftime("%Y-%m-%d") if e["last"] else "?"
+            badge = f"[{tier} · {prov}]"
+            seen = f"×{e['count']}" if e["count"] > 1 else ""
+            print(f"  - {r.get('summary','(no summary)')}  {badge} {seen}".rstrip())
+            ev = (r.get("evidence") or {}).get("excerpt", "")
+            if ev:
+                print(f"      evidence: {ev}")
+            cwd = r.get("cwd", "")
+            print(f"      {when}  {cwd}")
+        print()
+
+    # provenance reminder (the auto-commit rule for Phase 1)
+    ua = sum(e["count"] for e in items if e["rec"].get("provenance") == "user-authored")
+    td = total - ua
+    print(f"provenance: {ua} user-authored · {td} tool-or-web-derived "
+          f"(only user-authored would ever be eligible for T0 auto-commit)")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main() or 0)
+    except KeyboardInterrupt:
+        sys.exit(130)
