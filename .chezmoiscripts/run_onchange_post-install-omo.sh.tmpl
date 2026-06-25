@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Install oh-my-openagent (OMO) — the multi-agent orchestration harness — onto
+# OpenCode (the "Ultimate" edition). OMO registers itself as a plugin in
+# ~/.config/opencode/opencode.json and writes agent→model mappings to
+# ~/.config/opencode/oh-my-openagent.jsonc, routing its 11 agents to your
+# Claude Max (20×) subscription plus ChatGPT for the Oracle/Hephaestus agents.
+#
+# The installer is idempotent, so this reruns safely whenever the Brewfile hash
+# changes (i.e. after a fresh `opencode` install on a new machine).
+#
+# Auth is intentionally NOT done here (--skip-auth): the provider login is an
+# interactive browser OAuth flow. Run it once per machine, by hand:
+#     opencode auth login   →  Anthropic  →  Claude Pro/Max
+# The token is stored under ~/.local/share/opencode/ (not chezmoi-tracked), so
+# no secret lands in the dotfiles repo.
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v opencode >/dev/null 2>&1; then
+  echo "omo: opencode not on PATH — Brewfile not yet applied; skipping"
+  exit 0
+fi
+
+# bunx ships via mise (a global tool), whose shims aren't on PATH in chezmoi's
+# non-login shell — prepend them so the installer's runner resolves.
+export PATH="$HOME/.local/share/mise/shims:$PATH"
+if ! command -v bunx >/dev/null 2>&1; then
+  echo "omo: bunx not found (mise bun not installed?) — skipping"
+  exit 0
+fi
+
+echo "omo: installing oh-my-openagent onto opencode (claude=max20, openai=yes)"
+bunx oh-my-openagent install \
+  --no-tui \
+  --platform=opencode \
+  --claude=max20 \
+  --openai=yes \
+  --gemini=no \
+  --copilot=no \
+  --skip-auth
+
+echo "omo: done. If this is a fresh machine, authenticate once:"
+echo "     opencode auth login  →  Anthropic  →  Claude Pro/Max"
+{{- end }}
