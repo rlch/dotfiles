@@ -19,6 +19,7 @@
 
 [commit]
 	gpgsign = true
+	verbose = true   ; show the full diff in the commit-message editor
 
 ; revdiff isn't a stdin pager — it generates diffs from refs itself, so
 ; we don't wire pager.diff/show. delta stays as the streaming pager for
@@ -60,4 +61,97 @@
 
 [diff]
 	colorMoved = default
+	colorMovedWS = allow-indentation-change   ; don't flag pure re-indents as moved code
 	algorithm = histogram
+	; difftastic as an ON-DEMAND structural diff (`git dft`). diff.tool only
+	; affects `git difftool`, NOT `git diff` — delta stays the pager/diffFilter.
+	tool = difftastic
+
+[difftool]
+	prompt = false
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+
+[alias]
+	dft = difftool
+	; git-absorb: stage the review fixes (`git add -p`), then `git ab` creates the
+	; fixup! commits against the right ancestors AND rebases them in, one shot.
+	; Pairs with rebase.autoSquash/autoStash above. Use bare `git absorb` first if
+	; you'd rather inspect the fixups before rebasing.
+	ab = absorb --and-rebase
+	; absorb across the whole stack down to <base> (default main). --base ignores
+	; absorb.maxStack, so it's the right tool for deep stacks. `git abm` or `git abm <base>`.
+	abm = "!f() { git absorb --base \"${1:-main}\" --and-rebase; }; f"
+	; force-push a rewritten stack safely (lease + refuse if local lacks the remote tip).
+	pf = push --force-with-lease --force-if-includes
+
+[absorb]
+	; one fixup commit per target (not per hunk) — cleaner pre-rebase history
+	oneFixupPerCommit = true
+	; bare `git absorb`/`git ab` only scan this many commits back from HEAD. 10 is too
+	; low for stacked PRs (it warns + drops hunks — never mis-attributes). 50 covers any
+	; human stack; for deeper work use `git abm <base>`, which ignores this limit.
+	maxStack = 50
+	autoStageIfNothingStaged = true   ; nothing staged → stage all, fixup, re-unstage leftovers
+	fixupTargetAlwaysSHA = true       ; fixup subjects reference the target SHA (unambiguous)
+
+; --- rebase-heavy + stacked-branch workflow ---
+[rebase]
+	; rebasing the tip of a PR stack onto main fixes up every intermediate
+	; branch in one shot — no manual double-rebase.
+	updateRefs = true
+	autoStash = true
+	autoSquash = true
+	missingCommitsCheck = error   ; abort an interactive rebase whose todo drops a commit
+
+[rerere]
+	; reuse recorded conflict resolutions — resolve a recurring rebase
+	; conflict once per chain, not once per rebase.
+	enabled = true
+	autoUpdate = true
+
+[merge]
+	; 3-way conflict markers that show the common ancestor — far easier rebase
+	; conflict resolution, and gives rerere better resolutions to record.
+	conflictStyle = zdiff3
+
+[pull]
+	rebase = true            ; pull always rebases (never an accidental merge commit)
+
+[init]
+	defaultBranch = main
+
+[help]
+	autocorrect = prompt     ; typo'd subcommand → confirm before running (never auto-runs)
+
+[push]
+	autoSetupRemote = true   ; `git push` on a new branch just works (no --set-upstream)
+	followTags = true
+	useForceIfIncludes = true   ; --force-with-lease also refuses if local lacks the remote tip
+
+[fetch]
+	prune = true             ; auto-drop local refs for branches deleted upstream (feeds clean_gone)
+	pruneTags = true
+
+[branch]
+	sort = -committerdate    ; `git branch` lists most-recently-worked first
+
+[tag]
+	sort = -version:refname  ; tags sort as versions (v1.10 after v1.9)
+
+[column]
+	ui = auto                ; tidy columns for branch/status listings
+
+; Written by `git lfs install`. Captured here so chezmoi apply doesn't strip it.
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+
+; Machine-local, NON-chezmoi-managed git config. Holds per-host/per-repo runtime
+; state that must NOT live in the portable source — notably `git maintenance`'s
+; absolute `[maintenance] repo = …` paths (per-machine; pollutes other hosts).
+; git silently ignores this include if the file is absent (e.g. a fresh host).
+[include]
+	path = ~/.gitconfig.local
