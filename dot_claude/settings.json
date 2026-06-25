@@ -46,9 +46,6 @@
     }
   },
   "hooks": {
-    "PostToolUse": [],
-    "PostToolUseFailure": [],
-    "SessionStart": [],
     "PermissionRequest": [
       {
         "hooks": [

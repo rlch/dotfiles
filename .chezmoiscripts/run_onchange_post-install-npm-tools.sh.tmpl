@@ -11,16 +11,17 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 0
 fi
 
-# `npm install -g` upgrades; the version check first keeps the script
-# fast on subsequent runs.
-# oh-my-claude-sisyphus — the `omc` CLI for oh-my-claudecode (OMC), the
-# multi-agent harness that runs ON your already-authenticated Claude Code (no
-# third-party OAuth). Launched in cmux via `cmux omc`. See
-# post-install-omc.sh for the Claude Code plugin + cmux shim wiring.
-need=(@fission-ai/openspec oh-my-claude-sisyphus)
+# Keep the installed check filesystem-based: `npm ls -g --json` can be slow
+# or hang under pnpm/npm script-approval state, and scoped package names need
+# awkward regex escaping.
+npm_root=$(npm root -g)
+
+# @inbox-zero/cli — self-hosted Inbox Zero manager; wraps setup/start/stop/logs
+# for the Dockerized AI email assistant (requires Docker + Node 24+).
+need=(@fission-ai/openspec @inbox-zero/cli)
 
 for pkg in "${need[@]}"; do
-  if npm ls -g --depth=0 --json 2>/dev/null | grep -q "\"${pkg}\":"; then
+  if [ -d "${npm_root}/${pkg}" ]; then
     echo "npm-tools: ${pkg} already installed"
   else
     echo "npm-tools: installing ${pkg}@latest"
