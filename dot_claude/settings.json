@@ -1,5 +1,6 @@
 {
   "agentPushNotifEnabled": false,
+  "inputNeededNotifEnabled": true,
   "effortLevel": "xhigh",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
@@ -35,9 +36,19 @@
         "repo": "umputun/revdiff",
         "source": "github"
       }
+    },
+    "tutero-tools": {
+      "source": {
+        "path": "/Users/rjm/dev/org/infra/claude-plugins",
+        "repo": "your-org/claude-plugins",
+        "source": "github"
+      }
     }
   },
   "hooks": {
+    "PostToolUse": [],
+    "PostToolUseFailure": [],
+    "SessionStart": [],
     "PermissionRequest": [
       {
         "hooks": [
@@ -136,22 +147,7 @@
       }
     ]
   },
-  "mcpServers": {
-    "chrome-devtools": {
-      "args": [
-        "--browser-url=http://127.0.0.1:9222",
-        "--no-category-extensions"
-      ],
-      "command": "chrome-devtools-mcp"
-    },
-    "playwright": {
-      "args": [
-        "--cdp-endpoint=http://127.0.0.1:9222"
-      ],
-      "command": "playwright-mcp"
-    }
-  },
-  "model": "claude-fable-5[1m]",
+  "model": "claude-opus-4-8[1m]",
   "permissions": {
     "additionalDirectories": [
       "/Users/rjm/.config/nvim",
