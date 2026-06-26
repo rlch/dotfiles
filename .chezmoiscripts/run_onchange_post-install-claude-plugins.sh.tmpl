@@ -63,6 +63,13 @@ plugins=(
   # extraKnownMarketplaces in settings.json. Phase 1 is local-only (no github
   # repo yet), so a clean machine needs ~/dev/skills checked out for this.
   "rjm@personal-skills"
+
+  # scenario-review — modality scenario-bundle review (Tutero-internal,
+  # invocable-only via /scenario-review). Lives in the tutero-tools marketplace,
+  # registered as a local "directory" source (a github source breaks under
+  # clodcurrent's profile symlinks), so a clean machine needs
+  # ~/dev/org/infra/claude-plugins checked out (install best-effort).
+  "scenario-review@tutero-tools"
 )
 
 for p in "${plugins[@]}"; do
