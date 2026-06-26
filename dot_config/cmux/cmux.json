@@ -11,7 +11,151 @@
   // helps is autoResumeAgentSessions: it keeps agent panes alive across cmux
   // relaunches so long-running OMO (ulw) runs survive a restart.
   "terminal": {
-    "autoResumeAgentSessions": true
+    "autoResumeAgentSessions": true,
+    // Selection auto-copies to the macOS clipboard on release (no `y` needed).
+    // The in-copy-mode keyboard keys (v select / y yank) are hardcoded in
+    // cmux's Ghostty fork — not configurable here. Flip to false if mouse
+    // selections clobbering the clipboard gets annoying.
+    "copyOnSelect": true
+  },
+
+  // cmux-native multiplexing (tmux retired in-pane). app=dark to sit under
+  // Ghostty's Catppuccin Mocha. Terminal CONTENT colors still come from
+  // ~/.config/ghostty/config (theme = "Catppuccin Mocha") — cmux only themes
+  // its own chrome below.
+  "app": {
+    "appearance": "dark",
+
+    // Don't prompt "This will close Claude Code" (or any running agent) when
+    // closing a tab — neither via the ⌘W close shortcut nor the X button.
+    // autoResumeAgentSessions (above) brings agent panes back across relaunch,
+    // so an accidental close is recoverable and the confirmation is just noise.
+    "warnBeforeClosingTab": false,
+    "warnBeforeClosingTabXButton": false
+  },
+
+  // Kill the menu-bar status item. cmux exposes it as a tileable window-id-0
+  // "Item-0" ghost that AeroSpace can't manage (it wrecks tiling/splits) —
+  // cmux bug #5646. Notifications still work via dock badge / pane flash / sound.
+  "notifications": {
+    "showInMenuBar": false,
+    "paneFlash": false
+  },
+
+  // vim/tmux modal-mirror keymap. Old zellij→tmux muscle memory survives on
+  // chords (⌃Q workspace · ⌃\ scroll); create/split/close live on ⌘ keys.
+  //
+  //  - ⌃ hjkl        focus panes (no prefix, hold & repeat). SHADOWS LazyVim's
+  //                  ⌃hjkl window-nav while in an nvim pane → use ⌃W hjkl in
+  //                  nvim. Also eats readline ⌃K (kill-line) / ⌃L (clear) in
+  //                  shells — ⌘⇧K still clears.
+  //  - ⌘ hjkl        navigate containers: H/L = prev/next tab,
+  //                  K/J = prev/next workspace (sidebar is vertical).
+  //                  Moved off ⌃⌥hjkl. ⌘H shadows macOS Hide; ⌘L shadows
+  //                  the browser address-bar focus (browser panes only).
+  //  - ⌃\            scroll/copy mode (standalone). Moved off ⌃B → ⌃B now
+  //                  passes through to the shell (readline backward-char).
+  //  - ⌃S / ⌃Q       prefixes; each steals that ctrl key globally. ⌃S =
+  //                  f zoom · = equalize · , rename tab; ⌃Q = workspace
+  //                  (, rename · x close). ⌃A left FREE → readline ^A.
+  //
+  // ⌘ create / split / close:
+  //   ⌘T   new tab    (newSurface — the horizontal tab bar)
+  //   ⌘N   new tab    (newTab — the right-hand sidebar entries; "tabs" to you)
+  //   ⌘D   split right ·  ⌘⇧D split down   (cmux/iTerm2 default; this is why
+  //                                          ⌘V=paste & ⌘S=save still work)
+  //   ⌘W   close       (closeTab)
+  //   newWindow unbound; ⌘⇧N free.
+  // Kept on defaults: ⌘1-9 jump workspace · ⌘P switcher ·
+  // ⌘⇧K clear · ⌘⇧P palette · ⌃1-9 jump surface.
+  "shortcuts": {
+    "bindings": {
+      "focusLeft": "ctrl+h",
+      "focusDown": "ctrl+j",
+      "focusUp": "ctrl+k",
+      "focusRight": "ctrl+l",
+
+      "prevSurface": "cmd+h",
+      "nextSurface": "cmd+l",
+      "prevSidebarTab": "cmd+k",
+      "nextSidebarTab": "cmd+j",
+
+      "toggleTerminalCopyMode": "ctrl+\\",
+
+      "newSurface": "cmd+t",
+      "splitRight": "cmd+d",
+      "splitDown": "cmd+shift+d",
+      "toggleSplitZoom": ["ctrl+s", "f"],
+      "equalizeSplits": ["ctrl+s", "="],
+      "closeTab": "cmd+w",
+      "renameTab": ["ctrl+s", ","],
+
+      "newTab": "cmd+n",
+      "newWindow": "none",
+      "renameWorkspace": ["ctrl+q", ","],
+      "closeWorkspace": ["ctrl+q", "x"],
+
+      // Settings window is a non-standard window AeroSpace can't manage (won't
+      // tile/float, resurrects on refocus — #5646 family). Unbind ⌘, so it's
+      // never summoned; all config lives in this file (edit via Claude/dotfiles).
+      "openSettings": "none"
+    }
+  },
+
+  // Per-workspace rail palette = Catppuccin Mocha named swatches.
+  "workspaceColors": {
+    "indicatorStyle": "leftRail",
+    "notificationBadgeColor": "#f38ba8",
+    "colors": {
+      "Rosewater": "#f5e0dc",
+      "Flamingo": "#f2cdcd",
+      "Pink": "#f5c2e7",
+      "Mauve": "#cba6f7",
+      "Red": "#f38ba8",
+      "Maroon": "#eba0ac",
+      "Peach": "#fab387",
+      "Yellow": "#f9e2af",
+      "Green": "#a6e3a1",
+      "Teal": "#94e2d5",
+      "Sky": "#89dceb",
+      "Sapphire": "#74c7ec",
+      "Blue": "#89b4fa",
+      "Lavender": "#b4befe"
+    }
+  },
+
+  // Sidebar per-workspace detail rows. KEY NAMES HERE TARGET THE INSTALLED
+  // cmux (v0.64.17) — verified against `strings bin/cmux`, NOT the $schema URL
+  // above (which tracks `main` and has since renamed/dropped some of these):
+  //   pathLastSegmentOnly → show only the last segment of the working dir, so
+  //     ~/dev/ausvisa renders as "ausvisa". Real key in 0.64.17
+  //     (sidebar.pathLastSegmentOnly is in the binary); dropped on main.
+  //   branchVerticalLayout false → branch • dir inline, not stacked. main
+  //     renamed this to branchLayout:"vertical"|"inline"; that enum is a no-op
+  //     here, so we set the boolean the installed build actually reads.
+  //   showProgress false → the running-agent progress row uses sparkline/block
+  //     glyphs cmux's sidebar UI font lacks (the terminal's Nerd Font doesn't
+  //     reach the app chrome), so a live agent repaints it as a flickering
+  //     strip of missing-glyph tofu boxes (▯▯▯). Unreadable as tofu — kill it.
+  // Left default-on (each no-ops until it has data): showNotificationMessage,
+  // showPullRequests, showPorts.
+  "sidebar": {
+    "pathLastSegmentOnly": true,
+    "branchVerticalLayout": false,
+    "showProgress": false
+  },
+
+  // Sidebar = Catppuccin Mocha Mantle (#181825) — one step darker than the terminal/editor Base
+  // (#1e1e2e), so it reads as a differentiated, recessed pane (Mantle is the Catppuccin sidebar /
+  // secondary-surface role). matchTerminalBackground MUST be false (true bypasses the tint); a
+  // full-opacity tint pins an exact color since cmux has no explicit sidebar-color field.
+  // IMPORTANT: the sidebar material only renders on cmux LAUNCH. Apply by relaunching cmux —
+  // never via live `cmux reload-config`, which corrupts the window/tab-1 chrome mid-session.
+  "sidebarAppearance": {
+    "matchTerminalBackground": false,
+    "tintColor": "#181825",
+    "darkModeTintColor": "#181825",
+    "tintOpacity": 1
   },
 
   // This file uses JSON with comments (JSONC).
