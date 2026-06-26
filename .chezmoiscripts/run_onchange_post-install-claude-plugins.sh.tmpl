@@ -58,11 +58,12 @@ plugins=(
   # that get fed back to the Claude session. Marketplace is umputun/revdiff.
   "revdiff@revdiff"
 
-  # Personal skills — handoff, nerd-fonts-icons, tmp-cleanup, tmux.
-  # Local "directory" marketplace at ~/dev/skills (personal-skills); registered via
-  # extraKnownMarketplaces in settings.json. Phase 1 is local-only (no github
-  # repo yet), so a clean machine needs ~/dev/skills checked out for this.
-  "rjm@personal-skills"
+  # NB: rjm personal skills (fleet, handoff, judge-panel, docs-scaffold,
+  # docs-sync, nerd-fonts-icons, tmp-cleanup, tmux) are NOT a marketplace plugin
+  # — they load live as a `rjm@skills-dir` plugin, discovered in place via the
+  # chezmoi symlink ~/.claude/skills/rjm -> ~/dev/skills/plugins/rjm (no cache,
+  # no install, edits are live). Backed up at github.com/rlch/personal-skills
+  # (private); a clean machine clones it to ~/dev/skills + runs `chezmoi apply`.
 
   # scenario-review — modality scenario-bundle review (Tutero-internal,
   # invocable-only via /scenario-review). Lives in the tutero-tools marketplace,

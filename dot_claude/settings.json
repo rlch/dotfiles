@@ -17,7 +17,6 @@
     "pyright-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "revdiff@revdiff": true,
-    "rjm@personal-skills": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "scenario-review@tutero-tools": true,
     "skill-creator@claude-plugins-official": true,
@@ -42,12 +41,6 @@
     "tutero-tools": {
       "source": {
         "path": "/Users/rjm/dev/org/infra/claude-plugins",
-        "source": "directory"
-      }
-    },
-    "personal-skills": {
-      "source": {
-        "path": "/Users/rjm/dev/skills",
         "source": "directory"
       }
     }
