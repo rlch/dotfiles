@@ -11,6 +11,17 @@
 # A "failed to connect" in `claude mcp list` just means chrome-debug isn't
 # running yet — start it with the `chrome-debug` fish function.
 #
+# Concurrent-session model: every Claude Code session starts its OWN
+# chrome-devtools-mcp server, and with --browser-url they ALL attach to the one
+# :9222 Chromium (one shared browser, by design — the visual-separation
+# invariant wants a single distinct instance, not one-per-session). The failure
+# mode that bites is contention: sessions fight over a single global "selected
+# page". --experimentalPageIdRouting exposes pageId on page-scoped tools so each
+# session routes calls to its OWN tab — the documented fix for concurrent-agent
+# tab contention (chrome-devtools-mcp#926/#2052). It's experimental + global
+# (every project, both hosts); revert by dropping the flag below. Discipline
+# still applies: each session drives its own `new_page`, never the active tab.
+#
 # Brewfile hash: {{ include "Brewfile" | sha256sum }}
 
 set -euo pipefail
@@ -28,6 +39,6 @@ add_mcp() {  # <name> <command> [args...]
   claude mcp add -s user "$name" -- "$@"
 }
 
-add_mcp chrome-devtools chrome-devtools-mcp --browser-url=http://127.0.0.1:9222 --no-category-extensions
+add_mcp chrome-devtools chrome-devtools-mcp --browser-url=http://127.0.0.1:9222 --no-category-extensions --experimentalPageIdRouting
 add_mcp playwright      playwright-mcp      --cdp-endpoint=http://127.0.0.1:9222
 {{- end }}
