@@ -42,9 +42,11 @@ in `openspec/specs/<capability>/`, prose/justification lives in the docs vault.
 
 Run these from the target repo root. `<repo>` = absolute repo path.
 
-1. **Preconditions.** `node`/`npm` present; `d2` on PATH (`brew install d2`);
-   no existing `<repo>/docs` (if one exists, this is a *legacy adoption* — see
-   below, don't clobber it).
+1. **Preconditions.** `node`/`npm` present; no existing `<repo>/docs` (if one
+   exists, this is a *legacy adoption* — see below, don't clobber it). The `d2`
+   CLI is **not** required — diagrams render via the in-process
+   `@terrastruct/d2` WASM compiler (installed in step 4), which also works under
+   turbopack `next dev` (the old `d2`-CLI approach `spawn EBADF`'d there).
 
 2. **Scaffold the Fumadocs base** (these exact flags avoid every interactive
    prompt; we strip the AI bits next):
@@ -65,6 +67,7 @@ Run these from the target repo root. `<repo>` = absolute repo path.
    ```sh
    mkdir -p docs/mdx-plugins
    cp <skill>/files/mdx-plugins/remark-d2.mjs docs/mdx-plugins/
+   (cd docs && npm install @terrastruct/d2)   # WASM d2 renderer the plugin imports
    cp <skill>/files/source.config.ts          docs/source.config.ts
    cp -R <skill>/files/content/*              docs/content/docs/
    rm -f docs/content/docs/test.mdx           # scaffold sample
@@ -72,8 +75,18 @@ Run these from the target repo root. `<repo>` = absolute repo path.
    printf '# generated openspec mirror\n/content/docs/specs/\n' >> docs/.gitignore
    ```
 
-5. **Brand it.** Edit `docs/src/lib/shared.ts`: set `appName` and `gitConfig`
-   (`user`/`repo`/`branch`) for this repo.
+5. **Brand it + theme.** Edit `docs/src/lib/shared.ts`: set `appName` and
+   `gitConfig` (`user`/`repo`/`branch`) for this repo. Then apply the standard
+   **Catppuccin Mocha** theme (matches the team's Ghostty/cmux):
+   - `docs/src/app/global.css` — swap the fumadocs color preset:
+     `@import 'fumadocs-ui/css/neutral.css'` →
+     `@import 'fumadocs-ui/css/catppuccin.css'` (built-in: Latte in light mode,
+     Mocha in dark).
+   - `docs/src/app/layout.tsx` — default to dark so Mocha shows first:
+     `<RootProvider theme={{ defaultTheme: 'dark' }}>`.
+   - d2 diagrams are already dark: `remark-d2.mjs` defaults to `theme: 200`
+     ("Dark Mauve" — byte-for-byte Catppuccin Mocha: base `#1e1e2e`, mauve
+     `#cba6f7`). Override via the `theme` option in `source.config.ts` if needed.
 
 6. **OpenSpec layer.**
    ```sh
@@ -97,7 +110,12 @@ Run these from the target repo root. `<repo>` = absolute repo path.
    ```
    Pre-generating `.source` (don't `rm` it before a turbopack build) avoids the
    intermittent `collections/server` resolution race. Expect a clean build, pages
-   generated, SVGs in `public/d2/`. Dev server: `npm run dev` (port 3000).
+   generated, SVGs in `public/d2/`.
+
+   Dev server: `npm run dev` (turbopack, port 3000) — works as-is. The d2
+   renderer is in-process WASM, so there's **no `spawn EBADF`; do not add
+   `--webpack`**. (If you see `Errors: 1` starting dev *immediately after* a prod
+   `build`, that's a stale prod `.next` — `rm -rf .next` and re-run.)
 
 ## Gotchas the template already handles
 

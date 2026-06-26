@@ -1,43 +1,45 @@
-// remark-d2 — compile ```d2 fenced blocks to SVG at build time, BEFORE rehype.
+// remark-d2 — compile ```d2 fenced blocks to SVG, BEFORE rehype.
 //
 // Handling d2 at the remark stage (not rehype) is deliberate: it runs before
 // fumadocs' shiki highlighter, so shiki never sees `language-d2` (which it can't
-// tokenize and would throw on). We render the d2 to an .svg file under the
+// tokenize and would throw on). We render each diagram to an .svg file under the
 // app's public/ dir and replace the code block with an <img> pointing at it —
-// which also dodges MDX's JSX parsing of raw SVG (xmlns:xlink etc.) and any
-// hast sanitizer that would strip a data: URI.
+// which also dodges MDX's JSX parsing of raw SVG (xmlns:xlink etc.).
 //
-// The SVG is content-addressed (hash of the d2 source), so the output is
-// deterministic and regenerated only when the diagram changes.
-//
-// Uses the system `d2` CLI (stdin -> stdout). For a fully npm-portable variant
-// (CI without system d2), swap execFileSync for the async `@terrastruct/d2`
-// WASM API.
+// Renderer = the @terrastruct/d2 WASM compiler, IN-PROCESS — NOT the `d2` CLI.
+// Next's dev-server worker blocks child_process entirely (`spawn EBADF`), so the
+// CLI approach builds fine but 500s every MDX page under `next dev`. WASM runs
+// in-process, so it works in both build and dev. The transformer is async
+// (unified awaits it); SVGs are content-addressed and cached.
 //
 // Options:
-//   outDir  — abs dir to write SVGs into (default <publicBase>/d2)
+//   outDir  — abs dir to write SVGs into (e.g. <app>/public/d2)
 //   urlBase — URL path the SVGs are served under (default "/d2")
-//   layout/theme/sketch/pad — d2 CLI flags
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+//   layout  — "elk" | "dagre"   ·   sketch — bool   ·   pad — px
+//   theme   — d2 themeID (default 200 "Dark Mauve" — matches the Catppuccin
+//             Mocha portal; SVGs are static so we render one dark theme rather
+//             than relying on the toggle)
+import { D2 } from '@terrastruct/d2';
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
 export function remarkD2(options = {}) {
-  const { outDir, urlBase = '/d2', layout = 'elk', theme = 0, sketch = false, pad = 16 } = options;
+  const { outDir, urlBase = '/d2', layout = 'elk', theme = 200, sketch = false, pad = 16 } = options;
   if (!outDir) throw new Error('[remark-d2] outDir is required');
+  let engine; // lazy WASM singleton, reused across blocks
 
-  const render = (src, file) => {
+  const render = async (src, file) => {
     const hash = createHash('sha1').update(`${layout}|${theme}|${sketch}|${pad}|${src}`).digest('hex').slice(0, 16);
     const name = `${hash}.svg`;
+    const outFile = join(outDir, name);
+    if (existsSync(outFile)) return `${urlBase}/${name}`; // cached
     try {
-      const svg = execFileSync(
-        'd2',
-        [`--layout=${layout}`, `--theme=${theme}`, `--sketch=${sketch}`, `--pad=${pad}`, '-', '-'],
-        { input: src, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
-      );
+      engine ??= new D2();
+      const result = await engine.compile(src, { layout });
+      const svg = await engine.render(result.diagram, { ...result.renderOptions, themeID: theme, sketch, pad });
       mkdirSync(outDir, { recursive: true });
-      writeFileSync(join(outDir, name), svg);
+      writeFileSync(outFile, svg);
       return `${urlBase}/${name}`;
     } catch (err) {
       const where = file?.path ? ` in ${file.path}` : '';
@@ -46,27 +48,32 @@ export function remarkD2(options = {}) {
     }
   };
 
-  return (tree, file) => {
+  return async (tree, file) => {
+    // collect first (sync walk), then await renders — keeps tree mutation simple
+    const targets = [];
     const walk = (node) => {
       if (!node || typeof node !== 'object' || !Array.isArray(node.children)) return;
       for (let i = 0; i < node.children.length; i++) {
         const child = node.children[i];
         if (child == null || typeof child !== 'object') continue;
         if (child.type === 'code' && (child.lang || '').toLowerCase() === 'd2') {
-          const url = render(child.value || '', file);
-          if (url) {
-            node.children[i] = {
-              type: 'paragraph',
-              children: [{ type: 'image', url, alt: 'diagram', title: null }],
-            };
-            continue;
-          }
+          targets.push({ parent: node, index: i, src: child.value || '' });
+        } else {
+          walk(child);
         }
-        walk(child);
       }
     };
-
     walk(tree);
+
+    for (const t of targets) {
+      const url = await render(t.src, file);
+      if (url) {
+        t.parent.children[t.index] = {
+          type: 'paragraph',
+          children: [{ type: 'image', url, alt: 'diagram', title: null }],
+        };
+      }
+    }
   };
 }
 
