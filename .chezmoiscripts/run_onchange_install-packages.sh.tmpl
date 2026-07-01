@@ -1,19 +1,45 @@
 #!/usr/bin/env bash
-# Re-runs whenever this file's rendered content changes. The hash lines below
-# make external edits to Brewfile / Brewfile.heavy trigger this script
-# (otherwise `run_onchange` only sees the script itself, not files it includes).
+# Re-runs whenever this rendered content changes. The hash lines below make
+# external edits to any active Brewfile retrigger this script (run_onchange only
+# watches the script itself, not files it `include`s).
 #
-# Brewfile hash:        {{ include "Brewfile"       | sha256sum }}
+# Brewfile hash:        {{ include "Brewfile" | sha256sum }}
+{{ range $mod, $on := .modules -}}
+{{   if $on -}}
+{{     $frag := printf "Brewfile.d/%s.brewfile" $mod -}}
+{{     if stat (joinPath $.chezmoi.sourceDir $frag) -}}
+# {{ $mod }} hash:       {{ include $frag | sha256sum }}
+{{     end -}}
+{{   end -}}
+{{ end -}}
+{{ if stat (joinPath .chezmoi.sourceDir "Brewfile.personal") -}}
+# personal hash:        {{ include "Brewfile.personal" | sha256sum }}
+{{ end -}}
 # Brewfile.heavy hash:  {{ include "Brewfile.heavy" | sha256sum }}
-# Role:                 {{ .role }}
 # Heavy hardware:       {{ .heavyHardware }}
 
 set -euo pipefail
 
 {{ if eq .chezmoi.os "darwin" -}}
-brew bundle install --file={{ .chezmoi.sourceDir }}/Brewfile
+SRC="{{ .chezmoi.sourceDir }}"
+
+# core (every machine)
+brew bundle install --file="$SRC/Brewfile"
+
+# opt-in module fragments (gated by .chezmoidata.yaml / your chezmoi config)
+{{ range $mod, $on := .modules -}}
+{{   if $on -}}
+{{     $frag := printf "Brewfile.d/%s.brewfile" $mod -}}
+{{     if stat (joinPath $.chezmoi.sourceDir $frag) -}}
+brew bundle install --file="$SRC/{{ $frag }}"   # module: {{ $mod }}
+{{     end -}}
+{{   end -}}
+{{ end -}}
+
+# machine-local extras (gitignored; never conflicts on upstream pull)
+[ -f "$SRC/Brewfile.personal" ] && brew bundle install --file="$SRC/Brewfile.personal"
 
 {{ if .heavyHardware -}}
-brew bundle install --file={{ .chezmoi.sourceDir }}/Brewfile.heavy
+brew bundle install --file="$SRC/Brewfile.heavy"
 {{- end }}
 {{- end }}

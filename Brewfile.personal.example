@@ -1,0 +1,8 @@
+# Machine-local Homebrew extras — copy to `Brewfile.personal` (gitignored) and
+# add whatever you want. Bundled after the core Brewfile + enabled modules, so
+# your personal packages never touch upstream files and never conflict on pull.
+#
+#   cp Brewfile.personal.example Brewfile.personal
+#
+# brew "htop"
+# cask "spotify"

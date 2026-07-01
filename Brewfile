@@ -1,33 +1,26 @@
-# Homebrew bundle for the chezmoi-managed dotfiles.
-# Edit this file directly. Re-run via `chezmoi apply` (which calls
-# `brew bundle install` when this file's hash changes), or manually:
+# Homebrew bundle — CORE packages, installed on EVERY machine.
+#
+# Optional packages live in Brewfile.d/<module>.brewfile and are bundled only
+# when that module is enabled (see .chezmoidata.yaml + the install script,
+# run_onchange_install-packages.sh.tmpl). Owner-only packages live in the
+# private overlay's Brewfile. Machine-local extras go in Brewfile.personal
+# (gitignored — never conflicts on upstream pull).
+#
+# Edit directly. `chezmoi apply` re-bundles when the hash changes; or manually:
 #   brew bundle install --file=~/dev/dotfiles/Brewfile
 
 # === Dotfiles management ===
 brew "chezmoi"
 
-# === Window manager ===
-tap "nikitabobko/tap"
-cask "nikitabobko/tap/aerospace"
-# Native instant macOS Spaces switching — companion to AeroSpace.
-tap "jurplel/tap"
-cask "jurplel/tap/instant-space-switcher"
-
-# === Terminal + multiplexer ===
+# === Terminal (cmux is the daily driver; its app + config are not brew-managed) ===
 cask "ghostty"
-brew "tmux"
-brew "tmuxinator"  # YAML-defined tmux session layouts; configs in ~/.config/tmuxinator/
-# GUI SSH client. Hosts are still sourced from ~/.ssh/config so terminal SSH
-# and Termius stay in sync.
-cask "termius"
 
 # === Shell ===
-brew "bash"        # newer Bash for installers that need 4.3+ (Headroom Docker-native)
+brew "bash"        # newer Bash for installers that need 4.3+
 brew "fish"
 
 # === Fonts ===
-# Nerd Font flavor — adds icon glyphs needed by lazygit, yazi, etc.
-cask "font-jetbrains-mono-nerd-font"
+cask "font-jetbrains-mono-nerd-font"   # Nerd Font glyphs for lazygit, yazi, etc.
 
 # === Prompt + shell history + tool versions ===
 brew "starship"
@@ -44,239 +37,76 @@ brew "eza"
 brew "bat"
 brew "git-delta"
 brew "sd"          # readable find-and-replace (sed for the 90% case)
-brew "tree"        # plain directory tree (when dust's size view is overkill)
-brew "coreutils"   # GNU coreutils (g-prefixed: gtimeout, grealpath, …). Provides `timeout` via the timeout.fish wrapper — NOT gnubin-on-PATH, to avoid shadowing every BSD coreutil
+brew "tree"
+brew "coreutils"   # GNU coreutils (g-prefixed). Provides `timeout` via timeout.fish — NOT gnubin-on-PATH, to avoid shadowing every BSD coreutil
 # JSON / data
 brew "jq"
-brew "yq"          # jq for YAML/TOML/XML — deterministic query/edit of structured configs
-brew "gron"        # flatten JSON to greppable `path = value` lines (`gron | rg`; reverse with -u)
-brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
+brew "yq"          # jq for YAML/TOML/XML
+brew "gron"        # flatten JSON to greppable `path = value` lines
 brew "tokei"       # code line counter by language
-brew "imagemagick" # image manipulation (convert, magick) — pulled in by misc one-off scripts
+brew "imagemagick" # convert/magick — pulled in by misc one-off scripts
 brew "chafa"       # terminal image viewer (sixel/kitty/ansi)
 # Disk / process / system
 brew "dust"        # du, but tree-shaped
 brew "procs"       # ps, but readable
 brew "btop"        # interactive system monitor
 brew "yazi"        # async TUI file manager
-brew "glow"        # terminal markdown renderer (yazi previewer via piper plugin)
+brew "glow"        # terminal markdown renderer (yazi previewer via piper)
+brew "hyperfine"   # benchmarking
+brew "xh"          # friendlier curl / httpie alternative
 
-# Mount remote SSH hosts as local folders (sidesteps yazi's still-rough VFS).
-# fuse-t is a kext-less FUSE replacement; fuse-t-sshfs is the sshfs binary
-# built against it. Used by the `mini-mount`/`mini-umount` fish functions.
-tap "macos-fuse-t/cask"
-cask "fuse-t"
-cask "macos-fuse-t/cask/fuse-t-sshfs"
-# Benchmarking
-brew "hyperfine"
-
-# === Diagrams / docs authoring ===
-# d2 — diagram-as-code, renders ```d2 blocks to SVG. Used by docs sites via
-# a remark-d2 plugin, and any Astro + Starlight project that wants the same.
-brew "d2"
-# asciinema — record terminal sessions to .cast for playback via
-# asciinema-player (e.g. in a web TerminalScene component).
-brew "asciinema"
-
-# === Editor ===
+# === Editor (Neovim + LazyVim toolchain) ===
 brew "neovim"
-cask "neovide-app"          # GPU Neovim GUI. Opens code/text files via its OWN
-                            # Info.plist associations — do NOT add a duti script to
-                            # force broad filetypes: setting the html/web handlers
-                            # cascaded Neovide into the default *browser* slot and
-                            # hijacked Slack/url opens (2026-06-25). Kept minimal.
-brew "duti"                 # macOS default-app (LaunchServices) handler management,
-                            # used ad-hoc (e.g. reset web types back to Firefox).
+cask "neovide-app"          # GPU Neovim GUI. Opens files via its OWN Info.plist
+                            # associations — do NOT add a duti script to force broad
+                            # filetypes: it cascaded Neovide into the default browser
+                            # slot and hijacked Slack/url opens (2026-06-25).
+brew "duti"                 # macOS default-app (LaunchServices) handler management
 brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
-brew "stylua"               # Lua formatter — paired with lua-language-server
+brew "stylua"               # Lua formatter
 brew "luarocks"             # Lua package manager — needed by some nvim plugins
 brew "tree-sitter"          # library used by some treesitter parsers' install hooks
 brew "tree-sitter-cli"      # `tree-sitter` CLI binary (separate formula)
-brew "rust-analyzer"        # Rust LSP for nvim
-brew "rustup"               # Rust toolchain manager (rustc, cargo)
-brew "wasm-pack"            # Rust→WASM build/bundle tool
-# Cargo subcommands consumed by Rust projects.
-# Brew (vs. `cargo install`) so they upgrade with `brew upgrade` and don't
-# fight over ~/.cargo/bin/ between toolchains. cargo-fuzz also needs
-# nightly Rust at runtime: `rustup install nightly`.
-# Note: cargo-insta is not on Homebrew — installed via
-# .chezmoiscripts/run_onchange_post-install-cargo-tools.sh.
-brew "cargo-nextest"        # 2-3× faster test runner; used by `just test` and
-                            # aliased as `cargo test` via ~/.cargo/config.toml.
-brew "cargo-llvm-cov"       # line coverage via LLVM; used by `just cov`
-brew "cargo-fuzz"           # libFuzzer driver for codec fuzzing
 
 # === Language runtimes ===
-# Available globally so mason.nvim (in nvim) can install LSPs/formatters that
-# rely on `npm`, `go`, or python>=3.10. Per-project versions still come from mise.
+# Global so mason.nvim can install LSPs/formatters that rely on npm/go/python.
+# Per-project versions still come from mise.
 brew "node"
 brew "go"
 brew "python@3.13"
-brew "uv"          # fast Python package/venv manager (pip + virtualenv replacement)
-# uv-managed Python CLIs (euporie, etc.) install via
-# .chezmoiscripts/run_onchange_post-install-uv-tools.sh — not on homebrew-core.
+brew "uv"          # fast Python package/venv manager
 
-# === Flutter ===
-# Per-project Flutter SDK pinning via .fvmrc (mise doesn't manage Flutter).
-tap "leoafarias/fvm"
-brew "leoafarias/fvm/fvm"
-
-# === Project + dev workflow ===
+# === Build tools + project workflow ===
+brew "cmake"
+brew "ninja"
 brew "just"        # command runner, Make alternative
 brew "direnv"      # per-directory env vars / shell hooks
 brew "watchexec"   # rerun a command when files change
 
-# === Native build tools ===
-# C/C++ build toolchain for compiling-from-source apps (e.g. Aseprite from
-# ~/dev/refs/aseprite) and any native dep that ships a CMakeLists.txt. Xcode
-# Command Line Tools provide clang + the SDK; brew adds the build driver.
-brew "cmake"
-brew "ninja"
-
-# === Network / HTTP ===
-brew "xh"          # friendlier curl / httpie alternative
-# Tailscale mesh VPN — install manually (not via Brewfile). The cask uses a
-# .pkg installer that requires `sudo /usr/sbin/installer`, which can't read a
-# password from chezmoi's non-interactive shell, so every `chezmoi apply` would
-# stall + purge brew's Caskroom entry and re-try forever. The app auto-updates
-# itself via Sparkle, so brew adds nothing once installed.
-# On a fresh host: open Ghostty and run `brew install --cask tailscale-app`
-# (Touch ID / password prompts in the real tty).
-# sshpass — non-interactive ssh password auth (one-shot bootstrap of new hosts).
-# Removed from homebrew-core; lives in this third-party tap.
-tap "hudochenkov/sshpass"
-brew "hudochenkov/sshpass/sshpass"
-
-# upterm — instant terminal sharing (pair-programming / remote help over SSH
-# tunnel). Shipped as a cask despite being a CLI binary.
-tap "owenthereal/upterm"
-cask "owenthereal/upterm/upterm"
-
-# === Git / Docker TUIs ===
+# === Git ===
 brew "lazygit"
-brew "lazydocker"
-brew "git-absorb"  # auto-slot `git add -p`'d review fixes into the right ancestor commit (`git absorb --and-rebase`)
-brew "difftastic"  # structural/syntax-aware diff, invoked on demand as `git dft` (delta stays the pager)
-# revdiff — file-tree TUI for reviewing diffs, with inline annotations and a
-# Claude Code plugin. Replaced diffnav (delta-based pager) for richer review
-# UX. Lives in umputun's tap.
-#
-# Currently using a local dev build from ~/dev/forks/revdiff (`make build`
-# + `make install-local` symlinks .bin/revdiff into ~/.local/bin). The
-# brew formula is commented out so `brew bundle install` doesn't re-link
-# umputun's release version over the dev symlink. Re-enable when off the
-# fork.
-tap "umputun/apps"
-# brew "umputun/apps/revdiff"
-
-# === GitHub + macOS app stores ===
-brew "gh"          # GitHub CLI
-# gh extensions (gh-dash, gh-enhance) are installed by
-# .chezmoiscripts/run_onchange_post-install-gh-extensions.sh.tmpl — neither
-# ships on homebrew-core. Invoke as `gh dash` and `gh enhance`.
-brew "mas"         # Mac App Store CLI (lets MAS apps live in this Brewfile)
-
-# === Containers ===
-cask "orbstack"
-
-# === Trading / message bus ===
-# nats-server hosts a local JetStream message bus (127.0.0.1:4222, file
-# storage). Managed by a launchd agent. `nats` is the CLI used by
-# `nats stream ls` / `nats stream view`.
-brew "nats-server"
-tap "nats-io/nats-tools"
-brew "nats-io/nats-tools/nats"
-
-# === Cloud SDKs ===
-# gcloud + gsutil + bq + friends. Auth via `gcloud auth login`. Components
-# (kubectl, beta, etc.) install on demand into /opt/homebrew/share/google-
-# cloud-sdk/bin — already on PATH via the brew shim.
-cask "gcloud-cli"
-# Cloudflare Workers CLI — deploy Workers via `wrangler deploy`.
-# Auth via `wrangler login`.
-brew "cloudflare-wrangler"
-# OpenTofu — Terraform-compatible IaC. Manages stateful Cloudflare resources
-# (R2/D1/KV); `tofu` CLI, worker code still ships via wrangler.
-brew "opentofu"
-# Apify CLI — deploys Apify actors via `apify push` (scrapers that can't
-# run on an edge worker). Auth via `apify login`.
-brew "apify-cli"
-
-# === AI dev tooling ===
-cask "claude-code"
-cask "codex"       # OpenAI's coding agent CLI
-# OpenCode — terminal AI coding agent. Host for the oh-my-openagent (OMO)
-# multi-agent harness, installed by post-install-omo.sh against your Claude
-# Max subscription. Launched inside cmux.
-brew "opencode"
-brew "ast-grep"    # structural code search (`sg`) — OMO's ast-grep skill depends on it
-brew "gemini-cli"  # Google's Gemini CLI
-brew "rtk"         # CLI proxy that compresses dev-tool output before it reaches the agent's context
-brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
-brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
-brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
-
-# === Game dev / 2D editors ===
-# LDtk (Level Designer Toolkit) — free open-source 2D level + tileset editor.
-# Used for room templates (assets/rooms/*.ldtk) and the tile-asset
-# pipeline (atlas + autotile rules). Not on brew — installed by
-# .chezmoiscripts/run_onchange_install-ldtk.sh.tmpl from GitHub releases.
-# Version pin lives in that script.
-
-# === 3D / video / animation ===
-# Blender — used as an offline asset
-# factory for non-parametric scenes (cave / creature / Liquid Glass cameo)
-# and for baking Komikaze halftone/hatching/stippling plates that get
-# sampled in the Remotion WGSL shaders. Renders are exported to
-# assets/blender/ as image sequences; the .blend sources live outside the
-# repo (gitignored). Brew cask is currently 5.1.2 — recent enough for the
-# official Blender Lab MCP add-on (≥5.1) and for the community blender-mcp
-# server (≥3.0). We wire the latter via Claude Code's mcpServers config;
-# see .chezmoiscripts/run_onchange_install-blender-mcp.sh.tmpl for the
-# Blender-side add-on install.
-cask "blender"
+brew "git-absorb"  # slot `git add -p`'d fixes into the right ancestor (`git ab`)
+brew "difftastic"  # structural diff, invoked on demand as `git dft`
+brew "gh"          # GitHub CLI (gh-dash / gh-enhance added via extension script)
+brew "mas"         # Mac App Store CLI
 
 # === Secrets ===
 cask "1password-cli"
 
-# === Screenshot / capture ===
-# Native screenshot + screen recording with annotations, OCR, scroll capture.
-# Menu-bar app, default global hotkey Cmd-Shift-X (watch for conflicts with
-# Ghostty/aerospace/tridactyl bindings). Auto-updates.
-cask "macshot"
+# === AI (core CLI; extra agents are in the `aistack` module) ===
+cask "claude-code"
 
-# === Archive utilities ===
-# Handles RAR, 7z, tar.zst, and the long-tail formats macOS's built-in
-# Archive Utility can't extract. Native Finder integration; "Open With"
-# default once installed. Free, by MacPaw.
-cask "the-unarchiver"
-
-# === Cloud storage ===
-# Google Drive (Drive for Desktop) — mounts the account's Drive as a local
-# filesystem at ~/Library/CloudStorage/GoogleDrive-<account>/ (files stream on
-# demand; right-click → "Available offline" to pin). Install manually, NOT via
-# this Brewfile: the cask ships a GoogleDrive.pkg, and Homebrew runs pkgs with
-# `sudo /usr/sbin/installer`, which can't read a password from chezmoi's
-# non-interactive `brew bundle` — every `chezmoi apply` would stall + purge the
-# Caskroom entry and retry forever (same reason Tailscale is manual above). The
-# app self-updates via Google's own updater, so brew adds nothing once present.
-# On a fresh host: open Ghostty and run `brew install --cask google-drive`
-# (Touch ID / password prompt in the real tty), then launch Google Drive and
-# sign in to establish the mount.
-
-# === Apps ===
+# === Browser (daily; extra browsers are in the `browsers` module) ===
 cask "firefox"
-cask "obsidian"
-# Brave hosts Gather (and any other PWAs) so their lifetime is decoupled
-# from Chrome's — Chrome PWAs share Chrome's process tree, so Cmd-Q on
-# Chrome kills them. Brave is Chromium so the PWA UX is identical; it is
-# NOT a daily browser. (Chrome=Flutter web dev, Firefox=daily, Brave=PWAs.)
-cask "brave-browser"
-# Ungoogled-Chromium is the dedicated host for `chrome-debug` /
-# chrome-devtools-mcp on :9222. Same Blink/V8/DevTools/CDP as Google
-# Chrome, but with Google sign-in/sync/telemetry stripped out — clean
-# process, distinct icon, manual updates only when you ask. Lets the
-# agent-controlled browser be visually & process-wise distinct from any
-# manually-opened stable-Chrome window. NOT a daily browser; just a
-# CDP host for instrumentation.
-cask "ungoogled-chromium"
+
+# === Utilities ===
+cask "macshot"          # screenshot/recording w/ annotations + OCR (Cmd-Shift-X)
+cask "the-unarchiver"   # RAR/7z/tar.zst + long-tail archive formats
+
+# === Manual installs — intentionally NOT brew-managed ===
+# These ship .pkg installers that need `sudo /usr/sbin/installer`, which can't
+# read a password from chezmoi's non-interactive `brew bundle` — every apply
+# would stall + purge the Caskroom entry and retry forever. Install once by hand
+# in a real tty (Touch ID / password prompt); they self-update afterward:
+#   brew install --cask tailscale-app     # mesh VPN
+#   brew install --cask google-drive      # Drive for Desktop (~/Library/CloudStorage/…)

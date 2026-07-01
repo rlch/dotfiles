@@ -1,0 +1,29 @@
+# Module toggles — the opt-out mechanism for forks.
+#
+# These are DEFAULTS (all on = the full upstream setup). A fork opts OUT of a
+# module by overriding it in their OWN ~/.config/chezmoi/chezmoi.toml — never by
+# editing upstream files — so `git pull upstream` stays conflict-free:
+#
+#   [data.modules]
+#       windowmanager = false   # don't want AeroSpace
+#       datascience   = false
+#
+# Each module gates (a) config dirs via .chezmoiignore.tmpl and (b) package
+# fragments in Brewfile.d/<module>.brewfile via the install script. To ADD a
+# module: add a key here, gate its paths in .chezmoiignore.tmpl, and/or drop a
+# Brewfile.d/<key>.brewfile. See CLAUDE.md "Module system".
+modules:
+  multiplexer: true    # tmux + tmuxinator (cmux is core)
+  windowmanager: true  # AeroSpace + instant Spaces switching
+  keybindings: true    # Karabiner + macOS DefaultKeyBinding
+  containers: true     # OrbStack + lazydocker + k9s
+  rustdev: true        # Rust toolchain, cargo subcommands, evcxr, dot_cargo
+  webdev: true         # Flutter (fvm), go/flutter fish helpers
+  gitui: true          # revdiff + extra git review tooling
+  aistack: true        # extra AI CLIs (codex, gemini, ast-grep, ccusage)
+  cloud: true          # gcloud, wrangler, opentofu
+  datascience: true    # duckdb, jupyter
+  diagrams: true       # d2, asciinema
+  browsers: true       # tridactyl, brave, ungoogled-chromium
+  remote: true         # termius, upterm, sshpass, fuse-t sshfs
+  notes: true          # Obsidian

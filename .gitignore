@@ -23,5 +23,6 @@ dot_env.*
 __pycache__/
 *.pyc
 
-# oh-my-claudecode runtime state (regenerated; never committed)
-.omc/
+# Machine-local Homebrew extras. A fork's personal packages live here so they
+# never conflict with upstream on pull. Copy Brewfile.personal.example to start.
+Brewfile.personal

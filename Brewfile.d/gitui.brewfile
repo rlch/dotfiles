@@ -1,0 +1,6 @@
+# module: gitui — extra git review tooling (gh-dash installed via gh extension script)
+# revdiff — file-tree TUI for reviewing diffs w/ inline annotations + a Claude Code
+# plugin. Currently a local dev build from ~/dev/forks/revdiff symlinked into
+# ~/.local/bin, so the brew formula stays commented to avoid re-linking the release.
+tap "umputun/apps"
+# brew "umputun/apps/revdiff"

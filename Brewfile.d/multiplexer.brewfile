@@ -1,0 +1,3 @@
+# module: multiplexer — tmux + tmuxinator (cmux, the daily driver, is in core)
+brew "tmux"
+brew "tmuxinator"  # YAML-defined tmux session layouts; configs in ~/.config/tmuxinator/

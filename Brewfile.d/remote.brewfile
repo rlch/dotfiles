@@ -1,0 +1,13 @@
+# module: remote — SSH tooling + remote-filesystem mounts
+cask "termius"          # GUI SSH client (hosts sourced from ~/.ssh/config)
+# fuse-t is a kext-less FUSE replacement; fuse-t-sshfs mounts remote SSH hosts as
+# local folders (sidesteps yazi's still-rough VFS).
+tap "macos-fuse-t/cask"
+cask "fuse-t"
+cask "macos-fuse-t/cask/fuse-t-sshfs"
+# sshpass — non-interactive ssh password auth (one-shot bootstrap of new hosts).
+tap "hudochenkov/sshpass"
+brew "hudochenkov/sshpass/sshpass"
+# upterm — instant terminal sharing (pair-programming over an SSH tunnel).
+tap "owenthereal/upterm"
+cask "owenthereal/upterm/upterm"
