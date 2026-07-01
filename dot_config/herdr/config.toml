@@ -1,13 +1,12 @@
 # herdr — agent multiplexer (tmux-for-AI-agents). Source of truth lives
 # in dotfiles; chezmoi renders this to ~/.config/herdr/config.toml.
 #
-# Deployment: herdr runs STANDALONE inside a plain Ghostty window — it is
-# NOT nested in cmux. cmux and herdr are competing multiplexers; this
-# config exists so herdr can be A/B-compared against cmux with identical
-# muscle memory. Every keybind below deliberately mirrors cmux
-# (dot_config/cmux/cmux.json). The ⌘ chords only reach herdr because
-# ~/.config/ghostty/config forwards them as CSI-u super sequences — see
-# the "herdr ⌘-forwarding" block there; the two files are a matched pair.
+# Deployment: herdr runs STANDALONE inside a plain Ghostty window and is the
+# daily-driver multiplexer (cmux, the previous one, has been removed). The
+# keymap below is the vim-modal layout carried over from cmux so muscle memory
+# transferred — it's now herdr's own, edited only here. The ⌘ chords only reach
+# herdr because ~/.config/ghostty/config forwards them as CSI-u super sequences
+# — see the "herdr ⌘-forwarding" block there; the two files are a matched pair.
 #
 # To edit: `chezmoi edit ~/.config/herdr/config.toml` → chezmoi apply.
 # Live reload: `herdr server reload-config` (or `herdr --default-config`
@@ -49,65 +48,61 @@ surface0 = "#313244"
 surface_dim = "#585b70"
 
 [terminal]
-# New panes/tabs/workspaces inherit cwd from the focused pane — matches
-# cmux's "new splits follow the focused pane" behavior.
+# New panes/tabs/workspaces inherit cwd from the focused pane.
 new_cwd = "follow"
 
 [keys]
-# ── Keymap mirrors cmux (dot_config/cmux/cmux.json) ─────────────────────
-# cmux drives everything with DIRECT chords (no prefix): ⌃ = focus, ⌘ =
-# create/nav, ⌃1-9 / ⌘1-9 = jump, plus two sub-prefixes ⌃s (pane/layout)
-# and ⌃q (workspace). herdr replicates the direct chords verbatim. The
-# ⌃-chords arrive natively (kitty keyboard protocol); the ⌘-chords are
+# ── Keymap: vim-modal, direct chords (carried over from cmux, now removed) ─
+# Everything drives off DIRECT chords (no leader): ⌃ = focus, ⌘ = create/nav,
+# ⌃1-9 / ⌘1-9 = jump, plus ONE sub-prefix ⌃s (pane/layout + workspace ops).
+# The ⌃-chords arrive natively (kitty keyboard protocol); the ⌘-chords are
 # forwarded by ghostty/config as CSI-u super sequences.
 #
-#   cmux              herdr             mechanism
-#   ───────────────   ───────────────   ─────────────────────────────
-#   ⌃ h/j/k/l  focus  ctrl+h/j/k/l      native (kitty protocol)
-#   ⌃ 1-9  jump tab   ctrl+1..9         native   ([keys.indexed] tabs)
-#   ⌘ H/L  prev/next tab   cmd+h/l      ghostty cmd-forward
-#   ⌘ K/J  prev/next wksp  cmd+k/j      ghostty cmd-forward
-#   ⌘ 1-9  jump wksp   cmd+1..9         ghostty cmd-forward (indexed)
-#   ⌘T  new tab        cmd+t            ghostty cmd-forward
-#   ⌘N  new workspace  cmd+n            ghostty cmd-forward
+#   chord              herdr key         mechanism
+#   ───────────────    ───────────────   ─────────────────────────────
+#   ⌃ h/j/k/l  focus   ctrl+h/j/k/l      native (kitty protocol)
+#   ⌃ 1-9  jump tab    ctrl+1..9         native   ([keys.indexed] tabs)
+#   ⌘ H/L  prev/next tab    cmd+h/l      ghostty cmd-forward
+#   ⌘ K/J  prev/next wksp   cmd+k/j      ghostty cmd-forward
+#   ⌘ 1-9  jump wksp   cmd+1..9          ghostty cmd-forward (indexed)
+#   ⌘T  new tab        cmd+t             ghostty cmd-forward
+#   ⌘N  new workspace  cmd+n             ghostty cmd-forward
 #   ⌘D / ⌘⇧D  split    cmd+d / cmd+shift+d
-#   ⌘W  close tab      cmd+w
+#   ⌘W  close pane     cmd+w
 #   ⌘B  toggle sidebar cmd+b
 #   ⌘P  wksp picker    cmd+p
-#   —   resize mode    cmd+e            ghostty cmd-forward (herdr-only)
-#   ⌃⌥hjkl move pane   ctrl+alt+hjkl    ghostty ⌃⌥-forward (herdr-only)
-#   ⌘[ / ⌘]  agent nav cmd+[ / cmd+]    ghostty cmd-forward (prev/next agent)
+#   ⌘E  resize mode    cmd+e             ghostty cmd-forward
+#   ⌃⌥hjkl move pane   ctrl+alt+hjkl     ghostty ⌃⌥-forward
+#   ⌘[ / ⌘]  agent nav cmd+[ / cmd+]     ghostty cmd-forward (prev/next agent)
 #
-# herdr keeps ONE prefix — set to ⌃s to mirror cmux's ⌃s pane sub-prefix,
-# so ⌃s f (zoom) and ⌃s , (rename tab) are exact. cmux's SECOND sub-prefix
-# ⌃q (workspace) has no herdr analogue (one prefix only), so close/rename
-# workspace fold onto ⌃s with the same trailing keys (⌃s x / ⌃s ⇧,).
+# ONE sub-prefix, ⌃s (pane/layout): ⌃s f (zoom), ⌃s , (rename tab) etc.
+# Workspace ops fold onto the same ⌃s prefix (⌃s x close, ⌃s ⇧w rename) —
+# there is no second leader key.
 prefix = "ctrl+s"
 
-# Panes — ⌃hjkl focus (cmux ⌃hjkl).
+# Panes — ⌃hjkl focus.
 focus_pane_left  = "ctrl+h"
 focus_pane_down  = "ctrl+j"
 focus_pane_up    = "ctrl+k"
 focus_pane_right = "ctrl+l"
 
-# Copy / scroll mode — cmux uses ⌃\; mirror it. If herdr rejects the
-# backslash key name (watch the reload diagnostics), fall back to the
-# herdr/tmux default ⌃s [ (prefix+bracket_left).
+# Copy / scroll mode on ⌃\. If herdr rejects the backslash key name (watch
+# the reload diagnostics), fall back to the herdr default ⌃s [ (prefix+bracket_left).
 copy_mode = "ctrl+backslash"
 
-# Splits — ⌘D right (vertical divider), ⌘⇧D down (cmux ⌘D / ⌘⇧D).
+# Splits — ⌘D right (vertical divider), ⌘⇧D down.
 split_vertical   = "cmd+d"
 split_horizontal = "cmd+shift+d"
 
-# Tabs (= cmux "surfaces", the horizontal bar) — ⌘H/L cycle, ⌘T new.
-# ⌘W now closes the focused PANE (see close_pane), so tab-close moved to
-# ⌃s ⇧x. Numeric jump is ⌃1-9 via [keys.indexed] below.
+# Tabs (the horizontal bar) — ⌘H/L cycle, ⌘T new. ⌘W closes the focused PANE
+# (see close_pane), so tab-close moved to ⌃s ⇧x. Numeric jump is ⌃1-9 via
+# [keys.indexed] below.
 previous_tab = "cmd+h"
 next_tab     = "cmd+l"
 new_tab      = "cmd+t"
 close_tab    = "prefix+shift+x"
 
-# Workspaces (= cmux sidebar entries) — ⌘K/J cycle, ⌘N new, ⌘P picker,
+# Workspaces (sidebar entries) — ⌘K/J cycle, ⌘N new, ⌘P picker,
 # ⌘B sidebar toggle. Numeric jump is ⌘1-9 via [keys.indexed] below.
 previous_workspace = "cmd+k"
 next_workspace     = "cmd+j"
@@ -125,17 +120,17 @@ toggle_sidebar     = "cmd+b"
 previous_agent = "cmd+["
 next_agent     = "cmd+]"
 
-# ⌃s sub-prefix (mirrors cmux ⌃s …): zoom = ⌃s f, rename tab = ⌃s ,.
-# cmux ⌃s = (equalize) has no herdr analogue (no keybind, no CLI), so the
-# Karabiner Left-Option-tap gesture mirrors ONLY cmux's ⌥→zoom half; the
-# Shift+⌥→equalize half is deliberately dropped. herdr's interactive resize
-# mode moves to ⌘E instead (ghostty forwards it as csi:101;9u) — ⌃s r freed.
+# ⌃s sub-prefix: zoom = ⌃s f, rename tab = ⌃s ,. There is no equalize action
+# (no keybind, no CLI), so the Karabiner Left-Option-tap gesture does ONLY the
+# ⌥→zoom half; the Shift+⌥→equalize half is deliberately dropped. herdr's
+# interactive resize mode is on ⌘E instead (ghostty forwards it as csi:101;9u) —
+# ⌃s r freed.
 zoom        = "prefix+f"
 rename_tab  = "prefix+comma"
 resize_mode = "cmd+e"
 
-# Workspace management — cmux uses ⌃q x / ⌃q , (its 2nd sub-prefix);
-# folded onto the ⌃s prefix here. close stays on ⌃s x. rename is ⌃s ⇧W
+# Workspace management folds onto the ⌃s prefix (herdr has one prefix).
+# close is ⌃s x. rename is ⌃s ⇧W
 # (W = workspace, herdr's own default): herdr warns punctuation-with-modifiers
 # is terminal-dependent, and ⌃s ⇧, (prefix+shift+comma) genuinely never fired —
 # the shifted comma arrives as `<` and misses the match, while herdr accepts the
@@ -162,10 +157,10 @@ new_worktree    = "prefix+shift+g"
 open_worktree   = "prefix+g"
 remove_worktree = "prefix+ctrl+g"
 
-# Direct numeric jumps (cmux ⌃1-9 = surface/tab, ⌘1-9 = workspace).
+# Direct numeric jumps: ⌃1-9 = tab, ⌘1-9 = workspace.
 # herdr's [keys.indexed] maps a bare modifier over 1..9.
 [keys.indexed]
-tabs       = "ctrl"   # ⌃1-9 → jump tab (cmux surfaces)
+tabs       = "ctrl"   # ⌃1-9 → jump tab
 workspaces = "cmd"    # ⌘1-9 → jump workspace
 
 # Direct pane MOVE (swap with neighbor) on ⌃⌥hjkl — reposition the focused
@@ -205,8 +200,8 @@ description = "move pane down"
 
 [ui]
 # Accent for highlights, borders, and navigation UI — Catppuccin Mocha
-# Mauve (#cba6f7) to match cmux's mauve sidebar wash. Hex-pinned because
-# "mauve" isn't one of herdr's named colors (only cyan/blue/magenta).
+# Mauve (#cba6f7). Hex-pinned because "mauve" isn't one of herdr's named
+# colors (only cyan/blue/magenta).
 accent = "#cba6f7"
 
 # Agent panel ordering: "priority" floats agents that are blocked / awaiting
@@ -216,13 +211,17 @@ accent = "#cba6f7"
 agent_panel_sort = "priority"
 
 # Create new tabs instantly with generated names instead of prompting for a
-# name each time — matches the fast cmux flow.
+# name each time.
 prompt_new_tab_name = false
 
 # Standalone in Ghostty, herdr IS the multiplexer — so it owns the mouse
-# for its own UI (splits, sidebar, tab bar), exactly as cmux does. Ghostty
-# is a passive host here, so there is no outer layer to defer to.
+# for its own UI (splits, sidebar, tab bar). Ghostty is a passive host here,
+# so there is no outer layer to defer to.
 mouse_capture = true
+
+# Draw borders around split panes (herdr default) — the divider line reads
+# better than fully borderless once gaps are off.
+pane_borders = true
 
 # Panes share divider borders instead of a compact gap between them —
 # denser look, and the pane border (surface_dim #585b70 above) renders as a

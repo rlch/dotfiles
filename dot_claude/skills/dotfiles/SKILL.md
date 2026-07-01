@@ -1,6 +1,6 @@
 ---
 name: dotfiles
-description: Edit the user's personal macOS dotfiles repo at `~/dev/dotfiles` (managed by chezmoi). Use this skill ANY time the user wants to change a config — fish, cmux, herdr, ghostty, aerospace, neovim/LazyVim, starship, lazygit, k9s, claude (`~/.claude/*`), karabiner, brew, etc. — even when the user phrases it as "edit my fish config", "add a cmux binding", "tweak my prompt", "install X", "change my Claude settings", "update CLAUDE.md", or just gestures at a deployed file under `~/.config/*` or `~/.claude/*`. Triggers regardless of current working directory: the chezmoi-managed source lives in this one repo, so any edit to a file under `~/.config/`, `~/.claude/`, `~/.hermes/`, or other home-rooted config the user owns must go through `~/dev/dotfiles` and `chezmoi apply` — editing the deployed copy directly will be silently overwritten on next apply. Also use when the user wants to add a new tool (Brewfile + config dir), bootstrap a new machine, or asks "how do I make X persist". Encodes the chezmoi workflow, prefix conventions (dot_/executable_/.tmpl), multi-host role split (mbp vs mini), and the locked-in stack choices the user has already made — so don't re-litigate "should we use yabai instead of aerospace" / "should we add an AI nvim plugin" / etc. Always read the existing similar config in the repo first to match the user's patterns before writing new code.
+description: Edit the user's personal macOS dotfiles repo at `~/dev/dotfiles` (managed by chezmoi). Use this skill ANY time the user wants to change a config — fish, herdr, ghostty, aerospace, neovim/LazyVim, starship, lazygit, k9s, claude (`~/.claude/*`), karabiner, brew, etc. — even when the user phrases it as "edit my fish config", "add a herdr binding", "tweak my prompt", "install X", "change my Claude settings", "update CLAUDE.md", or just gestures at a deployed file under `~/.config/*` or `~/.claude/*`. Triggers regardless of current working directory: the chezmoi-managed source lives in this one repo, so any edit to a file under `~/.config/`, `~/.claude/`, `~/.hermes/`, or other home-rooted config the user owns must go through `~/dev/dotfiles` and `chezmoi apply` — editing the deployed copy directly will be silently overwritten on next apply. Also use when the user wants to add a new tool (Brewfile + config dir), bootstrap a new machine, or asks "how do I make X persist". Encodes the chezmoi workflow, prefix conventions (dot_/executable_/.tmpl), multi-host role split (mbp vs mini), and the locked-in stack choices the user has already made — so don't re-litigate "should we use yabai instead of aerospace" / "should we add an AI nvim plugin" / etc. Always read the existing similar config in the repo first to match the user's patterns before writing new code.
 ---
 
 # Dotfiles
@@ -122,7 +122,7 @@ in first.**
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty (ungoogled-Chromium for MCP — see CLAUDE.md)|
-| Multiplexer    | herdr (daily driver); cmux retired as daily driver  |
+| Multiplexer    | herdr (daily driver)                                |
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base — **no AI plugins**, pure editor |
@@ -144,7 +144,7 @@ to multiplexing or re-introduce its config/packages/fish helpers.
 
 ## Preserve existing keymaps
 
-The user has muscle memory in: aerospace, cmux (vim-style modal),
+The user has muscle memory in: aerospace, herdr (vim-style modal),
 nvim/LazyVim, fish abbreviations, tridactyl, karabiner. **Cosmetic refactors
 are fine; keybind changes are not** unless explicitly asked.
 
@@ -154,14 +154,11 @@ In particular:
   block (`dot_config/ghostty/config`); edit the two files together. herdr runs
   in Ghostty (auto-launched via `command = fish -l -C herdr`); its `⌘` chords
   only reach it because ghostty forwards them as CSI-u super sequences. The
-  keymap is the vim-style modal-mirror carried over from cmux: `⌃hjkl` focus
-  panes, `⌘` chords for create/nav (`⌘T`/`⌘N` new, `⌘D`/`⌘⇧D` split, `⌘HL`/`⌘KJ`
-  nav, `⌘W` close), `⌃S` pane sub-prefix, `⌃Q` workspace sub-prefix, `⌃\` copy
-  mode. Each ctrl-letter prefix steals that key globally — don't "fix" that.
-  Full detail lives in the dotfiles CLAUDE.md "Conventions / invariants".
-- **cmux keymap** (retained, no longer daily driver) — config at
-  `dot_config/cmux/cmux.json` (`shortcuts.bindings`), mirrors the herdr keymap
-  above. Kept for reference / fallback; not the primary multiplexer.
+  keymap is a vim-style modal layout: `⌃hjkl` focus panes, `⌘` chords for
+  create/nav (`⌘T`/`⌘N` new, `⌘D`/`⌘⇧D` split, `⌘HL`/`⌘KJ` nav, `⌘W` close pane),
+  `⌃S` sub-prefix (workspace ops fold onto it), `⌃\` copy mode. Each ctrl-letter
+  prefix steals that key globally — don't "fix" that. Full detail lives in the
+  dotfiles CLAUDE.md "Conventions / invariants".
 - Ghostty `super+digit_N` defaults need `cmd+digit_N` to override
   (character form `cmd+one` doesn't shadow the goto_tab default).
 
@@ -176,9 +173,8 @@ Concrete recipe:
 1. `cd ~/dev/dotfiles`.
 2. `rg -n '<the-tool-or-pattern>'` across `dot_config/`, `dot_claude/`,
    etc. — e.g. for a new fish function, look at existing functions in
-   `dot_config/fish/functions/`. For a new cmux/herdr binding, scan
-   `dot_config/cmux/cmux.json` or `dot_config/herdr/config.toml` for a
-   similar entry and match its comment style.
+   `dot_config/fish/functions/`. For a new herdr binding, scan
+   `dot_config/herdr/config.toml` for a similar entry and match its comment style.
 3. Read 2–3 nearby examples to absorb: comment density, naming, where the
    "why" goes (almost always inline above the line).
 4. Then write your change in the same voice.
@@ -229,6 +225,6 @@ routine config edits. Do ask before:
 - Adding a heavy package to the *base* Brewfile (vs Brewfile.heavy).
 - Anything that affects the mini host you can't test locally.
 
-For everything else — adding a fish function, a cmux/herdr binding that
+For everything else — adding a fish function, a herdr binding that
 doesn't conflict, a new aerospace rule, a Claude Code hook, a starship
 segment — research the pattern and ship it.

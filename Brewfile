@@ -207,7 +207,7 @@ cask "claude-code"
 cask "codex"       # OpenAI's coding agent CLI
 # OpenCode — terminal AI coding agent. Host for the oh-my-openagent (OMO)
 # multi-agent harness, installed by post-install-omo.sh against your Claude
-# Max subscription. Launched inside cmux.
+# Max subscription. Launched inside herdr.
 brew "opencode"
 brew "ast-grep"    # structural code search (`sg`) — OMO's ast-grep skill depends on it
 brew "gemini-cli"  # Google's Gemini CLI

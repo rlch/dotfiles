@@ -39,7 +39,7 @@ not the deployed copies in `~` — the next `chezmoi apply` will overwrite them.
 | Manager        | chezmoi                                             |
 | Shell          | fish 4 + fisher                                     |
 | Terminal       | Ghostty                                             |
-| Multiplexer    | cmux (+ herdr eval)                                 |
+| Multiplexer    | herdr                                               |
 | Window manager | AeroSpace                                           |
 | Editor         | Neovim (LazyVim base, no AI plugins)                |
 | Prompt         | starship                                            |

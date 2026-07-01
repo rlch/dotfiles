@@ -13,8 +13,8 @@
 #   pane label    → DISABLED (never set)            (border stays default)
 #
 # The topic comes from Claude Code's `ai-title` transcript record (the text it
-# also emits as the OSC-2 terminal title). herdr — unlike a normal terminal such
-# as cmux — doesn't map OSC-2, so we bridge it. Zero LLM cost: Claude already
+# also emits as the OSC-2 terminal title). herdr — unlike a normal terminal —
+# doesn't map OSC-2, so we bridge it. Zero LLM cost: Claude already
 # computed the title; we just forward it.
 #
 # Wired to the Stop hook (turn-end): fresh title, non-blocking. Refresh on

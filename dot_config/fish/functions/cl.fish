@@ -22,23 +22,10 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     # clodcurrent picks the highest-quota account not already running in another
     # pane, then exec's `claude` with CLAUDE_CONFIG_DIR set. `--ide` and the rest
     # pass straight through. Falls back to plain `claude` if clodcurrent is absent.
+    # herdr detects and tracks the claude agent on its own (integration hook), so
+    # there's no launcher wrapper to route through — just run it.
     set -l runner clodcurrent
     command -q clodcurrent; or set runner claude
-
-    # In a cmux pane (CMUX_SURFACE_ID is exported by cmux), route the launch
-    # through `cmux claude-teams` so Claude Code's native agent teams render as
-    # native cmux splits (sets up the tmux shim + CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).
-    # clodcurrent honors CLODCURRENT_LAUNCHER — it still picks the best account
-    # and sets CLAUDE_CONFIG_DIR, then exec's the launcher instead of claude.
-    # Without clodcurrent, invoke `cmux claude-teams` directly. Outside cmux
-    # (plain terminal, ssh), nothing changes.
-    if set -q CMUX_SURFACE_ID
-        if test "$runner" = clodcurrent
-            set -fx CLODCURRENT_LAUNCHER 'cmux claude-teams'
-        else
-            set runner cmux claude-teams
-        end
-    end
 
     $runner --ide $args
 end

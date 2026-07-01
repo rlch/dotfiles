@@ -165,13 +165,13 @@ artifacts:
 # ── DIVERGENCE FROM UPSTREAM: team-based apply ───────────────────────────────
 # `tracks: tasks.md` is kept so `openspec status` / `openspec archive` still see
 # checkbox progress. The `instruction` REPLACES the upstream default ("work
-# through pending tasks, mark complete as you go") with a cmux agent-team
+# through pending tasks, mark complete as you go") with an agent-team
 # delegation procedure, plus a graceful inline fallback when no team is present.
 apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Implement this change as a cmux-rendered Claude Code agent TEAM, not solo.
+    Implement this change as a parallel Claude Code agent TEAM, not solo.
     You are the team lead. Do NOT grind through tasks.md top-to-bottom yourself.
 
     1. Read the context files, proposal, design, and tasks.md. Collect every
@@ -180,10 +180,10 @@ apply:
        not by logical feature. Tasks that touch the same files, or that depend on
        an earlier task's output, belong to the SAME unit and run sequentially
        within it. Only genuinely independent units run in parallel.
-    3. Delegate each independent unit to a teammate — spawn one via your agent
-       team (Agent/Task tool) with a distinct name per unit. When this session
-       was launched through `cmux claude-teams` (the default for `cl` inside a
-       cmux pane), each teammate renders as a native cmux split you can watch.
+    3. Delegate each independent unit to a teammate — spawn one via your
+       Agent/Task tool with a distinct name per unit. For visible oversight you
+       can run each teammate as its own herdr split/tab
+       (`herdr agent start <name> -- claude "…"`) and watch it in the sidebar.
        Keep ~3-4 teammates active at once; queue the rest.
     4. Each teammate implements its unit on the shared working tree, runs the
        build/tests covering its files, and reports back with evidence.
@@ -198,6 +198,6 @@ apply:
     Pause and ask if you hit blockers, ambiguous requirements, or conflicts
     between units that you cannot resolve from the spec.
 
-    FALLBACK — if no agent team is available in this session (not launched via
-    `cmux claude-teams`, or teammates cannot spawn), implement the pending tasks
-    inline yourself in dependency order, still ticking checkboxes as you go.
+    FALLBACK — if you can't spawn teammates in this session, implement the
+    pending tasks inline yourself in dependency order, still ticking checkboxes
+    as you go.

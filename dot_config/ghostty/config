@@ -78,7 +78,7 @@ keybind = cmd+digit_8=text:\x1b[56;9u
 keybind = cmd+digit_9=text:\x1b[57;9u
 
 # === herdr ⌘-forwarding =================================================
-# herdr runs standalone in Ghostty and mirrors cmux's keymap, which leans
+# herdr runs standalone in Ghostty and leans
 # on ⌘ chords for create/nav (see ~/.config/herdr/config.toml — the two
 # files are a matched pair). macOS hands ⌘ to the app, so Ghostty must be
 # told to forward each chord to the running TUI as a CSI-u *super*
@@ -98,18 +98,18 @@ keybind = cmd+digit_9=text:\x1b[57;9u
 # comment text as literal keystrokes (herdr eats the `ESC[…u`, the rest prints
 # to the shell). Annotations therefore live ABOVE each bind, never after it.
 #
-#   cmd+h → previous_tab        (cmux ⌘H)
-#   cmd+l → next_tab            (cmux ⌘L)
-#   cmd+k → previous_workspace  (cmux ⌘K)
-#   cmd+j → next_workspace      (cmux ⌘J)
-#   cmd+t → new_tab             (cmux ⌘T)
-#   cmd+n → new_workspace       (cmux ⌘N)
-#   cmd+d → split_vertical      (cmux ⌘D)
-#   cmd+shift+d → split_horizontal (cmux ⌘⇧D)
-#   cmd+w → close_tab           (cmux ⌘W)
-#   cmd+b → toggle_sidebar      (cmux ⌘B)
-#   cmd+p → workspace_picker    (cmux ⌘P)
-#   cmd+e → resize_mode         (⌘E, herdr-only)
+#   cmd+h → previous_tab
+#   cmd+l → next_tab
+#   cmd+k → previous_workspace
+#   cmd+j → next_workspace
+#   cmd+t → new_tab
+#   cmd+n → new_workspace
+#   cmd+d → split_vertical
+#   cmd+shift+d → split_horizontal
+#   cmd+w → close_pane
+#   cmd+b → toggle_sidebar
+#   cmd+p → workspace_picker
+#   cmd+e → resize_mode
 #   cmd+[ → previous_agent      (⌘[, up agent list)
 #   cmd+] → next_agent          (⌘], down agent list)
 keybind = cmd+h=csi:104;9u
