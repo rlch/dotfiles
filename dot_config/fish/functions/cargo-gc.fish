@@ -5,7 +5,7 @@ function cargo-gc --description 'Prune cargo target bloat. --full nukes everythi
     # target/debug/deps/. After weeks of iterative work in a large workspace
     # this passes 100 GB and stat() over the tree starts dominating cargo's
     # startup time (12+ min "hangs" on `cargo check` were observed in
-    # ~/dev/trading at 172 GB before this was added).
+    # a 172 GB workspace before this was added).
     #
     # Default mode (light): rm -rf target/debug/{incremental,examples} +
     # target/llvm-cov-target. Cheap, cargo re-populates fingerprints on the

@@ -456,7 +456,7 @@ return {
           warn_test_not_executed = false,
         },
         ["neotest-dart"] = {
-          command = "/Users/rjm/fvm/default/bin/flutter",
+          command = vim.fn.expand("~/fvm/default/bin/flutter"),
           use_lsp = true,
         },
         -- require("rustaceanvim.neotest"),

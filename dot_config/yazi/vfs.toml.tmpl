@@ -19,8 +19,8 @@
 # Re-enable this block when v26.x SFTP previewer bugs are resolved.
 # [services.mini]
 # type           = "sftp"
-# host           = "REDACTED-HOST.local"
-# user           = "rjm"
+# host           = "your-host.local"
+# user           = "you"
 # port           = 22
 # identity_agent = "{{ .chezmoi.homeDir }}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 {{ else -}}
@@ -29,7 +29,7 @@
 # [services.mbp]
 # type           = "sftp"
 # host           = "TODO-mbp-hostname-or-tailscale.local"
-# user           = "rjm"
+# user           = "you"
 # port           = 22
 # identity_agent = "{{ .chezmoi.homeDir }}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 {{ end }}

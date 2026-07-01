@@ -212,11 +212,6 @@ run = 'move-node-to-workspace dev'
 if.app-name-regex-substring = '^Runner$'
 run = 'move-node-to-workspace dev'
 
-# MooMoo → trading
-[[on-window-detected]]
-if.app-id = 'com.moomoo.mm.mac.au'
-run = 'move-node-to-workspace trading'
-
 # Bevy game window → game workspace (pinned to laptop screen above).
 # The Bevy binary's macOS app id depends on packaging (debug `cargo run`
 # inherits from the parent shell, packaged builds use Info.plist), so

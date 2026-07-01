@@ -71,12 +71,11 @@ cask "macos-fuse-t/cask/fuse-t-sshfs"
 brew "hyperfine"
 
 # === Diagrams / docs authoring ===
-# d2 — diagram-as-code, renders ```d2 blocks to SVG. Used by the seam docs
-# site's remark-d2 plugin (~/dev/seam/docs/src/plugins/remark-d2.mjs) and
-# any future Astro + Starlight project that wants the same.
+# d2 — diagram-as-code, renders ```d2 blocks to SVG. Used by docs sites via
+# a remark-d2 plugin, and any Astro + Starlight project that wants the same.
 brew "d2"
-# asciinema — record terminal sessions to .cast for playback in
-# ~/dev/youtube/apps/terminal-scene/ TerminalScene via asciinema-player.
+# asciinema — record terminal sessions to .cast for playback via
+# asciinema-player (e.g. in a web TerminalScene component).
 brew "asciinema"
 
 # === Editor ===
@@ -96,7 +95,7 @@ brew "tree-sitter-cli"      # `tree-sitter` CLI binary (separate formula)
 brew "rust-analyzer"        # Rust LSP for nvim
 brew "rustup"               # Rust toolchain manager (rustc, cargo)
 brew "wasm-pack"            # Rust→WASM build/bundle tool
-# Cargo subcommands consumed by ~/dev/trading and any other Rust project.
+# Cargo subcommands consumed by Rust projects.
 # Brew (vs. `cargo install`) so they upgrade with `brew upgrade` and don't
 # fight over ~/.cargo/bin/ between toolchains. cargo-fuzz also needs
 # nightly Rust at runtime: `rustup install nightly`.
@@ -181,12 +180,9 @@ brew "mas"         # Mac App Store CLI (lets MAS apps live in this Brewfile)
 cask "orbstack"
 
 # === Trading / message bus ===
-# nats-server hosts the JetStream message bus used by the
-# agent-signal-strategy-live design in ~/dev/trading — single `trading`
-# stream, 127.0.0.1:4222, file storage, 90d retention. Managed by
-# launchd (~/Library/LaunchAgents/com.synadia.nats-server.plist) via
-# `just nats-{load,unload,status,bootstrap}` in the trading workspace.
-# `nats` is the CLI used by `nats stream ls` / `nats stream view`.
+# nats-server hosts a local JetStream message bus (127.0.0.1:4222, file
+# storage). Managed by a launchd agent. `nats` is the CLI used by
+# `nats stream ls` / `nats stream view`.
 brew "nats-server"
 tap "nats-io/nats-tools"
 brew "nats-io/nats-tools/nats"
@@ -196,16 +192,14 @@ brew "nats-io/nats-tools/nats"
 # (kubectl, beta, etc.) install on demand into /opt/homebrew/share/google-
 # cloud-sdk/bin — already on PATH via the brew shim.
 cask "gcloud-cli"
-# Cloudflare Workers CLI — deploys ~/dev/org/infra/ai-gateway
-# (and jwt-worker) via `wrangler deploy`. Auth via `wrangler login`.
+# Cloudflare Workers CLI — deploy Workers via `wrangler deploy`.
+# Auth via `wrangler login`.
 brew "cloudflare-wrangler"
 # OpenTofu — Terraform-compatible IaC. Manages stateful Cloudflare resources
-# (R2/D1/KV) for ~/dev/ausvisa + ~/dev/project/app; `tofu` CLI, worker
-# code still ships via wrangler.
+# (R2/D1/KV); `tofu` CLI, worker code still ships via wrangler.
 brew "opentofu"
-# Apify CLI — deploys ~/dev/project/app's actor plane via `apify push`
-# (the impit/Cloudflare-bypass scrapers that can't run on the edge worker).
-# Auth via `apify login`.
+# Apify CLI — deploys Apify actors via `apify push` (scrapers that can't
+# run on an edge worker). Auth via `apify login`.
 brew "apify-cli"
 
 # === AI dev tooling ===
@@ -224,13 +218,13 @@ brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flu
 
 # === Game dev / 2D editors ===
 # LDtk (Level Designer Toolkit) — free open-source 2D level + tileset editor.
-# Used by grift for room templates (assets/rooms/*.ldtk) and the tile-asset
+# Used for room templates (assets/rooms/*.ldtk) and the tile-asset
 # pipeline (atlas + autotile rules). Not on brew — installed by
 # .chezmoiscripts/run_onchange_install-ldtk.sh.tmpl from GitHub releases.
 # Version pin lives in that script.
 
 # === 3D / video / animation ===
-# Blender — used by the YouTube channel (~/dev/youtube) as an offline asset
+# Blender — used as an offline asset
 # factory for non-parametric scenes (cave / creature / Liquid Glass cameo)
 # and for baking Komikaze halftone/hatching/stippling plates that get
 # sampled in the Remotion WGSL shaders. Renders are exported to

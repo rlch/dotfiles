@@ -136,7 +136,7 @@
   // cmux (v0.64.17) — verified against `strings bin/cmux`, NOT the $schema URL
   // above (which tracks `main` and has since renamed/dropped some of these):
   //   pathLastSegmentOnly → show only the last segment of the working dir, so
-  //     ~/dev/ausvisa renders as "ausvisa". Real key in 0.64.17
+  //     ~/dev/myproject renders as "myproject". Real key in 0.64.17
   //     (sidebar.pathLastSegmentOnly is in the binary); dropped on main.
   //   branchVerticalLayout false → branch • dir inline, not stacked. main
   //     renamed this to branchLayout:"vertical"|"inline"; that enum is a no-op

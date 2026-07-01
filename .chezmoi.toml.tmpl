@@ -10,7 +10,7 @@
 */}}
 {{- $role := promptStringOnce . "role" "Machine role (mbp|mini)" "mbp" -}}
 
-sourceDir = "/Users/rjm/dev/dotfiles"
+sourceDir = "{{ .chezmoi.homeDir }}/dev/dotfiles"
 
 [edit]
     apply = true

@@ -1,7 +1,7 @@
 # Cargo global config (~/.cargo/config.toml). Applies to every workspace.
 #
-# Why this exists: the four big workspaces on this machine (tanzo, trading,
-# tutero/frontend/library/modality, mosaic) all default to debug=2 + 600-1000
+# Why this exists: the big Rust workspaces on this machine all default to
+# debug=2 + 600-1000
 # transitive deps each, producing 100-200 GB `target/` dirs and slow inner
 # loops. Settings here apply uniformly without editing each project's
 # Cargo.toml; per-project Cargo.toml overrides still win where present.
@@ -21,8 +21,8 @@ jobs = 14
 # Linker — Homebrew lld for Mach-O
 # ---------------------------------------------------------------------------
 # Apple ld-prime is fine for small bins but link time dominates incremental
-# builds for big workspaces (modality's `modality-dev` pulls 600 crates into
-# one debug binary). lld is dramatically faster on Mach-O link.
+# builds for big workspaces (a single debug binary can pull 600 crates).
+# lld is dramatically faster on Mach-O link.
 #
 # Install: `brew install lld` (provides /opt/homebrew/opt/lld/bin/ld64.lld).
 # Stable-compatible — no -Z flags here. Per-project .cargo/config.toml can
