@@ -114,12 +114,16 @@ if state.get("pane") and (pane.get("label") or None) == state.get("pane"):
     herdr("pane", "rename", pane_id, "--clear")
 state.pop("pane", None)
 
-# tab ← ai-title (topic). Default label = the bare tab number.
+# tab ← ai-title (topic). herdr's default tab label is the tab's DISPLAY
+# POSITION (a bare integer), which is NOT the same as tab.number (the stable
+# creation id): they diverge as soon as tabs are opened/closed/reordered. So
+# "still default, safe to overwrite" = the label is purely numeric — matching
+# a specific number ("2" == str(5)) would mis-read a repositioned tab's plain
+# positional default as a user label and never title it (the tab-title bug).
 if tab_id and topic:
     tab = herdr_result("tab", "get", tab_id).get("tab", {})
-    num = str(tab.get("number", ""))
     maybe_set("tab", tab.get("label"), topic,
-              lambda c: c == num,
+              lambda c: (c or "").strip().isdigit(),
               lambda d: herdr("tab", "rename", tab_id, d))
 
 # agents-list line 2 name ← git branch (via display_agent). Clear if no branch,
