@@ -62,6 +62,11 @@ ctrl-alt-4 = 'workspace comms'
 ctrl-alt-5 = 'workspace notion'
 ctrl-alt-6 = 'workspace dev'
 ctrl-alt-7 = 'workspace trading'
+# LLM-driven ungoogled-Chromium (chrome-debug / chrome-devtools-mcp / the
+# chrome-devtools-axi skill). Its own workspace, laptop-pinned; sits after code
+# in the alt-n/p cycle (workspace_order.sh: dev, code, agent, ...) — the space
+# you switch to to review what Claude is doing in the browser.
+ctrl-alt-8 = 'workspace agent'
 # alt-n/p cycle through workspaces ON THE FOCUSED MONITOR ONLY, in the
 # explicit order defined by ~/.config/aerospace/workspace_order.sh. The
 # focused_workspaces.sh helper filters the canonical order down to the
@@ -82,6 +87,7 @@ ctrl-alt-shift-4 = 'move-node-to-workspace comms --focus-follows-window'
 ctrl-alt-shift-5 = 'move-node-to-workspace notion --focus-follows-window'
 ctrl-alt-shift-6 = 'move-node-to-workspace dev --focus-follows-window'
 ctrl-alt-shift-7 = 'move-node-to-workspace trading --focus-follows-window'
+ctrl-alt-shift-8 = 'move-node-to-workspace agent --focus-follows-window'
 
 # focus monitors directly
 alt-1 = 'focus-monitor 1'
@@ -164,6 +170,12 @@ game    = ['Built-in.*', 'main']
 # context-switch hit when alt-tabbing back to code.
 blender = ['Built-in.*', 'main']
 
+# Agent — the LLM-driven ungoogled-Chromium (chrome-debug). Same laptop-only
+# pin as game/blender: it must never hijack whichever external you're actively
+# working on. You switch to it deliberately (ctrl-alt-8) to watch/review what
+# Claude is doing in the browser, not by glancing at a side monitor.
+agent   = ['Built-in.*', 'main']
+
 # persistent app → workspace routing. Focus does not follow — apps land
 # in their slot silently, you switch via ctrl-alt-N.
 [[on-window-detected]]
@@ -202,6 +214,17 @@ run = 'move-node-to-workspace notion'
 if.app-id = 'com.google.Chrome'
 run = 'move-node-to-workspace dev'
 
+# Agent browser → agent. ungoogled-Chromium (org.chromium.Chromium), launched by
+# `chrome-debug` for chrome-devtools-mcp / the chrome-devtools-axi skill, is the
+# one browser Claude drives over CDP. Give it its own home so it never leaks into
+# whatever workspace happened to be focused when `chrome-debug` fired — it had NO
+# rule before this, so it tiled straight on top of `code`. Kept distinct from
+# stable Chrome (dev) and Firefox (browser) per the visual-separation invariant
+# in the dotfiles CLAUDE.md. Bundle id verified via the app's Info.plist.
+[[on-window-detected]]
+if.app-id = 'org.chromium.Chromium'
+run = 'move-node-to-workspace agent'
+
 # Flutter native desktop apps. Aerospace can only match by bundle-id /
 # app-name / window-title — there's no "links against Flutter framework"
 # matcher. Default match: Xcode's stock target name "Runner" (un-renamed
@@ -233,6 +256,17 @@ if.app-id = 'org.blenderfoundation.blender'
 run = 'move-node-to-workspace blender'
 
 # float-by-default apps
+
+# The Boring Notch (OSS notch utility, https://github.com/TheBoredTeam/boring.notch)
+# draws an overlay panel around the notch. AeroSpace must never tile it or it
+# hijacks the built-in's layout. Match by bundle id so it holds regardless of
+# where the app lives — it currently runs straight from its DMG (/Volumes/…),
+# so a path/name matcher would be brittle. (Drag it to /Applications to stop the
+# DMG dependency; the bundle id — theboringteam.boringnotch — stays the same.)
+[[on-window-detected]]
+if.app-id = 'theboringteam.boringnotch'
+run = 'layout floating'
+
 [[on-window-detected]]
 if.app-id = 'com.apple.finder'
 run = 'layout floating'
