@@ -23,7 +23,7 @@ prepend_keymap = [
   { on = "i", run = "plugin searchjump -- autocd", desc = "Searchjump (label-jump)" },
 
   # Pane control.
-  { on = "T", run = "plugin toggle-pane min-preview", desc = "Toggle preview pane" },
+  { on = "T", run = "plugin toggle-pane max-preview", desc = "Maximize preview pane" },
 
   # Diff hovered ↔ selected, copy patch to clipboard (great for Claude review).
   { on = "<C-d>", run = "plugin diff", desc = "Diff selected ↔ hovered (clipboard)" },

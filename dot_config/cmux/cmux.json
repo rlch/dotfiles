@@ -85,8 +85,16 @@
       "newSurface": "cmd+t",
       "splitRight": "cmd+d",
       "splitDown": "cmd+shift+d",
+      // Pane-layout ops driven by Left Option taps (Karabiner replays these chords
+      // on tap while cmux is frontmost; hold Alt = normal Left Option). cmux allows
+      // one shortcut per action, so the taps reuse the existing chords rather than
+      // getting their own entries:
+      //   • Alt (⌥)        → ⌃S f  — zoom the focused PANE to fill the window
+      //                              (tmux-style; NOT macOS window fullscreen).
+      //   • Shift+Alt (⇧⌥) → ⌃S =  — equalize splits (flatten panes to equal size).
       "toggleSplitZoom": ["ctrl+s", "f"],
       "equalizeSplits": ["ctrl+s", "="],
+
       "closeTab": "cmd+w",
       "renameTab": ["ctrl+s", ","],
 

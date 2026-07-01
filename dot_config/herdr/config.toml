@@ -1,10 +1,10 @@
 # herdr — agent multiplexer (tmux-for-AI-agents). Source of truth lives
 # in dotfiles; chezmoi renders this to ~/.config/herdr/config.toml.
 #
-# Practical deployment: herdr runs nested inside a tmux window when you
-# want to multiplex Claude Code / Codex / Hermes agents in panes within
-# one tmux window. tmux remains the outer multiplexer for sessions /
-# windows / status bar / mosaic / agent bells (see ~/.config/tmux/tmux.conf).
+# Deployment: herdr runs NESTED inside a cmux pane. cmux is the outer
+# terminal + multiplexer (workspaces / surfaces / splits / sidebar); herdr
+# multiplexes Claude Code / Codex / Hermes agent panes *within* one cmux
+# pane. (tmux is retired in-pane — see ~/dev/dotfiles/CLAUDE.md.)
 #
 # To edit: `chezmoi edit ~/.config/herdr/config.toml` → chezmoi apply.
 # Live reload: `herdr server reload-config` (or `herdr --default-config`
@@ -21,30 +21,88 @@ name = "terminal"
 
 [terminal]
 # Inherit cwd from the focused pane when spawning new panes/tabs/workspaces,
-# matching the tmux behavior the user expects.
+# matching the cmux "new panes follow the focused pane" behavior.
 new_cwd = "follow"
 
 [keys]
-# Prefix: ctrl+e. Chosen because it's NOT bound by tmux at root, so tmux
-# passes it through unchanged to the focused pane — herdr panes see it
-# (as its prefix) and shell panes still get fish's end-of-line. No tmux
-# interception logic required (unlike the C-Space/C-b swap that didn't
-# work cleanly).
-#
-# In a fish pane: C-e = move-to-end-of-line (unchanged).
-# In a herdr pane: C-e = herdr's prefix → followed by the action key
-# (h/v/-/x/z/r/c/w/?/etc.).
+# ── Prefix: ctrl+e ──────────────────────────────────────────────────────
+# cmux leaves ⌃e unbound (see dot_config/cmux/cmux.json + dotfiles
+# CLAUDE.md) so it passes straight through to the focused pane: a herdr
+# pane reads it as this prefix; a fish pane still gets readline
+# end-of-line. Nothing in ~/.config/ghostty remaps ⌃e either, so there is
+# no terminal-layer interception to undo — herdr's only *global* key is
+# this prefix, and every action below is a plain letter pressed AFTER it
+# (which ghostty's modified-chord keybinds never touch).
 prefix = "ctrl+e"
 
-# Vim-only navigation. Herdr's defaults are already hjkl (and letter-keyed
-# for everything else — no arrow keys exposed), but bound explicitly here
-# to lock the intent into source: this config never uses arrow keys.
-# Resize-mode inside herdr (entered via `prefix+r`) is also hjkl natively.
+# ── Keymap mirrors cmux (dot_config/cmux/cmux.json) ─────────────────────
+# cmux drives pane/tab/workspace ops with DIRECT chords across two
+# modifiers — ⌃ (focus) and ⌘ (create/nav) — plus the ⌃s / ⌃q
+# sub-prefixes. herdr is single-prefix, so every cmux chord collapses onto
+# ⌃e + its same final key. cmux overloads hjkl across modifiers (⌃hjkl =
+# focus, ⌘hjkl = container-nav); herdr keeps unshifted hjkl = focus (the
+# hot path) and puts container-nav on prefix+SHIFT+hjkl — a clean "shift =
+# one level up" rule with no collision.
+#
+#   cmux                          herdr
+#   ─────────────────────────     ───────────────────────────
+#   ⌃ h/j/k/l   focus pane    →    prefix + h/j/k/l
+#   ⌘ H/L       prev/next tab →    prefix + shift + h/l
+#   ⌘ K/J       prev/next wksp →   prefix + shift + k/j
+#   ⌘T          new tab       →    prefix + t
+#   ⌘N          new workspace →    prefix + n
+#   ⌘D          split right   →    prefix + d        (split_vertical)
+#   ⌘⇧D         split down    →    prefix + shift+d  (split_horizontal)
+#   ⌘W          close tab     →    prefix + w
+#   ⌘B          toggle sidebar →   prefix + b
+#   ⌘P          workspace picker → prefix + p
+#   ⌃ 1-9       jump surface  →    prefix + 1..9      (tabs)
+#   ⌘ 1-9       jump workspace →   prefix + shift + 1..9
+#   ⌃s f        zoom pane     →    prefix + f
+#   ⌃s ,        rename tab    →    prefix + ,
+#   ⌃q x        close workspace →  prefix + shift + x
+#   ⌃q ,        rename workspace → prefix + shift + w  (',' taken by tab)
+#
+# No cmux equivalent: close_pane (⌘W closes the whole tab) stays on herdr's
+# prefix+x; copy/scroll mode (cmux ⌃\) — herdr scrollback is mouse /
+# prefix+e (edit_scrollback); equalize (cmux ⌃s =) — use resize_mode
+# (prefix+r, then hjkl). Unlisted actions (help, settings, detach, goto,
+# worktree, cycle_pane) keep herdr defaults.
+
+# Focus panes — unshifted hjkl (matches cmux ⌃hjkl).
 focus_pane_left  = "prefix+h"
 focus_pane_down  = "prefix+j"
 focus_pane_up    = "prefix+k"
 focus_pane_right = "prefix+l"
 
+# Container nav — prefix+shift+hjkl (mirrors cmux ⌘hjkl, one level up).
+previous_tab       = "prefix+shift+h"
+next_tab           = "prefix+shift+l"
+previous_workspace = "prefix+shift+k"
+next_workspace     = "prefix+shift+j"
+
+# Create / split / close — cmux ⌘ family, same final key under the prefix.
+new_tab          = "prefix+t"          # cmux ⌘T
+new_workspace    = "prefix+n"          # cmux ⌘N
+split_vertical   = "prefix+d"          # cmux ⌘D  (split right / vertical divider)
+split_horizontal = "prefix+shift+d"    # cmux ⌘⇧D (split down)
+close_tab        = "prefix+w"          # cmux ⌘W
+close_pane       = "prefix+x"          # no cmux chord; herdr default
+close_workspace  = "prefix+shift+x"    # cmux ⌃q x
+
+# Layout / view.
+zoom           = "prefix+f"            # cmux ⌃s f
+resize_mode    = "prefix+r"            # cmux ⌃s = / Alt-tap resize → then hjkl
+toggle_sidebar = "prefix+b"            # cmux ⌘B
+
+# Rename.
+rename_tab       = "prefix+comma"      # cmux ⌃s ,
+rename_workspace = "prefix+shift+w"    # cmux ⌃q , (',' already on rename_tab)
+
+# Pickers / indexed jumps.
+workspace_picker = "prefix+p"          # cmux ⌘P (goToWorkspace switcher)
+switch_tab       = "prefix+1..9"       # cmux ⌃1-9 (surfaces / tabs)
+switch_workspace = "prefix+shift+1..9" # cmux ⌘1-9 (workspaces)
 
 [ui]
 # Named color so the accent follows the terminal palette in lock-step
@@ -57,10 +115,9 @@ accent = "blue"
 # workspace's) — useful when multiple workspaces have active agents.
 agent_panel_scope = "all"
 
-# tmux already has `set -g mouse on` and a custom MouseDown1Status handler
-# (`~/.config/tmux/tmux-mouse-status.sh`). With herdr nested, both layers
-# capturing mouse causes ambiguous clicks (e.g. status-bar segments tmux
-# wants to route get swallowed by herdr's UI). Defer to tmux — inner panes
+# cmux already captures mouse for its own UI (copy-on-select, sidebar /
+# tab clicks). With herdr nested, both layers grabbing the mouse causes
+# ambiguous clicks — defer to the OUTER layer (cmux). Inner panes
 # (lazygit, btop, claude TUI) still receive mouse when they request it.
 mouse_capture = false
 
@@ -70,22 +127,22 @@ mouse_capture = false
 show_agent_labels_on_pane_borders = true
 
 [ui.toast]
-# In-app toasts only. The outer tmux already has a flash widget
-# (`@flash_text` / `@flash_set_at` — see tmux.conf:275-352) for transient
-# status messages; routing herdr notifications to the OS would double-notify.
+# In-app toasts only. Routing to the OS would be a no-op anyway —
+# ghostty has `desktop-notifications = false` and cmux owns the
+# dock-badge / sound path — so keep herdr's notifications inside herdr.
 delivery = "herdr"
 
 [ui.sound]
 # Audible cue when an agent in a background workspace changes state. Useful
-# when juggling multiple agents and the tmux status badges aren't in view.
+# when juggling multiple agents and the cmux sidebar badges aren't in view.
 enabled = true
 
 [worktrees]
-# Sibling of tmux's mosaic worktrees / git worktrees the user already keeps
-# under ~/. Default is fine; pinned explicitly so it's discoverable.
+# Sibling of the git worktrees the user already keeps under ~/. Default is
+# fine; pinned explicitly so it's discoverable.
 directory = "~/.herdr/worktrees"
 
 [experimental]
 # Nested herdr (herdr inside a herdr-managed pane) would be confusing —
-# tmux + herdr is the intended nesting depth.
+# cmux + herdr is the intended nesting depth.
 allow_nested = false

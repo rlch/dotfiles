@@ -38,7 +38,7 @@ Brewfile                    → base packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, notify.sh hook)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
-                              lazydocker, starship.toml, tmux, tridactyl)
+                              lazydocker, starship.toml, cmux, tmux, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
 dev/trading/                → ~/dev/trading/.obsidian/ (per-project vault — vault root is the repo root, all .md across the repo become wikilinkable)
 ```
@@ -78,8 +78,8 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | -------------- | --------------------------------------------------- |
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
-| Terminal       | Ghostty                                             |
-| Multiplexer    | tmux (modal Ctrl-s/a/b/q, hjkl — ported from zellij)|
+| Terminal       | cmux (Ghostty-based; colors/font still from Ghostty config) |
+| Multiplexer    | cmux-native (workspaces/surfaces/splits) — tmux retired in-pane |
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
@@ -96,20 +96,48 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 ## Conventions / invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in
-  aerospace, tmux (zellij-style modal), nvim, fish abbreviations, and tridactyl.
-  Cosmetic refactors fine; keybind changes are not.
+  aerospace, cmux (vim/tmux-style, below), nvim, fish abbreviations, and
+  tridactyl. Cosmetic refactors fine; keybind changes are not.
 - **k9s `config.yaml` is global prefs only**, not cluster state. k9s rewrites
   cluster-specific sections at runtime — keeping them in source pollutes the
   Mac mini and stale-clusters them.
 - **Fish does not auto-attach tmux.** This was deliberately dropped from the
   zellij config and stays dropped; don't re-introduce it.
-- **tmux modal scheme is canonical** — `Ctrl-s` pane, `Ctrl-a`/`F3` tab,
-  `Ctrl-b` scroll (with a Claude-Code passthrough), `Ctrl-q` session,
-  hjkl/arrows everywhere, `Ctrl-1..9` windows. Ported verbatim from the
-  zellij config; don't switch back to a prefix-based scheme without
-  checking with the user. **`Ctrl-e`** is herdr's prefix — tmux doesn't
-  bind it at root, so it passes through to whatever's in the focused pane
-  (herdr in herdr panes; fish's end-of-line elsewhere).
+- **cmux is the daily driver; tmux is retired in-pane.** The user went
+  cmux-native (2026-06-25) — cmux's own workspaces/surfaces/splits replace
+  what tmux used to do. The `tmux/` config still ships but isn't the daily
+  multiplexer; don't re-suggest tmux as the answer to multiplexing.
+- **cmux keymap is canonical** — config at `dot_config/cmux/cmux.json`
+  (`shortcuts.bindings`). vim/tmux modal-mirror, ported from the old zellij→tmux
+  muscle memory. Each ctrl-letter prefix steals that key globally (same as the
+  old modal tmux); don't "fix" that. Don't restructure without checking with
+  the user. **cmux chords are exactly 2 keys, one-shot — no sticky modes.**
+  - `⌃ hjkl` — focus panes (no prefix, repeatable). Deliberately **shadows
+    LazyVim's `⌃hjkl` window-nav** while in an nvim pane (cmux has no
+    vim-aware passthrough) → use `⌃W hjkl` in nvim. Also eats readline
+    `⌃K`/`⌃L` in shells (`⌘⇧K` clears).
+  - `⌘ hjkl` — navigate containers (moved off `⌃⌥hjkl`): `H/L` prev/next tab
+    (surface), `K/J` prev/next workspace (sidebar is vertical). `⌘H` shadows
+    macOS Hide; `⌘L` shadows browser address-bar focus (browser panes only).
+  - `⌃\` scroll/copy mode (moved off `⌃B`, which now passes through to the
+    shell as readline backward-char) · `⌃S` prefix — `f` zoom, `=` equalize,
+    `,` rename tab · `⌃Q` workspace prefix (`,` rename, `x` close). `⌃A`
+    left free → readline beginning-of-line.
+  - Create / split / close live on `⌘` keys (reworked 2026-06-26): `⌘T` new
+    tab (cmux `newSurface`, the horizontal bar) · `⌘N` new tab / right-sidebar
+    entry (cmux `newTab`) · `⌘D` split right · `⌘⇧D` split down (cmux/iTerm2
+    default — keeps `⌘V` paste / `⌘S` save) · `⌘W` close (cmux `closeTab`).
+    `newWindow` unbound; `⌘⇧N` free.
+  - Kept on cmux defaults: `⌘1-9` jump workspace · `⌘P` switcher ·
+    `⌃1-9` jump surface · `⌘⇧K` clear · `⌘⇧P` palette.
+- **cmux UI chrome is themed to Catppuccin Mocha** to match the Ghostty
+  terminal theme: `app.appearance=dark`, sidebar tracks terminal bg + faint
+  mauve wash, workspace rail palette = Catppuccin Mocha named swatches.
+  Terminal *content* colors/font remain Ghostty's job (`theme = "Catppuccin
+  Mocha"`), not cmux's.
+- **`⌃-e`** is herdr's prefix — left unbound in cmux so it passes through to
+  whatever's in the focused pane (herdr in herdr panes; fish's end-of-line
+  elsewhere).
 - **Window names auto-slugify to ≤10 chars** via `~/.config/tmux/slugify-title.py`
   on the `window-renamed` hook. Claude Code's OSC titles get NLP-picked salient
   tokens (proper nouns / ALLCAPS preferred); paths get basenamed; long words
