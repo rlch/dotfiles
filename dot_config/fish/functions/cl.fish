@@ -1,4 +1,4 @@
-function cl --wraps claude --description 'clodcurrent: launch best free account; --ide; model shortcuts; restores tmux title'
+function cl --wraps claude --description 'clodcurrent: launch best free account; --ide; model shortcuts'
     # Translate model shortcuts into `--model <id>` (passed through to claude).
     # opus/fable are pinned to the 1M-context ([1m]) variants; sonnet/haiku use
     # claude's own "latest" aliases so they auto-track releases. Bump opus/fable
@@ -31,7 +31,7 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     # clodcurrent honors CLODCURRENT_LAUNCHER — it still picks the best account
     # and sets CLAUDE_CONFIG_DIR, then exec's the launcher instead of claude.
     # Without clodcurrent, invoke `cmux claude-teams` directly. Outside cmux
-    # (plain terminal, real tmux, ssh), nothing changes.
+    # (plain terminal, ssh), nothing changes.
     if set -q CMUX_SURFACE_ID
         if test "$runner" = clodcurrent
             set -fx CLODCURRENT_LAUNCHER 'cmux claude-teams'
@@ -40,13 +40,5 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
         end
     end
 
-    if set -q TMUX
-        set -l prev (tmux display-message -p '#W')
-        $runner --ide $args
-        set -l rc $status
-        tmux rename-window -- "$prev"
-        return $rc
-    else
-        $runner --ide $args
-    end
+    $runner --ide $args
 end

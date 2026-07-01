@@ -1,2 +1,0 @@
-# module: datascience — analytical SQL (see also dot_jupyter)
-brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON

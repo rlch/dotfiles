@@ -4,12 +4,11 @@
  * changes to take effect.
  *
  * Why this file exists: macOS NSBeeps on chords its system dictionary doesn't
- * recognize, even when the foreground app has captured the keystroke. Ghostty
- * intercepts ctrl+/ via its own keybind and emits CSI-u so tmux can fire
- * choose-tree, but AppKit *also* sees the chord, doesn't find it in any
- * standard menu/system table, and rings NSBeep alongside Ghostty's action.
+ * recognize, even when the foreground app has captured the keystroke. ctrl+/
+ * (and ctrl+_) reach the terminal fine, but AppKit *also* sees the chord,
+ * doesn't find it in any standard menu/system table, and rings NSBeep on top.
  * Registering the chord here as `noop:` tells AppKit "this is intentional,
- * don't beep" — Ghostty's keybind still fires, the system bell is silenced.
+ * don't beep" — the app still receives the key, the system bell is silenced.
  *
  * Modifier prefixes: ^=Ctrl, $=Shift, ~=Alt/Option, @=Cmd, #=Numeric keypad.
  * See https://gist.github.com/trusktr/1e5e516df4e8032cbc3d for syntax.

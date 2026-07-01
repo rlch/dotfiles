@@ -1,4 +1,3 @@
-function c --wraps z --description 'zoxide jump + create-or-switch tmux window + return to prev dir'
+function c --wraps z --description 'zoxide jump (kept as muscle-memory alias for z)'
     z $argv
-    zl && cd -
 end

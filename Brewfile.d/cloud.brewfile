@@ -1,4 +1,0 @@
-# module: cloud — cloud provider SDKs / IaC
-cask "gcloud-cli"           # gcloud + gsutil + bq (auth via `gcloud auth login`)
-brew "cloudflare-wrangler"  # Cloudflare Workers CLI (auth via `wrangler login`)
-brew "opentofu"             # Terraform-compatible IaC (`tofu`)

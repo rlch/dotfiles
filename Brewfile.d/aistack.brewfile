@@ -1,5 +1,0 @@
-# module: aistack — extra AI coding CLIs (Claude Code itself is core)
-cask "codex"       # OpenAI's coding agent CLI
-brew "gemini-cli"  # Google's Gemini CLI
-brew "ast-grep"    # structural code search (`sg`)
-brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs

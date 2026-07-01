@@ -1,5 +1,0 @@
-# module: windowmanager — AeroSpace tiling WM + instant macOS Spaces switching
-tap "nikitabobko/tap"
-cask "nikitabobko/tap/aerospace"
-tap "jurplel/tap"
-cask "jurplel/tap/instant-space-switcher"

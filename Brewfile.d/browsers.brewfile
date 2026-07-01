@@ -1,6 +1,0 @@
-# module: browsers — extra Chromium browsers (Firefox is core / daily)
-cask "brave-browser"      # PWA host (decoupled from Chrome's process tree)
-# Ungoogled-Chromium — dedicated host for `chrome-debug` / chrome-devtools-mcp on
-# :9222. Same Blink/V8/CDP as Chrome, telemetry stripped; visually/process-wise
-# distinct from any manually-opened Chrome. NOT a daily browser.
-cask "ungoogled-chromium"

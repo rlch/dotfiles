@@ -1,3 +1,0 @@
-# module: containers — OCI runtime + TUIs
-cask "orbstack"
-brew "lazydocker"

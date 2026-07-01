@@ -1,6 +1,6 @@
 ---
 name: dotfiles
-description: Edit the user's personal macOS dotfiles repo at `~/dev/dotfiles` (managed by chezmoi). Use this skill ANY time the user wants to change a config — fish, tmux, ghostty, aerospace, neovim/LazyVim, starship, lazygit, ghostty, k9s, claude (`~/.claude/*`), karabiner, brew, etc. — even when the user phrases it as "edit my fish config", "add a tmux binding", "tweak my prompt", "install X", "change my Claude settings", "update CLAUDE.md", or just gestures at a deployed file under `~/.config/*` or `~/.claude/*`. Triggers regardless of current working directory: the chezmoi-managed source lives in this one repo, so any edit to a file under `~/.config/`, `~/.claude/`, `~/.hermes/`, or other home-rooted config the user owns must go through `~/dev/dotfiles` and `chezmoi apply` — editing the deployed copy directly will be silently overwritten on next apply. Also use when the user wants to add a new tool (Brewfile + config dir), bootstrap a new machine, or asks "how do I make X persist". Encodes the chezmoi workflow, prefix conventions (dot_/executable_/.tmpl), multi-host role split (mbp vs mini), and the locked-in stack choices the user has already made — so don't re-litigate "should we use yabai instead of aerospace" / "should we add an AI nvim plugin" / etc. Always read the existing similar config in the repo first to match the user's patterns before writing new code.
+description: Edit the user's personal macOS dotfiles repo at `~/dev/dotfiles` (managed by chezmoi). Use this skill ANY time the user wants to change a config — fish, cmux, herdr, ghostty, aerospace, neovim/LazyVim, starship, lazygit, k9s, claude (`~/.claude/*`), karabiner, brew, etc. — even when the user phrases it as "edit my fish config", "add a cmux binding", "tweak my prompt", "install X", "change my Claude settings", "update CLAUDE.md", or just gestures at a deployed file under `~/.config/*` or `~/.claude/*`. Triggers regardless of current working directory: the chezmoi-managed source lives in this one repo, so any edit to a file under `~/.config/`, `~/.claude/`, `~/.hermes/`, or other home-rooted config the user owns must go through `~/dev/dotfiles` and `chezmoi apply` — editing the deployed copy directly will be silently overwritten on next apply. Also use when the user wants to add a new tool (Brewfile + config dir), bootstrap a new machine, or asks "how do I make X persist". Encodes the chezmoi workflow, prefix conventions (dot_/executable_/.tmpl), multi-host role split (mbp vs mini), and the locked-in stack choices the user has already made — so don't re-litigate "should we use yabai instead of aerospace" / "should we add an AI nvim plugin" / etc. Always read the existing similar config in the repo first to match the user's patterns before writing new code.
 ---
 
 # Dotfiles
@@ -23,19 +23,17 @@ them on the next `apply`. The flow is:
 
 1. Locate the source file under `~/dev/dotfiles/` (see prefix mapping below).
 2. Edit it.
-3. Run `chezmoi apply` (or scope it to a path: `chezmoi apply ~/.config/tmux`).
+3. Run `chezmoi apply` (or scope it to a path: `chezmoi apply ~/.config/fish`).
 4. For tools with a running daemon, **also reload them** so the change takes
    effect in the live process — the source isn't enough on its own:
-   - tmux: `tmux source-file ~/.config/tmux/tmux.conf` (and `tmux -L scratch
-     source-file ~/.config/tmux/tmux.conf` if there's a running scratch
-     session — see "Multi-socket tmux" below).
    - fish: `exec fish` in the relevant shell (or just open a new pane).
+   - herdr: `herdr server reload-config` (config.toml changes).
    - aerospace: `aerospace reload-config`.
    - karabiner / ghostty: pick up changes automatically.
    - claude code / `~/.claude/settings.json`: takes effect on next prompt
      turn or restart depending on the setting.
 5. Commit + push when stable. Conventional commits with scope
-   (`fix(tmux): …`, `feat(claude): …`); see the user's git workflow rules.
+   (`fix(fish): …`, `feat(claude): …`); see the user's git workflow rules.
 
 **Don't end a task assuming the user will `chezmoi apply` later.** If you've
 edited anything under `~/dev/dotfiles/`, run apply yourself before reporting
@@ -49,7 +47,7 @@ for an interactive prompt, it's because something deployed (often a
 generated artifact like a `.pyc` or a tool's runtime-rewritten config like
 `k9s/config.yaml`) has drifted from source. Two clean fixes:
 
-- **Apply just the path you changed**: `chezmoi apply ~/.config/tmux/tmux.conf`
+- **Apply just the path you changed**: `chezmoi apply ~/.config/fish/config.fish`
   — bypasses the prompt by not visiting the drifted file.
 - **Re-add the drift back to source** if it's user-authored: `chezmoi
   re-add ~/.config/foo/bar`.
@@ -65,14 +63,14 @@ rename them away** — they're functional, not stylistic.
 | Prefix in repo                 | Deploys as              | Example |
 | :----------------------------- | :---------------------- | :------ |
 | `dot_foo`                      | `~/.foo`                | `dot_claude/` → `~/.claude/` |
-| `dot_config/foo/`              | `~/.config/foo/`        | `dot_config/tmux/tmux.conf` → `~/.config/tmux/tmux.conf` |
+| `dot_config/foo/`              | `~/.config/foo/`        | `dot_config/fish/config.fish` → `~/.config/fish/config.fish` |
 | `executable_foo`               | `~/foo` mode 755        | `dot_config/aerospace/executable_scratchpad.sh` |
 | `private_dot_foo`              | `~/.foo` mode 600       | `private_dot_gitconfig` |
 | `foo.tmpl`                     | rendered as Go template | `.chezmoi.toml.tmpl` |
 | `run_onchange_install-x.sh.tmpl` | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |
 
-So if the user says "edit my tmux config", that's
-`~/dev/dotfiles/dot_config/tmux/tmux.conf` (not `~/.config/tmux/tmux.conf`).
+So if the user says "edit my fish config", that's
+`~/dev/dotfiles/dot_config/fish/config.fish` (not `~/.config/fish/config.fish`).
 "Edit my Claude settings" is `~/dev/dotfiles/dot_claude/settings.json`.
 
 ### "Edit my CLAUDE.md" — default to the user-global one
@@ -124,7 +122,7 @@ in first.**
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty (ungoogled-Chromium for MCP — see CLAUDE.md)|
-| Multiplexer    | tmux (modal Ctrl-s/a/b/q + hjkl; ported from zellij)|
+| Multiplexer    | herdr (daily driver); cmux retired as daily driver  |
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base — **no AI plugins**, pure editor |
@@ -140,22 +138,30 @@ in first.**
 
 Specifically rejected, don't propose: yabai, skhd, sketchybar,
 jankyborders, floating/dropdown Ghostty, AI nvim plugins, fish
-auto-attaching tmux, merging Chrome+Firefox roles.
+auto-attaching a multiplexer on startup, merging Chrome+Firefox roles.
+**tmux was fully removed (2026-07-01)** — don't re-suggest it as the answer
+to multiplexing or re-introduce its config/packages/fish helpers.
 
 ## Preserve existing keymaps
 
-The user has muscle memory in: aerospace, tmux (zellij-style modal),
+The user has muscle memory in: aerospace, cmux (vim-style modal),
 nvim/LazyVim, fish abbreviations, tridactyl, karabiner. **Cosmetic refactors
 are fine; keybind changes are not** unless explicitly asked.
 
 In particular:
-- tmux modal scheme is canonical — `Ctrl-s` pane, `Ctrl-a`/`F3` tab,
-  `Ctrl-b` scroll (with a Claude-Code passthrough), `Ctrl-q` session,
-  hjkl/arrows everywhere, `Ctrl-1..9` windows. Don't switch to a
-  prefix-based scheme.
-- Karabiner intercepts F3 and the Mission Control button before tmux —
-  remaps to `Ctrl-/` in Ghostty. So `bind -T root C-/` is the correct
-  tmux side, not `bind -T root F3`.
+- **herdr keymap is canonical** (daily driver since 2026-07-01) — config at
+  `dot_config/herdr/config.toml`, a matched pair with the ghostty `⌘`-forwarding
+  block (`dot_config/ghostty/config`); edit the two files together. herdr runs
+  in Ghostty (auto-launched via `command = fish -l -C herdr`); its `⌘` chords
+  only reach it because ghostty forwards them as CSI-u super sequences. The
+  keymap is the vim-style modal-mirror carried over from cmux: `⌃hjkl` focus
+  panes, `⌘` chords for create/nav (`⌘T`/`⌘N` new, `⌘D`/`⌘⇧D` split, `⌘HL`/`⌘KJ`
+  nav, `⌘W` close), `⌃S` pane sub-prefix, `⌃Q` workspace sub-prefix, `⌃\` copy
+  mode. Each ctrl-letter prefix steals that key globally — don't "fix" that.
+  Full detail lives in the dotfiles CLAUDE.md "Conventions / invariants".
+- **cmux keymap** (retained, no longer daily driver) — config at
+  `dot_config/cmux/cmux.json` (`shortcuts.bindings`), mirrors the herdr keymap
+  above. Kept for reference / fallback; not the primary multiplexer.
 - Ghostty `super+digit_N` defaults need `cmd+digit_N` to override
   (character form `cmd+one` doesn't shadow the goto_tab default).
 
@@ -170,33 +176,12 @@ Concrete recipe:
 1. `cd ~/dev/dotfiles`.
 2. `rg -n '<the-tool-or-pattern>'` across `dot_config/`, `dot_claude/`,
    etc. — e.g. for a new fish function, look at existing functions in
-   `dot_config/fish/functions/`. For a new tmux binding, scan
-   `dot_config/tmux/tmux.conf` for a similar conditional or mode binding.
+   `dot_config/fish/functions/`. For a new cmux/herdr binding, scan
+   `dot_config/cmux/cmux.json` or `dot_config/herdr/config.toml` for a
+   similar entry and match its comment style.
 3. Read 2–3 nearby examples to absorb: comment density, naming, where the
    "why" goes (almost always inline above the line).
 4. Then write your change in the same voice.
-
-## Multi-socket tmux
-
-The user runs *two* tmux servers concurrently:
-- **Default socket** (`tmux …`): the main session, attached from regular
-  Ghostty windows.
-- **Scratch socket** (`tmux -L scratch …`): the scratchpad. Pinned via
-  `socket_name: scratch` in `~/.config/tmuxinator/Scratch.yml` for
-  isolation — `tmux switch-client` from inside scratch can't hijack the
-  main client and vice versa.
-
-Both servers load `~/.config/tmux/tmux.conf`, but **a running server does
-not auto-reload on file change**. After editing `tmux.conf`, source it on
-both:
-
-```sh
-tmux -L default source-file ~/.config/tmux/tmux.conf
-tmux -L scratch source-file ~/.config/tmux/tmux.conf
-```
-
-If a binding works in scratch but not main (or vice versa), the first
-thing to suspect is that you only sourced one socket.
 
 ## Adding a new tool
 
@@ -226,7 +211,7 @@ otherwise `chezmoi apply` will try to deploy it.
 ```sh
 chezmoi diff                          # preview pending changes
 chezmoi apply                         # deploy
-chezmoi apply ~/.config/tmux/tmux.conf  # scope to a single path
+chezmoi apply ~/.config/fish/config.fish  # scope to a single path
 chezmoi cd                            # cd into source dir (= ~/dev/dotfiles)
 chezmoi edit ~/.config/foo/bar        # open the source for a deployed file in $EDITOR
 chezmoi re-add ~/.config/foo/bar      # absorb deployed-side changes back into source
@@ -244,6 +229,6 @@ routine config edits. Do ask before:
 - Adding a heavy package to the *base* Brewfile (vs Brewfile.heavy).
 - Anything that affects the mini host you can't test locally.
 
-For everything else — adding a fish function, a tmux binding that
+For everything else — adding a fish function, a cmux/herdr binding that
 doesn't conflict, a new aerospace rule, a Claude Code hook, a starship
 segment — research the pattern and ship it.

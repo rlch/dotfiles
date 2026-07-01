@@ -1,3 +1,0 @@
-# module: diagrams — diagram-as-code + terminal recording
-brew "d2"          # renders ```d2 blocks to SVG (docs sites, Astro/Starlight)
-brew "asciinema"   # record terminal sessions to .cast for asciinema-player

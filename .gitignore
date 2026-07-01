@@ -23,6 +23,20 @@ dot_env.*
 __pycache__/
 *.pyc
 
-# Machine-local Homebrew extras. A fork's personal packages live here so they
-# never conflict with upstream on pull. Copy Brewfile.personal.example to start.
-Brewfile.personal
+# --- Kept OUT of the public repo (still deployed locally by chezmoi) ---
+# Personal / host-specific / self-hosted config. chezmoi manages these from the
+# working tree regardless of git, so `chezmoi apply` still deploys them — they
+# just never get committed or pushed to the public repo. Preserves the privacy
+# scrub while keeping one repo + one apply.
+private_dot_ssh/
+dot_config/homepage/
+dot_config/searxng/
+dot_config/nats-server/
+Library/LaunchAgents/
+dot_config/gh-dash/
+dot_config/ollama/
+dot_config/fish/functions/mini-mount.fish
+dot_config/fish/functions/mini-umount.fish
+dot_config/fish/functions/modality.fish
+dot_config/fish/functions/subflow.fish
+dot_local/bin/executable_inbox-zero

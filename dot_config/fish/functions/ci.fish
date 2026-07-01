@@ -1,4 +1,3 @@
-function ci --wraps zi --description 'interactive zoxide picker + tmux window management (like c, but uses zi)'
+function ci --wraps zi --description 'interactive zoxide picker (kept as muscle-memory alias for zi)'
     zi $argv
-    _tabjump $argv
 end

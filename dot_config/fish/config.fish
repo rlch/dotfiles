@@ -65,7 +65,7 @@ set -gx HEADROOM_MODE     token
 set -gx HEADROOM_BACKEND  anthropic
 #t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
 
-# fzf — Catppuccin Mocha (matches tmux + ghostty)
+# fzf — Catppuccin Mocha (matches ghostty)
 set -gx FZF_DEFAULT_OPTS "\
 --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
 --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
@@ -83,7 +83,6 @@ abbr mk  minikube
 abbr kk  k9s
 abbr tf  terraform
 abbr v   "fg &>/dev/null || nvim"
-abbr tx  tmux
 abbr gw  worktree-tui
 abbr cld 'cl --dangerously-skip-permissions'
 abbr n   pnpm
@@ -169,9 +168,6 @@ type -q claude-squad && claude-squad completion fish | source
 
 # --- Secrets (not tracked) --------------------------------------------------
 test -e ~/.config/fish/secrets.fish && source ~/.config/fish/secrets.fish
-
-# Note: tmux is NOT auto-attached on startup — type `tmux` (or `tx`) when
-# you want a multiplexed session.
 
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.

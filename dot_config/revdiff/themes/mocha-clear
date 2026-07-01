@@ -1,6 +1,6 @@
 # name: mocha-clear
 # description: catppuccin-mocha with transparent status bar / tree / diff
-#              (lets ghostty's terminal background show through, matches tmux look)
+#              (lets ghostty's terminal background show through)
 # author: rlch (derived from upstream catppuccin-mocha)
 
 chroma-style = catppuccin-mocha

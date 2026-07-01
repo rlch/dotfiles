@@ -17,10 +17,36 @@
 onboarding = false
 
 [theme]
-# Inherit from the host terminal (Ghostty's Catppuccin Mocha palette).
-# Picking the `terminal` theme means herdr follows whatever ghostty is
-# set to — change Ghostty's theme later and herdr automatically tracks.
-name = "terminal"
+# Tokyo Night for herdr's own chrome — higher contrast than Catppuccin,
+# whose pastel-on-pastel pane borders + selected-workspace highlight washed
+# out. Still a blue/purple palette so it harmonizes with Ghostty's
+# Catppuccin Mocha terminal CONTENT (unaffected — this themes only herdr's
+# UI chrome). accent stays mauve (#cba6f7) — light on TN's dark bg, so the
+# focused border / selection reads clearly.
+name = "tokyo-night"
+
+# Override specific chrome tokens with Catppuccin Mocha colors so herdr's UI
+# lines up with the terminal palette. Token names from herdr's source
+# (CustomThemeColors → Palette), with what each ACTUALLY paints:
+#   panel_bg    = tab-bar + panel bg (accepts "transparent" → Color::Reset)
+#   surface0    = selected/focused item bg  AND  inactive-tab bg
+#   surface_dim = pane border / separators  (+ active-tab fg fallback)
+#   accent      = active-tab bg + focused-pane border  (mauve, set in [ui])
+[theme.custom]
+# Tab bar + panels = TRANSPARENT: the outer terminal background shows through
+# — including Ghostty's macos-glass blur — so the tab strip matches the
+# terminal exactly and tracks it. (herdr maps "transparent"/"none"/"reset" →
+# Color::Reset.) Caveat: a *custom-named active* tab's text falls back to
+# surface_dim on the mauve accent; swap to a solid "#1e1e2e" if it reads poorly.
+panel_bg = "transparent"
+# surface0 paints BOTH the selected-workspace highlight AND the inactive-tab
+# background, so keep it a SOFT selection tint — Catppuccin Surface0 (#313244),
+# one gentle step above Base. (Surface1 #45475a was too harsh: it made the
+# selection and the inactive tabs both look heavy/ugly.)
+surface0 = "#313244"
+# Pane border / split divider = Catppuccin Surface2 (#585b70) — lighter than
+# Base so dividers read. Focused pane + active tab use the mauve accent above.
+surface_dim = "#585b70"
 
 [terminal]
 # New panes/tabs/workspaces inherit cwd from the focused pane — matches
@@ -48,6 +74,9 @@ new_cwd = "follow"
 #   ⌘W  close tab      cmd+w
 #   ⌘B  toggle sidebar cmd+b
 #   ⌘P  wksp picker    cmd+p
+#   —   resize mode    cmd+e            ghostty cmd-forward (herdr-only)
+#   ⌃⌥hjkl move pane   ctrl+alt+hjkl    ghostty ⌃⌥-forward (herdr-only)
+#   ⌘[ / ⌘]  agent nav cmd+[ / cmd+]    ghostty cmd-forward (prev/next agent)
 #
 # herdr keeps ONE prefix — set to ⌃s to mirror cmux's ⌃s pane sub-prefix,
 # so ⌃s f (zoom) and ⌃s , (rename tab) are exact. cmux's SECOND sub-prefix
@@ -61,16 +90,22 @@ focus_pane_down  = "ctrl+j"
 focus_pane_up    = "ctrl+k"
 focus_pane_right = "ctrl+l"
 
+# Copy / scroll mode — cmux uses ⌃\; mirror it. If herdr rejects the
+# backslash key name (watch the reload diagnostics), fall back to the
+# herdr/tmux default ⌃s [ (prefix+bracket_left).
+copy_mode = "ctrl+backslash"
+
 # Splits — ⌘D right (vertical divider), ⌘⇧D down (cmux ⌘D / ⌘⇧D).
 split_vertical   = "cmd+d"
 split_horizontal = "cmd+shift+d"
 
-# Tabs (= cmux "surfaces", the horizontal bar) — ⌘H/L cycle, ⌘T new,
-# ⌘W close. Numeric jump is ⌃1-9 via [keys.indexed] below.
+# Tabs (= cmux "surfaces", the horizontal bar) — ⌘H/L cycle, ⌘T new.
+# ⌘W now closes the focused PANE (see close_pane), so tab-close moved to
+# ⌃s ⇧x. Numeric jump is ⌃1-9 via [keys.indexed] below.
 previous_tab = "cmd+h"
 next_tab     = "cmd+l"
 new_tab      = "cmd+t"
-close_tab    = "cmd+w"
+close_tab    = "prefix+shift+x"
 
 # Workspaces (= cmux sidebar entries) — ⌘K/J cycle, ⌘N new, ⌘P picker,
 # ⌘B sidebar toggle. Numeric jump is ⌘1-9 via [keys.indexed] below.
@@ -80,20 +115,52 @@ new_workspace      = "cmd+n"
 workspace_picker   = "cmd+p"
 toggle_sidebar     = "cmd+b"
 
+# Agents — ⌘[ / ⌘] focus previous / next agent (up/down the agent list),
+# forwarded by ghostty as csi:91;9u / csi:93;9u (⌘ never reaches a TUI
+# natively). NB: the first attempt "didn't switch properly" because the
+# ghostty forward line carried a TRAILING # comment — ghostty appends that to
+# the value, so ⌘[ sent the CSI-u PLUS the comment text as keystrokes. Fixed
+# by keeping ghostty annotations ABOVE their binds. ⌘⇧jk/⌘⇧hl ("move agents"/
+# "move tabs") stay unbound: herdr has no reorder for agents/tabs (no CLI).
+previous_agent = "cmd+["
+next_agent     = "cmd+]"
+
 # ⌃s sub-prefix (mirrors cmux ⌃s …): zoom = ⌃s f, rename tab = ⌃s ,.
-# cmux ⌃s = (equalize) has no one-shot herdr analogue → herdr's
-# interactive resize mode on ⌃s r instead.
+# cmux ⌃s = (equalize) has no herdr analogue (no keybind, no CLI), so the
+# Karabiner Left-Option-tap gesture mirrors ONLY cmux's ⌥→zoom half; the
+# Shift+⌥→equalize half is deliberately dropped. herdr's interactive resize
+# mode moves to ⌘E instead (ghostty forwards it as csi:101;9u) — ⌃s r freed.
 zoom        = "prefix+f"
 rename_tab  = "prefix+comma"
-resize_mode = "prefix+r"
+resize_mode = "cmd+e"
 
 # Workspace management — cmux uses ⌃q x / ⌃q , (its 2nd sub-prefix);
-# folded onto the ⌃s prefix here with the same trailing keys.
+# folded onto the ⌃s prefix here. close stays on ⌃s x. rename is ⌃s ⇧W
+# (W = workspace, herdr's own default): herdr warns punctuation-with-modifiers
+# is terminal-dependent, and ⌃s ⇧, (prefix+shift+comma) genuinely never fired —
+# the shifted comma arrives as `<` and misses the match, while herdr accepts the
+# string on reload (no diagnostic), so it fails silently. Letter chords are
+# herdr's "most reliable" tier, so rename uses ⇧W, not shifted punctuation.
 close_workspace  = "prefix+x"
-rename_workspace = "prefix+shift+comma"
-# herdr has a per-pane close with no cmux equivalent (cmux ⌘W closes the
-# whole tab). Parked off the ⌃s x used for close_workspace.
-close_pane = "prefix+shift+x"
+rename_workspace = "prefix+shift+w"
+# ⌘W closes the focused PANE (pane-granular, per request — not the whole
+# tab or workspace). close_tab is on ⌃s ⇧x, close_workspace on ⌃s x.
+close_pane = "cmd+w"
+
+# Session & scrollback — native ⌃s prefix chords (no ghostty forward needed):
+#   ⌃s ⇧r  reload config.toml from inside herdr (vs the `herdr server
+#          reload-config` CLI) · ⌃s q  detach, leaving agents running ·
+#   ⌃s e   dump the focused pane's scrollback into $EDITOR.
+reload_config   = "prefix+shift+r"
+detach          = "prefix+q"
+edit_scrollback = "prefix+e"
+
+# Git worktrees — herdr's [worktrees] integration (dir set in [worktrees]
+# below). g-cluster on the prefix: ⌃s ⇧g new · ⌃s g open/switch · ⌃s ⌃g
+# remove (opens a confirmation first).
+new_worktree    = "prefix+shift+g"
+open_worktree   = "prefix+g"
+remove_worktree = "prefix+ctrl+g"
 
 # Direct numeric jumps (cmux ⌃1-9 = surface/tab, ⌘1-9 = workspace).
 # herdr's [keys.indexed] maps a bare modifier over 1..9.
@@ -101,21 +168,66 @@ close_pane = "prefix+shift+x"
 tabs       = "ctrl"   # ⌃1-9 → jump tab (cmux surfaces)
 workspaces = "cmd"    # ⌘1-9 → jump workspace
 
-[ui]
-# Named color so the accent follows the terminal palette in lock-step
-# with the `terminal` theme above — no hex lock-in. Ghostty's `blue`
-# slot is Catppuccin Mocha blue today; change ghostty's theme and this
-# tracks without a config edit.
-accent = "blue"
+# Direct pane MOVE (swap with neighbor) on ⌃⌥hjkl — reposition the focused
+# pane within the layout. herdr has no native swap keybind action (only the
+# `herdr pane swap` CLI), so these shell out just like the old resize binds.
+# ⌃⇧hjkl (former direct-resize) is now UNBOUND — resizing lives in the
+# interactive resize mode on ⌘E. ⌃⌥hjkl are ghostty-forwarded as csi:NNN;7u
+# (modifier 7 = ctrl+alt) because Option isn't Alt here (macos-option-as-alt
+# is unset), so they can't arrive natively the way the ctrl+shift binds did.
+#
+# NB: the requested ⌘⇧hjkl "move tab / move workspace" is deliberately
+# absent — herdr has no reorder action or CLI for tabs/workspaces (only
+# panes can be swapped/moved), which is exactly what ⌃⌥hjkl now do.
+[[keys.command]]
+key = "ctrl+alt+h"
+type = "shell"
+command = "herdr pane swap --direction left --current"
+description = "move pane left"
 
-# Show all detected agent rows in the sidebar (not just the focused
-# workspace's) — useful when multiple workspaces have active agents.
-agent_panel_scope = "all"
+[[keys.command]]
+key = "ctrl+alt+l"
+type = "shell"
+command = "herdr pane swap --direction right --current"
+description = "move pane right"
+
+[[keys.command]]
+key = "ctrl+alt+k"
+type = "shell"
+command = "herdr pane swap --direction up --current"
+description = "move pane up"
+
+[[keys.command]]
+key = "ctrl+alt+j"
+type = "shell"
+command = "herdr pane swap --direction down --current"
+description = "move pane down"
+
+[ui]
+# Accent for highlights, borders, and navigation UI — Catppuccin Mocha
+# Mauve (#cba6f7) to match cmux's mauve sidebar wash. Hex-pinned because
+# "mauve" isn't one of herdr's named colors (only cyan/blue/magenta).
+accent = "#cba6f7"
+
+# Agent panel ordering: "priority" floats agents that are blocked / awaiting
+# input to the top (attention queue) rather than "spaces" (grouped by
+# workspace). Replaces the old agent_panel_scope="all" — that key does not
+# exist in herdr, so it was a silent no-op AND forced a config-rewrite drift.
+agent_panel_sort = "priority"
+
+# Create new tabs instantly with generated names instead of prompting for a
+# name each time — matches the fast cmux flow.
+prompt_new_tab_name = false
 
 # Standalone in Ghostty, herdr IS the multiplexer — so it owns the mouse
 # for its own UI (splits, sidebar, tab bar), exactly as cmux does. Ghostty
 # is a passive host here, so there is no outer layer to defer to.
 mouse_capture = true
+
+# Panes share divider borders instead of a compact gap between them —
+# denser look, and the pane border (surface_dim #585b70 above) renders as a
+# solid line rather than empty space.
+pane_gaps = false
 
 # Show the per-pane agent label (claude/codex/hermes) in the pane border.
 # Cheap visual cue to know which agent owns the focused split without
@@ -131,7 +243,7 @@ delivery = "herdr"
 [ui.sound]
 # Audible cue when an agent in a background workspace changes state. Useful
 # when juggling multiple agents whose sidebar badges aren't in view.
-enabled = true
+enabled = false
 
 [worktrees]
 # Sibling of the git worktrees the user already keeps under ~/. Default is
@@ -142,3 +254,9 @@ directory = "~/.herdr/worktrees"
 # Nested herdr (herdr inside a herdr-managed pane) would be confusing —
 # leave it off.
 allow_nested = false
+# Relay the Kitty graphics protocol through to the outer terminal so image
+# previews render inside herdr panes — yazi's image previews (and any other
+# kitty-graphics TUI). herdr swallows the escapes by default like tmux/zellij;
+# this passes them to Ghostty, which supports the protocol. Flagged
+# experimental upstream — may be rough across splits/scrollback/remote attach.
+kitty_graphics = true

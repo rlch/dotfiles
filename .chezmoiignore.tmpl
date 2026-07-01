@@ -1,11 +1,14 @@
 # Files that live in the source repo but shouldn't be deployed to ~
-Brewfile*
+Brewfile
+Brewfile.heavy
 CLAUDE.md
 README.md
 LICENSE
 .git/
 .gitignore
 **/.DS_Store
+**/__pycache__
+**/*.pyc
 
 # LazyVim mutates this file (news markers etc.); extras are declared in
 # lua/config/init.lua instead, so chezmoi has no reason to track it.
@@ -16,37 +19,9 @@ LICENSE
 # round-trip the live target.
 .config/nvim/lazy-lock.json
 
-# === Optional modules ===
-# A fork opts OUT of a module by setting it false under [data.modules] in its
-# OWN ~/.config/chezmoi/chezmoi.toml — NEVER by editing this file — so upstream
-# pulls stay conflict-free. Defaults live in .chezmoidata.yaml (all on). Only
-# modules with deployed config dirs are gated here; package-only modules are
-# gated in the Brewfile installer.
-{{ if not .modules.windowmanager }}
-.config/aerospace
-{{ end -}}
-{{ if not .modules.multiplexer }}
-.config/tmux
-.config/tmuxinator
-{{ end -}}
-{{ if not .modules.keybindings }}
-.config/karabiner
-Library/KeyBindings
-{{ end -}}
-{{ if not .modules.containers }}
-.config/k9s
-.config/lazydocker
-{{ end -}}
-{{ if not .modules.rustdev }}
-.config/evcxr
-.cargo
-{{ end -}}
-{{ if not .modules.gitui }}
-.config/revdiff
-{{ end -}}
-{{ if not .modules.datascience }}
-.jupyter
-{{ end -}}
-{{ if not .modules.browsers }}
-.config/tridactyl
-{{ end -}}
+# OpenD (moomoo trading gateway) + nats-server (JetStream bus) only run on the
+# mbp; on a non-mbp host they'd loop on missing binaries. Skip them there.
+{{ if ne .role "mbp" -}}
+Library/LaunchAgents/com.moomoo.opend.plist
+Library/LaunchAgents/com.synadia.nats-server.plist
+{{- end }}

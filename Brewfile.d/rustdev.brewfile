@@ -1,9 +1,0 @@
-# module: rustdev — Rust toolchain + cargo subcommands (see also dot_cargo, evcxr)
-brew "rust-analyzer"        # Rust LSP for nvim
-brew "rustup"               # toolchain manager (rustc, cargo)
-brew "wasm-pack"            # Rust→WASM build/bundle tool
-# Brew (vs. `cargo install`) so they upgrade with `brew upgrade` and don't fight
-# over ~/.cargo/bin/. cargo-fuzz also needs nightly at runtime (`rustup install nightly`).
-brew "cargo-nextest"        # 2-3× faster test runner; aliased as `cargo test` via dot_cargo
-brew "cargo-llvm-cov"       # line coverage via LLVM
-brew "cargo-fuzz"           # libFuzzer driver

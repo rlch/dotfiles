@@ -12,13 +12,13 @@ directly — `chezmoi apply` will overwrite them. The flow is:
    `Brewfile.heavy`, `.chezmoiscripts/...`).
 2. **Always run `chezmoi apply`** after every edit — the source isn't
    live until it's deployed. Use `chezmoi diff` first if you want a preview.
-   For tmux/fish/etc. that have a running daemon, also reload (e.g.
-   `tmux source-file ~/.config/tmux/tmux.conf`, `exec fish`).
+   For fish/herdr/etc. that have a running daemon, also reload (e.g.
+   `exec fish`, `herdr server reload-config`).
 3. Commit + push when stable.
 
 **Don't end a task assuming the user will apply later.** If you've changed
 files under this repo, run `chezmoi apply` (or scope it: `chezmoi apply
-~/.config/tmux`) before reporting done — otherwise nothing you wrote is
+~/.config/fish`) before reporting done — otherwise nothing you wrote is
 actually in effect, and any "verification" you do is verifying the source
 copy, not the live one.
 
@@ -30,24 +30,17 @@ prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
 
 ```
 .chezmoi.toml.tmpl          → renders ~/.config/chezmoi/chezmoi.toml on init
-.chezmoidata.yaml           → module defaults (all on); forks override in their config
-.chezmoiignore.tmpl         → files NOT to deploy (templated by role + modules)
+.chezmoiignore.tmpl         → files NOT to deploy (templated by role)
 .chezmoiscripts/            → run-on-change install hooks
 .chezmoitemplates/          → shared partials referenced by `{{ template ... }}`
                               (e.g. obsidian-shared/ — see "Obsidian vaults" below)
-Brewfile                    → CORE packages, installed everywhere
-Brewfile.d/<module>         → opt-in module packages (bundled when that module is on)
-Brewfile.personal           → machine-local extras (gitignored; copy the .example)
+Brewfile                    → packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, hooks)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
-                              lazydocker, starship.toml, cmux, tmux, tridactyl)
+                              lazydocker, starship.toml, cmux, herdr, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
 dev/trading/                → ~/dev/trading/.obsidian/ (per-project vault — vault root is the repo root, all .md across the repo become wikilinkable)
-
-~/dev/dotfiles-private/     → PRIVATE overlay (separate repo, NOT here): owner
-                              secrets/host/personal config, applied on top. See
-                              "Module system & fork model" below.
 ```
 
 ## Multi-host
@@ -77,71 +70,6 @@ brew install chezmoi && chezmoi init --apply rlch/dotfiles
 # Answer "mini" at the role prompt
 ```
 
-## Module system & fork model (team-installable)
-
-This repo is **public** and meant to be **forked**: a teammate forks it,
-customises freely, and `git pull`s upstream updates *without conflicts*. Two
-mechanisms make that work — keep both intact when editing.
-
-### Core + private overlay
-
-- **This repo = public core.** De-identified, shareable. **Never add secrets,
-  host names, Tailscale IPs, or personal-project specifics here** — on a public
-  repo, gating hides from *deploy*, not from *git history*.
-- **`~/dev/dotfiles-private` = private overlay** (separate local repo, no public
-  remote). Owner-only: SSH/host config, self-hosted services, trading infra,
-  personal AI tooling, owner-only fish fns, the full owner `~/.claude/settings.json`,
-  and owner-only brew packages (its own `Brewfile`). Applied as a **second chezmoi
-  source on top** of the public apply (`chezmoi apply --source ~/dev/dotfiles-private`;
-  last-write-wins → overlay overrides core).
-- **Rule of thumb:** secret / host-specific / personal-only → overlay. Shareable
-  → here.
-
-### Modules (opt-in; conflict-free opt-out)
-
-Optional functionality is grouped into **modules**, each a boolean flag:
-
-- **Defaults** live in `.chezmoidata.yaml` (`modules:` map, all `true` = the full
-  upstream setup, so a fresh checkout / your own machine gets everything).
-- **A fork opts OUT** by setting a module `false` under `[data.modules]` in its
-  OWN `~/.config/chezmoi/chezmoi.toml` — **never by editing repo files**. Git only
-  conflicts on shared-file edits, so this keeps upstream pulls clean.
-- **Config dirs** are gated in `.chezmoiignore.tmpl`:
-  `{{ if not .modules.X }} .config/foo {{ end }}` → skipped when off.
-- **Packages** are gated by the installer: each module's brews live in
-  `Brewfile.d/<module>.brewfile`, bundled by
-  `run_onchange_install-packages.sh.tmpl` only when the flag is on.
-
-Modules today: `multiplexer windowmanager keybindings containers rustdev webdev
-gitui aistack cloud datascience diagrams browsers remote notes`. **Core** (always
-installed) is everything not in a module.
-
-### Fork-conflict discipline (the key invariant)
-
-Upstream pulls stay clean **only if personal changes never touch upstream-owned
-files.** So every customisation has a home that isn't a shared file — and when
-you add config to the base, prefer **drop-in dirs / include directives** over
-monolithic single files:
-
-| Customisation | Goes in (never edit the shared file) |
-| --- | --- |
-| identity (name/email) | chezmoi config `[data]` → templated into gitconfig |
-| turn a tool off | `[data.modules].X = false` in the fork's config |
-| add packages | `Brewfile.personal` (gitignored) |
-| add fish aliases/fns | `conf.d/*.fish`, `functions/*.fish` (drop-in) |
-| add nvim plugins | `lua/plugins/local-*.lua` (LazyVim drop-in spec) |
-| override git | `[include] ~/.gitconfig.local` |
-
-### Recipes
-
-- **Add a module `foo`:** add `foo: true` to `.chezmoidata.yaml`; gate its config
-  dirs in `.chezmoiignore.tmpl`; drop a `Brewfile.d/foo.brewfile`. The installer
-  picks it up automatically — nothing else to wire.
-- **Make something owner-only:** move the file(s) into `~/dev/dotfiles-private/`
-  (same `dot_`/`private_` layout); move owner-only brews to the overlay's `Brewfile`.
-- **Forker opts out of `foo`:** they add `[data.modules] foo = false` to their own
-  `~/.config/chezmoi/chezmoi.toml`. Zero repo edits.
-
 ## Stack
 
 Locked-in tool choices (don't re-litigate without checking with the user):
@@ -150,8 +78,8 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | -------------- | --------------------------------------------------- |
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
-| Terminal       | cmux (Ghostty-based; colors/font still from Ghostty config) |
-| Multiplexer    | cmux-native (workspaces/surfaces/splits) — tmux retired in-pane |
+| Terminal       | Ghostty (auto-launches herdr; theme/font from Ghostty config) |
+| Multiplexer    | herdr (daily driver; workspaces/tabs/panes); cmux retired as daily driver |
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
@@ -168,21 +96,48 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 ## Conventions / invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in
-  aerospace, cmux (vim/tmux-style, below), nvim, fish abbreviations, and
+  aerospace, cmux (vim-style modal, below), nvim, fish abbreviations, and
   tridactyl. Cosmetic refactors fine; keybind changes are not.
 - **k9s `config.yaml` is global prefs only**, not cluster state. k9s rewrites
   cluster-specific sections at runtime — keeping them in source pollutes the
   Mac mini and stale-clusters them.
-- **Fish does not auto-attach tmux.** This was deliberately dropped from the
-  zellij config and stays dropped; don't re-introduce it.
-- **cmux is the daily driver; tmux is retired in-pane.** The user went
-  cmux-native (2026-06-25) — cmux's own workspaces/surfaces/splits replace
-  what tmux used to do. The `tmux/` config still ships but isn't the daily
-  multiplexer; don't re-suggest tmux as the answer to multiplexing.
-- **cmux keymap is canonical** — config at `dot_config/cmux/cmux.json`
-  (`shortcuts.bindings`). vim/tmux modal-mirror, ported from the old zellij→tmux
-  muscle memory. Each ctrl-letter prefix steals that key globally (same as the
-  old modal tmux); don't "fix" that. Don't restructure without checking with
+- **tmux is fully removed (2026-07-01).** The user went cmux-native
+  (2026-06-25) and then deleted the tmux config, packages, TPM, and all fish
+  tmux helpers outright. Don't re-suggest tmux as the answer to multiplexing,
+  and don't re-introduce fish tmux auto-attach. herdr (daily driver, since
+  2026-07-01) owns multiplexing; cmux config is retained but is no longer the
+  daily driver. Ghostty auto-launches herdr via `command = fish -l -C herdr`
+  (detach with ⌃s q to fall back to a plain fish in the same window).
+- **herdr keymap is canonical** — config at `dot_config/herdr/config.toml`,
+  a matched pair with the ghostty ⌘-forwarding block (`dot_config/ghostty/config`);
+  edit the two together. It mirrors the old cmux vim-modal keymap.
+- **herdr worktrees — one workspace per branch.** Idiom: instead of running
+  several agents in one shared `~`/`~/dev`-rooted workspace (which isn't a git
+  work tree, so worktree actions warn), give each branch/task/agent its own
+  isolated worktree-workspace. Two tiers, kept distinct by the push-guard:
+  - `~/.herdr/worktrees/<repo>/<slug>` — **your** branches (interactive or
+    supervised-agent). Pushable with the normal per-instance approval.
+  - `<repo>/.claude/worktrees/*` — CC autonomous `isolation:"worktree"` dispatch;
+    land via parent, push hard-denied by `git-push-guard.sh`.
+  Drivers: the g-cluster keybinds (`⌃s ⇧g` new · `⌃s g` open/switch · `⌃s ⌃g`
+  remove) for ad-hoc interactive worktrees, and — for the main use case,
+  **implementing an OpenSpec change on its own branch** — the `rjm:opsx-worktree`
+  skill (`~/dev/skills/plugins/rjm/skills/opsx-worktree/`), which creates the
+  worktree off `main`, runs the standard `/opsx:apply` loop inside it, commits
+  per task-group, and hands back a ready-to-PR branch. (The old `wt` fish helper
+  was removed 2026-07-01 — the skill supersedes it for the agent flow; the raw
+  `herdr worktree {create,remove}` CLI covers scripting.) Freeform slug = branch
+  name (change name); add the conventional-commit prefix at squash-PR time. Base
+  is local `main` (mind the origin/main-drift caveat). Note that herdr's remove
+  leaves the branch dangling — delete it with `git -C <repo> branch -d <slug>`.
+  Path-leak note: a Claude agent in a linked worktree can have Edit/Read/Write
+  rerouted to the parent checkout for **relative/project-rooted** paths — the
+  tools require absolute paths anyway, which are honored, so supervised agents
+  are fine; reserve `.claude/worktrees` isolation for fully-autonomous fan-out.
+- **cmux keymap** (retained, non-daily-driver) — config at `dot_config/cmux/cmux.json`
+  (`shortcuts.bindings`). vim-style modal-mirror, carried over from the old
+  zellij→tmux muscle memory. Each ctrl-letter prefix steals that key globally;
+  don't "fix" that. Don't restructure without checking with
   the user. **cmux chords are exactly 2 keys, one-shot — no sticky modes.**
   - `⌃ hjkl` — focus panes (no prefix, repeatable). Deliberately **shadows
     LazyVim's `⌃hjkl` window-nav** while in an nvim pane (cmux has no
@@ -210,15 +165,20 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 - **`⌃-e`** is herdr's prefix — left unbound in cmux so it passes through to
   whatever's in the focused pane (herdr in herdr panes; fish's end-of-line
   elsewhere).
-- **Window names auto-slugify to ≤10 chars** via `~/.config/tmux/slugify-title.py`
-  on the `window-renamed` hook. Claude Code's OSC titles get NLP-picked salient
-  tokens (proper nouns / ALLCAPS preferred); paths get basenamed; long words
-  get vowel-dropped. Idempotent.
 - **No floating/dropdown Ghostty.** Tried, rejected. Don't propose it.
-- **All `Brewfile*` (core, `Brewfile.d/`, `.heavy`, `.personal`) are ignored via
-  the `Brewfile*` entry in `.chezmoiignore`** so they aren't deployed to `~`.
-  They're consumed only by `brew bundle install` from the install script, which
-  bundles core + each enabled module fragment + `Brewfile.personal`.
+- **Ghostty config has NO inline/trailing comments.** A `#` on the same line as
+  a directive is parsed as part of the *value*, not stripped. This is silent and
+  nasty for keybinds: `keybind = cmd+j=csi:106;9u   # ...` makes Ghostty send the
+  CSI-u sequence **plus** the comment text as literal keystrokes — herdr eats the
+  `ESC[…u` and the rest (`# herdr next_workspace …`) prints into the shell on every
+  press (bit us 2026-07-01, the whole ⌘-forward block). Put every comment on its
+  **own line above** the directive. Same rule for `text:`/`csi:` action payloads
+  generally — whitespace and `#` after the value are not trimmed. After editing
+  `dot_config/ghostty/config`, `chezmoi apply` then reload Ghostty (**⌘⇧,**) —
+  keybind changes don't take effect until the config is reloaded.
+- **`Brewfile` and `Brewfile.heavy` are listed in `.chezmoiignore`** so they
+  aren't deployed to `~`. They're consumed only by `brew bundle install` from
+  the install script (which hashes the Brewfile so external edits retrigger it).
 
 ## Obsidian vaults
 

@@ -1,4 +1,3 @@
-function cc --wraps z --description 'zoxide jump + rename current tab (no new tab created)'
+function cc --wraps z --description 'zoxide jump (kept as muscle-memory alias for z)'
     z $argv
-    _rename_tab_if_allowed
 end

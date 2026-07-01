@@ -50,10 +50,7 @@ prepend_keymap = [
   { on = "q", run = "quit", desc = "Quit (write cwd)" },
   { on = "Q", run = "close", desc = "Close without writing cwd" },
 
-  # <C-y> as a yazi-side close fallback for contexts where the tmux
-  # binding doesn't fire first (e.g., yazi launched directly via the `y`
-  # fish wrapper outside the tmux popup). The popup-toggle path is
-  # actually handled by yazi-popup.sh killing the named inner session.
+  # <C-y> — close yazi (kept as a convenience alias alongside q/Q).
   { on = "<C-y>", run = "close", desc = "Close yazi" },
 
   # Pinned jumps — `g` is the "go" prefix. For ad-hoc favourites use the
@@ -71,18 +68,4 @@ prepend_keymap = [
   { on = ["b", "j"], run = "plugin yamb -- jump_by_key",   desc = "Bookmark: jump by key" },
   { on = ["b", "d"], run = "plugin yamb -- delete_by_fzf", desc = "Bookmark: delete (fzf)" },
   { on = ["b", "r"], run = "plugin yamb -- rename_by_fzf", desc = "Bookmark: rename (fzf)" },
-
-  # tmux integration — `<C-w>` prefix mirrors vim's window-management chord.
-  # The wrapper script retargets actions at the *outer* session/pane when
-  # YAZI_OUTER_SESSION / YAZI_OUTER_PANE are set (Ctrl+Y popup path), else
-  # falls back to the current session/pane (regular yazi launch). Logged
-  # to /tmp/yazi-tmux.log. yazi-side `quit` is issued by the script via
-  # `ya emit-to "$YAZI_ID"` once the tmux action lands — keeping it OUT
-  # of the keymap because yazi (≥26.x) silently drops chord-on + array-run
-  # bindings, so the only safe shape here is single-string `run`.
-  { on = ["<C-w>", "n"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$PWD"', desc = "tmux: new window at cwd" },
-  { on = ["<C-w>", "o"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh window "$0"',   desc = "tmux: new window at hovered dir" },
-  { on = ["<C-w>", "v"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh vsplit "$PWD"', desc = "tmux: vsplit at cwd" },
-  { on = ["<C-w>", "s"], run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh hsplit "$PWD"', desc = "tmux: hsplit at cwd" },
-  { on = "<C-o>",        run = 'shell --orphan -- ~/.config/yazi/yazi-tmux.sh edit "$@"',     desc = "tmux: edit selection in new window" },
 ]

@@ -1,3 +1,0 @@
-# module: webdev — Flutter version manager (per-project .fvmrc; mise doesn't manage Flutter)
-tap "leoafarias/fvm"
-brew "leoafarias/fvm/fvm"
