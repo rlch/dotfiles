@@ -229,10 +229,11 @@ mouse_capture = true
 # solid line rather than empty space.
 pane_gaps = false
 
-# Show the per-pane agent label (claude/codex/hermes) in the pane border.
-# Cheap visual cue to know which agent owns the focused split without
-# checking the sidebar.
-show_agent_labels_on_pane_borders = true
+# Keep the per-pane agent label (claude/codex/hermes) OUT of the pane
+# border — the border stays a clean divider with no title text. The
+# sidebar/agent panel already shows which agent owns each split, so the
+# in-border label was redundant chrome.
+show_agent_labels_on_pane_borders = false
 
 [ui.toast]
 # In-app toasts only. Routing to the OS would be a no-op anyway —
