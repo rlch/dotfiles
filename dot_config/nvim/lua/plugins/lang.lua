@@ -565,6 +565,16 @@ return {
     init = function()
       vim.g.rustaceanvim = {
         tools = {},
+        server = {
+          default_settings = {
+            ["rust-analyzer"] = {
+              -- RA gets its own <target>/rust-analyzer subdir so its cargo check
+              -- doesn't share/thrash the CLI's target-dir (e.g. modality's
+              -- .shared-target) and lock Cargo.lock against a terminal build.
+              cargo = { targetDir = true },
+            },
+          },
+        },
       }
     end,
   },

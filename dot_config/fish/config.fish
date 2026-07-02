@@ -32,7 +32,12 @@ set -x GOPRIVATE go.buf.build,github.com
 
 # Rust
 set -x CARGO_HOME $HOME/.cargo
-set -x RUSTFLAGS  "-L /opt/homebrew/opt/libpq/lib"
+# No global RUSTFLAGS: it's a cargo fingerprint input, so a value here that
+# differs from what rust-analyzer/GUI/CI see forces each to rebuild the whole
+# dep graph into its own variant. Nothing on this machine links the C libpq
+# (every Postgres user is pure-Rust sqlx+rustls), so the old
+# `-L .../libpq/lib` linked nothing and only polluted the fingerprint. Any
+# project that genuinely needs a link path puts it in its own .cargo/config.toml.
 
 # gh enhance — bubbletint theme id (https://lrstanley.github.io/bubbletint/).
 set -x ENHANCE_THEME catppuccin_mocha
