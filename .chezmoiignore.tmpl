@@ -24,4 +24,8 @@ LICENSE
 {{ if ne .role "mbp" -}}
 Library/LaunchAgents/com.moomoo.opend.plist
 Library/LaunchAgents/com.synadia.nats-server.plist
+Library/LaunchAgents/com.rjm.wireproxy-nl.plist
 {{- end }}
+
+# wireproxy's WG config carries a ProtonVPN private key — never manage/commit it.
+.config/wireproxy
