@@ -196,7 +196,7 @@
     "refreshInterval": 10,
     "type": "command"
   },
-  "teammateMode": "tmux",
+  "teammateMode": "in-process",
   "worktree": {
     "baseRef": "head"
   }

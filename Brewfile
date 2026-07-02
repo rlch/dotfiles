@@ -15,8 +15,6 @@ cask "jurplel/tap/instant-space-switcher"
 
 # === Terminal + multiplexer ===
 cask "ghostty"
-brew "tmux"
-brew "tmuxinator"  # YAML-defined tmux session layouts; configs in ~/.config/tmuxinator/
 # GUI SSH client. Hosts are still sourced from ~/.ssh/config so terminal SSH
 # and Termius stay in sync.
 cask "termius"
