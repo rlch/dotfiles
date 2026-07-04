@@ -117,15 +117,6 @@
       {
         "hooks": [
           {
-            "command": "~/.claude/agent-done-hook.sh",
-            "type": "command"
-          }
-        ],
-        "matcher": ".*"
-      },
-      {
-        "hooks": [
-          {
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
             "timeout": 10,
             "type": "command"
