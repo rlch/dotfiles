@@ -4,6 +4,15 @@
 
 When editing anything under `~/.config/`, `~/.claude/`, `~/.local/`, or `~/dev/dotfiles/` — read `~/dev/dotfiles/CLAUDE.md` before making changes. It's the source-of-truth guide for the chezmoi flow (edit source in `~/dev/dotfiles/`, never the deployed files; `chezmoi apply` after every edit).
 
+# Skills — keep them correct (self-repair)
+
+When one of my own skills (`rjm:*`, under `~/dev/skills/plugins/rjm/skills/<name>/SKILL.md`) is wrong, stale, incomplete, or makes you dig / guess / work around it mid-task, **fix the skill at its source before you finish the task** — don't just route around it and move on. Rule of thumb: anything you had to discover that the skill *should* have told you (a flag, a path, a command, a gotcha, a changed name) belongs back in that SKILL.md so the next run doesn't hit the same wall. This is autonomous — you don't need to ask first to make a skill correct.
+
+- **Edit the source, respect the deploy chain.** `~/.claude*/skills/` are symlinks — `realpath` the SKILL.md, then `chezmoi source-path <realpath>`: if it's managed, edit the dotfiles source and `chezmoi apply`; otherwise edit the real file directly (the `rjm:*` skills live in the un-managed `~/dev/skills` repo). Never edit a deployed copy that gets overwritten.
+- **Minimal + in-voice.** Fix the specific gap, match the skill's existing style, don't rewrite wholesale. Commit only when I ask (normal per-instance push rules still apply).
+- **Read-only skills can't be fixed** (anything under a `bundled-skills/` path — e.g. `claude-api`, the cloudflare/fiftyone skills): don't try to edit those. Surface the gap to me instead, and if the correction is durable, capture it as a note in the relevant project or global CLAUDE.md.
+- **Report it** — one line per skill touched, so the repair is visible.
+
 # Git workflow (global)
 
 - **Commit messages**: conventional commits with scope — `type(scope): subject`.
@@ -43,6 +52,12 @@ When editing anything under `~/.config/`, `~/.claude/`, `~/.local/`, or `~/dev/d
 - **Two-workspace model — main = think, worktree = implement.** A repo's **main workspace** (the root checkout, on `main`) is for chatting, speccing, brainstorming, proposing changes, and non-spec impl. Implementing an OpenSpec change happens in a **dedicated worktree workspace** driven by its *own* Claude session that lives in that checkout — never by the main session reaching into the worktree via absolute paths. One worktree workspace = one change's implementation.
 - **Applying an OpenSpec change → default to a worktree, and spawn a session in it.** When you're about to implement/apply an OpenSpec change (a natural-language "implement/apply the `<change>` change", or the intent behind `/opsx:apply`), default to the **`rjm:opsx-worktree`** skill: it creates a herdr worktree off `main` **and launches a fresh Claude session inside that new workspace, seeded to run the apply loop there** — so the main session hands off and stays free for concurrent speccing/chat while the implementer session grinds the tasks on its own branch and lands a clean squash-PR. Do this by default, without asking. Because the implementer is native to the worktree, it also sidesteps the linked-worktree path-resolution leak.
 - **Escape hatches (the "unless otherwise stated"):** skip the worktree and apply in-place only when one of these holds — the user says so (`in-place`, `on this branch`, `no worktree`); the user typed the raw `/opsx:apply` slash command (that literal invocation *is* the in-place request); herdr isn't running (`herdr workspace list` errors); or the repo isn't a git work tree. In those cases fall back to the plain in-place `/opsx:apply` flow.
+
+# herdr — tabs, panes & background work
+
+- **Create tabs/panes in YOUR OWN workspace, not the focused one.** `herdr tab create` / `herdr pane split` default to the *focused* workspace (whatever I'm looking at) — which is usually **not** the one your session lives in, so you'll dump a pane into my active space. Always target your own: `herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <path> --no-focus`. Your identity is in the shell env — `$HERDR_WORKSPACE_ID`, `$HERDR_PANE_ID`, `$HERDR_TAB_ID` — or `herdr pane current`. (Bit me 2026-07-03: a `dev` tab landed in the workspace I was actively working in.) Already in the wrong space? `herdr pane move <pane_id> --new-tab --workspace "$HERDR_WORKSPACE_ID" --no-focus` relocates it *without* restarting the process.
+- **Never steal focus.** Always pass `--no-focus`; never `herdr tab focus` / `herdr pane focus` or otherwise switch my view unless I explicitly ask — this is background work. Read pane output non-interactively with `herdr pane read <pane_id> --source visible`, don't yank me to the tab.
+- **Long-running processes (dev servers, watchers, builds) → a herdr tab/pane in your workspace, not the agent's managed background shell** — so I can see and control them. `herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label dev --no-focus`, grab the returned `pane_id`, then `herdr pane run <pane_id> "<cmd>"`. Reserve the Bash tool's background shell for short-lived commands.
 
 - The `chrome-devtools-mcp` server (and any tool that talks to `127.0.0.1:9222`) attaches to **ungoogled-Chromium** — generic Chromium icon, app name "Chromium" — launched by the `chrome-debug` fish function. Same Blink/V8/CDP as Google Chrome, but with Google sign-in/sync/telemetry stripped out. The visual + process-tree separation from stable Google Chrome is deliberate: the agent-controlled browser is never confused with manually-opened stable-Chrome windows in the Dock or ⌘-Tab.
 - Stable Google Chrome (blue icon) is for manual web/Flutter dev. **Never** the MCP target.

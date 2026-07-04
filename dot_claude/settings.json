@@ -150,8 +150,7 @@
   "model": "claude-opus-4-8[1m]",
   "permissions": {
     "additionalDirectories": [
-      "/Users/rjm/.config/nvim",
-      "/Users/rjm/.config/tmux"
+      "/Users/rjm"
     ],
     "ask": [
       "Bash(git push:*)"

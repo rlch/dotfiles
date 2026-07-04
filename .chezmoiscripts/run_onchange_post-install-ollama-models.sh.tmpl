@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Pull the pinned Ollama models on heavy-hardware hosts so the local-LLM
+# stack is reproducible from a clean checkout — no manual `ollama pull`.
+#
+# Sorted to run AFTER `run_onchange_install-packages.sh.tmpl` (brew bundle)
+# so the `ollama-app` cask is present. The Ollama.app menu-bar daemon must
+# have been launched once (grants perms + starts :11434); if it hasn't, we
+# skip gracefully rather than fail the whole apply — see ~/.config/ollama/notes.md.
+#
+# Idempotent: skips any model already on disk. Add a model to MODELS below
+# (and to notes.md) to have it auto-pulled here.
+#
+# Re-runs whenever this script's logic (incl. the MODELS list) changes.
+
+set -euo pipefail
+
+{{ if and (eq .chezmoi.os "darwin") .heavyHardware -}}
+# Models to guarantee present. Keep in sync with ~/.config/ollama/notes.md.
+MODELS=(
+  # persona-factory: on-device VLM for NSFW anatomy classification (innie/outie
+  # vulva gate). Local-only by policy — NSFW frames never leave the machine.
+  "qwen2.5vl:7b"
+)
+
+if ! command -v ollama >/dev/null 2>&1; then
+  echo "ollama-models: ollama CLI not on PATH — launch Ollama.app once (see ~/.config/ollama/notes.md); skipping"
+  exit 0
+fi
+
+# Pulling needs the daemon on :11434. If the app hasn't been opened yet, skip.
+if ! ollama list >/dev/null 2>&1; then
+  echo "ollama-models: daemon not reachable on :11434 — launch Ollama.app once; skipping"
+  exit 0
+fi
+
+installed=$(ollama list)
+for model in "${MODELS[@]}"; do
+  if printf '%s\n' "$installed" | grep -Fq "$model"; then
+    echo "ollama-models: $model already present — skipping"
+  else
+    echo "ollama-models: pulling $model"
+    ollama pull "$model"
+  fi
+done
+{{- end }}
