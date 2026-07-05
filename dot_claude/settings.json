@@ -41,83 +41,104 @@
   "hooks": {
     "PermissionRequest": [
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "*"
+        ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "Bash",
         "hooks": [
           {
-            "command": "rtk hook claude",
-            "type": "command"
+            "type": "command",
+            "command": "rtk hook claude"
           }
-        ],
-        "matcher": "Bash"
+        ]
       },
       {
+        "matcher": "Bash",
         "hooks": [
           {
+            "type": "command",
             "command": "~/.claude/git-push-guard.sh",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "Bash"
+        ]
       },
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "*"
+        ]
       }
     ],
     "SessionEnd": [
       {
+        "matcher": ".*",
         "hooks": [
           {
+            "type": "command",
             "command": "~/.claude/improvement-capture.py",
-            "timeout": 15,
-            "type": "command"
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
           }
-        ],
-        "matcher": ".*"
+        ]
       },
       {
+        "matcher": ".*",
         "hooks": [
           {
-            "command": "~/.claude/lsp-cleanup-hook.sh",
-            "type": "command"
+            "type": "command",
+            "command": "~/.claude/lsp-cleanup-hook.sh"
           }
-        ],
-        "matcher": ".*"
+        ]
       },
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "*"
+        ]
       }
     ],
     "Stop": [
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "command": "~/.claude/herdr-title.sh",
             "timeout": 10,
             "type": "command"
           }
@@ -127,18 +148,100 @@
     ],
     "UserPromptSubmit": [
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "*"
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
       }
     ]
   },
-  "model": "claude-opus-4-8[1m]",
+  "model": "opus[1m]",
   "permissions": {
     "additionalDirectories": [
       "/Users/rjm"
