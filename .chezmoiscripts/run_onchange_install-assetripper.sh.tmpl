@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Install AssetRipper (AssetRipper/AssetRipper) — Unity asset export/decompile
+# tool. Used as the INDEPENDENT cross-parser oracle for persona-factory's
+# `services/native-clip-decode` (diff its generic-clip curve parse against
+# AssetRipper's decoding of the same KKS AnimationClip bytes — the
+# `add-native-clip-decode` acceptance gate 2.5).
+#
+# Distributed as a self-contained Mach-O executable + libcapstone.dylib in a
+# per-arch zip from GitHub releases; no brew formula. NB: 1.3.14 has NO batch
+# CLI — it is a headless web-server GUI (only `--headless`/`--port`), so the
+# cross-parser drives its local HTTP API. We install the binary + a wrapper.
+#
+# mbp-only (heavyHardware): the KK asset work lives on the M5 Max; the mini has
+# no use for a 147MB Unity ripper.
+#
+# Idempotent: skips if the pinned version marker matches. To force a reinstall:
+#   rm -rf ~/.local/opt/assetripper && chezmoi apply
+#
+# Version pin — bump to refresh. Latest at
+# https://github.com/AssetRipper/AssetRipper/releases
+
+set -euo pipefail
+
+{{ if and (eq .chezmoi.os "darwin") .heavyHardware -}}
+AR_VERSION="1.3.14"
+AR_DIR="$HOME/.local/opt/assetripper"
+AR_BIN="$HOME/.local/bin/assetripper"
+AR_MARKER="$AR_DIR/.installed-version"
+
+if [ -f "$AR_MARKER" ] && [ "$(cat "$AR_MARKER" 2>/dev/null)" = "$AR_VERSION" ] && [ -x "$AR_BIN" ]; then
+  echo "assetripper: already installed v$AR_VERSION — skipping"
+  exit 0
+fi
+
+# Apple Silicon vs Intel asset.
+case "$(uname -m)" in
+  arm64) asset="AssetRipper_mac_arm64.zip" ;;
+  x86_64) asset="AssetRipper_mac_x64.zip" ;;
+  *) echo "assetripper: unsupported arch $(uname -m)" >&2; exit 1 ;;
+esac
+
+echo "assetripper: downloading v$AR_VERSION ($asset) from GitHub releases"
+TMPDIR="$(mktemp -d)"
+cleanup() { rm -rf "$TMPDIR"; }
+trap cleanup EXIT
+
+curl -fsSL -o "$TMPDIR/ar.zip" \
+  "https://github.com/AssetRipper/AssetRipper/releases/download/$AR_VERSION/$asset"
+
+echo "assetripper: extracting"
+unzip -q "$TMPDIR/ar.zip" -d "$TMPDIR/extracted"
+
+# The zip holds the executable + libcapstone.dylib (+ compile_time.txt) at the
+# root. The executable needs the dylib alongside it (@executable_path), so we
+# install the whole payload into a managed opt dir, not a bare bin drop.
+src="$(find "$TMPDIR/extracted" -maxdepth 2 -name "AssetRipper.GUI.Free" -type f | head -1)"
+if [ -z "$src" ]; then
+  echo "assetripper: AssetRipper.GUI.Free not found in release zip — layout may have changed" >&2
+  find "$TMPDIR/extracted" -maxdepth 3 >&2
+  exit 1
+fi
+payload="$(dirname "$src")"
+
+rm -rf "$AR_DIR"
+mkdir -p "$AR_DIR" "$HOME/.local/bin"
+cp -R "$payload"/. "$AR_DIR/"
+chmod +x "$AR_DIR/AssetRipper.GUI.Free"
+
+# Strip quarantine — curl bypasses Gatekeeper's user attestation.
+xattr -dr com.apple.quarantine "$AR_DIR" 2>/dev/null || true
+
+# Wrapper so the executable runs from its own dir (dylib resolves) and is on PATH.
+cat > "$AR_BIN" <<'EOF'
+#!/usr/bin/env bash
+# AssetRipper wrapper — runs the self-contained binary from its install dir so
+# libcapstone.dylib resolves via @executable_path. Installed by chezmoi
+# (.chezmoiscripts/run_onchange_install-assetripper.sh.tmpl).
+exec "$HOME/.local/opt/assetripper/AssetRipper.GUI.Free" "$@"
+EOF
+chmod +x "$AR_BIN"
+
+echo "$AR_VERSION" > "$AR_MARKER"
+echo "assetripper: installed → $AR_DIR (v$AR_VERSION), wrapper → $AR_BIN"
+{{- end }}
