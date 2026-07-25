@@ -7,7 +7,7 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     for a in $argv
         switch $a
             case --opus
-                set -a args --model 'claude-opus-4-8[1m]'
+                set -a args --model 'claude-opus-5[1m]'
             case --fable
                 set -a args --model 'claude-fable-5[1m]'
             case --sonnet
