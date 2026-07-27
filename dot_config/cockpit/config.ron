@@ -1,0 +1,16 @@
+// cockpit — terminal HUD for a coding-agent session (https://github.com/rlch/cockpit)
+//
+// cockpit's default theme names terminal palette slots rather than carrying
+// colours, which follows a terminal theme switch for free — but a palette slot
+// cannot say "a step off the background", so the default leaves the status row,
+// the keybinding row and the history strip unshaded. Ghostty here is already
+// wearing Catppuccin Mocha, so name the matching built-in and get real values:
+// Mantle behind the frame, Crust behind the strip, Surface0 for the selection.
+// That is the same Mocha herdr's own chrome is themed with.
+//
+// Styling lives next to this in theme.ron, which is not written — it resolves
+// *over* the theme named here, so a few lines there would be "Mocha, but with my
+// accent". Everything in this file is optional; see `cockpit --help`.
+(
+    theme: "catppuccin-mocha",
+)
