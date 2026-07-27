@@ -2,6 +2,8 @@
 theme         = "Catppuccin Mocha"
 font-family   = "JetBrainsMono Nerd Font"
 font-size     = 15
+# Line spacing: +10% vertical padding around each glyph (~1.1 line-height).
+adjust-cell-height = 10%
 cursor-style       = bar
 cursor-style-blink = false
 
@@ -47,7 +49,10 @@ shell-integration-features = ssh-env,ssh-terminfo
 # "I just need a plain terminal" escape hatch. herdr autostart lives HERE, not
 # in config.fish: fish auto-attaching a multiplexer on startup is a rejected
 # pattern, and this keeps a manually-spawned `fish` a plain shell.
-command = fish -l -C herdr
+#
+# Autostart currently DISABLED — new Ghostty windows drop into a plain login
+# fish; attach herdr by hand when wanted. Re-enable by uncommenting the line.
+# command = fish -l -C herdr
 
 # === Keybinds ===
 # alt+backspace → delete word backwards. Without this, Option+Backspace sends
@@ -124,8 +129,9 @@ keybind = cmd+w=csi:119;9u
 keybind = cmd+b=csi:98;9u
 keybind = cmd+p=csi:112;9u
 keybind = cmd+e=csi:101;9u
-keybind = cmd+left_bracket=csi:91;9u
-keybind = cmd+right_bracket=csi:93;9u
+# Use character names to shadow Ghostty's built-in cmd+[/] split navigation.
+keybind = cmd+[=csi:91;9u
+keybind = cmd+]=csi:93;9u
 
 # === herdr ⌃⌥-forwarding (pane MOVE) ====================================
 # ⌃⌥hjkl move (swap) the focused pane in a direction — herdr binds them to
