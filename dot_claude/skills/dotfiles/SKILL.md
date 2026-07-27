@@ -1,6 +1,13 @@
 ---
 name: dotfiles
-description: Edit the user's personal macOS dotfiles repo at `~/dev/dotfiles` (managed by chezmoi). Use this skill ANY time the user wants to change a config — fish, herdr, ghostty, aerospace, neovim/LazyVim, starship, lazygit, k9s, claude (`~/.claude/*`), karabiner, brew, etc. — even when the user phrases it as "edit my fish config", "add a herdr binding", "tweak my prompt", "install X", "change my Claude settings", "update CLAUDE.md", or just gestures at a deployed file under `~/.config/*` or `~/.claude/*`. Triggers regardless of current working directory: the chezmoi-managed source lives in this one repo, so any edit to a file under `~/.config/`, `~/.claude/`, `~/.hermes/`, or other home-rooted config the user owns must go through `~/dev/dotfiles` and `chezmoi apply` — editing the deployed copy directly will be silently overwritten on next apply. Also use when the user wants to add a new tool (Brewfile + config dir), bootstrap a new machine, or asks "how do I make X persist". Encodes the chezmoi workflow, prefix conventions (dot_/executable_/.tmpl), multi-host role split (mbp vs mini), and the locked-in stack choices the user has already made — so don't re-litigate "should we use yabai instead of aerospace" / "should we add an AI nvim plugin" / etc. Always read the existing similar config in the repo first to match the user's patterns before writing new code.
+description: >-
+  Edit the user's chezmoi-managed macOS dotfiles in ~/dev/dotfiles. Use whenever
+  changing fish, herdr, Ghostty, aerospace, Neovim, Starship, lazygit, k9s,
+  Claude, OpenCode, Karabiner, Homebrew, ~/.config, ~/.claude, or another
+  home-rooted configuration; also use when installing a tool, bootstrapping a
+  machine, or making a setting persist. Always edit the source repository, run
+  chezmoi apply, preserve the established stack and keymaps, and inspect similar
+  existing config before writing.
 ---
 
 # Dotfiles
@@ -29,9 +36,11 @@ them on the next `apply`. The flow is:
    - fish: `exec fish` in the relevant shell (or just open a new pane).
    - herdr: `herdr server reload-config` (config.toml changes).
    - aerospace: `aerospace reload-config`.
-   - karabiner / ghostty: pick up changes automatically.
+   - karabiner: picks up changes automatically.
+   - ghostty: reload with `cmd+shift+,`; keybind changes are not live until then.
    - claude code / `~/.claude/settings.json`: takes effect on next prompt
      turn or restart depending on the setting.
+   - opencode config, commands, and skills: restart OpenCode.
 5. Commit + push when stable. Conventional commits with scope
    (`fix(fish): …`, `feat(claude): …`); see the user's git workflow rules.
 
@@ -48,7 +57,9 @@ generated artifact like a `.pyc` or a tool's runtime-rewritten config like
 `k9s/config.yaml`) has drifted from source. Two clean fixes:
 
 - **Apply just the path you changed**: `chezmoi apply ~/.config/fish/config.fish`
-  — bypasses the prompt by not visiting the drifted file.
+  — bypasses prompts from unrelated drift. If that target itself drifted, inspect
+  `chezmoi diff`; use `chezmoi re-add` for intentional deployed-side changes, or
+  `chezmoi apply --force <target>` only when source already preserves them.
 - **Re-add the drift back to source** if it's user-authored: `chezmoi
   re-add ~/.config/foo/bar`.
 
@@ -73,22 +84,22 @@ So if the user says "edit my fish config", that's
 `~/dev/dotfiles/dot_config/fish/config.fish` (not `~/.config/fish/config.fish`).
 "Edit my Claude settings" is `~/dev/dotfiles/dot_claude/settings.json`.
 
-### "Edit my CLAUDE.md" — default to the user-global one
+### Agent instructions - shared core plus client wrappers
 
-There are several CLAUDE.md / instruction files in this repo. Unless the
-user explicitly says "the project CLAUDE.md" or "the dotfiles CLAUDE.md",
-**default to the user-global one** — that's the one that affects every
-project the user works in, which is overwhelmingly what they mean:
+Global agent policy is rendered from one shared template plus client-specific
+wrappers. Put a rule in the shared core unless it truly depends on one client.
 
 | User says                                           | File to edit |
 | :-------------------------------------------------- | :----------- |
-| "edit my CLAUDE.md", "my user CLAUDE.md", "my global CLAUDE.md", "add to CLAUDE.md" (no scope) | `~/dev/dotfiles/dot_claude/CLAUDE.md` → deploys to `~/.claude/CLAUDE.md` |
+| "edit my agent instructions", cross-client rule | `~/dev/dotfiles/.chezmoitemplates/agent-instructions/common.md` |
+| "edit my CLAUDE.md", Claude-specific rule | `~/dev/dotfiles/dot_claude/CLAUDE.md.tmpl` → `~/.claude/CLAUDE.md` |
+| "edit my OpenCode AGENTS.md", OpenCode-specific rule | `~/dev/dotfiles/dot_config/opencode/AGENTS.md.tmpl` → `~/.config/opencode/AGENTS.md` |
 | "edit RTK.md" / "the RTK reference"                 | `~/dev/dotfiles/dot_claude/RTK.md` → deploys to `~/.claude/RTK.md` (loaded via `@RTK.md` from the user-global CLAUDE.md) |
 | "the project CLAUDE.md", "the dotfiles CLAUDE.md", "this repo's CLAUDE.md" | `~/dev/dotfiles/CLAUDE.md` (in-tree, not deployed) |
 | "the CLAUDE.md for project X"                       | `<project-X>/CLAUDE.md` — *not* a dotfiles edit, this skill doesn't apply |
 
-When in doubt: the user-global one is the right default. It's short
-(~2KB), so reading it first to confirm scope before editing is cheap.
+When scope is unclear, prefer the shared template so Claude and OpenCode retain
+the same user policy.
 
 ## Multi-host: mbp vs mini
 
@@ -128,7 +139,7 @@ in first.**
 | Editor         | Neovim + LazyVim base — **no AI plugins**, pure editor |
 | Prompt         | starship                                            |
 | Git TUI        | lazygit                                             |
-| AI CLIs        | Claude Code (primary) + Codex CLI + Hermes Agent    |
+| AI CLIs        | Claude Code + OpenCode + Codex CLI + Hermes Agent   |
 | Local LLM      | Ollama (heavyHardware only)                         |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |

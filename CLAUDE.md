@@ -85,7 +85,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
 | Prompt         | starship                                            |
 | Git TUI        | lazygit                                             |
-| AI CLIs        | Claude Code (primary) + Codex CLI + Hermes Agent    |
+| AI CLIs        | Claude Code + OpenCode + Codex CLI + Hermes Agent   |
 | Local LLM      | Ollama (heavy hardware only)                        |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
@@ -175,6 +175,15 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   bg, mauve accent, Surface0/2 for selection + dividers. Terminal *content*
   colors/font remain Ghostty's job (`theme = "Catppuccin Mocha"`).
 - **No floating/dropdown Ghostty.** Tried, rejected. Don't propose it.
+- **Agent instructions and skills have shared cores plus native client adapters.**
+  Global policy lives in `.chezmoitemplates/agent-instructions/common.md`, then
+  `dot_claude/CLAUDE.md.tmpl` and `dot_config/opencode/AGENTS.md.tmpl` add only
+  client-specific rules. OpenCode consumes only `~/.config/opencode/skills`;
+  fish disables its `.claude` and `.agents` compatibility scans to prevent
+  duplicate skill names selecting the wrong implementation. Shared skills point
+  at one source under `~/dev/skills/plugins/rjm/skills`; non-shareable workflows
+  such as handoff/spinoff have client-specific sources. `opencode.json` remains
+  installer-owned and is not managed by chezmoi.
 - **Ghostty config has NO inline/trailing comments.** A `#` on the same line as
   a directive is parsed as part of the *value*, not stripped. This is silent and
   nasty for keybinds: `keybind = cmd+j=csi:106;9u   # ...` makes Ghostty send the
@@ -250,4 +259,3 @@ brew bundle check --file=Brewfile.heavy  # verify heavy bundle satisfied
 When adding a new tool: install via Brewfile (or Brewfile.heavy), add config
 under `dot_config/<tool>/`, run `chezmoi apply`. The install script auto-runs
 when the Brewfile hash changes.
-

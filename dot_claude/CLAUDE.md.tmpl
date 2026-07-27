@@ -1,0 +1,54 @@
+@RTK.md
+
+{{ template "agent-instructions/common.md" . }}
+
+# Claude Code
+
+- The push approval rule is enforced by `~/.claude/git-push-guard.sh`.
+- Never push from a Claude worktree under `.claude/worktrees/`; land its work
+  through the parent checkout.
+
+## Worktrees
+
+- Claude Code worktree isolation (`EnterWorktree`, `--worktree`, and Agent
+  `isolation: "worktree"`) must branch from the parent session's `HEAD`.
+  `worktree.baseRef: "head"` is configured globally, but verify the worktree
+  `HEAD` matches the parent before making changes. If it does not, fetch the
+  parent checkout's `HEAD` and rebase onto `FETCH_HEAD`; stop on conflicts.
+- In an isolated worktree, resolve its top level first and use absolute paths
+  under that worktree for every Read/Edit/Write operation. Claude Code can
+  otherwise reroute relative paths to the parent checkout through the shared git
+  directory. Stop if isolation silently produced the parent path.
+- Before finishing isolated work, prove the parent checkout has no leaked edits
+  or commits and that the work is present on the worktree branch. The parent
+  session must verify this again before landing the branch.
+- Prefer sequential edits in the main tree for small or tightly coupled work.
+  Split parallel edit agents by disjoint file ownership.
+
+## OpenSpec
+
+- The main workspace is for chatting, speccing, brainstorming, and non-spec
+  implementation. A sizeable OpenSpec change is implemented by a fresh Claude
+  session native to its dedicated herdr worktree.
+- For a sizeable natural-language request to implement or apply an OpenSpec
+  change, use `rjm:opsx-worktree` by default. A literal `/opsx:apply`, an
+  explicit in-place request, unavailable herdr, or a non-git directory uses the
+  in-place flow instead.
+- The worktree implementer stops with a clean, green, fast-forward-ready branch.
+  It never pushes or moves local `main`; the operator lands it from the parent
+  checkout.
+
+## Workflow Models
+
+For deep-research or multi-agent fan-out Workflow scripts, choose models per
+phase rather than applying one model to the whole workflow.
+
+- Use Sonnet for high-volume fan-out phases such as scoping, retrieval, and
+  adversarial verification.
+- Use Fable for the single synthesis bottleneck for now. Fable is now available
+  as a selectable agent/subagent model (`model: fable` on the Agent tool, or a
+  Workflow `opts.model`/phase model) — confirmed working 2026-07-21. The planned
+  switch to Opus (was scheduled after 2026-07-12) remains deferred; confirm with
+  the user before changing it. Fable is never a fan-out default.
+- The bundled `deep-research` workflow is read-only; reproduce this tiering in a
+  custom Workflow script when needed.

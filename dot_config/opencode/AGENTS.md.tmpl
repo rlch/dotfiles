@@ -1,0 +1,11 @@
+{{ template "agent-instructions/common.md" . }}
+
+# OpenCode
+
+- Personal OpenCode skills live under `~/.config/opencode/skills/`. Do not load
+  personal skills through Claude-compatibility or `.agents` fallback paths;
+  those contain other clients' implementations.
+- OpenCode configuration, commands, and skills are loaded at process startup.
+  Restart OpenCode after changing them.
+- Use the OpenCode-specific `handoff` and `spinoff` skills. They preserve the
+  shared handoff contract but launch a fresh OpenCode TUI with `--prompt`.

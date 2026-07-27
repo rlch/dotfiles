@@ -62,6 +62,12 @@ set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t
 # across sessions. https://code.claude.com/docs/en/env-vars
 set -gx CLAUDE_CODE_NO_FLICKER 1
 
+# OpenCode — consume only its native, chezmoi-managed skill root. OpenCode also
+# scans ~/.claude/skills and ~/.agents/skills by default; disabling both avoids
+# duplicate names selecting another client's implementation nondeterministically.
+set -gx OPENCODE_DISABLE_CLAUDE_CODE_SKILLS 1
+set -gx OPENCODE_DISABLE_EXTERNAL_SKILLS 1
+
 # Headroom — local LLM context-compression proxy. Persistent Docker container
 # managed by the Docker-native `headroom install` wrapper.
 set -gx HEADROOM_PORT     8787
