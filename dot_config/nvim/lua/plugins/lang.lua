@@ -552,7 +552,7 @@ return {
   {
     "mrcjkb/rustaceanvim",
     lazy = false,
-    version = "^6",
+    version = "^9",
     build = "rustup component add rust-analyzer",
     keys = {
       {
@@ -572,6 +572,11 @@ return {
               -- doesn't share/thrash the CLI's target-dir (e.g. modality's
               -- .shared-target) and lock Cargo.lock against a terminal build.
               cargo = { targetDir = true },
+              inlayHints = {
+                -- Burn's inferred tensor types overwhelm the source; retain
+                -- parameter, generic-parameter, and other focused hints.
+                typeHints = { enable = false },
+              },
             },
           },
         },

@@ -44,6 +44,39 @@ map("n", "[b", "<cmd>bprevious<cr>", { desc = "Prev buffer" })
 map("n", "]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
 map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 
+-- Pin one file for quick reference/code switching. Once the marked file is
+-- open, the alternate buffer is the file we came from, so the same key toggles.
+local marked_file
+map("n", ",.", function()
+  local path = vim.api.nvim_buf_get_name(0)
+  if path == "" or vim.bo.buftype ~= "" then
+    vim.notify("Cannot mark a non-file buffer", vim.log.levels.WARN)
+    return
+  end
+  marked_file = path
+  vim.notify("Marked file: " .. vim.fn.fnamemodify(path, ":~:."))
+end, { desc = "Mark file for toggle" })
+
+map("n", ",,", function()
+  local current = vim.api.nvim_buf_get_name(0)
+  if marked_file and current ~= marked_file then
+    local marked_buf = vim.fn.bufnr(marked_file)
+    if marked_buf > 0 and vim.api.nvim_buf_is_valid(marked_buf) then
+      vim.cmd("buffer " .. marked_buf)
+    else
+      vim.cmd("edit " .. vim.fn.fnameescape(marked_file))
+    end
+    return
+  end
+
+  local alternate = vim.fn.bufnr("#")
+  if alternate <= 0 or not vim.api.nvim_buf_is_valid(alternate) or alternate == vim.api.nvim_get_current_buf() then
+    vim.notify("No alternate file", vim.log.levels.WARN)
+    return
+  end
+  vim.cmd("buffer " .. alternate)
+end, { desc = "Toggle marked / alternate file" })
+
 -- Clear search with <esc>
 map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
 
