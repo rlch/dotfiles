@@ -33,9 +33,11 @@ told you belongs back in that skill so the next run does not hit the same gap.
 - Force-push is allowed on personal branches, never on `main` or `master`.
 - Every `git push` requires explicit per-instance approval. Never treat prior
   approval as standing approval.
-- Never use `git stash` on `main`; the user may be editing it concurrently.
-  Revert only specific unauthorized paths, or preserve worthwhile work on a
-  side branch.
+- **Never `git stash`, anywhere, for any reason.** `refs/stash` is one shared ref
+  in the common git dir, so every worktree and agent pops the same stack; a
+  conflicting pop leaves markers and unmerged entries that block `merge
+  --ff-only` (left `main` unmergeable mid-landing, 2026-07-29). Park work in a
+  commit instead, and revert only specific unauthorized paths.
 - Use isolated worktrees for parallel edit agents. Never let one agent's
   cleanup revert or overwrite another agent's work.
 
@@ -72,6 +74,14 @@ request.
   unhelpful, that is the accepted trade, not a bug to patch with `--focus`.
 - Inspect what you spawned with `herdr pane read <pane> --source visible` and
   `herdr pane process-info --pane <pane>` — never by focusing it.
+
+# Cockpit Scratchpad
+
+To put a document on the operator's cockpit HUD, write markdown under the
+folder `cockpit scratch` prints (it creates the folder; the default document
+is `pad.md` there). Put referenced images in the same folder and link them by
+relative path. The command is the source of truth for the location — never
+hardcode the path.
 
 # Browser
 
