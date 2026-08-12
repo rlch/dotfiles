@@ -1,1 +1,8 @@
-{{- template "obsidian-shared/app.json" . -}}
+{{- /* This vault's root IS the trading repo root, so Obsidian would otherwise
+index crates/, infra/, refs/ and every stray .txt as a note. userIgnoreFilters
+keeps them out of search, the graph, and link autocomplete. It's the one key
+that diverges from the shared base — merged on top rather than copied, so the
+rest still tracks .chezmoitemplates/obsidian-shared/app.json. */ -}}
+{{- $app := includeTemplate "obsidian-shared/app.json" . | fromJson -}}
+{{- $app = merge $app (dict "userIgnoreFilters" (list "(^|/)assets/" "(^|/)refs/" "\\.txt$")) -}}
+{{- $app | toPrettyJson -}}
