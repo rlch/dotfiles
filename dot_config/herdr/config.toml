@@ -210,6 +210,20 @@ accent = "#cba6f7"
 # exist in herdr, so it was a silent no-op AND forced a config-rewrite drift.
 agent_panel_sort = "priority"
 
+# Terminal width at or below which herdr uses the single-column MOBILE layout
+# (the one with the top-right view-switch button). herdr's default is 64.
+# Raised to 72 because the Termius client on the phone reports 70x30 — it used
+# to report 58x25 and sat comfortably under the default, then on 2026-07-29
+# ~08:26 it jumped to 70 cols (font/appearance change on the phone) and
+# silently fell out of mobile mode. Nothing about herdr changed; 0.7.5 was
+# already installed on 07-25 and mobile mode worked fine until that resize.
+# 72 is deliberately tight: the local Ghostty client only lands in the 65-72
+# band if the font is zoomed hard, so this doesn't drag the desktop into the
+# mobile layout. If the phone's font shrinks again, re-check the reported cols
+# in herdr-server.log ("client connected ... cols=N", cell_width_px=8 marks the
+# remote/Termius client) rather than guessing a bigger number.
+mobile_width_threshold = 72
+
 # Create new tabs instantly with generated names instead of prompting for a
 # name each time.
 prompt_new_tab_name = false
