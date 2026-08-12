@@ -9,9 +9,14 @@ brew "chezmoi"
 # === Window manager ===
 tap "nikitabobko/tap"
 cask "nikitabobko/tap/aerospace"
-# Native instant macOS Spaces switching — companion to AeroSpace.
-tap "jurplel/tap"
-cask "jurplel/tap/instant-space-switcher"
+# Native instant macOS Spaces switching — companion to AeroSpace. Strips the
+# Spaces transition animation, plus cycle bindings/swipes, Cmd-Tab follow, and
+# instant Mission Control. Replaced jurplel/tap/instant-space-switcher
+# (2026-08-12), which it's derived from — don't run both, they fight over the
+# same synthetic gesture interception. Needs Accessibility permission
+# (System Settings → Privacy & Security → Accessibility) and macOS >= 15;
+# self-updates, so brew only bootstraps it.
+cask "space-rabbit"
 
 # === Terminal + multiplexer ===
 cask "ghostty"
@@ -149,6 +154,14 @@ brew "hudochenkov/sshpass/sshpass"
 # tunnel). Shipped as a cask despite being a CLI binary.
 tap "owenthereal/upterm"
 cask "owenthereal/upterm/upterm"
+
+# === WPA auditing (own/authorized networks) ===
+# Mac is the CRACKING station only — capture (monitor mode + injection) needs
+# Linux + a USB adapter (mt7921u/RTL8812AU) or a Pi; Apple's internal Wi-Fi and
+# hcxdumptool are Linux-only. Workflow: capture .pcapng elsewhere → convert →
+# crack here on the Metal GPU.
+brew "hashcat"     # GPU password recovery; WPA2/PMKID is mode 22000 (Metal backend on macOS)
+brew "hcxtools"    # hcxpcapngtool: convert captured .pcapng → hashcat .hc22000
 
 # === Git / Docker TUIs ===
 brew "lazygit"

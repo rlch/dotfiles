@@ -13,7 +13,7 @@ set -euo pipefail
 {{ if eq .chezmoi.os "darwin" -}}
 # Trust third-party taps so brew bundle doesn't refuse to load their formulae/casks.
 # brew trust is idempotent — safe to run on every apply.
-brew trust leoafarias/fvm hudochenkov/sshpass jurplel/tap \
+brew trust leoafarias/fvm hudochenkov/sshpass \
     macos-fuse-t/cask nats-io/nats-tools nikitabobko/tap \
     owenthereal/upterm umputun/apps 2>/dev/null || true
 
