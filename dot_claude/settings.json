@@ -19,6 +19,7 @@
     "revdiff@revdiff": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
   "env": {
@@ -167,6 +168,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Notification": [
@@ -245,6 +256,9 @@
   "permissions": {
     "additionalDirectories": [
       "/Users/rjm"
+    ],
+    "allow": [
+      "Bash(herdr agent start:*)"
     ],
     "ask": [
       "Bash(git push:*)"
