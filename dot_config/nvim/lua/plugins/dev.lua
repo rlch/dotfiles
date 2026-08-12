@@ -2,18 +2,18 @@ return {
   {
     {
       "rafcamlet/nvim-luapad",
-      cmd = { "Luapad" },
+      cmd = { "Luapad", "LuaRun" },
       ft = "lua",
+      main = "luapad",
       opts = { eval_on_change = false },
-      keys = {},
-      config = function(_, opts)
-        require("which-key").add({
-          { "<localleader>p", "<cmd>Luapad<cr>", desc = "Luapad" },
-          { "<localleader>r", "<cmd>LuaRun<cr>", desc = "LuaRun" },
-          { "<localleader>w", "<cmd>echo win_getid()<cr>", desc = "win_getid" },
-        })
-        require("luapad").setup(opts)
-      end,
+      -- `ft` keeps these buffer-local. They used to go through
+      -- `which-key.add()`, which registers globally — so opening one Lua file
+      -- stole `<localleader>r` in every buffer for the rest of the session.
+      keys = {
+        { "<localleader>p", "<cmd>Luapad<cr>", ft = "lua", desc = "Luapad" },
+        { "<localleader>r", "<cmd>LuaRun<cr>", ft = "lua", desc = "LuaRun" },
+        { "<localleader>w", "<cmd>echo win_getid()<cr>", ft = "lua", desc = "win_getid" },
+      },
     },
     {
       "DestopLine/scratch-runner.nvim",

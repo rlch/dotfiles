@@ -84,6 +84,7 @@ return {
   {
     "akinsho/flutter-tools.nvim",
     ft = { "dart" },
+    main = "flutter-tools",
     requires = {
       "nvim-lua/plenary.nvim",
     },
@@ -147,58 +148,75 @@ return {
         },
       },
     },
-    config = function(_, opts)
-      local map = vim.keymap.set
-      local dap = require("dap")
-      require("flutter-tools").setup(opts)
-
-      map("n", "<localleader>a", "<cmd>FlutterReanalyze<cr>", { desc = "Flutter reanalyze" })
-      map("n", "<localleader>d", "<cmd>FlutterDevices<cr>", { desc = "Flutter devices" })
-      map("n", "<localleader>D", function()
-        local lazy = require("flutter-tools.lazy")
-        local config = lazy.require("flutter-tools.config")
-        local notify = require("notify")
-        local run_via_dap = not config.debugger.run_via_dap
-        local dev_log_enabled = not config.dev_log.enabled
-        config.debugger.run_via_dap = run_via_dap
-        config.dev_log.enabled = dev_log_enabled
-        if run_via_dap then
-          notify("Run via DAP enabled", "info", { title = "Flutter Tools" })
-        else
-          notify("Run via DAP disabled", "info", { title = "Flutter Tools" })
-        end
-      end, { desc = "Flutter toggle run via DAP" })
-      map("n", "<localleader>e", "<cmd>FlutterEmulators<cr>", { desc = "Flutter emulators" })
-      map("n", "<localleader>o", "<cmd>FlutterOutlineOpen<cr>", { desc = "Flutter outline open" })
-      map("n", "<localleader>l", ":tabedit | buffer __FLUTTER_DEV_LOG__<CR>", { desc = "Flutter logs" })
-      map("n", "<localleader>L", "<cmd>FlutterLspRestart<cr>", { desc = "Flutter lsp restart" })
-      map("n", "<localleader>p", "<cmd>FlutterCopyProfilerUrl<cr>", { desc = "Flutter copy profiler url" })
-      map("n", "<localleader>q", "<cmd>FlutterQuit<cr>", { desc = "Flutter quit" })
-      map("n", "<localleader>r", function()
-        local commands = require("flutter-tools.commands")
-        if commands.is_running() then
-          commands.reload(false)
-        else
-          commands.run({})
-        end
-      end, { desc = "Flutter run/reload" })
-      map("n", "<localleader>R", "<cmd>FlutterRestart<cr>", { desc = "Flutter restart" })
-      map("n", "<localleader>t", "<cmd>FlutterOutlineToggle<cr>", { desc = "Flutter outline toggle" })
-      map("n", "<localleader>v", "<cmd>FlutterDevTools<cr>", { desc = "Flutter dev tools" })
-      map("n", "<localleader>V", "<cmd>FlutterDevToolsActivate<cr>", { desc = "Flutter dev tools activate" })
-      map("n", "<localleader>s", "<cmd>FlutterSuper<cr>", { desc = "Flutter super" })
-      map("n", "<localleader>n", "<cmd>FlutterRename<cr>", { desc = "Flutter rename" })
-
-      map("n", "<localleader>xa", function()
-        dap.set_exception_breakpoints({ "All" })
-      end, { desc = "Stop on all exceptions" })
-      map("n", "<localleader>xu", function()
-        dap.set_exception_breakpoints({ "Unhandled" })
-      end, { desc = "Stop on unhandled exceptions" })
-      map("n", "<localleader>xx", function()
-        dap.set_exception_breakpoints({})
-      end, { desc = "Clear exception breakpoints" })
-    end,
+    -- Every one of these used to be a bare `vim.keymap.set` inside `config`,
+    -- i.e. global — opening a single Dart file stole `<localleader>r` (and a
+    -- dozen other keys) in every buffer for the rest of the session. Same keys,
+    -- now buffer-local to Dart via lazy's `keys.ft`.
+    -- stylua: ignore start
+    keys = {
+      { "<localleader>a", "<cmd>FlutterReanalyze<cr>",         ft = "dart", desc = "Flutter reanalyze" },
+      { "<localleader>d", "<cmd>FlutterDevices<cr>",           ft = "dart", desc = "Flutter devices" },
+      { "<localleader>e", "<cmd>FlutterEmulators<cr>",         ft = "dart", desc = "Flutter emulators" },
+      { "<localleader>o", "<cmd>FlutterOutlineOpen<cr>",       ft = "dart", desc = "Flutter outline open" },
+      { "<localleader>l", ":tabedit | buffer __FLUTTER_DEV_LOG__<cr>", ft = "dart", desc = "Flutter logs" },
+      { "<localleader>L", "<cmd>FlutterLspRestart<cr>",        ft = "dart", desc = "Flutter lsp restart" },
+      { "<localleader>p", "<cmd>FlutterCopyProfilerUrl<cr>",   ft = "dart", desc = "Flutter copy profiler url" },
+      { "<localleader>q", "<cmd>FlutterQuit<cr>",              ft = "dart", desc = "Flutter quit" },
+      { "<localleader>R", "<cmd>FlutterRestart<cr>",           ft = "dart", desc = "Flutter restart" },
+      { "<localleader>t", "<cmd>FlutterOutlineToggle<cr>",     ft = "dart", desc = "Flutter outline toggle" },
+      { "<localleader>v", "<cmd>FlutterDevTools<cr>",          ft = "dart", desc = "Flutter dev tools" },
+      { "<localleader>V", "<cmd>FlutterDevToolsActivate<cr>",  ft = "dart", desc = "Flutter dev tools activate" },
+      { "<localleader>s", "<cmd>FlutterSuper<cr>",             ft = "dart", desc = "Flutter super" },
+      { "<localleader>n", "<cmd>FlutterRename<cr>",            ft = "dart", desc = "Flutter rename" },
+      {
+        "<localleader>r",
+        function()
+          local commands = require("flutter-tools.commands")
+          if commands.is_running() then
+            commands.reload(false)
+          else
+            commands.run({})
+          end
+        end,
+        ft = "dart",
+        desc = "Flutter run/reload",
+      },
+      {
+        "<localleader>D",
+        function()
+          local lazy = require("flutter-tools.lazy")
+          local config = lazy.require("flutter-tools.config")
+          local notify = require("notify")
+          local run_via_dap = not config.debugger.run_via_dap
+          local dev_log_enabled = not config.dev_log.enabled
+          config.debugger.run_via_dap = run_via_dap
+          config.dev_log.enabled = dev_log_enabled
+          if run_via_dap then
+            notify("Run via DAP enabled", "info", { title = "Flutter Tools" })
+          else
+            notify("Run via DAP disabled", "info", { title = "Flutter Tools" })
+          end
+        end,
+        ft = "dart",
+        desc = "Flutter toggle run via DAP",
+      },
+      {
+        "<localleader>xa",
+        function() require("dap").set_exception_breakpoints({ "All" }) end,
+        ft = "dart", desc = "Stop on all exceptions",
+      },
+      {
+        "<localleader>xu",
+        function() require("dap").set_exception_breakpoints({ "Unhandled" }) end,
+        ft = "dart", desc = "Stop on unhandled exceptions",
+      },
+      {
+        "<localleader>xx",
+        function() require("dap").set_exception_breakpoints({}) end,
+        ft = "dart", desc = "Clear exception breakpoints",
+      },
+    },
+    -- stylua: ignore end
   },
 
   -- Markdown
@@ -377,56 +395,22 @@ return {
   {
     "rest-nvim/rest.nvim",
     ft = { "http" },
+    -- Two fixes over the original: `ft` keeps these buffer-local (without it
+    -- they went global the moment rest.nvim loaded, fighting Flutter's and
+    -- luapad's `<localleader>` maps), and every `<cmd>` payload now ends in
+    -- `<cr>` — without it Neovim raises E5520 and the mapping never ran. The
+    -- two that take an argument use a plain `:` so the cmdline stays open.
+    -- stylua: ignore
     keys = {
-      {
-        "<localleader>o",
-        "<cmd>Rest open",
-        desc = "Open result pane",
-        mode = { "n" },
-      },
-      {
-        "<localleader>r",
-        "<cmd>Rest run",
-        desc = "Run request under the cursor.",
-        mode = { "n" },
-      },
-      {
-        "<localleader>R",
-        "<cmd>Rest run {name}",
-        "Run request with name {name}",
-        mode = { "n" },
-      },
-      {
-        "<localleader>h",
-        "<cmd>Rest last",
-        desc = "Run last request",
-        mode = { "n" },
-      },
-      {
-        "<localleader>l",
-        "<cmd>Rest logs",
-        desc = "Edit logs file",
-        mode = { "n" },
-      },
-      {
-        "<localleader>c",
-        "<cmd>Rest cookies",
-        desc = "Edit cookies file",
-        mode = { "n" },
-      },
-      {
-        "<localleader>eo",
-        "<cmd>Rest env show",
-        desc = "Show dotenv file registered to current .http file",
-        mode = { "n" },
-      },
-      {
-        "<localleader>es",
-        "<cmd>Rest env select ",
-        desc = "Select & register .env file with vim.ui.select()",
-        mode = { "n" },
-      },
-      { "<localleader>er", "<cmd>Rest env set ", desc = "Register .env file to current .http file", mode = { "n" } },
+      { "<localleader>o",  "<cmd>Rest open<cr>",     ft = "http", mode = { "n" }, desc = "Open result pane" },
+      { "<localleader>r",  "<cmd>Rest run<cr>",      ft = "http", mode = { "n" }, desc = "Run request under the cursor" },
+      { "<localleader>R",  ":Rest run ",             ft = "http", mode = { "n" }, desc = "Run request by name" },
+      { "<localleader>h",  "<cmd>Rest last<cr>",     ft = "http", mode = { "n" }, desc = "Run last request" },
+      { "<localleader>l",  "<cmd>Rest logs<cr>",     ft = "http", mode = { "n" }, desc = "Edit logs file" },
+      { "<localleader>c",  "<cmd>Rest cookies<cr>",  ft = "http", mode = { "n" }, desc = "Edit cookies file" },
+      { "<localleader>eo", "<cmd>Rest env show<cr>", ft = "http", mode = { "n" }, desc = "Show dotenv file registered to current .http file" },
+      { "<localleader>es", "<cmd>Rest env select<cr>", ft = "http", mode = { "n" }, desc = "Select & register .env file with vim.ui.select()" },
+      { "<localleader>er", ":Rest env set ",         ft = "http", mode = { "n" }, desc = "Register .env file to current .http file" },
     },
   },
 
@@ -554,13 +538,19 @@ return {
     lazy = false,
     version = "^9",
     build = "rustup component add rust-analyzer",
+    -- rust-analyzer resolves the actual bin/test/example under the cursor, so
+    -- these beat a generic `cargo run` from overseer — and being ft-scoped,
+    -- they shadow the global overseer `<localleader>r`/`R` inside Rust buffers.
+    -- The `!` variants replay the last runnable/debuggable with no picker.
+    -- stylua: ignore
     keys = {
-      {
-        "<localleader>m",
-        "<cmd>RustLsp expandMacro<cr>",
-        desc = "Expand macro",
-        ft = "rust",
-      },
+      { "<localleader>r", "<cmd>RustLsp runnables<cr>",    ft = "rust", desc = "Runnables" },
+      { "<localleader>R", "<cmd>RustLsp! runnables<cr>",   ft = "rust", desc = "Run last runnable" },
+      { "<localleader>d", "<cmd>RustLsp debuggables<cr>",  ft = "rust", desc = "Debuggables" },
+      { "<localleader>D", "<cmd>RustLsp! debuggables<cr>", ft = "rust", desc = "Debug last debuggable" },
+      { "<localleader>t", "<cmd>RustLsp testables<cr>",    ft = "rust", desc = "Testables" },
+      { "<localleader>e", "<cmd>RustLsp explainError<cr>", ft = "rust", desc = "Explain error" },
+      { "<localleader>m", "<cmd>RustLsp expandMacro<cr>",  ft = "rust", desc = "Expand macro" },
     },
     init = function()
       vim.g.rustaceanvim = {
