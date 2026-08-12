@@ -47,7 +47,7 @@ return {
     "span",
     fmt(
       [[
-ctx, span := otel.GetTracerProvider().Tracer("github.com/your-org/{}").Start(ctx, "{}")
+ctx, span := otel.GetTracerProvider().Tracer("github.com/MathGaps/{}").Start(ctx, "{}")
 {}
 ]],
       {
