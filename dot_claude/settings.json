@@ -4,7 +4,7 @@
   "effortLevel": "xhigh",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
-    "chrome-devtools-mcp@claude-plugins-official": false,
+    "chrome-devtools-mcp@claude-plugins-official": true,
     "ck@cavekit-marketplace": true,
     "clangd-lsp@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
@@ -13,7 +13,7 @@
     "gopls-lsp@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
-    "playwright@claude-plugins-official": false,
+    "playwright@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "revdiff@revdiff": true,
@@ -23,7 +23,8 @@
     "typescript-lsp@claude-plugins-official": true
   },
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION": "2000"
   },
   "extraKnownMarketplaces": {
     "cavekit-marketplace": {
@@ -252,7 +253,7 @@
       }
     ]
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5[1m]",
   "permissions": {
     "additionalDirectories": [
       "/Users/rjm"
