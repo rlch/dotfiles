@@ -4,6 +4,11 @@
 
 # Claude Code
 
+- **Never publish through the Artifact tool** (claude.ai artifacts). Multiple
+  Claude accounts are in play and the web login often doesn't match the CLI
+  account, so artifact URLs are dead ends. HTML/visual output is still wanted —
+  write it to a local file and hand over the path (or `open` it, where the
+  content rules allow auto-opening).
 - The push approval rule is enforced by `~/.claude/git-push-guard.sh`.
 - Never push from a Claude worktree under `.claude/worktrees/`; land its work
   through the parent checkout.
