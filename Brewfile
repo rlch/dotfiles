@@ -225,6 +225,12 @@ brew "gemini-cli"  # Google's Gemini CLI
 brew "rtk"         # CLI proxy that compresses dev-tool output before it reaches the agent's context
 brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
 brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
+# moshi-hook — bridges AI CLI sessions to the Moshi mobile app. After install,
+# run `moshi-hook install` (hook entries land in each CLI's config; the claude
+# ones are chezmoi-managed in dot_claude/settings.json) and start the daemon
+# with `brew services start moshi-hook` — hooks are inert without it.
+tap "rjyo/moshi"
+brew "moshi-hook"
 brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
 
 # === Game dev / 2D editors ===

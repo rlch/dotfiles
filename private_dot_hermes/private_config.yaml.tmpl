@@ -114,7 +114,10 @@ memory:
 # `herdr-agent-state` plugin is installed by `herdr integration install
 # hermes` (run from .chezmoiscripts/run_onchange_post-install-herdr-
 # integrations.sh.tmpl) — emits state pings (working/idle/blocked/release)
-# to herdr's socket so the agent panel reflects hermes turn state.
+# to herdr's socket so the agent panel reflects hermes turn state. The
+# `moshi-hooks` plugin is installed by `moshi-hook install --target hermes`
+# — reports session ids to the Moshi app so hermes agents appear there.
 plugins:
   enabled:
     - herdr-agent-state
+    - moshi-hooks

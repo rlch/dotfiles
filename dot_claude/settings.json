@@ -1,6 +1,5 @@
 {
   "agentPushNotifEnabled": false,
-  "inputNeededNotifEnabled": true,
   "effortLevel": "xhigh",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
@@ -41,101 +40,202 @@
     }
   },
   "hooks": {
-    "PermissionRequest": [
+    "Notification": [
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
-            "timeout": 10
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "type": "command"
           }
         ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      },
+      {
+        "hooks": [
+          {
+            "async": false,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ],
+        "matcher": "AskUserQuestion"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ],
+        "matcher": "ExitPlanMode"
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "rtk hook claude"
+            "command": "rtk hook claude",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Bash"
       },
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
             "command": "~/.claude/git-push-guard.sh",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Bash"
       },
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "*"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ],
+        "matcher": "AskUserQuestion"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ],
+        "matcher": "ExitPlanMode"
       }
     ],
     "SessionEnd": [
       {
-        "matcher": ".*",
         "hooks": [
           {
-            "type": "command",
             "command": "~/.claude/improvement-capture.py",
-            "timeout": 15
+            "timeout": 15,
+            "type": "command"
           },
           {
-            "type": "command",
+            "async": true,
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
-            "async": true
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": ".*"
       },
       {
-        "matcher": ".*",
         "hooks": [
           {
-            "type": "command",
-            "command": "~/.claude/lsp-cleanup-hook.sh"
+            "command": "~/.claude/lsp-cleanup-hook.sh",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": ".*"
       },
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "type": "command"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
           }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           },
           {
-            "type": "command",
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
+            "timeout": 5,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "*"
       },
       {
         "hooks": [
@@ -146,48 +246,13 @@
           }
         ],
         "matcher": "*"
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
-          }
-        ]
       },
       {
-        "matcher": "*",
         "hooks": [
           {
-            "type": "command",
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
           }
         ]
       }
@@ -196,10 +261,10 @@
       {
         "hooks": [
           {
-            "type": "command",
+            "async": true,
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
-            "async": true
+            "type": "command"
           }
         ]
       }
@@ -208,10 +273,10 @@
       {
         "hooks": [
           {
-            "type": "command",
+            "async": true,
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
-            "async": true
+            "type": "command"
           }
         ]
       }
@@ -220,22 +285,10 @@
       {
         "hooks": [
           {
-            "type": "command",
+            "async": true,
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
+            "type": "command"
           }
         ]
       }
@@ -244,15 +297,49 @@
       {
         "hooks": [
           {
-            "type": "command",
+            "async": true,
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
-            "async": true
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      },
+      {
+        "hooks": [
+          {
+            "async": true,
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "type": "command"
           }
         ]
       }
     ]
   },
+  "inputNeededNotifEnabled": true,
   "model": "claude-fable-5[1m]",
   "permissions": {
     "additionalDirectories": [
@@ -277,7 +364,7 @@
       "Bash(sudo useradd:*)",
       "Bash(sudo userdel:*)",
       "Bash(sudo rm /etc/*)",
-      "Bash(sudo > /etc/*)",
+      "Bash(sudo \u003e /etc/*)",
       "Bash(docker run --privileged:*)",
       "Bash(docker run --pid=host:*)",
       "Bash(docker run -v /:/host *)",
