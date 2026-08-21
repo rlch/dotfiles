@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Install Tart (Apple Silicon VM toolset) on the MBP, which serves as the T4
+# system-test host for Conjure (disposable TCC-seeded macOS guests; see
+# conjure's docs/research/sota-macos-app-testing.md). MBP-only: guests must
+# run macOS ≥ 26.1 and the host virtualization stack should be at least as
+# new — the mini sits on Sonoma, so it can't take the rig. Apple's EULA caps
+# 2 macOS guests per host; one host owns the rig.
+#
+# Tart moved from cirruslabs/cli to the openai/tools tap in April 2026.
+# Homebrew 6 refuses to load non-official tap formulae until they are
+# trusted, and `brew bundle` has no trust stanza — hence this script instead
+# of a Brewfile entry. softnet is trusted alongside tart because tart's
+# formula pulls it in for isolated-network runs (--net-softnet).
+#
+# Idempotent: skips if `tart` is already on PATH. To force a reinstall,
+# `brew uninstall tart` and re-run. Version at time of writing: 2.35.0
+# (2.33.0's broken notarization — unsatisfied com.apple.vm.networking
+# entitlement — was fixed in 2.33.1; don't pin below that).
+
+set -euo pipefail
+
+{{ if and (eq .chezmoi.os "darwin") (eq .role "mbp") -}}
+if command -v tart >/dev/null 2>&1; then
+  echo "tart: already installed at $(command -v tart) — skipping"
+  exit 0
+fi
+
+echo "tart: tapping openai/tools"
+brew tap openai/tools
+
+echo "tart: trusting tap formulae"
+brew trust --formula openai/tools/tart openai/tools/softnet
+
+echo "tart: installing"
+brew install openai/tools/tart
+
+tart --version
+echo "tart: installed → $(command -v tart)"
+{{- end }}
