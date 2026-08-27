@@ -31,8 +31,13 @@ told you belongs back in that skill so the next run does not hit the same gap.
   --and-rebase`), or `git abm <base>` for a deep stack.
 - PRs are squash-merged. The PR title becomes the squashed conventional commit.
 - Force-push is allowed on personal branches, never on `main` or `master`.
-- Every `git push` requires explicit per-instance approval. Never treat prior
-  approval as standing approval.
+- **`git push` needs no approval — push when the work is ready, without asking.**
+  Standing decision (2026-08-27), replacing a per-instance-approval rule that only
+  ever produced a prompt the operator always said yes to. The guards that guard real
+  incidents stay and are NOT relaxed by this: never force-push `main`/`master`, and
+  never push from a Claude worktree (land through the parent checkout). Pushing a
+  branch nobody asked you to create is still out of scope — this licenses pushing
+  work you were asked to do, not inventing new remote state.
 - **Never `git stash`, anywhere, for any reason.** `refs/stash` is one shared ref
   in the common git dir, so every worktree and agent pops the same stack; a
   conflicting pop leaves markers and unmerged entries that block `merge
@@ -77,11 +82,13 @@ request.
 
 # Cockpit Scratchpad
 
-To put a document on the operator's cockpit HUD, write markdown under the
-folder `cockpit scratch` prints (it creates the folder; the default document
-is `pad.md` there). Put referenced images in the same folder and link them by
-relative path. The command is the source of truth for the location — never
-hardcode the path.
+Load the `rjm:cockpit` skill before writing anything to the operator's
+cockpit pad (the folder `cockpit scratch` prints; entry document `pad.md`).
+Non-negotiables it enforces: the pad stays small and actionable — one
+screen, current item on top, settled items collapsed — and an image is
+invisible until `pad.md` references it, so copy the file and add its
+`![…](x.png)` line in the SAME step, verifying with grep before claiming
+anything is "on the pad".
 
 # Browser
 
