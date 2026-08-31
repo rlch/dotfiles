@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Set up Talon Voice's user-script tree (~/.talon/user).
+#
+# Layout (each piece is a REAL directory — never symlink anything on the
+# ~/.talon/user path; talon.wiki: hot reload "breaks if ~/.talon (or any
+# other part of the path) is a symlink"):
+#
+#   ~/.talon/user/community    ← clone of talonhub/community (base grammar:
+#                                 alphabet, numbers, browser tag, firefox app)
+#   ~/.talon/user/rango-talon  ← clone of david-tejada/rango-talon (voice side
+#                                 of the Rango browser extension: hint clicking,
+#                                 scrolling, tabs — the in-page half)
+#   ~/.talon/user/bunpro       ← chezmoi-managed (dot_talon/user/bunpro/):
+#                                 bunpro.jp voice plugin
+#
+# The Talon.app itself comes from the Brewfile (cask "talon").
+#
+# After this script, still needed ONCE per host (all interactive, can't be
+# scripted):
+#   1. Launch Talon.app; grant Microphone + Accessibility when prompted.
+#   2. Menu-bar Talon icon > Speech Recognition > Conformer D (~500MB
+#      one-time model download; speech does nothing until it's in).
+#   3. Firefox: install the Rango extension from
+#      https://addons.mozilla.org/en-US/firefox/addon/rango/
+#      then click its toolbar icon once (clipboard permission), and check
+#      about:addons > gear > Manage Extension Shortcuts that Rango's
+#      "Get the talon request" shortcut is actually bound (its default uses
+#      the Insert key, which Mac keyboards lack — rebind if empty).
+#   4. Firefox: install the bunpro bridge userscript (see
+#      ~/.talon/user/bunpro/README.md).
+#
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+
+TALON_USER="$HOME/.talon/user"
+mkdir -p "$TALON_USER"
+
+# ---- Clone (or fast-forward) the two upstream script repos ----------------
+# Clone-don't-fork per community's README; local overrides live in sibling
+# dirs, so these clones stay clean and ff-pullable.
+
+clone_or_ff() {
+  local repo="$1" dest="$2" name
+  name=$(basename "$dest")
+  if [ ! -d "$dest/.git" ]; then
+    echo "talon: cloning $repo → $dest"
+    git clone --depth 1 "$repo" "$dest"
+  else
+    if git -C "$dest" diff --quiet && git -C "$dest" diff --cached --quiet; then
+      echo "talon: fast-forwarding $name"
+      git -C "$dest" pull --ff-only --quiet || \
+        echo "talon: $name ff-only pull failed (local divergence?) — leaving clone alone"
+    else
+      echo "talon: $name has uncommitted changes — skipping pull"
+    fi
+  fi
+}
+
+clone_or_ff "https://github.com/talonhub/community"        "$TALON_USER/community"
+clone_or_ff "https://github.com/david-tejada/rango-talon"  "$TALON_USER/rango-talon"
+
+# ---- Nudge about the interactive leftovers --------------------------------
+
+if [ ! -d "$HOME/.talon/conformer" ] && ! ls "$HOME/.talon" 2>/dev/null | grep -qi conformer; then
+  echo "talon: REMINDER — launch Talon.app, grant Mic + Accessibility, and"
+  echo "       install the speech engine: menu-bar icon > Speech Recognition"
+  echo "       > Conformer D. Voice does nothing until then."
+fi
+
+echo "talon: user-script tree ready at $TALON_USER"
+
+{{- end }}
