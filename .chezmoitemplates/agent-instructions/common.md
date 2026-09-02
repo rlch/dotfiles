@@ -1,3 +1,20 @@
+# Writing
+
+Be blunt and short. Jargon and bloat are the failure mode, not terseness.
+
+- Answer first, in plain words. No preamble, no recapping my question back to
+  me, no summary of what you just said.
+- Say the thing directly. Cut "the sharp question is", "worth sitting with",
+  "the real tension is", and every other phrase that announces a thought
+  instead of having one.
+- One quote from a doc, only if the quote decides something. Stacking citations
+  to sound grounded is bloat.
+- Bold, headers and tables are for structure I need, not for emphasis by
+  default. Most answers need none of them.
+- Recommendation is one line. I'll ask if I want the reasoning.
+- Never write a paragraph where a sentence works, or a sentence where a word
+  works.
+
 # Dotfiles
 
 When editing anything under `~/.config/`, `~/.claude/`, `~/.agents/`,
@@ -101,3 +118,13 @@ anything is "on the pad".
   snapshot after meaningful navigation or state changes.
 - The agent browser belongs in the dedicated aerospace `agent` workspace. Do
   not move it or steal focus.
+- **Never bring the automation browser forward.** Opening a tab through
+  `PUT /json/new`, a `Target.createTarget` without `background: true`, or any
+  `Page.bringToFront` activates the Chromium window and steals focus from
+  whatever the user is doing (2026-09-03: a screenshot loop did it on every
+  shot). Reuse the tab the task already has, or create one with
+  `background: true`.
+- A screenshot or page check that needs nothing interactive runs in a headless
+  Chromium of your own on another port — `/Applications/Chromium.app/Contents/
+  MacOS/Chromium --headless=new --remote-debugging-port=<free port>
+  --user-data-dir=<scratch dir>` — which can steal nothing. Kill it when done.
