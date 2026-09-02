@@ -9,7 +9,7 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
             case --opus
                 set -a args --model 'claude-opus-5[1m]'
             case --fable
-                set -a args --model 'claude-fable-5[1m]'
+                set -a args --model 'claude-fable-5-1[1m]'
             case --sonnet
                 set -a args --model sonnet
             case --haiku
