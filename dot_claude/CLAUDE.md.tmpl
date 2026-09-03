@@ -43,17 +43,25 @@
   It never pushes or moves local `main`; the operator lands it from the parent
   checkout.
 
-## Workflow Models
+## Model selection
 
-For deep-research or multi-agent fan-out Workflow scripts, choose models per
-phase rather than applying one model to the whole workflow.
+Three tiers, chosen by what the work is (operator, 2026-09-03; replaces the
+earlier "Fable for synthesis, switch to Opus deferred" note). The rule applies
+wherever a model is picked: `cl --fable | --opus | --sonnet` when launching a
+session, `model:` on the Agent tool, and per-phase `opts.model` in a Workflow.
 
-- Use Sonnet for high-volume fan-out phases such as scoping, retrieval, and
-  adversarial verification.
-- Use Fable for the single synthesis bottleneck for now. Fable is now available
-  as a selectable agent/subagent model (`model: fable` on the Agent tool, or a
-  Workflow `opts.model`/phase model) — confirmed working 2026-07-21. The planned
-  switch to Opus (was scheduled after 2026-07-12) remains deferred; confirm with
-  the user before changing it. Fable is never a fan-out default.
-- The bundled `deep-research` workflow is read-only; reproduce this tiering in a
-  custom Workflow script when needed.
+- **Fable** — orchestrating, planning and speccing (proposals, designs,
+  rulings, handoff seeds that plan); very complex implementation (cross-cutting,
+  a new crate or protocol change, several subsystems at once); the single
+  research-synthesis bottleneck; and the workflows that need it. Never a
+  fan-out default.
+- **Opus** — implementation, and ordinary research synthesis.
+- **Sonnet** — cheaper research, and the high-volume fan-out phases of a
+  workflow: scoping, retrieval, adversarial verification.
+- A Workflow chooses per phase, never one model for the whole script. The
+  bundled `deep-research` workflow is read-only; reproduce this tiering in a
+  custom script when needed. Fable is selectable as an agent/subagent model
+  (`model: fable`; confirmed 2026-07-21).
+- When a skill launches or dispatches, it names which tier it chose and why in
+  one line; a launcher that cannot tell (a change whose Impact is unread) reads
+  first rather than defaulting.
