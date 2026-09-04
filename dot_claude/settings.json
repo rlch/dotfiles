@@ -1,7 +1,408 @@
 {
-  "agentPushNotifEnabled": false,
-  "effortLevel": "xhigh",
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION": "2000"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(herdr agent start:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(sudo rm -rf /)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)",
+      "Bash(halt:*)",
+      "Bash(poweroff:*)",
+      "Bash(sudo passwd:*)",
+      "Bash(sudo useradd:*)",
+      "Bash(sudo userdel:*)",
+      "Bash(sudo rm /etc/*)",
+      "Bash(sudo > /etc/*)",
+      "Bash(docker run --privileged:*)",
+      "Bash(docker run --pid=host:*)",
+      "Bash(docker run -v /:/host *)",
+      "Bash(git push --force origin main:*)",
+      "Bash(git push --force origin master:*)",
+      "Bash(git push -f origin main:*)",
+      "Bash(git push -f origin master:*)",
+      "Bash(cat ~/.aws/*)",
+      "Bash(cat ~/.ssh/id_*)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
+    ],
+    "defaultMode": "auto",
+    "additionalDirectories": [
+      "/Users/rjm"
+    ]
+  },
+  "model": "claude-fable-5-1[1m]",
   "enableAllProjectMcpServers": true,
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": false
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/git-push-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/dev/cockpit/hooks/opsx-cockpit.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/improvement-capture.py",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/lsp-cleanup-hook.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/dev/cockpit/hooks/session-cockpit.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/herdr-title.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "ccstatusline",
+    "padding": 0,
+    "refreshInterval": 10
+  },
   "enabledPlugins": {
     "chrome-devtools-mcp@claude-plugins-official": true,
     "ck@cavekit-marketplace": true,
@@ -21,378 +422,58 @@
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION": "2000"
-  },
   "extraKnownMarketplaces": {
     "cavekit-marketplace": {
       "source": {
-        "repo": "JuliusBrussee/cavekit",
-        "source": "github"
+        "source": "github",
+        "repo": "JuliusBrussee/cavekit"
       }
     },
     "revdiff": {
       "source": {
-        "repo": "umputun/revdiff",
-        "source": "github"
+        "source": "github",
+        "repo": "umputun/revdiff"
       }
     }
   },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": false,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ],
-        "matcher": "AskUserQuestion"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ],
-        "matcher": "ExitPlanMode"
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "rtk hook claude",
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      },
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/git-push-guard.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      },
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ],
-        "matcher": "AskUserQuestion"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ],
-        "matcher": "ExitPlanMode"
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/improvement-capture.py",
-            "timeout": 15,
-            "type": "command"
-          },
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ],
-        "matcher": ".*"
-      },
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/lsp-cleanup-hook.sh",
-            "type": "command"
-          }
-        ],
-        "matcher": ".*"
-      },
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
-            "timeout": 10,
-            "type": "command"
-          },
-          {
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "command": "~/.claude/herdr-title.sh",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "StopFailure": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "async": true,
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "type": "command"
-          }
-        ]
-      }
-    ]
-  },
-  "inputNeededNotifEnabled": true,
-  "model": "claude-fable-5[1m]",
-  "permissions": {
-    "additionalDirectories": [
-      "/Users/rjm"
-    ],
-    "allow": [
-      "Bash(herdr agent start:*)"
-    ],
-    "ask": [
-      "Bash(git push:*)"
-    ],
-    "defaultMode": "auto",
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(rm -rf /*)",
-      "Bash(sudo rm -rf /)",
-      "Bash(shutdown:*)",
-      "Bash(reboot:*)",
-      "Bash(halt:*)",
-      "Bash(poweroff:*)",
-      "Bash(sudo passwd:*)",
-      "Bash(sudo useradd:*)",
-      "Bash(sudo userdel:*)",
-      "Bash(sudo rm /etc/*)",
-      "Bash(sudo \u003e /etc/*)",
-      "Bash(docker run --privileged:*)",
-      "Bash(docker run --pid=host:*)",
-      "Bash(docker run -v /:/host *)",
-      "Bash(git push --force origin main:*)",
-      "Bash(git push --force origin master:*)",
-      "Bash(git push -f origin main:*)",
-      "Bash(git push -f origin master:*)",
-      "Bash(cat ~/.aws/*)",
-      "Bash(cat ~/.ssh/id_*)",
-      "Read(.env)",
-      "Read(.env.*)",
-      "Read(**/secrets/**)",
-      "Read(**/*secret*)",
-      "Read(**/*password*)"
-    ]
-  },
-  "preferredNotifChannel": "notifications_disabled",
-  "skipAutoPermissionPrompt": true,
+  "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
-  "statusLine": {
-    "command": "ccstatusline",
-    "padding": 0,
-    "refreshInterval": 10,
-    "type": "command"
-  },
+  "preferredNotifChannel": "notifications_disabled",
   "teammateMode": "in-process",
-  "worktree": {
-    "baseRef": "head"
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": false,
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(git stash:*) \u2014 in the sonzai repo and its worktrees: refs/stash is one shared ref across every worktree, and a conflicting pop has previously left main unmergeable mid-landing; park work in a commit instead",
+      "Launching the studio with PF_STUDIO_LIVENESS=1 outside an explicit landing point \u2014 it boots a self-driving app over the operator's screen (2026-07-24 incident); use PF_STUDIO_PARKED=1 for repro/chrome work"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured \u2014 personal repositories under github.com/rlch (no organization); posture is personal/hobby, scoped to this project only",
+      "**Cloud provider(s)**: Cloudflare, scoped to this project \u2014 Workers/Durable Objects, D1, and R2 (evidenced by infra/*.tf Terraform files and wrangler usage in repo docs)",
+      "**Repository visibility**: github.com/rlch/sonzai is PRIVATE (verified via authenticated gh)",
+      "**Internal sharing / snippet hosting**: None configured \u2014 treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: Cloudflare Wrangler secrets for production (`wrangler secret put <NAME> --env production`); local dev secrets live in gitignored files (apps/api/.dev.vars, .env / .env.*, /data/_sourcing/secrets.env) \u2014 never commit these or surface their contents",
+      "**Default / protected branches**: main (gh shows no classic branch protection and no rulesets; this repo's stated convention is direct commits/pushes to main with no PRs, but every push still requires per-instance approval per the user's global CLAUDE.md and git-push-guard.sh)",
+      "**CI/CD deploy targets**: GitHub Actions under .github/workflows (repo-ci.yml, crates.yml); production deploys via `wrangler deploy --env production` and `wrangler d1 migrations apply <DB> --remote`; Terraform under infra/ manages the Cloudflare resources",
+      "**Network posture**: None configured \u2014 repo docs mention a Tailscale-reached local ML worker (ComfyUI on the M5 Max) but no broader network policy",
+      "**Source control**: The trusted repo and its single remote only \u2014 github.com/rlch/sonzai (origin), private; no additional orgs configured",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: gitignored secret files in this repo (apps/api/.dev.vars, .env / .env.*, /data/_sourcing/secrets.env); shell history files carry inline secrets and must never be read raw; NSFW review assets (contact sheets, keeper boards, the FiftyOne app) must never be auto-opened onto the operator's screen \u2014 hand over the file path or URL instead; otherwise the default applies: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited \u2014 e.g. matches `prod-db`, not `producer`); in this repo specifically, anything invoked with wrangler `--env production` or `--remote`",
+      "**Protected deployment namespaces / environments**: the Cloudflare `production` environment (`wrangler deploy --env production`, `wrangler secret put --env production`) and remote D1 databases (`wrangler d1 migrations apply --remote`)",
+      "**Protected IaC scopes**: the infra/ Terraform root (Cloudflare provider \u2014 backend.tf, d1.tf, r2.tf, encryption.tf, marketplace.tf, packs.tf); plus the default: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development \u2014 a personal/hobby project (an LLM-driven avatar sandbox engine) on a Claude Max subscription",
+      "**Trusted repo**: The git repository the agent started in (this checkout \u2014 a herdr worktree of ~/dev/sonzai) and its configured remote github.com/rlch/sonzai. The repo is PRIVATE, so confidential material of this project is fine to commit or push here; secrets and sensitive data (personal & entrusted) are never cleared into any repo by its visibility",
+      "**Org-specific CLIs**: herdr (session/tab/pane multiplexer \u2014 work runs in background tabs, never steal focus), openspec (spec-driven change flow), just (task runner), chezmoi (dotfiles source-of-truth flow), cockpit, chrome-debug (debug-Chromium launcher) \u2014 all corroborated by shell history and/or this project's transcripts"
+    ]
   }
 }

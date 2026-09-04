@@ -12,9 +12,15 @@
 # hand per-worktree (annoying, fragile, and blocked by the auto-permission
 # classifier as an ad-hoc security-gate edit).
 #
+# CORRECTION (2026-09-04): trust is inherited down the tree ONLY up to the cwd's
+# git toplevel (cli.js FF/BF walk with LL(cwd) as the boundary). So the $HOME
+# entry below covers non-git folders only; every git worktree, submodule or
+# clone needs an entry for ITS OWN toplevel. `cl` now writes that per launch via
+# ~/.local/bin/claude-trust-path (dot_local/bin). This script keeps the two
+# jobs it can do: trust $HOME for non-repo dirs, and repair explicit distrust.
+#
 # TWO halves, both needed:
-#   1. Trust $HOME itself. Trust is inherited down the directory tree, so ONE
-#      entry covers every current and future worktree under ~.
+#   1. Trust $HOME itself (non-git folders under ~ inherit it).
 #   2. Repair explicit distrust. An entry with hasTrustDialogAccepted=false
 #      SHADOWS the inherited $HOME trust, so those paths prompt forever no
 #      matter what (1) says — Claude writes one whenever a dialog is dismissed

@@ -27,5 +27,10 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     set -l runner clodcurrent
     command -q clodcurrent; or set runner claude
 
+    # Trust the launch folder in every account config first. Claude's trust walk
+    # stops at the cwd's git toplevel, so $HOME/~/dev trust never reaches into a
+    # fresh worktree or clone; without this every new checkout prompts.
+    command -q claude-trust-path; and claude-trust-path (pwd) >/dev/null
+
     $runner --ide $args
 end
