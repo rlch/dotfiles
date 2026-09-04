@@ -97,16 +97,6 @@ request.
 - Inspect what you spawned with `herdr pane read <pane> --source visible` and
   `herdr pane process-info --pane <pane>` — never by focusing it.
 
-# Cockpit Scratchpad
-
-Load the `rjm:cockpit` skill before writing anything to the operator's
-cockpit pad (the folder `cockpit scratch` prints; entry document `pad.md`).
-Non-negotiables it enforces: the pad stays small and actionable — one
-screen, current item on top, settled items collapsed — and an image is
-invisible until `pad.md` references it, so copy the file and add its
-`![…](x.png)` line in the SAME step, verifying with grep before claiming
-anything is "on the pad".
-
 # Browser
 
 - Browser automation attaches to ungoogled Chromium on `127.0.0.1:9222`,

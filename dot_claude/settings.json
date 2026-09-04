@@ -66,16 +66,6 @@
         "matcher": "*",
         "hooks": [
           {
-            "type": "command",
-            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
             "timeout": 10,
             "type": "command"
@@ -100,16 +90,6 @@
           {
             "type": "command",
             "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
             "async": true
           }
         ]
@@ -151,26 +131,6 @@
           {
             "type": "command",
             "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/dev/cockpit/hooks/spool-event.sh",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/dev/cockpit/hooks/opsx-cockpit.sh",
             "async": true
           }
         ]
@@ -257,15 +217,6 @@
           {
             "type": "command",
             "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/rjm/dev/cockpit/hooks/session-cockpit.sh",
             "async": true
           }
         ]
@@ -473,7 +424,7 @@
       "### User-specific",
       "**Primary use of Claude Code**: software development \u2014 a personal/hobby project (an LLM-driven avatar sandbox engine) on a Claude Max subscription",
       "**Trusted repo**: The git repository the agent started in (this checkout \u2014 a herdr worktree of ~/dev/sonzai) and its configured remote github.com/rlch/sonzai. The repo is PRIVATE, so confidential material of this project is fine to commit or push here; secrets and sensitive data (personal & entrusted) are never cleared into any repo by its visibility",
-      "**Org-specific CLIs**: herdr (session/tab/pane multiplexer \u2014 work runs in background tabs, never steal focus), openspec (spec-driven change flow), just (task runner), chezmoi (dotfiles source-of-truth flow), cockpit, chrome-debug (debug-Chromium launcher) \u2014 all corroborated by shell history and/or this project's transcripts"
+      "**Org-specific CLIs**: herdr (session/tab/pane multiplexer \u2014 work runs in background tabs, never steal focus), openspec (spec-driven change flow), just (task runner), chezmoi (dotfiles source-of-truth flow), chrome-debug (debug-Chromium launcher) \u2014 all corroborated by shell history and/or this project's transcripts"
     ]
   }
 }
