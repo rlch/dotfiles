@@ -31,6 +31,9 @@ name = "tokyo-night"
 #   surface0    = selected/focused item bg  AND  inactive-tab bg
 #   surface_dim = pane border / separators  (+ active-tab fg fallback)
 #   accent      = active-tab bg + focused-pane border  (mauve, set in [ui])
+# Written by herdr itself (in-app toggle); equals the default. Kept so the
+# deployed file matches source and chezmoi stops flagging drift.
+auto_switch = false
 [theme.custom]
 # Tab bar + panels = TRANSPARENT: the outer terminal background shows through
 # — including Ghostty's macos-glass blur — so the tab strip matches the
@@ -54,7 +57,7 @@ new_cwd = "follow"
 [keys]
 # ── Keymap: vim-modal, direct chords (carried over from cmux, now removed) ─
 # Everything drives off DIRECT chords (no leader): ⌃ = focus, ⌘ = create/nav,
-# ⌃1-9 / ⌘1-9 = jump, plus ONE sub-prefix ⌃s (pane/layout + workspace ops).
+# ⌃1-9 = jump tab, ⌘1-9 = jump agent, plus ONE sub-prefix ⌃s (pane/layout + workspace ops).
 # The ⌃-chords arrive natively (kitty keyboard protocol); the ⌘-chords are
 # forwarded by ghostty/config as CSI-u super sequences.
 #
@@ -64,7 +67,7 @@ new_cwd = "follow"
 #   ⌃ 1-9  jump tab    ctrl+1..9         native   ([keys.indexed] tabs)
 #   ⌘ H/L  prev/next tab    cmd+h/l      ghostty cmd-forward
 #   ⌘ K/J  prev/next wksp   cmd+k/j      ghostty cmd-forward
-#   ⌘ 1-9  jump wksp   cmd+1..9          ghostty cmd-forward (indexed)
+#   ⌘ 1-9  jump agent  cmd+1..9          ghostty cmd-forward (indexed)
 #   ⌘T  new tab        cmd+t             ghostty cmd-forward
 #   ⌘N  new workspace  cmd+n             ghostty cmd-forward
 #   ⌘D / ⌘⇧D  split    cmd+d / cmd+shift+d
@@ -103,7 +106,8 @@ new_tab      = "cmd+t"
 close_tab    = "prefix+shift+x"
 
 # Workspaces (sidebar entries) — ⌘K/J cycle, ⌘N new, ⌘P picker,
-# ⌘B sidebar toggle. Numeric jump is ⌘1-9 via [keys.indexed] below.
+# ⌘B sidebar toggle. No numeric workspace jump — ⌘1-9 is the agent jump
+# (see [keys.indexed] below); reach a workspace by ⌘K/J or the ⌘P picker.
 previous_workspace = "cmd+k"
 next_workspace     = "cmd+j"
 new_workspace      = "cmd+n"
@@ -119,6 +123,8 @@ toggle_sidebar     = "cmd+b"
 # "move tabs") stay unbound: herdr has no reorder for agents/tabs (no CLI).
 previous_agent = "cmd+["
 next_agent     = "cmd+]"
+# Direct numeric jump ⌘1-9 → Nth agent in the agent panel is [keys.indexed]
+# agents = "cmd" below (replaced the workspace jump, 2026-09-05).
 
 # ⌃s sub-prefix: zoom = ⌃s f, rename tab = ⌃s ,. There is no equalize action
 # (no keybind, no CLI), so the Karabiner Left-Option-tap gesture does ONLY the
@@ -157,11 +163,13 @@ new_worktree    = "prefix+shift+g"
 open_worktree   = "prefix+g"
 remove_worktree = "prefix+ctrl+g"
 
-# Direct numeric jumps: ⌃1-9 = tab, ⌘1-9 = workspace.
-# herdr's [keys.indexed] maps a bare modifier over 1..9.
+# Direct numeric jumps: ⌃1-9 = tab, ⌘1-9 = agent (Nth entry in the agent
+# panel, in its current sort order — see ui.agent_panel_sort). herdr's
+# [keys.indexed] maps a bare modifier over 1..9. `workspaces` is deliberately
+# unset: ⌘ is taken by agents, and there is no third free modifier.
 [keys.indexed]
-tabs       = "ctrl"   # ⌃1-9 → jump tab
-workspaces = "cmd"    # ⌘1-9 → jump workspace
+tabs   = "ctrl"   # ⌃1-9 → jump tab
+agents = "cmd"    # ⌘1-9 → jump agent
 
 # Direct pane MOVE (swap with neighbor) on ⌃⌥hjkl — reposition the focused
 # pane within the layout. herdr has no native swap keybind action (only the
@@ -247,6 +255,9 @@ pane_gaps = false
 # sidebar/agent panel already shows which agent owns each split, so the
 # in-border label was redundant chrome.
 show_agent_labels_on_pane_borders = false
+
+# Written by herdr itself (in-app toggle); equals the default "dots".
+status_indicators = "dots"
 
 [ui.toast]
 # In-app toasts only. Routing to the OS would be a no-op anyway —

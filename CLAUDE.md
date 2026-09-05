@@ -168,7 +168,8 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   - Create / split / close on `⌘`: `⌘T` new tab · `⌘N` new workspace · `⌘D` split
     right · `⌘⇧D` split down · `⌘W` close focused **pane** · `⌘B` sidebar · `⌘P`
     workspace picker · `⌘E` resize mode. Direct pane swap: `⌃⌥hjkl`. Numeric
-    jump: `⌃1-9` tab · `⌘1-9` workspace. There is no equalize action, so the
+    jump: `⌃1-9` tab · `⌘1-9` agent (Nth entry in the agent panel; no numeric
+    workspace jump — use `⌘K/J` or `⌘P`). There is no equalize action, so the
     Karabiner Left-Option-tap gesture only does zoom.
 - **herdr UI chrome** is themed Tokyo Night with Catppuccin Mocha token overrides
   (`config.toml [theme]`/`[ui]`): transparent tab-bar/panels over the terminal

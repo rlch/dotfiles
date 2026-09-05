@@ -62,8 +62,8 @@ shell-integration-features = ssh-env,ssh-terminfo
 # intact (no global macos-option-as-alt).
 keybind = alt+backspace=text:\x1b\x7f
 
-# cmd+1..9 → emit CSI-u with the SUPER modifier so herdr reads ⌘1-9 as a
-# workspace jump ([keys.indexed] workspaces = "cmd" in herdr's config.toml).
+# cmd+1..9 → emit CSI-u with the SUPER modifier so herdr reads ⌘1-9 as an
+# agent jump ([keys.indexed] agents = "cmd" in herdr's config.toml).
 # Modifier 9 = 1 + super(8); codepoints 49..57 = '1'..'9'. ⌃1-9 (tab jump)
 # reaches herdr natively via the kitty protocol, so it needs no keybind here.
 #
