@@ -58,6 +58,20 @@ session, `model:` on the Agent tool, and per-phase `opts.model` in a Workflow.
 - **Opus** — implementation, and ordinary research synthesis.
 - **Sonnet** — cheaper research, and the high-volume fan-out phases of a
   workflow: scoping, retrieval, adversarial verification.
+- **A fix is picked by complexity, not by default** (operator, 2026-09-07,
+  mid QA walk). **Sonnet** for a one-file or one-line change whose brief names
+  the files and quotes the rule; **Opus** for an ordinary fix — a spec sentence,
+  a gate, a handful of files; **Fable** only when the fix is cross-cutting and
+  its shape is unruled, which is usually a proposal wearing a fix's name. The
+  dispatcher says which in the brief's first line.
+- **The tier is not the effort.** `effortLevel: xhigh` in `settings.json` is
+  inherited by every subagent, so an unset Sonnet one-liner reasons as hard as
+  Fable speccing. The `fix` agent (`~/.claude/agents/fix.md`, dispatched as
+  `subagent_type: fix`, `model:` overriding its Sonnet default) sets
+  `effort: high`; the orchestrator keeps `xhigh`. Measured 2026-09-07
+  (`parley/docs/where-the-minutes-go.md`): effort is ~20% of a turn's cost and
+  the turn count is the rest — a fix is one loop, one verification line, never
+  `pnpm check`.
 - A Workflow chooses per phase, never one model for the whole script. The
   bundled `deep-research` workflow is read-only; reproduce this tiering in a
   custom script when needed. Fable is selectable as an agent/subagent model
