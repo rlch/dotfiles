@@ -1,0 +1,9 @@
+# ~/.npmrc — rendered by chezmoi from ~/dev/dotfiles/private_dot_npmrc.tmpl; edit the source.
+#
+# GitHub Packages holds the organisation's private npm packages (@mathgaps/ui,
+# @mathgaps/session — schools-ts DESIGN.md R157). The token is gh's own OAuth
+# token (scope write:packages, which reads too), captured at `chezmoi apply`
+# time, so nothing secret lives in the dotfiles source. Re-apply after
+# `gh auth login` / `gh auth refresh`.
+@mathgaps:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken={{ output "gh" "auth" "token" | trim }}
