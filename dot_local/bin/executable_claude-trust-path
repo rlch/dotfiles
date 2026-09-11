@@ -7,7 +7,7 @@ of the cwd (cli.js: FF -> BF with LL(cwd) as the boundary). So trust on $HOME or
 ~/dev never reaches inside a repo, and every fresh git worktree (a herdr
 worktree under ~/.herdr/worktrees/<repo>/<slug>, a submodule checkout, a
 clone) prompts "Do you trust the files in this folder?" until ITS OWN toplevel
-has an entry. ~/dev/parley stopped prompting only because it was accepted once.
+has an entry. ~/dev/unspoke stopped prompting only because it was accepted once.
 
 `cl` calls this with the launch dir right before exec'ing claude, so whichever
 account clodcurrent picks, the folder is already trusted. Writes every
