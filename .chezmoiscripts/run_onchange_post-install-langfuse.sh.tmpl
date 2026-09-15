@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Langfuse for agents: the langfuse/skills Agent Skill + the Langfuse MCP server
+# on the self-hosted instance (langfuse.tutero.dev), registered USER-scope in
+# EVERY Claude account dir (~/.claude and ~/.claude-<slug>), the same idiom as
+# claude-trust-path — `.claude.json` (mcpServers) is per-account, unlike
+# settings/skills which clodcurrent symlinks.
+#
+# Skill: lives in ~/.agents/skills/langfuse (universal dir, like `dotfiles`);
+# ~/.claude/skills/langfuse is a chezmoi symlink to it. Installed once here by
+# cloning langfuse/skills; update with `npx skills update langfuse -g -y`.
+#
+# MCP: needs a project-scoped API key pair (Langfuse → project modality →
+# Settings → API Keys), stored in 1Password as
+#   vault "Engineering & Development" (bywkocjywlrt5ck43vjsfqmb64)
+#   item  "Langfuse modality API key"  fields: username=pk-lf-…  credential=sk-lf-…
+# Skipped (not failed) when op or the item is unavailable, so apply never blocks.
+# The token lands in each .claude.json in plaintext, like every other user-scope
+# header — rotate by replacing the 1Password item and re-running `chezmoi apply`.
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+LANGFUSE_URL="https://langfuse.tutero.dev"
+SKILL_DIR="$HOME/.agents/skills/langfuse"
+OP_ACCOUNT="tutero.1password.com"
+OP_ITEM="op://bywkocjywlrt5ck43vjsfqmb64/Langfuse modality API key"
+
+# --- skill ---------------------------------------------------------------
+if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
+  if command -v git >/dev/null 2>&1; then
+    tmp=$(mktemp -d)
+    echo "langfuse: installing agent skill → $SKILL_DIR"
+    git clone -q --depth 1 https://github.com/langfuse/skills "$tmp" \
+      && mkdir -p "$HOME/.agents/skills" \
+      && rm -rf "$SKILL_DIR" \
+      && cp -R "$tmp/skills/langfuse" "$SKILL_DIR"
+    rm -rf "$tmp"
+  else
+    echo "langfuse: git not found; skipping skill install" >&2
+  fi
+fi
+
+# --- MCP server ----------------------------------------------------------
+if ! command -v claude >/dev/null 2>&1; then
+  echo "langfuse: claude CLI not on PATH; skipping MCP registration"; exit 0
+fi
+if ! command -v op >/dev/null 2>&1; then
+  echo "langfuse: 1Password CLI not on PATH; skipping MCP registration"; exit 0
+fi
+PK=$(op read "$OP_ITEM/username"   --account "$OP_ACCOUNT" 2>/dev/null || true)
+SK=$(op read "$OP_ITEM/credential" --account "$OP_ACCOUNT" 2>/dev/null || true)
+if [ -z "$PK" ] || [ -z "$SK" ]; then
+  echo "langfuse: no API key in 1Password ($OP_ITEM); MCP not registered. Create the item and re-run chezmoi apply."
+  exit 0
+fi
+TOKEN=$(printf '%s:%s' "$PK" "$SK" | base64 | tr -d '\n')
+
+for dir in "$HOME/.claude" "$HOME"/.claude-*; do
+  case "$dir" in *-swap-backup) continue ;; esac
+  [ -f "$dir/.claude.json" ] || continue
+  CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user langfuse >/dev/null 2>&1 || true
+  if CLAUDE_CONFIG_DIR="$dir" claude mcp add -s user --transport http langfuse "$LANGFUSE_URL/api/public/mcp" \
+       --header "Authorization: Basic $TOKEN" >/dev/null 2>&1; then
+    echo "langfuse: MCP registered in $(basename "$dir")"
+  else
+    echo "langfuse: MCP registration FAILED in $(basename "$dir")" >&2
+  fi
+done
+{{- end }}

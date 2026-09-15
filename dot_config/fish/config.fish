@@ -74,6 +74,7 @@ set -gx HEADROOM_PORT     8787
 set -gx HEADROOM_HOST     127.0.0.1
 set -gx HEADROOM_MODE     token
 set -gx HEADROOM_BACKEND  anthropic
+set -gx LANGFUSE_BASE_URL https://langfuse.tutero.dev   # self-hosted; keys via `langfuse-env`
 #t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
 
 # fzf — Catppuccin Mocha (matches ghostty)
