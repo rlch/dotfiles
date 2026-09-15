@@ -44,13 +44,21 @@ fi
 if ! command -v claude >/dev/null 2>&1; then
   echo "langfuse: claude CLI not on PATH; skipping MCP registration"; exit 0
 fi
-if ! command -v op >/dev/null 2>&1; then
-  echo "langfuse: 1Password CLI not on PATH; skipping MCP registration"; exit 0
+# Key pair from the local cache first (no Touch ID); 1Password only if the cache is absent.
+CACHE="$HOME/.config/langfuse/env"
+PK=""; SK=""
+if [ -r "$CACHE" ]; then
+  PK=$(sed -n 's/^LANGFUSE_PUBLIC_KEY=//p' "$CACHE"); SK=$(sed -n 's/^LANGFUSE_SECRET_KEY=//p' "$CACHE")
+elif command -v op >/dev/null 2>&1; then
+  PK=$(op read "$OP_ITEM/username"   --account "$OP_ACCOUNT" 2>/dev/null || true)
+  SK=$(op read "$OP_ITEM/credential" --account "$OP_ACCOUNT" 2>/dev/null || true)
+  if [ -n "$PK" ] && [ -n "$SK" ]; then
+    mkdir -p "$(dirname "$CACHE")"; umask 077
+    printf 'LANGFUSE_PUBLIC_KEY=%s\nLANGFUSE_SECRET_KEY=%s\nLANGFUSE_BASE_URL=%s\nLANGFUSE_HOST=%s\n' "$PK" "$SK" "$LANGFUSE_URL" "$LANGFUSE_URL" > "$CACHE"
+  fi
 fi
-PK=$(op read "$OP_ITEM/username"   --account "$OP_ACCOUNT" 2>/dev/null || true)
-SK=$(op read "$OP_ITEM/credential" --account "$OP_ACCOUNT" 2>/dev/null || true)
 if [ -z "$PK" ] || [ -z "$SK" ]; then
-  echo "langfuse: no API key in 1Password ($OP_ITEM); MCP not registered. Create the item and re-run chezmoi apply."
+  echo "langfuse: no API key in $CACHE or 1Password; MCP not registered."
   exit 0
 fi
 TOKEN=$(printf '%s:%s' "$PK" "$SK" | base64 | tr -d '\n')
