@@ -259,6 +259,14 @@ show_agent_labels_on_pane_borders = false
 # Written by herdr itself (in-app toggle); equals the default "dots".
 status_indicators = "dots"
 
+[ui.sidebar.agents.rows_by_agent]
+# Codex already emits its session title through OSC, and herdr exposes it as
+# terminal_title_stripped (without the animated status prefix). Show that live
+# value directly: the default rows only show workspace/tab and agent, while our
+# older title-forwarding hook only renames Claude tabs. Keep tab labels as well
+# so manually named research tasks remain distinguishable and stay user-owned.
+codex = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+
 [ui.toast]
 # In-app toasts only. Routing to the OS would be a no-op anyway —
 # ghostty has `desktop-notifications = false` — so keep herdr's
