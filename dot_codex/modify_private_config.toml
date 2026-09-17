@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Keep the operator's full-access default without copying Codex's live state.
+
+Codex and herdr rewrite models, hook trust and MCP entries in this file. A chezmoi
+modifier preserves those entries while keeping the explicitly requested defaults
+(2026-09-18): no approval prompts and no filesystem sandbox. Explicit launch flags
+or managed policy can still override these defaults.
+"""
+import re
+import sys
+
+content = sys.stdin.read()
+# These settings belong to the TOML root, before any named table. Leave all table
+# contents verbatim, including permission settings in an explicitly named profile.
+table = re.search(r"(?m)^\s*\[", content)
+boundary = table.start() if table else len(content)
+root, tables = content[:boundary], content[boundary:]
+for key, value in (
+    ("approval_policy", "never"),
+    ("sandbox_mode", "danger-full-access"),
+):
+    assignment = f'{key} = "{value}"\n'
+    pattern = rf'(?m)^[ \t]*(?:{key}|"{key}"|\'{key}\')[ \t]*=[^\n]*(?:\n|$)'
+    if re.search(pattern, root):
+        root = re.sub(pattern, assignment, root)
+    else:
+        root = assignment + root
+sys.stdout.write(root + tables)
