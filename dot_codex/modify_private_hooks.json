@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Remove hooks left by deleted Unspoke smoke-test builds.
+
+Hook installers own this file. Preserve their registrations and remove only
+missing executables from Unspoke's temporary pane-apply test directories.
+"""
+import json
+from pathlib import Path
+import shlex
+import sys
+
+
+def stale_test_hook(hook):
+    try:
+        command = shlex.split(hook.get("command", ""))
+    except ValueError:
+        return False
+    if len(command) != 5 or command[1] != "hook" or command[3:] != ["--runtime", "codex"]:
+        return False
+    executable = Path(command[0])
+    return (
+        executable.is_absolute()
+        and executable.parts[-3:] == ("target", "debug", "unspoke")
+        and any(part.startswith("unspoke-pane-apply-") for part in executable.parts)
+        and not executable.exists()
+    )
+
+
+content = sys.stdin.read()
+document = json.loads(content or "{}")
+changed = False
+for event, groups in list(document.get("hooks", {}).items()):
+    kept_groups = []
+    for group in groups:
+        hooks = group.get("hooks", [])
+        kept_hooks = [hook for hook in hooks if not stale_test_hook(hook)]
+        if len(kept_hooks) == len(hooks):
+            kept_groups.append(group)
+            continue
+        changed = True
+        if kept_hooks:
+            kept_groups.append({**group, "hooks": kept_hooks})
+    if kept_groups:
+        document["hooks"][event] = kept_groups
+    elif groups:
+        del document["hooks"][event]
+
+sys.stdout.write(json.dumps(document, indent=2) + "\n" if changed else content)
