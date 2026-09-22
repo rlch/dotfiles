@@ -1,0 +1,56 @@
+#!/bin/sh
+# op — shim in front of the real 1Password CLI for AGENT processes only.
+#
+# Problem: with the desktop-app integration, every new process that runs
+# `op read` is a new "terminal session" to 1Password, so each agent tool call
+# (Claude Code, Codex, OpenCode, Hermes spawn a fresh shell per command) costs
+# a Touch ID prompt. An agent polling a credential = a prompt every 30 s.
+#
+# Fix: when an agent is in the ancestry (or an agent env marker is set), serve
+# `op read op://…` from a per-user cache under ~/.config/op/agent-cache
+# (mode 0600, behind FileVault + login, same posture as ~/.config/langfuse/env
+# and the passphrase-less git signing key). First read still prompts once;
+# entries expire after OP_AGENT_CACHE_TTL_MIN minutes (default 7 days).
+# Everything else, and every interactive use, goes straight to the real op.
+#
+# Refresh one secret early:  rm ~/.config/op/agent-cache/<hash>  (or the dir).
+# Force the cache outside an agent: OP_AGENT_CACHE=1 op read op://…
+
+real=/opt/homebrew/bin/op
+[ -x "$real" ] || real=$(PATH=$(echo "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | paste -sd: -) command -v op)
+
+[ "$1" = "read" ] || exec "$real" "$@"
+
+agent=0
+[ -n "${OP_AGENT_CACHE}${CLAUDECODE}${CODEX_SANDBOX}${CODEX_THREAD_ID}${OPENCODE_SESSION}${HERMES_AGENT}" ] && agent=1
+if [ "$agent" = 0 ]; then
+  p=$PPID; i=0
+  while [ "${p:-0}" -gt 1 ] && [ $i -lt 15 ]; do
+    case "$(ps -o comm= -p "$p" 2>/dev/null)" in
+      *claude*|*codex*|*opencode*|*hermes*) agent=1; break ;;
+    esac
+    p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' '); i=$((i+1))
+  done
+fi
+[ "$agent" = 1 ] || exec "$real" "$@"
+
+ref=""
+for a in "$@"; do case "$a" in op://*) ref=$a ;; esac; done
+[ -n "$ref" ] || exec "$real" "$@"
+
+dir="$HOME/.config/op/agent-cache"
+umask 077
+mkdir -p "$dir"
+key=$(printf '%s\n' "$@" | shasum -a 256 | cut -c1-40)
+f="$dir/$key"
+ttl=${OP_AGENT_CACHE_TTL_MIN:-10080}
+if [ -f "$f" ] && [ -z "$(find "$f" -mmin +"$ttl" 2>/dev/null)" ]; then
+  exec cat "$f"
+fi
+tmp="$dir/.$key.$$"
+if "$real" "$@" > "$tmp"; then
+  mv -f "$tmp" "$f"
+  exec cat "$f"
+else
+  rc=$?; rm -f "$tmp"; exit $rc
+fi

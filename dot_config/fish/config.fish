@@ -9,12 +9,14 @@ set fish_greeting
 # --- PATH -------------------------------------------------------------------
 # Keep this list short and intentional. Tool-specific PATH entries belong
 # to mise (`mise use <tool>`) or the tool's own installer.
+# ~/.local/bin goes first so its shims win over Homebrew (e.g. the `op` shim
+# that caches 1Password reads for agent processes — see dot_local/bin/op).
 fish_add_path -g \
+    $HOME/.local/bin \
     /opt/homebrew/opt/rustup/bin \
     /opt/homebrew/bin \
     /opt/homebrew/opt/gnu-sed/libexec/gnubin \
     /opt/homebrew/opt/python@3.13/libexec/bin \
-    $HOME/.local/bin \
     $HOME/.cargo/bin \
     $HOME/go/bin \
     $HOME/fvm/default/bin   # fvm's globally-selected Flutter — populated by `fvm global <ver>`
@@ -76,6 +78,12 @@ set -gx HEADROOM_MODE     token
 set -gx HEADROOM_BACKEND  anthropic
 set -gx LANGFUSE_BASE_URL https://langfuse.tutero.dev   # self-hosted; keys via `langfuse-env`
 #t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
+
+# Java — brew's openjdk is keg-only and invisible to /usr/libexec/java_home.
+# JAVA_HOME lets JVM tools (maestro for Android UI flows, etc.) find it without
+# a sudo symlink into /Library/Java/JavaVirtualMachines.
+set -l _jdk /opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home
+test -d $_jdk; and set -gx JAVA_HOME $_jdk
 
 # fzf — Catppuccin Mocha (matches ghostty)
 set -gx FZF_DEFAULT_OPTS "\
