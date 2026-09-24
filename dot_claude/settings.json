@@ -1,5 +1,6 @@
 {
   "env": {
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5-5",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION": "2000"
   },
@@ -361,6 +362,7 @@
     "claude-md-management@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
+    "figma@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
@@ -369,6 +371,7 @@
     "ralph-loop@claude-plugins-official": true,
     "revdiff@revdiff": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
+    "sentry@claude-plugins-official": false,
     "skill-creator@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true

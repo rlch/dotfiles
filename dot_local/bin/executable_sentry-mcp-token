@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# The Sentry MCP server for Claude Code, authenticated by a token FILE rather
+# than OAuth, so no account dir (~/.claude, ~/.claude-<slug>) ever asks to log
+# in or re-authorize. The token is the tutero-au `iac` internal integration's
+# (org:read, project:read/write/admin, releases, team), kept outside the repo.
+# Registered in every account by run_onchange_post-install-sentry-mcp.sh.tmpl.
+set -euo pipefail
+
+TOKEN_FILE="${SENTRY_TOKEN_FILE:-$HOME/.config/schools-ts-preview/sentry-auth-token}"
+if [ ! -r "$TOKEN_FILE" ]; then
+  echo "sentry-mcp-token: no token at $TOKEN_FILE" >&2
+  exit 1
+fi
+SENTRY_ACCESS_TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
+export SENTRY_ACCESS_TOKEN
+exec npx -y @sentry/mcp-server@0.40.0 --organization-slug=tutero-au "$@"
