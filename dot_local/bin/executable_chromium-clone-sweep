@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Delete the code-signing copies Chromium-family browsers leave behind.
+#
+# Since Chrome 121 a browser launched from an app bundle copies the bundle into
+# $TMPDIR/../X/<bundle id>.code_sign_clone/code_sign_clone.XXXXXX and removes the
+# copy only on a clean quit. Headless runs that are killed (every agent
+# screenshot, every Playwright run on a bundled Chromium) leak one each: 730 of
+# them, 267 GB, filled the disk on 2026-09-25. `--disable-features=
+# MacAppCodeSignClone` stops a launch making one; this sweeps up after the
+# launches nobody can pass that flag to.
+#
+# A copy is deleted only when it is older than an hour AND no running process
+# holds a file inside it. Run hourly by com.rjm.chromium-clone-sweep; safe to run
+# by hand: `chromium-clone-sweep` (add -n to list without deleting).
+set -euo pipefail
+
+dry=false
+[[ "${1:-}" == "-n" ]] && dry=true
+
+temp_dir=$(getconf DARWIN_USER_TEMP_DIR)
+x_dir="$(dirname "${temp_dir%/}")/X"
+[[ -d "$x_dir" ]] || exit 0
+# Resolved: getconf says /var/folders, lsof reports /private/var/folders, and an
+# in-use check on the unresolved path matches nothing (it deleted two live
+# copies on its first run).
+x_dir=$(cd -P "$x_dir" && pwd)
+
+in_use=$(lsof -Fn 2>/dev/null | grep -o "${x_dir}/[^/]*code_sign_clone/code_sign_clone\.[A-Za-z0-9]*" | sort -u || true)
+
+removed=0
+while IFS= read -r clone; do
+  [[ -n "$clone" ]] || continue
+  if grep -qxF -- "$clone" <<<"$in_use"; then continue; fi
+  if $dry; then echo "would remove $clone"; else rm -rf -- "$clone"; fi
+  removed=$((removed + 1))
+done < <(find "$x_dir/" -mindepth 2 -maxdepth 2 -type d -name 'code_sign_clone.*' -path '*code_sign_clone/*' -mmin +60 2>/dev/null)
+
+echo "$(date '+%F %T') chromium-clone-sweep: $removed $($dry && echo would-remove || echo removed)"

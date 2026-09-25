@@ -68,7 +68,13 @@ function chrome-debug --description 'Launch Chromium with CDP on :9222 so Claude
         end
     end
 
+    # --disable-features=MacAppCodeSignClone: Chromium otherwise copies its
+    # whole bundle into $TMPDIR/../X/org.chromium.Chromium.code_sign_clone on
+    # every launch and leaks the copy whenever it is killed rather than quit —
+    # 730 of them, 267 GB, filled the disk on 2026-09-25. The hourly sweep
+    # (chromium-clone-sweep) catches launches that cannot take the flag.
     "$chrome" \
+        --disable-features=MacAppCodeSignClone \
         --remote-debugging-port=$port \
         --user-data-dir="$profile" \
         $argv >/dev/null 2>&1 &

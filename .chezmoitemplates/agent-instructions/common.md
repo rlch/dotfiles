@@ -116,5 +116,9 @@ request.
   `background: true`.
 - A screenshot or page check that needs nothing interactive runs in a headless
   Chromium of your own on another port — `/Applications/Chromium.app/Contents/
-  MacOS/Chromium --headless=new --remote-debugging-port=<free port>
-  --user-data-dir=<scratch dir>` — which can steal nothing. Kill it when done.
+  MacOS/Chromium --headless=new --disable-features=MacAppCodeSignClone
+  --remote-debugging-port=<free port> --user-data-dir=<scratch dir>` — which can
+  steal nothing. Kill it when done. The `--disable-features` flag is not
+  optional: without it every launch leaves a full copy of the app under
+  `$TMPDIR/../X`, and a killed one never removes it (730 copies, 267 GB, filled
+  the disk on 2026-09-25). A Playwright `launch()` passes it in `args`.
