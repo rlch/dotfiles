@@ -48,13 +48,11 @@ told you belongs back in that skill so the next run does not hit the same gap.
   --and-rebase`), or `git abm <base>` for a deep stack.
 - PRs are squash-merged. The PR title becomes the squashed conventional commit.
 - Force-push is allowed on personal branches, never on `main` or `master`.
-- **`git push` needs no approval — push when the work is ready, without asking.**
-  Standing decision (2026-08-27), replacing a per-instance-approval rule that only
-  ever produced a prompt the operator always said yes to. The guards that guard real
-  incidents stay and are NOT relaxed by this: never force-push `main`/`master`, and
-  never push from a Claude worktree (land through the parent checkout). Pushing a
-  branch nobody asked you to create is still out of scope — this licenses pushing
-  work you were asked to do, not inventing new remote state.
+- **`git push` needs no approval, from anywhere: push when the work is ready** (operator,
+  2026-09-30, replacing the 2026-08-27 rule and its worktree ban; the push guard hook is
+  gone). A worktree, including a Claude worktree, pushes its own branch. Never force-push
+  `main`/`master` (settings still deny it), and pushing a branch nobody asked you to create
+  is still out of scope.
 - **Never `git stash`, anywhere, for any reason.** `refs/stash` is one shared ref
   in the common git dir, so every worktree and agent pops the same stack; a
   conflicting pop leaves markers and unmerged entries that block `merge

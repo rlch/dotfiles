@@ -31,9 +31,6 @@
       "Bash(cat ~/.aws/*)",
       "Bash(cat ~/.ssh/id_*)"
     ],
-    "ask": [
-      "Bash(git push:*)"
-    ],
     "defaultMode": "auto",
     "additionalDirectories": [
       "/Users/rjm"
@@ -103,16 +100,6 @@
           {
             "type": "command",
             "command": "~/.claude/rtk-hook.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/git-push-guard.sh",
-            "timeout": 10
           }
         ]
       },

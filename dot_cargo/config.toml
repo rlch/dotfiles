@@ -16,6 +16,9 @@
 # tmux, browser, Claude sessions, etc.
 [build]
 jobs = 14
+# sccache caches the registry's crates across every worktree; the workspace's own
+# crates stay incremental (sccache passes incremental crates through uncached).
+rustc-wrapper = "sccache"
 
 # ---------------------------------------------------------------------------
 # Linker — Homebrew lld for Mach-O
@@ -48,10 +51,10 @@ rustflags = [
 #   debuginfo cost. Kept explicit so it survives future debug=true overrides.
 #
 # incremental = true:
-#   Cargo's native incremental cache. The right inner-loop tool for local
-#   dev. sccache was tried and reversed — it's a CI tool (cross-runner
-#   artifact dedup); for one-machine dev it disables incremental in
-#   exchange for cross-worktree dedup that's not worth the trade-off.
+#   Cargo's native incremental cache stays on for the workspace's crates.
+#   sccache (above) now only caches the non-incremental registry crates, so
+#   the two no longer trade off (schools-ts local-gates D6, operator 2026-09-30:
+#   two dozen worktrees each rebuilt the same registry crates).
 #
 # [profile.dev.package."*"] opt-level = 0:
 #   Both workspace crates AND deps stay at the default 0. We don't care
