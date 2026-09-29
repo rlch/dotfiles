@@ -108,6 +108,9 @@ brew "cargo-nextest"        # 2-3× faster test runner; used by `just test` and
                             # aliased as `cargo test` via ~/.cargo/config.toml.
 brew "cargo-llvm-cov"       # line coverage via LLVM; used by `just cov`
 brew "cargo-fuzz"           # libFuzzer driver for codec fuzzing
+brew "sccache"              # shared compile cache: the schools-ts gates wrap their
+                            # cargo in it (scripts/cargo.mjs); hand-run cargo does not
+                            # (see ~/.cargo/config.toml, incremental).
 
 # === Language runtimes ===
 # Available globally so mason.nvim (in nvim) can install LSPs/formatters that
