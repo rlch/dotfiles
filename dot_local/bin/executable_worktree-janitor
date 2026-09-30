@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# Keep build output from filling the disk: the lifecycle every worktree lacks.
+#
+# On 2026-09-30 the data volume hit 0 bytes free twice: ~1.1 TB of Rust target/
+# across ~128 herdr worktrees, most idle for days (research: schools-ts
+# research/reports/worktree-disk-2026-09-30.md). Build output is a cache, so it
+# gets a cache's lifecycle, by age, whatever repository or session made it:
+#
+#   idle >= PRUNE hours   drop target/*/incremental   (65-73% of a warm target;
+#                         the next edit costs one full compile of the crates it
+#                         touches, ~1-3 min, nothing else rebuilds)
+#   idle >= CLEAN hours   drop the whole target dir   (the next build is cold,
+#                         ~4 min for schools-ts under sccache; 12 h, the
+#                         operator's timing, 2026-09-30)
+#   --remove-landed       remove a herdr worktree whose branch is on origin/main
+#                         or whose upstream is gone, tree clean, idle >= a day
+#
+# Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
+# works oldest-first until free >= GOAL GB.
+#
+# A cargo target is found by what cargo writes into every one: CACHEDIR.TAG and
+# .rustc_info.json. Nothing is touched while a process has its cwd inside the
+# checkout, or holds the target's build lock. Run hourly by
+# com.rjm.worktree-janitor; by hand: `worktree-janitor -n` lists without deleting.
+set -euo pipefail
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+
+dry=false remove_landed=false
+for arg in "$@"; do
+  case "$arg" in
+    -n) dry=true ;;
+    --remove-landed) remove_landed=true ;;
+    *) echo "usage: worktree-janitor [-n] [--remove-landed]" >&2; exit 2 ;;
+  esac
+done
+
+PRUNE_H=${JANITOR_PRUNE_HOURS:-6}
+CLEAN_H=${JANITOR_CLEAN_HOURS:-12}
+LANDED_H=${JANITOR_LANDED_HOURS:-24}
+FLOOR_GB=${JANITOR_FLOOR_GB:-200}
+GOAL_GB=${JANITOR_GOAL_GB:-400}
+ROOTS=("$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
+
+free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
+log() { echo "$(date '+%F %T') worktree-janitor: $*"; }
+act() { if $dry; then log "would $*"; else log "$*"; fi; }
+
+# Every cwd of every process, once: a checkout with a process in it is in use.
+busy_cwds=$(lsof -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | sort -u || true)
+in_use() { # $1 = checkout
+  grep -qF -- "$1" <<<"$busy_cwds" && return 0
+  [[ -n "$(lsof -t "$2"/*/.cargo-lock 2>/dev/null || true)" ]]
+}
+
+# Hours since anything was written at the target's top two levels (a build
+# writes deps/ and incremental/, so their mtimes move on every compile).
+idle_hours() {
+  local newest
+  newest=$(find "$1" -maxdepth 2 -exec stat -f %m {} + 2>/dev/null | sort -rn | head -1)
+  echo $(( ($(date +%s) - ${newest:-0}) / 3600 ))
+}
+
+targets() {
+  for root in "${ROOTS[@]}"; do
+    [[ -d "$root" ]] || continue
+    find "$root" -maxdepth 7 \( -name node_modules -o -name .git -o -name incremental -o -name deps -o -name .fingerprint \) -prune \
+      -o -name CACHEDIR.TAG -print 2>/dev/null
+  done | while IFS= read -r tag; do
+    t=$(dirname "$tag")
+    [[ -f "$t/.rustc_info.json" ]] && echo "$(idle_hours "$t") $t"
+  done | sort -rn # oldest first
+}
+
+sweep() { # $1 = prune hours, $2 = clean hours, $3 = stop once free >= this (0 = never)
+  local idle t checkout
+  while read -r idle t; do
+    [[ -d "$t" ]] || continue
+    (( $3 > 0 && $(free_gb) >= $3 )) && return
+    checkout=$(git -C "$(dirname "$t")" rev-parse --show-toplevel 2>/dev/null || dirname "$t")
+    in_use "$checkout" "$t" && continue
+    if (( idle >= $2 )); then
+      act "clean $t (idle ${idle} h)"; $dry || rm -rf -- "$t"
+    elif (( idle >= $1 )) && compgen -G "$t/*/incremental" >/dev/null; then
+      act "prune $t/*/incremental (idle ${idle} h)"; $dry || rm -rf -- "$t"/*/incremental
+    fi
+  done < <(targets)
+}
+
+# A herdr worktree whose work is on origin/main (fast-forward or cherry-picked
+# tip) or whose remote branch is gone (a squash-merged PR with delete-on-merge),
+# with nothing uncommitted or unpushed, is finished: remove it and its branch.
+remove_landed_worktrees() {
+  local wt branch track idle repo ws
+  for wt in "$HOME"/.herdr/worktrees/*/*/; do
+    wt=${wt%/}
+    [[ -f "$wt/.git" ]] || continue
+    branch=$(git -C "$wt" branch --show-current 2>/dev/null) || continue
+    [[ -n "$branch" && -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
+    # A worktree holding the trunk itself is always "on origin/main"; never remove it or its branch.
+    [[ "$branch" == main || "$branch" == master ]] && continue
+    grep -qF -- "$wt" <<<"$busy_cwds" && continue
+    idle=$(( ($(date +%s) - $(stat -f %m "$(git -C "$wt" rev-parse --git-dir)/logs/HEAD" 2>/dev/null || echo 0)) / 3600 ))
+    (( idle >= LANDED_H )) || continue
+    track=$(git -C "$wt" for-each-ref --format='%(upstream:track)' "refs/heads/$branch")
+    if [[ "$track" == "[gone]" ]] || git -C "$wt" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+      act "remove landed worktree $wt ($branch, idle ${idle} h)"
+      $dry && continue
+      repo=$(dirname "$(git -C "$wt" rev-parse --path-format=absolute --git-common-dir)")
+      ws=$(herdr worktree list --cwd "$repo" --json 2>/dev/null | jq -r --arg b "$branch" \
+        '.result.worktrees[] | select(.branch == $b) | .open_workspace_id // empty' || true)
+      if [[ -n "$ws" ]]; then herdr worktree remove --workspace "$ws" --json >/dev/null
+      else git -C "$repo" worktree remove "$wt"; fi
+      # -D: a squash-merged branch is never an ancestor of main; landing was checked above.
+      git -C "$repo" branch -D "$branch" >/dev/null
+    fi
+  done
+}
+
+before=$(free_gb)
+$remove_landed && remove_landed_worktrees
+sweep "$PRUNE_H" "$CLEAN_H" 0
+if (( $(free_gb) < FLOOR_GB )); then
+  log "pressure: $(free_gb) GB free < ${FLOOR_GB} GB, sweeping at 1 h / 6 h to ${GOAL_GB} GB"
+  sweep 1 6 "$GOAL_GB"
+fi
+log "free ${before} GB -> $(free_gb) GB"

@@ -1,0 +1,9 @@
+# sccache's own config (~/Library/Application Support/Mozilla.sccache/config).
+# The cap lives HERE, not in an env var: SCCACHE_CACHE_SIZE is read only by the
+# process that starts the one shared server, so a gate that sets it after the
+# server is up changes nothing (schools-ts scripts/cargo.mjs asked for 40G and
+# the server ran at the 10 GiB default, full, 49% Rust hits, 2026-09-30).
+# 50 GiB holds the registry crates of every workspace on this machine once,
+# in place of each worktree building its own.
+[cache.disk]
+size = 53687091200
