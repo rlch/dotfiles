@@ -79,18 +79,33 @@ sweep() { # $1 = prune hours, $2 = clean hours, $3 = stop once free >= this (0 =
     checkout=$(git -C "$(dirname "$t")" rev-parse --show-toplevel 2>/dev/null || dirname "$t")
     in_use "$checkout" "$t" && continue
     if (( idle >= $2 )); then
-      act "clean $t (idle ${idle} h)"; $dry || rm -rf -- "$t"
+      act "clean $t (idle ${idle} h)"; $dry || rm -rf -- "$t" || log "could not clean $t"
     elif (( idle >= $1 )) && compgen -G "$t/*/incremental" >/dev/null; then
-      act "prune $t/*/incremental (idle ${idle} h)"; $dry || rm -rf -- "$t"/*/incremental
+      act "prune $t/*/incremental (idle ${idle} h)"; $dry || rm -rf -- "$t"/*/incremental || log "could not prune $t"
     fi
   done < <(targets)
+}
+
+# Remove one worktree and its branch. Addressed through the common git dir, not
+# the "main" checkout: for a submodule (ai-gateway under the metarepo) that
+# checkout is .git/modules/<path>, which `git -C` cannot run in (the first real
+# run died there, 2026-09-30).
+remove_worktree() { # $1 = worktree, $2 = branch
+  local common ws
+  common=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir) || return 1
+  ws=$(herdr worktree list --cwd "$1" --json 2>/dev/null | jq -r --arg b "$2" \
+    '.result.worktrees[] | select(.branch == $b) | .open_workspace_id // empty' || true)
+  if [[ -n "$ws" ]]; then herdr worktree remove --workspace "$ws" --json >/dev/null || return 1
+  else git --git-dir="$common" worktree remove "$1" || return 1; fi
+  # -D: a squash-merged branch is never an ancestor of main; landing was checked by the caller.
+  git --git-dir="$common" branch -D "$2" >/dev/null
 }
 
 # A herdr worktree whose work is on origin/main (fast-forward or cherry-picked
 # tip) or whose remote branch is gone (a squash-merged PR with delete-on-merge),
 # with nothing uncommitted or unpushed, is finished: remove it and its branch.
 remove_landed_worktrees() {
-  local wt branch track idle repo ws
+  local wt branch track idle
   for wt in "$HOME"/.herdr/worktrees/*/*/; do
     wt=${wt%/}
     [[ -f "$wt/.git" ]] || continue
@@ -105,13 +120,7 @@ remove_landed_worktrees() {
     if [[ "$track" == "[gone]" ]] || git -C "$wt" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
       act "remove landed worktree $wt ($branch, idle ${idle} h)"
       $dry && continue
-      repo=$(dirname "$(git -C "$wt" rev-parse --path-format=absolute --git-common-dir)")
-      ws=$(herdr worktree list --cwd "$repo" --json 2>/dev/null | jq -r --arg b "$branch" \
-        '.result.worktrees[] | select(.branch == $b) | .open_workspace_id // empty' || true)
-      if [[ -n "$ws" ]]; then herdr worktree remove --workspace "$ws" --json >/dev/null
-      else git -C "$repo" worktree remove "$wt"; fi
-      # -D: a squash-merged branch is never an ancestor of main; landing was checked above.
-      git -C "$repo" branch -D "$branch" >/dev/null
+      remove_worktree "$wt" "$branch" || log "could not remove $wt; left as it is"
     fi
   done
 }
