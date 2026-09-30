@@ -100,7 +100,7 @@
 	; rebasing the tip of a PR stack onto main fixes up every intermediate
 	; branch in one shot — no manual double-rebase.
 	updateRefs = true
-	autoStash = true
+	autoStash = false   ; never stash implicitly: refs/stash is shared by every worktree and agent (operator, 2026-09-30)
 	autoSquash = true
 	missingCommitsCheck = error   ; abort an interactive rebase whose todo drops a commit
 
