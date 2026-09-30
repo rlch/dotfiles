@@ -63,7 +63,10 @@ idle_hours() {
 targets() {
   for root in "${ROOTS[@]}"; do
     [[ -d "$root" ]] || continue
-    find "$root" -maxdepth 7 \( -name node_modules -o -name .git -o -name incremental -o -name deps -o -name .fingerprint \) -prune \
+    # Read-only clones and forks hold no build of ours; walking them was most
+    # of an 18-minute scan of ~/dev (2026-09-30).
+    find "$root" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" \
+      -o -name node_modules -o -name .git -o -name incremental -o -name deps -o -name .fingerprint \) -prune \
       -o -name CACHEDIR.TAG -print 2>/dev/null
   done | while IFS= read -r tag; do
     t=$(dirname "$tag")
