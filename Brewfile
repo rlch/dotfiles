@@ -52,6 +52,8 @@ brew "coreutils"   # GNU coreutils (g-prefixed: gtimeout, grealpath, …). Provi
 # JSON / data
 brew "jq"
 brew "yq"          # jq for YAML/TOML/XML — deterministic query/edit of structured configs
+brew "sops"        # decrypt MathGaps/infrastructure's SOPS secrets (age recipients)
+brew "age"         # the key format sops uses there; private key at ~/.config/sops/age/keys.txt (never in this repo)
 brew "gron"        # flatten JSON to greppable `path = value` lines (`gron | rg`; reverse with -u)
 brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
 brew "tokei"       # code line counter by language
@@ -126,6 +128,18 @@ brew "uv"          # fast Python package/venv manager (pip + virtualenv replacem
 # Per-project Flutter SDK pinning via .fvmrc (mise doesn't manage Flutter).
 tap "leoafarias/fvm"
 brew "leoafarias/fvm/fvm"
+
+# === Android device automation ===
+# adb/fastboot for driving the phone (OPPO Find N6) from the terminal and from
+# agents. Pair once over USB or Wireless debugging, then `adb connect` over the
+# tailnet IP works from anywhere. maestro = declarative YAML UI flows over adb;
+# scrcpy = live screen mirror so you can watch/take over while an agent drives.
+# The mobile MCP server is registered separately via
+# `claude mcp add -s user mobile -- npx -y @mobilenext/mobile-mcp@latest`.
+cask "android-platform-tools"
+tap "mobile-dev-inc/tap"
+brew "mobile-dev-inc/tap/maestro"
+brew "scrcpy"
 
 # === Project + dev workflow ===
 brew "just"        # command runner, Make alternative
@@ -217,7 +231,6 @@ brew "opentofu"
 brew "apify-cli"
 
 # === AI dev tooling ===
-cask "claude-code"
 cask "codex"       # OpenAI's coding agent CLI
 # OpenCode — terminal AI coding agent. Host for the oh-my-openagent (OMO)
 # multi-agent harness, installed by post-install-omo.sh against your Claude
