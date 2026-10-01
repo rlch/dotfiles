@@ -20,20 +20,42 @@
 #
 # A cargo target is found by what cargo writes into every one: CACHEDIR.TAG and
 # .rustc_info.json. Nothing is touched while a process has its cwd inside the
-# checkout, or holds the target's build lock. Run hourly by
-# com.rjm.worktree-janitor; by hand: `worktree-janitor -n` lists without deleting.
+# checkout, or holds the target's build lock.
+#
+# Leaked processes get the same treatment, first (2026-10-01: load ~37 from an
+# iOS Simulator booted 14 h, four orphaned `yes` loops at 80% CPU for 16 h, and
+# days-old wrangler/workerd, vite, headless Chromium, http.server, log
+# followers and Claude shell-snapshot wrappers from long-landed worktrees):
+#
+#   orphan >= REAP hours  an ORPHAN (PPID 1, ours, not a launchd job) whose
+#                         executable is dev tooling (allowlisted() below) is
+#                         killed with its children: SIGTERM, SIGKILL after 5 s
+#   booted >= SIM hours   `xcrun simctl shutdown all`, unless Simulator.app or
+#                         Xcode is open
+#
+# A process with a live parent is never touched, nor is anything never_touch()
+# names, as the process or as any of its children. Reaping first frees the
+# checkouts those orphans sat in for the disk passes.
+#
+# Run hourly by com.rjm.worktree-janitor; by hand: `worktree-janitor -n`
+# (or --dry-run) lists without deleting or killing; --reap-only runs only the
+# process and simulator passes.
 set -euo pipefail
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
 
-dry=false remove_landed=false
+dry=false remove_landed=false reap_only=false
 for arg in "$@"; do
   case "$arg" in
-    -n) dry=true ;;
+    -n|--dry-run) dry=true ;;
     --remove-landed) remove_landed=true ;;
-    *) echo "usage: worktree-janitor [-n] [--remove-landed]" >&2; exit 2 ;;
+    --reap-only) reap_only=true ;;
+    *) echo "usage: worktree-janitor [-n|--dry-run] [--remove-landed] [--reap-only]" >&2; exit 2 ;;
   esac
 done
 
+REAP_H=${JANITOR_REAP_HOURS:-6}     # an orphan this old is a leak, not a job
+SIM_H=${JANITOR_SIM_HOURS:-4}       # a simulator booted this long is forgotten
+REAP_MATCH=${JANITOR_REAP_MATCH:-}  # regex a reaped command must also match (narrows a test run)
 PRUNE_H=${JANITOR_PRUNE_HOURS:-6}
 CLEAN_H=${JANITOR_CLEAN_HOURS:-12}
 LANDED_H=${JANITOR_LANDED_HOURS:-24}
@@ -45,8 +67,142 @@ free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
 log() { echo "$(date '+%F %T') worktree-janitor: $*"; }
 act() { if $dry; then log "would $*"; else log "$*"; fi; }
 
-# Every cwd of every process, once: a checkout with a process in it is in use.
-busy_cwds=$(lsof -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | sort -u || true)
+# --- processes ---------------------------------------------------------------
+
+UID_=$(id -u)
+TMP_RE="^(/private/var/folders/|/var/folders/|/private/tmp/|/tmp/|${TMPDIR:-/nonexistent/})"
+
+# "pid ppid uid age_seconds rss_kb command", every process, once.
+snapshot() {
+  ps -axo pid=,ppid=,uid=,etime=,rss=,command= -ww | awk '
+    function secs(e,  d, a, n, i, s) {
+      d = 0; if (index(e, "-")) { split(e, a, "-"); d = a[1]; e = a[2] }
+      n = split(e, a, ":"); s = 0; for (i = 1; i <= n; i++) s = s * 60 + a[i]
+      return d * 86400 + s
+    }
+    # ps can run on past argv into the environment ("\012KEY=value"): never log that.
+    { cmd = $0; sub(/^ *[0-9]+ +[0-9]+ +[0-9]+ +[0-9:-]+ +[0-9]+ /, "", cmd); sub(/\\012.*/, "", cmd)
+      print $1, $2, $3, secs($4), $5, cmd }'
+}
+
+descendants() { # $1 = pid; every pid below it in $ptable
+  awk -v root="$1" '{ kids[$2] = kids[$2] " " $1 }
+    END { q = root; while (q != "") { n = split(q, a, " "); q = ""
+      for (i = 1; i <= n; i++) { m = split(kids[a[i]], k, " ")
+        for (j = 1; j <= m; j++) { printf "%s ", k[j]; q = q " " k[j] } } } }' <<<"$ptable"
+}
+
+# What is never killed, whatever matches below: the automation browser, apps
+# and system daemons, and the long-lived tools sessions and the operator live in.
+never_touch() { # $1 = command
+  local cmd=$1 exe=${1%% *} rest=${1#* }
+  [[ "$cmd" == *--remote-debugging-port=9222* ]] && return 0
+  [[ "$cmd" =~ ^/Applications/Chromium\.app/.*\ --headless ]] && return 1
+  [[ "$cmd" =~ ^/(System|Applications|Library|usr/libexec|usr/sbin|sbin)/ ]] && return 0
+  [[ "$exe" == */claude/versions/* || "$exe" == *orbstack* || "$exe" == *docker* ]] && return 0
+  [[ "$exe" == "$HOME"/actions-runner* || "${rest%% *}" == "$HOME"/actions-runner* ]] && return 0
+  case "${exe##*/}" in
+    mosh-server|herdr|claude|sccache|launchd*|docker*|com.docker.*|orbstack*|OrbStack*|ollama|Ollama|Runner.*) return 0 ;;
+  esac
+  return 1
+}
+
+# Prints the class of dev tooling a command is, or fails: the allowlist.
+allowlisted() { # $1 = command
+  local cmd=$1 exe=${1%% *} args=" ${1#* } " tok
+  [[ "$cmd" == "$exe" ]] && args=" "
+  case "${exe##*/}" in
+    node)
+      if [[ "$args" =~ [\ /](wrangler|workerd|vite|vitest|tsx|playwright)[\ /.@-] ]]; then echo "node ${BASH_REMATCH[1]}"
+      elif [[ "$args" =~ [\ /](npm|pnpm)[^\ ]*\ (exec|dlx)\  || "$args" =~ [\ /]npx[\ .] ]]; then echo "npm exec"
+      # a script run from a temp dir: test fixtures (QA's stubborn.cjs) and scratch servers
+      elif tok=$(awk '{ for (i = 1; i <= NF; i++) if ($i !~ /^-/) { print $i; exit } }' <<<"$args") \
+        && [[ "$tok" =~ $TMP_RE && "$tok" =~ \.(c|m)?(j|t)s$ ]]; then echo "node scratch script"
+      else return 1; fi ;;
+    npm|pnpm|npx)
+      [[ "${exe##*/}" == npx || "$args" =~ ^\ (exec|dlx)\  ]] && echo "npm exec" || return 1 ;;
+    workerd|yes|tee) echo "${exe##*/}" ;;
+    tail)
+      [[ "$args" =~ \ -[a-zA-Z0-9]*[fF][a-zA-Z0-9]*\  ]] && echo "tail -f" || return 1 ;;
+    sed)
+      [[ "$args" =~ \ -[a-zA-Z]*u[a-zA-Z]*\  ]] && echo "sed -u" || return 1 ;;
+    python*|Python*)
+      [[ "$args" =~ \ -m\ (http\.server|SimpleHTTPServer)\  || "$args" == *devserver* ]] && echo "python http.server" || return 1 ;;
+    zsh|bash|sh)
+      [[ "$args" == *shell-snapshots/snapshot-* ]] && echo "shell-snapshot wrapper" || return 1 ;;
+    cargo|cargo-nextest)
+      [[ "$args" =~ ^\ (test|nextest)\  ]] && echo "cargo test" || return 1 ;;
+    Chromium|chrome-headless-shell|chrome)
+      [[ "$args" == *" --headless"* && "$cmd" != *--remote-debugging-port=9222* ]] && echo "headless chromium" || return 1 ;;
+    *)
+      # a cargo test binary: target/[<triple>/](debug|release)/deps/<name>-<16 hex>
+      [[ "$exe" =~ /target/([^/]+/)?[^/]+/deps/[^/]+-[0-9a-f]{16}$ ]] && echo "cargo test binary" || return 1 ;;
+  esac
+}
+
+reap() { # $1 = pid, $2 = age s, $3 = rss kb, $4 = class, $5 = command
+  local pid=$1 tree kid alive n=0
+  tree="$pid $(descendants "$pid")"
+  for kid in $tree; do
+    [[ "$kid" == "$pid" ]] && continue
+    n=$((n + 1))
+    if never_touch "$(awk -v p="$kid" '$1 == p { sub(/^([^ ]+ ){5}/, ""); print; exit }' <<<"$ptable")"; then
+      log "skip pid $pid: child $kid is never touched"; return 0
+    fi
+  done
+  act "reap pid $pid (orphan $(($2 / 3600)) h, $(($3 / 1024)) MB, $4, +$n children): ${5:0:200}"
+  $dry && return 0
+  # PIDs recycle: kill only if it is still the same orphan.
+  [[ "$(ps -o ppid=,command= -ww -p "$pid" 2>/dev/null | sed -e 's/^ *//' -e 's/\\012.*//')" == "1 $5" ]] || { log "pid $pid changed; left"; return 0; }
+  # shellcheck disable=SC2086
+  kill -TERM $tree 2>/dev/null || true
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    alive=$(for kid in $tree; do kill -0 "$kid" 2>/dev/null && echo "$kid"; done || true)
+    [[ -z "$alive" ]] && break
+    sleep 0.5
+  done
+  if [[ -n "$alive" ]]; then
+    log "pid $pid tree ignored SIGTERM for 5 s; SIGKILL $(echo $alive)"
+    # shellcheck disable=SC2086
+    kill -KILL $alive 2>/dev/null || true
+  fi
+  reaped=$((reaped + 1)) reaped_kb=$((reaped_kb + $3))
+}
+
+reap_orphans() {
+  local pid ppid uid age rss cmd class jobs
+  ptable=$(snapshot)
+  jobs=" $(launchctl list 2>/dev/null | awk 'NR > 1 && $1 ~ /^[0-9]+$/ { printf "%s ", $1 }') "
+  reaped=0 reaped_kb=0
+  while read -r pid ppid uid age rss cmd; do
+    [[ "$ppid" == 1 && "$uid" == "$UID_" && "$pid" != "$$" ]] || continue
+    (( age >= REAP_H * 3600 )) || continue
+    [[ "$jobs" == *" $pid "* ]] && continue
+    [[ -z "$REAP_MATCH" || "$cmd" =~ $REAP_MATCH ]] || continue
+    never_touch "$cmd" && continue
+    class=$(allowlisted "$cmd") || continue
+    reap "$pid" "$age" "$rss" "$class" "$cmd"
+  done <<<"$ptable"
+  $dry || (( reaped == 0 )) || log "reaped $reaped orphans, $((reaped_kb / 1024)) MB"
+}
+
+# A simulator booted for hours with no Simulator.app or Xcode to show it is
+# forgotten: each booted device is a launchd_sim with ~300 processes under it.
+shutdown_idle_simulators() {
+  local oldest n
+  oldest=$(awk -v u="$UID_" '$3 == u && $6 ~ /(^|\/)launchd_sim$/ && $4 > m { m = $4 } END { print m + 0 }' <<<"$ptable")
+  (( oldest > 0 && oldest >= SIM_H * 3600 )) || return 0
+  if pgrep -x -u "$UID_" Simulator >/dev/null || pgrep -x -u "$UID_" Xcode >/dev/null; then
+    log "simulator booted $((oldest / 3600)) h, but Simulator.app or Xcode is open; left"; return 0
+  fi
+  n=$(for pid in $(awk -v u="$UID_" '$3 == u && $6 ~ /(^|\/)launchd_sim$/ { print $1 }' <<<"$ptable"); do
+    echo "$pid $(descendants "$pid")"; done | wc -w | tr -d ' ')
+  act "shut down every simulator (oldest booted $((oldest / 3600)) h, $n processes)"
+  $dry || xcrun simctl shutdown all || log "could not shut the simulators down"
+}
+
+# --- disk --------------------------------------------------------------------
+
 in_use() { # $1 = checkout
   grep -qF -- "$1" <<<"$busy_cwds" && return 0
   [[ -n "$(lsof -t "$2"/*/.cargo-lock 2>/dev/null || true)" ]]
@@ -128,6 +284,12 @@ remove_landed_worktrees() {
   done
 }
 
+reap_orphans
+shutdown_idle_simulators
+$reap_only && exit 0
+
+# Every cwd of every process, once: a checkout with a process in it is in use.
+busy_cwds=$(lsof -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | sort -u || true)
 before=$(free_gb)
 $remove_landed && remove_landed_worktrees
 sweep "$PRUNE_H" "$CLEAN_H" 0
