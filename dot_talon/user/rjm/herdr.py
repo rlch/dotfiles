@@ -22,6 +22,10 @@ TELL_SETTLE = "1500ms"
 TELL_LIMIT_S = 300
 PEEK_LINES = 40
 
+FILLER = set(
+    "the and for from with its their what when only every this that are was not you your".split()
+)
+
 mod = Module()
 mod.list("herdr_word", desc="Every word in a live herdr agent's label")
 ctx = Context()
@@ -40,6 +44,13 @@ def words(label: str) -> list[str]:
     return re.sub(r"[^a-z]+", " ", label.lower()).split()
 
 
+def sayable(word: str) -> bool:
+    """Worth registering as a way to name an agent. Talon has to pick some
+    command for whatever it hears, so every filler word is a wrong target:
+    "agent previous" became "agent prs" (from land-open-prs, 2026-10-01)."""
+    return len(word) >= 3 and word not in FILLER and any(v in word for v in "aeiouy")
+
+
 def refresh():
     global agents
     try:
@@ -56,7 +67,9 @@ def refresh():
         # Same naming rule as the HUD (src-tauri/src/lib.rs).
         a["label"] = labels.get(a["workspace_id"], "") if name in (None, "main") else name
     agents = found
-    ctx.lists["user.herdr_word"] = {w: w for a in found for w in words(a["label"])}
+    ctx.lists["user.herdr_word"] = {
+        w: w for a in found for w in words(a["label"]) if sayable(w)
+    }
 
 
 def panel(action: str, **props):

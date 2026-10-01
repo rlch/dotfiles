@@ -4,8 +4,8 @@ app: ghostty
 mode: user.lean
 mode: command
 -
-agent next: key(cmd-])
-agent last: key(cmd-[)
+(agent next | next agent): key(cmd-])
+(agent (last | previous) | (last | previous) agent): key(cmd-[)
 # Answer a Claude Code approval prompt in the focused agent.
 agent approve: key(enter)
 agent (reject | stop): key(escape)
