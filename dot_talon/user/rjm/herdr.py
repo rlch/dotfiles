@@ -27,7 +27,6 @@ mod.list("herdr_word", desc="Every word in a live herdr agent's label")
 ctx = Context()
 
 agents: list[dict] = []
-panel_open = False
 previous_pane = ""
 tell_job = None
 
@@ -60,17 +59,10 @@ def refresh():
     ctx.lists["user.herdr_word"] = {w: w for a in found for w in words(a["label"])}
 
 
-def panel(show: bool, **props):
-    global panel_open
-    panel_open = show
-    send(
-        {
-            "type": "widget",
-            "id": "agents",
-            "action": "show" if show else "hide",
-            "props": props,
-        }
-    )
+def panel(action: str, **props):
+    """Show, hide or toggle the agents panel. The HUD owns whether it is open:
+    opening another panel closes it without Talon hearing about it."""
+    send({"type": "widget", "id": "agents", "action": action, "props": props})
 
 
 def focus(pane_id: str):
@@ -78,7 +70,7 @@ def focus(pane_id: str):
     here = next((a["pane_id"] for a in agents if a.get("focused")), "")
     if here and here != pane_id:
         previous_pane = here
-    panel(False)
+    panel("hide")
     actions.user.switcher_focus("Ghostty")
     subprocess.run([HERDR, "agent", "focus", pane_id], capture_output=True, timeout=3)
 
@@ -93,7 +85,7 @@ def worded(word: str) -> dict | None:
     refresh()
     matches = [a for a in agents if word in words(a["label"])]
     if len(matches) > 1:
-        panel(True, filter=word)
+        panel("show", filter=word)
     return matches[0] if len(matches) == 1 else None
 
 
@@ -132,11 +124,11 @@ def tell(agent: dict | None):
 class Actions:
     def herdr_agents_toggle():
         """Show or hide the numbered list of herdr agents"""
-        panel(not panel_open)
+        panel("toggle")
 
     def herdr_agents_status(status: str):
         """Show only the agents waiting on you, or only those working"""
-        panel(True, status=status)
+        panel("show", status=status)
 
     def herdr_agent_number(number: int):
         """Focus the Nth herdr agent"""
@@ -180,7 +172,7 @@ class Actions:
         if agent is None:
             return
         out = subprocess.run(
-            [HERDR, "agent", "read", agent["pane_id"], "--source", "visible"],
+            [HERDR, "agent", "read", agent["pane_id"], "--source", "visible", "--format", "ansi"],
             capture_output=True,
             text=True,
             timeout=3,
