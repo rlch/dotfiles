@@ -308,6 +308,10 @@ cask "the-unarchiver"
 # icon (Speech Recognition > Conformer D).
 cask "talon"
 
+# Flashes the Moonlander from ~/dev/moonlander (./flash); the firmware itself
+# builds in Docker, so no ARM toolchain is installed here.
+brew "dfu-util"
+
 # === Apps ===
 cask "firefox"
 cask "obsidian"
