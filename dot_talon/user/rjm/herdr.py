@@ -22,6 +22,10 @@ TELL_SETTLE = "1500ms"
 TELL_LIMIT_S = 300
 PEEK_LINES = 40
 
+# herdr's agent panel under agent_panel_sort = "priority": attention first,
+# newest state change breaking ties (src/ui/sidebar.rs, workspace_attention_priority).
+PRIORITY = {"blocked": 4, "done": 3, "working": 2, "idle": 1, "unknown": 0}
+
 FILLER = set(
     "the and for from with its their what when only every this that are was not you your".split()
 )
@@ -175,6 +179,17 @@ class Actions:
                     focus(a["pane_id"])
                     return
         actions.user.hud_notice("no agent is waiting")
+
+    def herdr_agent_latest():
+        """Focus the agent at the top of herdr's priority queue"""
+        refresh()
+        queue = sorted(
+            (a for a in agents if not a.get("focused")),
+            key=lambda a: (PRIORITY.get(a["agent_status"], 0), a.get("state_change_seq", 0)),
+            reverse=True,
+        )
+        if queue:
+            focus(queue[0]["pane_id"])
 
     def herdr_agent_back():
         """Return to the agent focused before the last jump"""

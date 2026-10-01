@@ -9,6 +9,8 @@ agents working: user.herdr_agents_status("working")
 agent <number_small>: user.herdr_agent_number(number_small)
 agent {user.herdr_word}: user.herdr_agent_word(herdr_word)
 agent ready: user.herdr_agent_ready()
+# The top of herdr's priority queue, as its agent panel sorts it.
+(agent | agents) latest: user.herdr_agent_latest()
 agent back: user.herdr_agent_back()
 agent status: user.herdr_agent_status()
 peek <number_small>: user.herdr_agent_peek(number_small)
