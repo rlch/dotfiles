@@ -35,6 +35,7 @@ import socket
 from talon import actions, cron, registry, scope, ui
 
 from .hud import popup
+from .superwhisper import dispatch
 
 SOCK = os.path.expanduser("~/.talon/ears.sock")
 
@@ -154,6 +155,7 @@ ACTIONS = {
     "listen_toggle": lambda: actions.user.listen_toggle(),
     "popup_open": lambda: popup(True),
     "popup_closed": lambda: popup(False),
+    "dispatch": dispatch,
 }
 
 
