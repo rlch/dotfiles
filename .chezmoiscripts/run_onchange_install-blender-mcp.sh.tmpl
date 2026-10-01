@@ -120,13 +120,11 @@ if ! command -v claude >/dev/null 2>&1; then
   exit 0
 fi
 
-if claude mcp list 2>/dev/null | grep -q '^blender:'; then
-  echo "blender-mcp: already registered with Claude Code — skipping"
-else
-  echo "blender-mcp: registering with Claude Code (user scope, stdio)"
-  claude mcp add -s user blender -- \
-    uv --directory "$BLENDER_MCP_CLONE/mcp" run blender-mcp
-fi
+# Not user scope (2026-10-01): every Claude session started the bridge, ~37
+# idle processes across 20+ sessions. A project that drives Blender adds it
+# itself: claude mcp add -s project blender -- uv --directory "$BLENDER_MCP_CLONE/mcp" run blender-mcp
+claude mcp remove blender -s user >/dev/null 2>&1 || true
+echo "blender-mcp: not registered globally; add it per project (see the comment above)"
 
 echo "blender-mcp: setup complete."
 echo "blender-mcp: NEXT — in Blender, open the 3D viewport sidebar (N)"

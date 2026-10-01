@@ -343,7 +343,7 @@
     "refreshInterval": 10
   },
   "enabledPlugins": {
-    "chrome-devtools-mcp@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": false,
     "ck@cavekit-marketplace": true,
     "clangd-lsp@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true,
@@ -354,7 +354,7 @@
     "gopls-lsp@claude-plugins-official": true,
     "hookify@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
+    "playwright@claude-plugins-official": false,
     "pyright-lsp@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
     "revdiff@revdiff": true,
