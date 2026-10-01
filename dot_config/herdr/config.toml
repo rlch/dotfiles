@@ -259,13 +259,29 @@ show_agent_labels_on_pane_borders = false
 # Written by herdr itself (in-app toggle); equals the default "dots".
 status_indicators = "dots"
 
+[ui.sidebar.agents]
+# herdr's default rows, plus two tokens from the agent-tags plugin
+# (~/dev/plugins/herdr/agent-tags): $letter far left is the agent's sticky
+# name for voice ("agent bat" in Talon, the same letter in the Talon HUD), and
+# $port lists its frontend dev-server ports (:5173) so you can open them. Both
+# disappear when unreported, so the rows fall back to the defaults without the
+# plugin. ⌘1-9 stays positional and does not follow the letters.
+rows = [
+  [{ token = "$letter", fg = "#cba6f7", bold = true }, "state_icon", "machine", "workspace", "tab"],
+  ["agent", { token = "$port", fg = "#a6e3a1" }],
+]
+
 [ui.sidebar.agents.rows_by_agent]
 # Codex already emits its session title through OSC, and herdr exposes it as
 # terminal_title_stripped (without the animated status prefix). Show that live
 # value directly: the default rows only show workspace/tab and agent, while our
 # older title-forwarding hook only renames Claude tabs. Keep tab labels as well
 # so manually named research tasks remain distinguishable and stay user-owned.
-codex = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+codex = [
+  [{ token = "$letter", fg = "#cba6f7", bold = true }, "state_icon", "machine", "workspace", "tab"],
+  ["terminal_title_stripped"],
+  ["agent", { token = "$port", fg = "#a6e3a1" }],
+]
 
 [ui.toast]
 # In-app toasts only. Routing to the OS would be a no-op anyway —

@@ -94,6 +94,11 @@ request.
   unhelpful, that is the accepted trade, not a bug to patch with `--focus`.
 - Inspect what you spawned with `herdr pane read <pane> --source visible` and
   `herdr pane process-info --pane <pane>` — never by focusing it.
+- The sidebar shows each agent's frontend dev-server port next to its name, so
+  the user can open it. That is automatic when the server runs in your pane, or
+  in a pane of your tab or workspace where you are the only agent. Otherwise,
+  once you start one, claim it from your own shell: `herdr-port <port>`
+  (`--clear` drops it). Only frontends show: a port that serves HTML at `/`.
 
 # Browser
 

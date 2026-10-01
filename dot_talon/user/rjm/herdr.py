@@ -1,8 +1,10 @@
 """herdr agent switching by voice, from any app.
 
 Reads live state from the herdr CLI (it finds the default session socket on
-its own, so it works outside a herdr pane) and focuses by pane ID. Numbers are
-positions in `herdr agent list`, the same order the HUD's agents panel shows.
+its own, so it works outside a herdr pane) and focuses by pane ID. Agents are
+named by letter: the agent-tags herdr plugin (~/dev/plugins/herdr/agent-tags)
+gives each a sticky one as the pane token `letter`, the same letter herdr's
+sidebar and the HUD show, and it is said in the Talon alphabet ("agent bat").
 """
 
 import json
@@ -11,7 +13,7 @@ import re
 import subprocess
 import time
 
-from talon import Context, Module, actions, app, cron
+from talon import Context, Module, actions, app, cron, registry
 
 from .hud import send
 
@@ -26,12 +28,16 @@ PEEK_LINES = 40
 # newest state change breaking ties (src/ui/sidebar.rs, workspace_attention_priority).
 PRIORITY = {"blocked": 4, "done": 3, "working": 2, "idle": 1, "unknown": 0}
 
+# community's alphabet, in case its list is not loaded yet.
+ALPHABET = "air bat cap drum each fine gust harp sit jury crunch look made near odd pit quench red sun trap urge vest whale plex yank zip".split()
+
 FILLER = set(
     "the and for from with its their what when only every this that are was not you your".split()
 )
 
 mod = Module()
 mod.list("herdr_word", desc="Every word in a live herdr agent's label")
+mod.list("herdr_letter", desc="Every live herdr agent's letter, in the Talon alphabet")
 ctx = Context()
 
 agents: list[dict] = []
@@ -46,6 +52,18 @@ def herdr(*args: str) -> dict:
 
 def words(label: str) -> list[str]:
     return re.sub(r"[^a-z]+", " ", label.lower()).split()
+
+
+def alphabet() -> dict[str, str]:
+    """Letter -> its spoken word, from community's user.letter list."""
+    try:
+        spoken = registry.lists["user.letter"][-1]
+        words = {letter: word for word, letter in spoken.items() if " " not in word}
+        if len(words) == 26:
+            return words
+    except (KeyError, IndexError):
+        pass
+    return dict(zip("abcdefghijklmnopqrstuvwxyz", ALPHABET))
 
 
 def sayable(word: str) -> bool:
@@ -70,9 +88,19 @@ def refresh():
         name = a.get("display_agent")
         # Same naming rule as the HUD (src-tauri/src/lib.rs).
         a["label"] = labels.get(a["workspace_id"], "") if name in (None, "main") else name
+        a["letter"] = a.get("tokens", {}).get("letter", "")
     agents = found
+    spoken = alphabet()
+    letters = {
+        " ".join(spoken[c] for c in a["letter"]): a["letter"]
+        for a in found
+        if a["letter"] and all(c in spoken for c in a["letter"])
+    }
+    ctx.lists["user.herdr_letter"] = letters
+    # A label word that is also a letter's word would make "agent red" mean two agents.
+    taken = set(spoken.values())
     ctx.lists["user.herdr_word"] = {
-        w: w for a in found for w in words(a["label"]) if sayable(w)
+        w: w for a in found for w in words(a["label"]) if sayable(w) and w not in taken
     }
 
 
@@ -103,9 +131,9 @@ def focus(pane_id: str):
         subprocess.run([HERDR, *step], capture_output=True, timeout=3)
 
 
-def numbered(number: int) -> dict | None:
+def lettered(letter: str) -> dict | None:
     refresh()
-    return agents[number - 1] if 1 <= number <= len(agents) else None
+    return next((a for a in agents if a["letter"] == letter), None)
 
 
 def worded(word: str) -> dict | None:
@@ -151,16 +179,16 @@ def tell(agent: dict | None):
 @mod.action_class
 class Actions:
     def herdr_agents_toggle():
-        """Show or hide the numbered list of herdr agents"""
+        """Show or hide the lettered list of herdr agents"""
         panel("toggle")
 
     def herdr_agents_status(status: str):
         """Show only the agents waiting on you, or only those working"""
         panel("show", status=status)
 
-    def herdr_agent_number(number: int):
-        """Focus the Nth herdr agent"""
-        agent = numbered(number)
+    def herdr_agent_letter(letter: str):
+        """Focus the herdr agent with this letter"""
+        agent = lettered(letter)
         if agent:
             focus(agent["pane_id"])
 
@@ -205,9 +233,9 @@ class Actions:
             f"{count('blocked')} need you · {count('done')} done · {count('working')} working"
         )
 
-    def herdr_agent_peek(number: int):
-        """Show the Nth agent's recent output in the HUD without switching"""
-        agent = numbered(number)
+    def herdr_agent_peek(letter: str):
+        """Show an agent's recent output in the HUD without switching"""
+        agent = lettered(letter)
         if agent is None:
             return
         out = subprocess.run(
@@ -222,7 +250,7 @@ class Actions:
                 "type": "widget",
                 "id": "peek",
                 "action": "show",
-                "props": {"title": f"{number} · {agent['label']}", "text": text},
+                "props": {"title": f"{letter} · {agent['label']}", "text": text},
             }
         )
 
@@ -231,9 +259,9 @@ class Actions:
         if 1 <= number <= 9:
             actions.key(f"ctrl-{number}")
 
-    def herdr_tell_number(number: int):
-        """Dictate a prompt to the Nth agent and come back"""
-        tell(numbered(number))
+    def herdr_tell_letter(letter: str):
+        """Dictate a prompt to the agent with this letter and come back"""
+        tell(lettered(letter))
 
     def herdr_tell_word(word: str):
         """Dictate a prompt to the agent whose label has this word and come back"""

@@ -4,12 +4,12 @@ it had recognised the words itself. Talon's own model made four errors in
 twelve utterances where Parakeet made one (2026-10-01).
 
 ~/.talon/ears.sock, one JSON object per line each way:
-  -> {"say": "agent seven"}
+  -> {"say": "agent bat"}
   <- {"ok": true}  |  {"ok": false, "error": "asleep" | "not a command"}
   -> {"vocabulary": true}
-  <- {"ok": true, "words": ["agent", "seven", ...]}
+  <- {"ok": true, "words": ["agent", "bat", ...]}
   -> {"commands": true}
-  <- {"ok": true, "commands": [{"phrase": "agent seven", "dynamic": false,
+  <- {"ok": true, "commands": [{"phrase": "agent bat", "dynamic": true,
                                 "risky": false}, ...]}
   -> {"action": "listen_toggle"}      (a click in the HUD)
   -> {"action": "popup_open" | "popup_closed"}
@@ -19,7 +19,7 @@ The vocabulary is every word the rjm commands can contain, so the recogniser
 can snap a near miss ("health") onto a real word ("help") before giving up.
 The commands are every phrase the rjm commands accept in the active app,
 captures expanded, so the recogniser can match a whole misheard phrase:
-`dynamic` marks one built from agent names, which come and go and collide
+`dynamic` marks one built from agent names or letters, which come and go and collide
 with fixed words, and `risky` one it must only ever suggest, never run from
 a guess.
 
@@ -77,7 +77,7 @@ def vocabulary() -> list[str]:
 # from a near miss but never run them unasked.
 RISKY = {"tab close", "pane close", "tree remove", "go to sleep", "agent reject", "agent stop"}
 # Lists whose words come and go with the live agents.
-DYNAMIC = {"user.herdr_word"}
+DYNAMIC = {"user.herdr_word", "user.herdr_letter"}
 # Apps a .talon header can name (ghostty.py), by bundle.
 APPS = {"ghostty": "com.mitchellh.ghostty"}
 TENS = "twenty thirty forty fifty sixty seventy eighty ninety".split()
