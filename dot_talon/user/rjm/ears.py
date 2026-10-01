@@ -8,6 +8,8 @@ twelve utterances where Parakeet made one (2026-10-01).
   <- {"ok": true}  |  {"ok": false, "error": "asleep" | "not a command"}
   -> {"vocabulary": true}
   <- {"ok": true, "words": ["agent", "seven", ...]}
+  -> {"action": "listen_toggle"}      (a click in the HUD)
+  <- {"ok": true}
 
 The vocabulary is every word the rjm commands can contain, so the recogniser
 can snap a near miss ("health") onto a real word ("help") before giving up.
@@ -60,6 +62,10 @@ def vocabulary() -> list[str]:
     return sorted(words)
 
 
+# What a click in the HUD may ask for, by name.
+ACTIONS = {"listen_toggle": lambda: actions.user.listen_toggle()}
+
+
 def say(text: str) -> dict:
     if "sleep" in (scope.get("mode") or set()):
         return {"ok": False, "error": "asleep"}
@@ -84,6 +90,9 @@ def poll():
                 request = json.loads(conn.makefile().readline())
                 if request.get("vocabulary"):
                     reply = {"ok": True, "words": vocabulary()}
+                elif request.get("action") in ACTIONS:
+                    ACTIONS[request["action"]]()
+                    reply = {"ok": True}
                 else:
                     reply = say(str(request["say"]))
             except (OSError, ValueError, KeyError):
