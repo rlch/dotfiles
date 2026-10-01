@@ -9,6 +9,7 @@ twelve utterances where Parakeet made one (2026-10-01).
   -> {"vocabulary": true}
   <- {"ok": true, "words": ["agent", "seven", ...]}
   -> {"action": "listen_toggle"}      (a click in the HUD)
+  -> {"action": "popup_open" | "popup_closed"}
   <- {"ok": true}
 
 The vocabulary is every word the rjm commands can contain, so the recogniser
@@ -24,6 +25,8 @@ import re
 import socket
 
 from talon import actions, cron, registry, scope
+
+from .hud import popup
 
 SOCK = os.path.expanduser("~/.talon/ears.sock")
 
@@ -63,7 +66,11 @@ def vocabulary() -> list[str]:
 
 
 # What a click in the HUD may ask for, by name.
-ACTIONS = {"listen_toggle": lambda: actions.user.listen_toggle()}
+ACTIONS = {
+    "listen_toggle": lambda: actions.user.listen_toggle(),
+    "popup_open": lambda: popup(True),
+    "popup_closed": lambda: popup(False),
+}
 
 
 def say(text: str) -> dict:

@@ -11,7 +11,7 @@ import re
 import socket
 import time
 
-from talon import Module, actions, cron, scope, speech_system, ui
+from talon import Context, Module, actions, cron, scope, speech_system, ui
 
 SOCK = os.path.expanduser("~/.talon/hud.sock")
 # Every phrase Talon acted on, one JSON object per line: the record to read
@@ -22,6 +22,14 @@ HERE = os.path.dirname(__file__)
 RESEND_TICKS = 15
 
 mod = Module()
+mod.tag("hud_popup", desc="A HUD popup is open, so Escape closes it (hud.talon)")
+ctx = Context()
+
+
+def popup(is_open: bool):
+    """The HUD says whether a popup is open. It never has the keyboard, so
+    Talon takes Escape for it, and only while one is open."""
+    ctx.tags = ["user.hud_popup"] if is_open else []
 
 last_mode = None
 last_screen = None
@@ -133,6 +141,13 @@ class Actions:
     def hud_help():
         """Toggle the cheat sheet of commands that apply here"""
         send({"type": "widget", "id": "help", "action": "toggle", "props": {"groups": cheat_sheet()}})
+
+    def hud_close():
+        """Close every HUD popup"""
+        # Drop the tag here too: if the HUD has died, Escape is swallowed
+        # once at most, not for good.
+        popup(False)
+        send({"type": "close"})
 
     def hud_notice(text: str):
         """Show a one-line notice in the HUD status pill"""
