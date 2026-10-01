@@ -261,14 +261,15 @@ status_indicators = "dots"
 
 [ui.sidebar.agents]
 # herdr's default rows, plus two tokens from the agent-tags plugin
-# (~/dev/plugins/herdr/agent-tags): $letter far left is the agent's sticky
+# (~/dev/plugins/herdr/agent-tags), dimmed on the bottom row so the top row
+# keeps its alignment: $letter prefixes the agent name and is its sticky
 # name for voice ("agent bat" in Talon, the same letter in the Talon HUD), and
 # $port lists its frontend dev-server ports (:5173) so you can open them. Both
 # disappear when unreported, so the rows fall back to the defaults without the
 # plugin. ⌘1-9 stays positional and does not follow the letters.
 rows = [
-  [{ token = "$letter", fg = "#cba6f7", bold = true }, "state_icon", "machine", "workspace", "tab"],
-  ["agent", { token = "$port", fg = "#a6e3a1" }],
+  ["state_icon", "machine", "workspace", "tab"],
+  [{ token = "$letter", dim = true }, "agent", { token = "$port", dim = true }],
 ]
 
 [ui.sidebar.agents.rows_by_agent]
@@ -278,9 +279,9 @@ rows = [
 # older title-forwarding hook only renames Claude tabs. Keep tab labels as well
 # so manually named research tasks remain distinguishable and stay user-owned.
 codex = [
-  [{ token = "$letter", fg = "#cba6f7", bold = true }, "state_icon", "machine", "workspace", "tab"],
+  ["state_icon", "machine", "workspace", "tab"],
   ["terminal_title_stripped"],
-  ["agent", { token = "$port", fg = "#a6e3a1" }],
+  [{ token = "$letter", dim = true }, "agent", { token = "$port", dim = true }],
 ]
 
 [ui.toast]
