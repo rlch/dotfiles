@@ -104,10 +104,12 @@ def tick():
     # The HUD covers whichever screen holds the focused window.
     try:
         focused = ui.active_window().screen
-        rect = focused.rect
-        menubar = focused.visible_rect.y - rect.y
     except Exception:
-        return
+        # No active window (the desktop, or an app with none): keep the HUD
+        # placed rather than leave it without a screen after a restart.
+        focused = ui.main_screen()
+    rect = focused.rect
+    menubar = focused.visible_rect.y - rect.y
     screen = {
         "type": "screen",
         "x": rect.x,
