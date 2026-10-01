@@ -14,7 +14,7 @@ tab next: key(cmd-l)
 tab last: key(cmd-h)
 tab new: key(cmd-t)
 tab close: key(ctrl-s shift-x)
-go tab <number_small>: key("ctrl-{number_small}")
+go tab <number_small>: user.herdr_tab(number_small)
 
 space next: key(cmd-j)
 space last: key(cmd-k)

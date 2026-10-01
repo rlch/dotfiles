@@ -195,6 +195,11 @@ class Actions:
             }
         )
 
+    def herdr_tab(number: int):
+        """Jump to the Nth herdr tab (herdr binds ctrl-1 to ctrl-9)"""
+        if 1 <= number <= 9:
+            actions.key(f"ctrl-{number}")
+
     def herdr_tell_number(number: int):
         """Dictate a prompt to the Nth agent and come back"""
         tell(numbered(number))

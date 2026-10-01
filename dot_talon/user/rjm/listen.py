@@ -11,6 +11,7 @@
 """
 
 import os
+import subprocess
 import time
 
 from talon import Module, actions, app, cron, scope, ui
@@ -23,6 +24,8 @@ RECORDINGS = os.path.expanduser("~/Documents/superwhisper/recordings")
 FULL_APPS: set[str] = set()
 # A recording Superwhisper cancelled may never write meta.json.
 DICTATION_LIMIT_S = 300
+
+SOUNDS = os.path.join(os.path.dirname(__file__), "sounds")
 
 mod = Module()
 mod.mode("lean", desc="Only the rjm command set; community's grammar is off")
@@ -108,6 +111,10 @@ class Actions:
         dictation = None
         actions.speech.toggle()
         enforce()
+        # Only the key chimes: sleeping for Superwhisper would land the sound
+        # in its recording, and Superwhisper chimes for itself.
+        chime = "on.wav" if awake() else "off.wav"
+        subprocess.Popen(["/usr/bin/afplay", os.path.join(SOUNDS, chime)])
 
     def listen_full(full: bool):
         """Force the whole community grammar on, or go back to lean-by-app"""
