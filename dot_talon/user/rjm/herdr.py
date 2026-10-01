@@ -72,7 +72,18 @@ def focus(pane_id: str):
         previous_pane = here
     panel("hide")
     actions.user.switcher_focus("Ghostty")
-    subprocess.run([HERDR, "agent", "focus", pane_id], capture_output=True, timeout=3)
+    # `agent focus` alone only marks the pane focused inside its workspace;
+    # the screen stays where it was. The workspace and tab have to be focused
+    # too (2026-10-01: "agent seven" was heard and did nothing visible).
+    target = next((a for a in agents if a["pane_id"] == pane_id), None)
+    steps = [["agent", "focus", pane_id]]
+    if target:
+        steps = [
+            ["workspace", "focus", target["workspace_id"]],
+            ["tab", "focus", target["tab_id"]],
+        ] + steps
+    for step in steps:
+        subprocess.run([HERDR, *step], capture_output=True, timeout=3)
 
 
 def numbered(number: int) -> dict | None:
