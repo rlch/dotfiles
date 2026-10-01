@@ -269,7 +269,7 @@ status_indicators = "dots"
 # plugin. ⌘1-9 stays positional and does not follow the letters.
 rows = [
   ["state_icon", "machine", "workspace", "tab"],
-  [{ token = "$letter", bold = true }, "agent", { token = "$port", dim = true }],
+  [{ token = "$letter", bold = true, fg = "#a6adc8" }, "agent", { token = "$port", dim = true }],
 ]
 
 [ui.sidebar.agents.rows_by_agent]
@@ -281,7 +281,7 @@ rows = [
 codex = [
   ["state_icon", "machine", "workspace", "tab"],
   ["terminal_title_stripped"],
-  [{ token = "$letter", bold = true }, "agent", { token = "$port", dim = true }],
+  [{ token = "$letter", bold = true, fg = "#a6adc8" }, "agent", { token = "$port", dim = true }],
 ]
 
 [ui.toast]
