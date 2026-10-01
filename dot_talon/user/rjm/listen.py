@@ -126,6 +126,10 @@ class Actions:
 
 def on_ready():
     actions.speech.disable()
+    # The Talon HUD app hears for Talon now (Parakeet, through ears.py), so
+    # Talon's own recogniser gets no audio. To go back, pick the microphone
+    # again from Talon's menu.
+    actions.sound.set_microphone("None")
     cron.interval("200ms", tick)
 
 
