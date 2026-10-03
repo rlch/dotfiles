@@ -4,3 +4,6 @@ python = "latest"
 go = "latest"
 bun = "latest"
 pnpm = "latest"
+# Global default so the flux shim works outside repos that pin it; without one,
+# config.fish's `flux completion fish` errors on every new shell. Repo pins win.
+"aqua:fluxcd/flux2" = "latest"
