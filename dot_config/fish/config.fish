@@ -15,6 +15,7 @@ fish_add_path -g \
     $HOME/.local/bin \
     /opt/homebrew/opt/rustup/bin \
     /opt/homebrew/bin \
+    /opt/homebrew/share/google-cloud-sdk/bin \
     /opt/homebrew/opt/gnu-sed/libexec/gnubin \
     /opt/homebrew/opt/python@3.13/libexec/bin \
     $HOME/.cargo/bin \

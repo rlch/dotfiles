@@ -217,8 +217,10 @@ brew "nats-io/nats-tools/nats"
 
 # === Cloud SDKs ===
 # gcloud + gsutil + bq + friends. Auth via `gcloud auth login`. Components
-# (kubectl, beta, etc.) install on demand into /opt/homebrew/share/google-
-# cloud-sdk/bin — already on PATH via the brew shim.
+# (kubectl, gke-gcloud-auth-plugin, beta, etc.) install on demand into
+# /opt/homebrew/share/google-cloud-sdk/bin, which config.fish puts on PATH:
+# brew links only `gcloud` itself, so kubectl's GKE auth plugin is not found
+# without it.
 cask "gcloud-cli"
 # Cloudflare Workers CLI — deploy Workers via `wrangler deploy`.
 # Auth via `wrangler login`.
