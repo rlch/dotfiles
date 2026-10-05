@@ -142,6 +142,12 @@ brew "leoafarias/fvm/fvm"
 # The mobile MCP server is registered separately via
 # `claude mcp add -s user mobile -- npx -y @mobilenext/mobile-mcp@latest`.
 cask "android-platform-tools"
+# Building Android apps (schools-ts apps/mobile, Tauri): the SDK (sdkmanager,
+# platforms, build-tools, emulator) and the NDK. Gradle wants JDK 17 or 21,
+# not brew's newest openjdk; config.fish points JAVA_HOME at 21.
+cask "android-commandlinetools"
+cask "android-ndk"
+brew "openjdk@21"
 tap "mobile-dev-inc/tap"
 brew "mobile-dev-inc/tap/maestro"
 brew "scrcpy"

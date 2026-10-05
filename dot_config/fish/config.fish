@@ -81,10 +81,22 @@ set -gx LANGFUSE_BASE_URL https://langfuse.tutero.dev   # self-hosted; keys via 
 #t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
 
 # Java — brew's openjdk is keg-only and invisible to /usr/libexec/java_home.
-# JAVA_HOME lets JVM tools (maestro for Android UI flows, etc.) find it without
-# a sudo symlink into /Library/Java/JavaVirtualMachines.
-set -l _jdk /opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home
+# JAVA_HOME lets JVM tools (maestro for Android UI flows, Gradle for Android
+# builds) find it without a sudo symlink into /Library/Java/JavaVirtualMachines.
+# 21, not brew's newest: the Android Gradle plugin refuses a JDK past 21.
+set -l _jdk /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+test -d $_jdk; or set _jdk /opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home
 test -d $_jdk; and set -gx JAVA_HOME $_jdk
+
+# Android SDK and NDK from the brew casks (Tauri's `android init/dev/build`
+# read ANDROID_HOME and NDK_HOME; the emulator and sdkmanager go on PATH).
+set -l _android /opt/homebrew/share/android-commandlinetools
+if test -d $_android
+    set -gx ANDROID_HOME $_android
+    set -gx ANDROID_SDK_ROOT $_android
+    fish_add_path -g $_android/emulator $_android/cmdline-tools/latest/bin
+end
+test -d /opt/homebrew/share/android-ndk; and set -gx NDK_HOME /opt/homebrew/share/android-ndk
 
 # fzf — Catppuccin Mocha (matches ghostty)
 set -gx FZF_DEFAULT_OPTS "\
