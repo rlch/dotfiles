@@ -59,6 +59,11 @@ brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the d
 brew "tokei"       # code line counter by language
 brew "imagemagick" # image manipulation (convert, magick) — pulled in by misc one-off scripts
 brew "chafa"       # terminal image viewer (sixel/kitty/ansi)
+# Documents / PDFs — ~/dev/partner-visa builds evidence PDFs from markdown
+brew "pandoc"      # markdown → PDF (statements, cover letters), via typst
+brew "typst"       # pandoc's PDF engine here: one binary, no TeX install, handles CJK names
+brew "ghostscript" # gs: shrink PDFs under ImmiAccount's 5 MB per-file cap
+brew "ocrmypdf"    # OCR scanned evidence so it's searchable and greppable
 # Disk / process / system
 brew "dust"        # du, but tree-shaped
 brew "procs"       # ps, but readable
