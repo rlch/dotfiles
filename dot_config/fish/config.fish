@@ -94,6 +94,9 @@ set -l _android /opt/homebrew/share/android-commandlinetools
 if test -d $_android
     set -gx ANDROID_HOME $_android
     set -gx ANDROID_SDK_ROOT $_android
+    # avdmanager writes AVDs under ~/.config/.android (XDG); the emulator only
+    # looks in ~/.android unless told.
+    set -gx ANDROID_AVD_HOME $HOME/.config/.android/avd
     fish_add_path -g $_android/emulator $_android/cmdline-tools/latest/bin
 end
 test -d /opt/homebrew/share/android-ndk; and set -gx NDK_HOME /opt/homebrew/share/android-ndk
