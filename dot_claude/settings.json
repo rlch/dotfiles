@@ -31,7 +31,7 @@
       "Bash(cat ~/.aws/*)",
       "Bash(cat ~/.ssh/id_*)"
     ],
-    "defaultMode": "auto",
+    "defaultMode": "bypassPermissions",
     "additionalDirectories": [
       "/Users/rjm"
     ]

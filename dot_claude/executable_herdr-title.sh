@@ -62,7 +62,11 @@ try:
 except Exception:
     payload = {}
 tx  = payload.get("transcript_path") or ""
-cwd = payload.get("cwd") or os.getcwd()
+# The session's own directory, never the payload's `cwd`: that is wherever the
+# last Bash `cd` left the shell, so an orchestrator that ran one command in
+# another checkout renamed its workspace and branch after it ("clodcurrent",
+# 2026-10-06). CLAUDE_PROJECT_DIR is where the session was launched.
+cwd = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
 
 # topic = latest ai-title, else latest user prompt's first line
 ai = last = None
