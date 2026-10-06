@@ -5,12 +5,16 @@
 # playwright servers plus their plugin twins were 171 processes and 11.6 GB.
 # Browsers are driven on demand by the vendors' CLIs instead: Microsoft's
 # `playwright-cli` and the `chrome-devtools` CLI the chrome-devtools-mcp
-# package ships. Both attach to the one ungoogled Chromium on 127.0.0.1:9222
-# (`chrome-debug`), and the `browser` skill says how. The plugins are disabled
+# package ships. Headless work runs in a browser of each agent's own; the one
+# headed Chromium on 127.0.0.1:9222 is a service taken on a lease
+# (`browser-headed`), and the `browser` skill says how. The plugins are disabled
 # in settings.json and the npm globals are installed by the claude-plugins
 # script.
 #
-# Idempotent: remove the user-scope entries this script used to add.
+# Idempotent: remove the user-scope entries this script used to add, the
+# @playwright/mcp global, and the chrome-devtools-axi skill (2026-10-06: an
+# unmanaged `npx skills add` install that told every account's agents to
+# prefer it over the browser skill).
 #
 # Brewfile hash: {{ include "Brewfile" | sha256sum }}
 
@@ -24,6 +28,13 @@ fi
 
 for name in chrome-devtools playwright; do
   claude mcp remove "$name" -s user >/dev/null 2>&1 || true
+done
+if command -v npm >/dev/null 2>&1 && npm ls -g --depth=0 @playwright/mcp >/dev/null 2>&1; then
+  npm uninstall -g @playwright/mcp >/dev/null 2>&1 || true
+fi
+rm -rf "$HOME/.agents/skills/chrome-devtools-axi"
+for d in "$HOME"/.claude*/skills/chrome-devtools-axi "$HOME/.config/opencode/skills/chrome-devtools-axi"; do
+  [[ -L "$d" ]] && rm -f "$d"
 done
 echo "browser-mcp: no browser MCP server is registered; the browser skill drives the CLIs"
 {{- end }}

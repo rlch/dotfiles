@@ -132,7 +132,7 @@ in first.**
 | :------------- | :-------------------------------------------------- |
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
-| Terminal       | Ghostty (ungoogled-Chromium for MCP — see CLAUDE.md)|
+| Terminal       | Ghostty (auto-launches herdr)                       |
 | Multiplexer    | herdr (daily driver)                                |
 | Window manager | aerospace (no yabai/skhd)                           |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |

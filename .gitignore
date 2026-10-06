@@ -15,9 +15,10 @@ dot_env.*
 !dot_env.sample
 !dot_env.template
 
-# Runtime artefacts — playwright-mcp / chrome-devtools-mcp dump session
-# console logs in CWD when invoked from this repo. Not config; ignore.
+# Runtime artefacts the old browser MCPs and playwright-cli (when run without
+# its global config) dump in CWD. Not config; ignore.
 .playwright-mcp/
+.playwright-cli/
 
 # Python bytecode caches (slugify-title.py et al.).
 __pycache__/

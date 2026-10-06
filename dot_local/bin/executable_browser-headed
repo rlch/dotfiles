@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+# The one headed Chromium agents share, one agent at a time.
+#
+# Headless work never comes here: every agent opens its own browser with
+# `playwright-cli -s=<name> open` (the `browser` skill). This is for what
+# headless cannot do: a logged-in profile (1Password lives in it), a site that
+# blocks headless (ImmiAccount, always), a page the user watches.
+#
+# Why a lease and not a shared endpoint: Playwright and chrome-devtools-mcp both
+# connect with Target.setAutoAttach {waitForDebuggerOnStart: true}, so Chromium
+# holds every new tab until each such client says go. A client that is alive
+# but hung never does, and every other agent's new tab stays blank with url ''
+# (2026-10-05: a 3 h old chrome-devtools-mcp daemon wedged the browser). One
+# holder at a time, and every other CDP client killed on acquire and release,
+# means no client can outlive the agent that started it.
+#
+#   browser-headed up                 make sure the service is running (herdr `browser` workspace)
+#   browser-headed acquire <name>     take the lease; prints the CDP endpoint
+#   browser-headed run <name> <cmd>…  a playwright-cli command on the lease, focus put back
+#   browser-headed release [--force]  drop the lease, reap every CDP client
+#   browser-headed status             service, lease holder, attached clients
+#   browser-headed serve              the watchdog the service pane runs (not for agents)
+set -euo pipefail
+
+port=${CHROME_DEBUG_PORT:-9222}
+profile=${CHROME_DEBUG_PROFILE:-"$HOME/Library/Application Support/Chromium Debug"}
+app=/Applications/Chromium.app
+state="$HOME/.local/state/browser-headed"
+lease="$state/lease"
+endpoint="http://127.0.0.1:$port"
+mkdir -p "$state"
+
+healthy() { curl -sf --max-time 1 "$endpoint/json/version" >/dev/null 2>&1; }
+
+chromium_pid() { # the browser process that listens on the port
+  lsof -nP -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null | head -n 1
+}
+
+clients() { # pids holding a CDP connection to the browser, minus the browser itself
+  local server
+  server=$(chromium_pid)
+  lsof -nP -iTCP:"$port" -sTCP:ESTABLISHED -Fp 2>/dev/null | sed -n 's/^p//p' | sort -u \
+    | { if [[ -n "$server" ]]; then grep -vx -- "$server"; else cat; fi; } || true
+}
+
+reap_clients() {
+  local pid n=0
+  for pid in $(clients); do
+    echo "reaping CDP client $pid: $(ps -o command= -p "$pid" 2>/dev/null | cut -c1-120)"
+    kill "$pid" 2>/dev/null || true
+    n=$((n + 1))
+  done
+  ((n == 0)) || sleep 0.5
+}
+
+agent_pid() { # the coding-agent process this command runs under: the lease is held by it
+  local p=$$ comm
+  while [[ "$p" -gt 1 ]]; do
+    comm=$(ps -o comm= -p "$p" 2>/dev/null) || break
+    case "${comm##*/}" in claude | opencode | codex | hermes) echo "$p"; return 0 ;; esac
+    p=$(ps -o ppid= -p "$p" | tr -d ' ')
+  done
+  echo "$PPID"
+}
+
+holder() { # prints "<pid> <name> <since>" of a live lease, or nothing
+  [[ -f "$lease" ]] || return 0
+  local pid name since
+  read -r pid name since <"$lease" || return 0
+  if kill -0 "$pid" 2>/dev/null; then echo "$pid $name $since"; fi
+}
+
+launch() {
+  # `open -g` launches without activating the app, so no window comes forward;
+  # aerospace files it under the `agent` workspace. MacAppCodeSignClone off, or
+  # every launch that ends in a kill leaks a whole app copy under $TMPDIR/../X.
+  open -g -n -a "$app" --args \
+    --disable-features=MacAppCodeSignClone \
+    --remote-debugging-port="$port" \
+    --user-data-dir="$profile" \
+    --no-first-run
+}
+
+cmd_serve() {
+  echo "browser-headed: watching Chromium on :$port (profile: $profile)"
+  echo "Ctrl-C stops the watchdog; the browser keeps running."
+  local was=unknown
+  while true; do
+    if healthy; then
+      [[ "$was" == up ]] || echo "$(date '+%T') up (pid $(chromium_pid))"
+      was=up
+    elif pgrep -f -- "--user-data-dir=$profile" >/dev/null; then
+      # Starting, or a Chromium on this profile without the port. Give it time.
+      [[ "$was" == starting ]] || echo "$(date '+%T') waiting for CDP"
+      was=starting
+    else
+      echo "$(date '+%T') down; launching"
+      launch
+      was=starting
+    fi
+    sleep 5
+  done
+}
+
+cmd_up() {
+  healthy && [[ -n "$(service_pane)" ]] && { echo "$endpoint"; return 0; }
+  command -v herdr >/dev/null && herdr workspace list >/dev/null 2>&1 || {
+    echo "browser-headed: herdr is not running; the service lives in a herdr workspace" >&2
+    return 1
+  }
+  local ws pane
+  find_ws() { herdr workspace list | jq -r '.result.workspaces[] | select(.label == "browser") | .workspace_id' | head -n 1; }
+  ws=$(find_ws)
+  if [[ -z "$ws" ]]; then
+    herdr workspace create --cwd "$HOME" --label browser --no-focus >/dev/null
+    ws=$(find_ws)
+  fi
+  pane=$(herdr pane list --workspace "$ws" | jq -r '.result.panes[0].pane_id')
+  herdr pane run "$pane" "browser-headed serve" >/dev/null
+  for _ in $(seq 60); do healthy && break; sleep 0.5; done
+  healthy || { echo "browser-headed: Chromium did not come up on :$port; see the herdr 'browser' workspace" >&2; return 1; }
+  echo "$endpoint"
+}
+
+service_pane() { # the pid of a running watchdog, if any
+  pgrep -f 'browser-headed serve' | grep -vx "$$" | head -n 1 || true
+}
+
+cmd_acquire() {
+  local name=${1:?usage: browser-headed acquire <name>} me h
+  me=$(agent_pid)
+  h=$(holder)
+  if [[ -n "$h" && "${h%% *}" != "$me" ]]; then
+    read -r hpid hname hsince <<<"$h"
+    echo "browser-headed: held by '$hname' (pid $hpid) since $hsince. Wait, or ask the user." >&2
+    return 2
+  fi
+  cmd_up >/dev/null
+  # A fresh lease starts from no clients: whatever is attached belongs to a
+  # holder that is gone, or to something that never took the lease.
+  [[ -n "$h" ]] || reap_clients
+  echo "$me $name $(date '+%F_%T')" >"$lease"
+  echo "$endpoint"
+}
+
+cmd_run() {
+  # Playwright's tab-new opens a foreground tab and tab-select calls
+  # Page.bringToFront; both activate Chromium, and aerospace follows it to the
+  # `agent` workspace (tested 2026-10-06; Target.createTarget background:true
+  # and goto do not). So every headed command runs here: the lease is checked,
+  # and the window the user had focused gets focus back.
+  local name=${1:?usage: browser-headed run <name> <playwright-cli command>…} h prev rc=0
+  shift
+  h=$(holder)
+  if [[ -z "$h" || "${h%% *}" != "$(agent_pid)" ]]; then
+    echo "browser-headed: you do not hold the lease; browser-headed acquire <name> first" >&2
+    return 2
+  fi
+  prev=$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null || true)
+  playwright-cli -s="$name" "$@" || rc=$?
+  if [[ -n "$prev" && "$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null)" != "$prev" ]]; then
+    aerospace focus --window-id "$prev" 2>/dev/null || true
+  fi
+  return "$rc"
+}
+
+cmd_release() {
+  local h me
+  me=$(agent_pid)
+  h=$(holder)
+  if [[ -n "$h" && "${h%% *}" != "$me" && "${1:-}" != --force ]]; then
+    echo "browser-headed: the lease is '${h#* }', not yours; --force to take it back" >&2
+    return 2
+  fi
+  rm -f "$lease"
+  reap_clients
+  echo "released"
+}
+
+cmd_status() {
+  if healthy; then echo "service: up on :$port (pid $(chromium_pid))"; else echo "service: down"; fi
+  echo "watchdog: $(service_pane || true)"
+  local h
+  h=$(holder)
+  echo "lease: ${h:-free}"
+  local pid
+  for pid in $(clients); do echo "client $pid: $(ps -o etime=,command= -p "$pid" | cut -c1-120)"; done
+}
+
+case "${1:-status}" in
+  up) cmd_up ;;
+  acquire) shift; cmd_acquire "$@" ;;
+  run) shift; cmd_run "$@" ;;
+  release) shift; cmd_release "$@" ;;
+  status) cmd_status ;;
+  serve) cmd_serve ;;
+  *) sed -n '2,22p' "$0" >&2; exit 64 ;;
+esac

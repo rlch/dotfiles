@@ -35,4 +35,9 @@ while IFS= read -r clone; do
   removed=$((removed + 1))
 done < <(find "$x_dir/" -mindepth 2 -maxdepth 2 -type d -name 'code_sign_clone.*' -path '*code_sign_clone/*' -mmin +60 2>/dev/null)
 
+# playwright-cli writes every agent's snapshots and screenshots here (its global
+# config, ~/.config/playwright-cli/config.json). Nobody reads one after a day.
+out_dir="$HOME/Library/Caches/playwright-cli"
+if [[ -d "$out_dir" ]] && ! $dry; then find "$out_dir" -type f -mtime +1 -delete 2>/dev/null || true; fi
+
 echo "$(date '+%F %T') chromium-clone-sweep: $removed $($dry && echo would-remove || echo removed)"

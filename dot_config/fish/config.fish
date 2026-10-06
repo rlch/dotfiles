@@ -71,6 +71,13 @@ set -gx CLAUDE_CODE_NO_FLICKER 1
 set -gx OPENCODE_DISABLE_CLAUDE_CODE_SKILLS 1
 set -gx OPENCODE_DISABLE_EXTERNAL_SKILLS 1
 
+# playwright-cli (the `browser` skill) — one config for every agent, every
+# account, every cwd: ungoogled Chromium, headless, MacAppCodeSignClone off (a
+# killed launch otherwise leaks a whole app copy under $TMPDIR/../X), and
+# snapshots/screenshots written to one cache dir instead of `.playwright-cli/`
+# in whatever repo the agent stands in. chromium-clone-sweep prunes the dir.
+set -gx PLAYWRIGHT_MCP_CONFIG "$HOME/.config/playwright-cli/config.json"
+
 # Headroom — local LLM context-compression proxy. Persistent Docker container
 # managed by the Docker-native `headroom install` wrapper.
 set -gx HEADROOM_PORT     8787

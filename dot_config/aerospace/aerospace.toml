@@ -62,8 +62,8 @@ ctrl-alt-4 = 'workspace comms'
 ctrl-alt-5 = 'workspace notion'
 ctrl-alt-6 = 'workspace dev'
 ctrl-alt-7 = 'workspace trading'
-# LLM-driven ungoogled-Chromium (chrome-debug / chrome-devtools-mcp / the
-# chrome-devtools-axi skill). Its own workspace, laptop-pinned; sits after code
+# LLM-driven ungoogled-Chromium (the headed service, `browser-headed`, and
+# any headed playwright-cli window). Its own workspace, laptop-pinned; sits after code
 # in the alt-n/p cycle (workspace_order.sh: dev, code, agent, ...) — the space
 # you switch to to review what Claude is doing in the browser.
 ctrl-alt-8 = 'workspace agent'
@@ -214,9 +214,9 @@ run = 'move-node-to-workspace notion'
 if.app-id = 'com.google.Chrome'
 run = 'move-node-to-workspace dev'
 
-# Agent browser → agent. ungoogled-Chromium (org.chromium.Chromium), launched by
-# `chrome-debug` for chrome-devtools-mcp / the chrome-devtools-axi skill, is the
-# one browser Claude drives over CDP. Give it its own home so it never leaks into
+# Agent browser → agent. ungoogled-Chromium (org.chromium.Chromium), run as a
+# service by `browser-headed` (alias `chrome-debug`), is the one headed browser
+# agents drive over CDP, on a lease. Give it its own home so it never leaks into
 # whatever workspace happened to be focused when `chrome-debug` fired — it had NO
 # rule before this, so it tiled straight on top of `code`. Kept distinct from
 # stable Chrome (dev) and Firefox (browser) per the visual-separation invariant

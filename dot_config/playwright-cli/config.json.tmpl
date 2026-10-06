@@ -1,0 +1,11 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "launchOptions": {
+      "executablePath": "/Applications/Chromium.app/Contents/MacOS/Chromium",
+      "headless": true,
+      "args": ["--disable-features=MacAppCodeSignClone"]
+    }
+  },
+  "outputDir": "{{ .chezmoi.homeDir }}/Library/Caches/playwright-cli"
+}

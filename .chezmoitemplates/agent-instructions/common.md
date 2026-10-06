@@ -102,26 +102,30 @@ request.
 
 # Browser
 
-- Browser automation attaches to ungoogled Chromium on `127.0.0.1:9222`,
-  launched by `chrome-debug`. Stable Google Chrome is never the automation
-  target.
-- If no real automation page is available, tell the user to run `chrome-debug`;
-  do not launch stable Chrome with a debugging port.
-- Keep one browser tab per task and capture a screenshot or accessibility
-  snapshot after meaningful navigation or state changes.
-- The agent browser belongs in the dedicated aerospace `agent` workspace. Do
-  not move it or steal focus.
-- **Never bring the automation browser forward.** Opening a tab through
-  `PUT /json/new`, a `Target.createTarget` without `background: true`, or any
-  `Page.bringToFront` activates the Chromium window and steals focus from
-  whatever the user is doing (2026-09-03: a screenshot loop did it on every
-  shot). Reuse the tab the task already has, or create one with
-  `background: true`.
-- A screenshot or page check that needs nothing interactive runs in a headless
-  Chromium of your own on another port — `/Applications/Chromium.app/Contents/
-  MacOS/Chromium --headless=new --disable-features=MacAppCodeSignClone
-  --remote-debugging-port=<free port> --user-data-dir=<scratch dir>` — which can
-  steal nothing. Kill it when done. The `--disable-features` flag is not
-  optional: without it every launch leaves a full copy of the app under
-  `$TMPDIR/../X`, and a killed one never removes it (730 copies, 267 GB, filled
-  the disk on 2026-09-25). A Playwright `launch()` passes it in `args`.
+- The `browser` skill is the only way to a browser: `playwright-cli`, run on
+  demand. No browser MCP server, no Claude in Chrome, no stable Google Chrome,
+  and no Chromium launched by hand. Repos carry no browser setup of their own;
+  this file and that skill own it for every account.
+- Headless is the default: a browser of your own per task,
+  `playwright-cli -s=<unique name> open --idle-timeout=600000`, closed when
+  done. Never `close-all` or `kill-all`; they end other agents' browsers.
+- Headed is the shared ungoogled Chromium on `127.0.0.1:9222` (persistent
+  profile: logins, 1Password), one agent at a time: `browser-headed acquire
+  <name>` before attaching, every command through `browser-headed run <name>`
+  (it puts the user's focus back), `browser-headed release` after. A second
+  client on a shared browser can wedge everyone's new tabs blank (2026-10-05),
+  so never attach without the lease and never leave a client attached.
+- **ImmiAccount (`immi.homeaffairs.gov.au`) is never headless.** Akamai blocks
+  it with a 403. Use the headed lease.
+- The headed browser runs as a service in the herdr `browser` workspace
+  (`browser-headed up`, or the human alias `chrome-debug`). Never start it, or
+  any long-lived browser, from your own shell.
+- Never type or fetch a password. The user signs in by hand or through the
+  1Password extension in the headed profile.
+- **Never bring the browser forward.** No `Page.bringToFront`, no driving the
+  user's tabs; open your own tab and close it. It lives in the aerospace
+  `agent` workspace; never move it.
+- Any Chromium launch outside `playwright-cli` passes
+  `--disable-features=MacAppCodeSignClone`. Without it a killed launch leaves a
+  full app copy under `$TMPDIR/../X` (730 copies, 267 GB, filled the disk on
+  2026-09-25).

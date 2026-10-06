@@ -1,48 +1,91 @@
 ---
 name: browser
-description: Drive a real browser from a coding session with the vendors' CLIs, playwright-cli and chrome-devtools, attached to the shared automation Chromium on 127.0.0.1:9222. Use to open or click through a page, read a snapshot, take a screenshot, inspect console, network or performance. There is no browser MCP server; these CLIs are how a session reaches a browser.
+description: Drive a real browser from a coding session with Microsoft's playwright-cli. Headless by default, in a browser of the agent's own; the one shared headed Chromium (logins, 1Password, bot-protected sites such as ImmiAccount) only under a lease from `browser-headed`. Use to open or click through a page, read a snapshot, take a screenshot, inspect console or network. There is no browser MCP server.
 ---
 
-# Browser: the vendors' CLIs, on demand
+# Browser: your own headless browser, or the headed one on a lease
 
-No browser MCP server starts with a session (2026-10-01). Twenty-three sessions were holding 171 idle browser-MCP
-processes and 11.6 GB. Each CLI below keeps one background daemon and is run only when a task needs a browser.
-Both attach to the ungoogled Chromium on `127.0.0.1:9222`. If nothing answers there, tell the user to run
-`chrome-debug`. Never launch stable Chrome.
+Ten agents run at once, so no agent shares a browser with another. Playwright connects to Chromium with
+`waitForDebuggerOnStart`, so Chromium holds every new tab until each connected client says go. One hung client
+wedges everyone's new tabs blank (2026-10-05). That is why:
 
-## Flows: `playwright-cli` (Microsoft, `@playwright/cli`)
+- **Headless (the default):** `playwright-cli -s=<name> open` gives you your own daemon and your own Chromium, with
+  an in-memory profile and no shared port.
+- **Headed (rare):** the persistent "Chromium Debug" profile on `127.0.0.1:9222`, one agent at a time, through
+  `browser-headed`.
 
-```bash
-playwright-cli -s=<task> attach --cdp=http://127.0.0.1:9222   # once per task; <task> names YOUR session
-playwright-cli -s=<task> goto https://example.com
-playwright-cli -s=<task> snapshot                              # element refs (e15…) for the next commands
-playwright-cli -s=<task> click e15
-playwright-cli -s=<task> fill e21 "text"
-playwright-cli -s=<task> screenshot
-playwright-cli -s=<task> detach                                # leaves the Chromium running
-```
+`PLAYWRIGHT_MCP_CONFIG` (set in fish) already points every session at ungoogled Chromium, headless,
+`--disable-features=MacAppCodeSignClone`, with output in `~/Library/Caches/playwright-cli`. Pass no launch flags
+of your own, and never launch Chromium or Chrome by hand.
 
-Always pass `-s=<task>` with a name of your own. Sessions on one machine share the Chromium, and the session name is
-what keeps your tab yours. `playwright-cli --help` lists every command. The package also ships its own longer guide;
-`playwright-cli --help` prints where it is.
-
-## DevTools: `chrome-devtools` (the chrome-devtools-mcp package's CLI)
+## Headless: everything that doesn't need a login or a human
 
 ```bash
-chrome-devtools start --browserUrl http://127.0.0.1:9222 --no-usage-statistics   # its daemon, on the shared Chromium
-chrome-devtools list_pages
-chrome-devtools list_network_requests
-chrome-devtools list_console_messages
-chrome-devtools performance_start_trace
-chrome-devtools status | stop
+S=<task>-$RANDOM                                    # unique; names are shared machine-wide
+playwright-cli -s=$S open --idle-timeout=600000 https://example.com
+playwright-cli -s=$S snapshot                       # element refs (e15…) for the next commands
+playwright-cli -s=$S click e15
+playwright-cli -s=$S fill e21 "text"
+playwright-cli -s=$S screenshot                     # prints the file path
+playwright-cli -s=$S console                        # also: requests, request <n>, tracing-start/-stop
+playwright-cli -s=$S close                          # always, when done
 ```
 
-Use it for the network, the console, performance traces, Lighthouse and heap snapshots. Use `playwright-cli` for
-clicking through a flow. `chrome-devtools <command> --help` gives each command's flags.
+- The session daemon outlives your shell. `--idle-timeout` (10 min here) reaps it if you forget `close`.
+- Never `close-all` or `kill-all`: they end other agents' browsers.
+- `playwright-cli --help` lists every command.
 
-## Rules (global CLAUDE.md › Browser)
+## Headed: logins, 1Password, sites that block headless
 
-- One tab per task, and work in your own tab, never the active one.
-- Never bring the window forward. No `Page.bringToFront`, and no target created without `background: true`.
-- A screenshot that needs nothing interactive goes to a headless Chromium of your own on another port, started with
-  `--disable-features=MacAppCodeSignClone`. Kill it by PID when done.
+ImmiAccount (`immi.homeaffairs.gov.au`) is always headed: Akamai returns 403 to headless.
+
+```bash
+browser-headed acquire <task>                       # prints http://127.0.0.1:9222, or exits 2 if another agent holds it
+playwright-cli -s=<task> attach --cdp=http://127.0.0.1:9222
+browser-headed run <task> tab-new https://…          # your own tab; never drive the user's tabs
+browser-headed run <task> snapshot                  # every command on the lease goes through `run`
+…
+browser-headed run <task> tab-close <index>
+playwright-cli -s=<task> detach
+browser-headed release                              # always; it also reaps every CDP client left behind
+```
+
+- **`browser-headed run`, never bare `playwright-cli`, on the lease.** `tab-new` and `tab-select` activate Chromium,
+  and aerospace follows it to the `agent` workspace. `run` checks that you hold the lease and puts the user's focus
+  back.
+- **Held by someone else:** wait and retry, or tell the user. Never `release --force` another agent's lease.
+- **Service down:** `acquire` starts it in the herdr `browser` workspace, with no focus change. Never launch the
+  browser from your own shell.
+- **Logging in:** the user signs in by hand or with the 1Password extension in that profile. Never type a password
+  or read one from `op` yourself.
+- **Never bring the window forward yourself:** no `Page.bringToFront` in `run-code`.
+
+## Reusing a login headlessly
+
+A site that doesn't block headless can reuse the headed login:
+
+```bash
+# while holding the lease, attached:
+playwright-cli -s=<task> state-save ~/.local/state/browser-auth/<site>.json
+chmod 600 ~/.local/state/browser-auth/<site>.json
+# later, in any headless session:
+playwright-cli -s=$S state-load ~/.local/state/browser-auth/<site>.json
+```
+
+- The file holds live session cookies. Keep it in `~/.local/state/browser-auth/` (dir 700), never in a repo, and
+  delete it when the task ends.
+
+## DevTools extras (rare)
+
+- Performance traces, Lighthouse and heap snapshots come from `chrome-devtools` (the chrome-devtools-mcp CLI).
+- It runs one daemon per machine, so check `chrome-devtools status` first; if another agent's is running, wait.
+- Run it on its own throwaway browser and stop it when done:
+
+```bash
+chrome-devtools start --isolated --headless --executablePath=/Applications/Chromium.app/Contents/MacOS/Chromium \
+  --chromeArg=--disable-features=MacAppCodeSignClone --no-usage-statistics
+…
+chrome-devtools stop
+```
+
+- Never point it at `:9222`.
