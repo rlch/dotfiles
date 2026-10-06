@@ -1,0 +1,46 @@
+#!/bin/bash
+# tp-hosts: the root half of tp-up. Installed root-owned at /usr/local/libexec/tp-hosts by
+# `tp-up setup`, and run through sudo with no password, so it trusts nothing it is given:
+#
+#   tp-hosts set     replace the tp-up block of /etc/hosts with the lines on stdin, each
+#                    "<IPv4> <name> [<name>...]" with lowercase DNS names; anything else is refused
+#   tp-hosts clear   remove the block
+#
+# Then it flushes the resolver cache so the change is seen at once. Nothing outside the block
+# between its two marker lines is ever touched.
+set -euo pipefail
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+HOSTS=/etc/hosts
+BEGIN='# tp-up begin (cluster services; managed by tp-up, do not edit)'
+END='# tp-up end'
+LINE='^([0-9]{1,3}\.){3}[0-9]{1,3}( [a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?)+$'
+
+block=""
+case "${1:-}" in
+  set)
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      if ! [[ $line =~ $LINE ]]; then
+        echo "tp-hosts: refused line: $line" >&2
+        exit 65
+      fi
+      block+="$line"$'\n'
+    done
+    ;;
+  clear) ;;
+  *) echo "usage: tp-hosts set|clear" >&2; exit 64 ;;
+esac
+
+tmp=$(mktemp /etc/hosts.tp-up.XXXXXX)
+trap 'rm -f "$tmp"' EXIT
+awk -v b="$BEGIN" -v e="$END" '$0==b{skip=1} !skip{print} $0==e{skip=0}' "$HOSTS" >"$tmp"
+if [ -n "$block" ]; then
+  printf '%s\n%s%s\n' "$BEGIN" "$block" "$END" >>"$tmp"
+fi
+chmod 644 "$tmp"
+chown root:wheel "$tmp"
+mv -f "$tmp" "$HOSTS"
+trap - EXIT
+dscacheutil -flushcache
+killall -HUP mDNSResponder

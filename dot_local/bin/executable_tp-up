@@ -1,82 +1,119 @@
 #!/usr/bin/env bash
-# tp-up: Telepresence to the dev cluster, connected and resolving, with no password.
+# tp-up: Telepresence to the dev cluster, with its service names resolving on this Mac, and no
+# password after the one-time setup.
 #
-#   tp-up          connect if down, then make sure cluster names resolve; exit 0 only when they do
+#   tp-up          connect if down, then make the cluster's service names resolve; exit 0 only
+#                  when they do
+#   tp-up down     disconnect and remove the names
 #   tp-up setup    one time, in a terminal (asks your password once): installs the pinned binary
-#                  root-owned at /usr/local/bin/telepresence and a sudoers rule letting it, and the
-#                  mDNSResponder reload, run without a password
+#                  root-owned at /usr/local/bin/telepresence, the /etc/hosts helper at
+#                  /usr/local/libexec/tp-hosts, and a sudoers rule letting both run with no password
 #   tp-up status   what is up
 #
 # Why the setup: Telepresence's root daemon starts through sudo, and an agent's shell has no
-# terminal for the password prompt. The binary is copied root-owned because a NOPASSWD rule on
-# a user-writable path (mise's install dir) is a root hole.
+# terminal for the password prompt. Both are copied root-owned because a NOPASSWD rule on a
+# user-writable path is a root hole.
 #
-# Why the DNS step: Telepresence writes /etc/resolver/telepresence.* pointing at its own DNS on
-# 127.0.0.1. After a restart macOS has been seen to not load them (2026-10-06: the files present,
-# `scutil --dns` listing none, Telepresence's DNS answering when asked directly). Cause unknown;
-# reloading mDNSResponder is the workaround. Each time it is needed, what was seen is appended to
-# ~/Library/Logs/tp-up.log so the cause can be found.
+# Why /etc/hosts: Telepresence resolves cluster names by writing /etc/resolver/* files, and the
+# Tailscale app owns this Mac's DNS, so macOS never loads them (2026-10-06: `scutil --dns` lists
+# only Tailscale's, the router's and mDNS resolvers). /etc/hosts is read before any DNS server,
+# so the names resolve with Tailscale connected. The block lists every ClusterIP service of the
+# mapped namespaces: `svc.ns`, `svc.ns.svc` and `svc.ns.svc.cluster.local`, plus the bare `svc`
+# for the connected namespace (the chart's own URLs, `http://schools-ts-render:3100`). It is
+# rewritten on every `tp-up`, so a moved service IP follows.
 #
 # Env: TP_CONTEXT (dev), TP_NAMESPACE (schools-ts-dev), TP_MAPPED ("$TP_NAMESPACE,schools"),
-#      TP_PROBE (schools-ts-render.$TP_NAMESPACE: a service name that must resolve).
+#      TP_PROBE (schools-ts-render: a service name that must resolve).
 set -euo pipefail
 
 VERSION=2.32.1
 BIN=/usr/local/bin/telepresence
+HELPER=/usr/local/libexec/tp-hosts
+HELPER_SRC=$HOME/.local/share/tp-up/tp-hosts
 CONTEXT=${TP_CONTEXT:-dev}
 NAMESPACE=${TP_NAMESPACE:-schools-ts-dev}
 MAPPED=${TP_MAPPED:-$NAMESPACE,schools}
-PROBE=${TP_PROBE:-schools-ts-render.$NAMESPACE}
-LOG=$HOME/Library/Logs/tp-up.log
+PROBE=${TP_PROBE:-schools-ts-render}
 SUDOERS=/etc/sudoers.d/telepresence
 
 say() { printf 'tp-up: %s\n' "$*" >&2; }
 
 setup() {
-  local src
+  local src rule
   mise install -q "aqua:telepresenceio/telepresence@$VERSION"
   src=$(mise where "aqua:telepresenceio/telepresence@$VERSION")/telepresence
   sudo install -o root -g wheel -m 755 "$src" "$BIN"
-  local rule
+  sudo install -d -o root -g wheel -m 755 "$(dirname "$HELPER")"
+  sudo install -o root -g wheel -m 755 "$HELPER_SRC" "$HELPER"
   rule=$(mktemp)
-  printf '%s ALL=(root) NOPASSWD: %s, /usr/bin/killall -HUP mDNSResponder\n' "$(id -un)" "$BIN" >"$rule"
+  printf '%s ALL=(root) NOPASSWD: %s, %s\n' "$(id -un)" "$BIN" "$HELPER" >"$rule"
   sudo visudo -cf "$rule" >/dev/null
   sudo install -o root -g wheel -m 440 "$rule" "$SUDOERS"
   rm -f "$rule"
-  say "installed $BIN ($("$BIN" version 2>/dev/null | awk '/Client/{print $NF}')) and $SUDOERS"
+  say "installed $BIN, $HELPER and $SUDOERS"
+}
+
+ready() {
+  [ -x "$BIN" ] && [ -x "$HELPER" ] &&
+    sudo -n -l "$BIN" >/dev/null 2>&1 && sudo -n -l "$HELPER" >/dev/null 2>&1
 }
 
 resolves() { [ -n "$(dscacheutil -q host -a name "$PROBE" 2>/dev/null)" ]; }
 
 connected() { "$BIN" status 2>/dev/null | grep -q 'Status *: Connected'; }
 
+# Every ClusterIP service of the mapped namespaces, as /etc/hosts lines.
+hosts() {
+  local ns
+  for ns in ${MAPPED//,/ }; do
+    kubectl --context "$CONTEXT" -n "$ns" get svc \
+      -o jsonpath='{range .items[*]}{.spec.clusterIP}{" "}{.metadata.name}{"\n"}{end}' |
+      awk -v ns="$ns" -v home="$NAMESPACE" '
+        $1 ~ /^[0-9.]+$/ {
+          line = $1
+          if (ns == home) line = line " " $2
+          print line " " $2 "." ns " " $2 "." ns ".svc " $2 "." ns ".svc.cluster.local"
+        }'
+  done
+}
+
 up() {
-  if [ ! -x "$BIN" ] || ! sudo -n -l "$BIN" >/dev/null 2>&1; then
+  if ! ready; then
     say "not set up: run \`tp-up setup\` once in a terminal (it asks your password once)"
     exit 2
   fi
   if ! connected || ! "$BIN" status 2>/dev/null | grep -q "Namespace *: $NAMESPACE\$"; then
-    "$BIN" quit -s >/dev/null 2>&1 || true  # -s: the daemons too, so a binary change takes
+    "$BIN" quit -s >/dev/null 2>&1 || true # -s: the daemons too, so a binary change takes
     "$BIN" connect --context "$CONTEXT" --namespace "$NAMESPACE" --mapped-namespaces "$MAPPED"
   fi
-  for _ in 1 2 3; do resolves && { say "connected; $PROBE resolves"; return 0; }; sleep 2; done
-  {
-    echo "== $(date '+%F %T') $PROBE did not resolve; reloading mDNSResponder"
-    ls -la /etc/resolver
-    echo "scutil --dns resolvers naming $NAMESPACE: $(scutil --dns | grep -c "$NAMESPACE" || true)"
-  } >>"$LOG"
-  sudo -n /usr/bin/killall -HUP mDNSResponder
-  for _ in 1 2 3 4 5; do resolves && { say "connected; $PROBE resolves (after an mDNSResponder reload, logged)"; return 0; }; sleep 2; done
-  say "connected, but $PROBE still does not resolve; see $LOG"
+  local lines
+  lines=$(hosts)
+  [ -n "$lines" ] || { say "kubectl listed no services in $MAPPED"; exit 1; }
+  printf '%s\n' "$lines" | sudo -n "$HELPER" set
+  for _ in 1 2 3; do
+    if resolves; then
+      say "connected; $(printf '%s\n' "$lines" | wc -l | tr -d ' ') services in /etc/hosts; $PROBE resolves"
+      return 0
+    fi
+    sleep 1
+  done
+  say "connected and /etc/hosts written, but $PROBE does not resolve"
   exit 1
+}
+
+down() {
+  "$BIN" quit -s >/dev/null 2>&1 || true
+  if [ -x "$HELPER" ]; then sudo -n "$HELPER" clear; fi
+  say "disconnected; cluster names removed from /etc/hosts"
 }
 
 case "${1:-up}" in
   setup) setup ;;
+  up) up ;;
+  down) down ;;
   status)
     "$BIN" status
     if resolves; then say "$PROBE resolves"; else say "$PROBE does not resolve"; fi
     ;;
-  up) up ;;
-  *) say "usage: tp-up [setup|status]"; exit 64 ;;
+  *) say "usage: tp-up [setup|down|status]"; exit 64 ;;
 esac
