@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# tp-up: Telepresence to the dev cluster, connected and resolving, with no password.
+#
+#   tp-up          connect if down, then make sure cluster names resolve; exit 0 only when they do
+#   tp-up setup    one time, in a terminal (asks your password once): installs the pinned binary
+#                  root-owned at /usr/local/bin/telepresence and a sudoers rule letting it, and the
+#                  mDNSResponder reload, run without a password
+#   tp-up status   what is up
+#
+# Why the setup: Telepresence's root daemon starts through sudo, and an agent's shell has no
+# terminal for the password prompt. The binary is copied root-owned because a NOPASSWD rule on
+# a user-writable path (mise's install dir) is a root hole.
+#
+# Why the DNS step: Telepresence writes /etc/resolver/telepresence.* pointing at its own DNS on
+# 127.0.0.1. After a restart macOS has been seen to not load them (2026-10-06: the files present,
+# `scutil --dns` listing none, Telepresence's DNS answering when asked directly). Cause unknown;
+# reloading mDNSResponder is the workaround. Each time it is needed, what was seen is appended to
+# ~/Library/Logs/tp-up.log so the cause can be found.
+#
+# Env: TP_CONTEXT (dev), TP_NAMESPACE (schools-ts-dev), TP_MAPPED ("$TP_NAMESPACE,schools"),
+#      TP_PROBE (schools-ts-render.$TP_NAMESPACE: a service name that must resolve).
+set -euo pipefail
+
+VERSION=2.32.1
+BIN=/usr/local/bin/telepresence
+CONTEXT=${TP_CONTEXT:-dev}
+NAMESPACE=${TP_NAMESPACE:-schools-ts-dev}
+MAPPED=${TP_MAPPED:-$NAMESPACE,schools}
+PROBE=${TP_PROBE:-schools-ts-render.$NAMESPACE}
+LOG=$HOME/Library/Logs/tp-up.log
+SUDOERS=/etc/sudoers.d/telepresence
+
+say() { printf 'tp-up: %s\n' "$*" >&2; }
+
+setup() {
+  local src
+  mise install -q "aqua:telepresenceio/telepresence@$VERSION"
+  src=$(mise where "aqua:telepresenceio/telepresence@$VERSION")/telepresence
+  sudo install -o root -g wheel -m 755 "$src" "$BIN"
+  local rule
+  rule=$(mktemp)
+  printf '%s ALL=(root) NOPASSWD: %s, /usr/bin/killall -HUP mDNSResponder\n' "$(id -un)" "$BIN" >"$rule"
+  sudo visudo -cf "$rule" >/dev/null
+  sudo install -o root -g wheel -m 440 "$rule" "$SUDOERS"
+  rm -f "$rule"
+  say "installed $BIN ($("$BIN" version 2>/dev/null | awk '/Client/{print $NF}')) and $SUDOERS"
+}
+
+resolves() { [ -n "$(dscacheutil -q host -a name "$PROBE" 2>/dev/null)" ]; }
+
+connected() { "$BIN" status 2>/dev/null | grep -q 'Status *: Connected'; }
+
+up() {
+  if [ ! -x "$BIN" ] || ! sudo -n -l "$BIN" >/dev/null 2>&1; then
+    say "not set up: run \`tp-up setup\` once in a terminal (it asks your password once)"
+    exit 2
+  fi
+  if ! connected || ! "$BIN" status 2>/dev/null | grep -q "Namespace *: $NAMESPACE\$"; then
+    "$BIN" quit >/dev/null 2>&1 || true
+    "$BIN" connect --context "$CONTEXT" --namespace "$NAMESPACE" --mapped-namespaces "$MAPPED"
+  fi
+  for _ in 1 2 3; do resolves && { say "connected; $PROBE resolves"; return 0; }; sleep 2; done
+  {
+    echo "== $(date '+%F %T') $PROBE did not resolve; reloading mDNSResponder"
+    ls -la /etc/resolver
+    echo "scutil --dns resolvers naming $NAMESPACE: $(scutil --dns | grep -c "$NAMESPACE" || true)"
+  } >>"$LOG"
+  sudo -n /usr/bin/killall -HUP mDNSResponder
+  for _ in 1 2 3 4 5; do resolves && { say "connected; $PROBE resolves (after an mDNSResponder reload, logged)"; return 0; }; sleep 2; done
+  say "connected, but $PROBE still does not resolve; see $LOG"
+  exit 1
+}
+
+case "${1:-up}" in
+  setup) setup ;;
+  status)
+    "$BIN" status
+    if resolves; then say "$PROBE resolves"; else say "$PROBE does not resolve"; fi
+    ;;
+  up) up ;;
+  *) say "usage: tp-up [setup|status]"; exit 64 ;;
+esac
