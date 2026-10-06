@@ -96,6 +96,9 @@ def refresh():
         for a in found
         if a["letter"] and all(c in spoken for c in a["letter"])
     }
+    # The letters themselves too: Parakeet writes a spoken "q" as "Q", which the
+    # HUD sends as "agent q", not as the alphabet word.
+    letters.update({" ".join(a["letter"]): a["letter"] for a in found if a["letter"]})
     ctx.lists["user.herdr_letter"] = letters
     # A label word that is also a letter's word would make "agent red" mean two agents.
     taken = set(spoken.values())

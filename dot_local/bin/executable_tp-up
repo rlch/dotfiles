@@ -56,7 +56,7 @@ up() {
     exit 2
   fi
   if ! connected || ! "$BIN" status 2>/dev/null | grep -q "Namespace *: $NAMESPACE\$"; then
-    "$BIN" quit >/dev/null 2>&1 || true
+    "$BIN" quit -s >/dev/null 2>&1 || true  # -s: the daemons too, so a binary change takes
     "$BIN" connect --context "$CONTEXT" --namespace "$NAMESPACE" --mapped-namespaces "$MAPPED"
   fi
   for _ in 1 2 3; do resolves && { say "connected; $PROBE resolves"; return 0; }; sleep 2; done
