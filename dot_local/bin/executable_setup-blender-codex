@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Register the official Blender Lab bridge already used by Claude Code.
+# Codex owns config.toml (it is not chezmoi-managed), so keep the repeatable
+# registration here rather than managing a second copy of the whole config.
+# Background tools work without the interactive Blender extension running.
+set -euo pipefail
+
+bridge="$HOME/mcp/blender_mcp/mcp"
+if [[ ! -f "$bridge/pyproject.toml" ]]; then
+  echo "Blender Lab bridge missing at $bridge; run the existing blender-mcp installer first." >&2
+  exit 1
+fi
+uv_bin="$(command -v uv)"
+blender_bin="$(command -v blender)"
+command -v codex >/dev/null
+
+if codex mcp get blender >/dev/null 2>&1; then
+  echo "Blender is already registered; preserving its configuration."
+else
+  codex mcp add blender --env "BLENDER_PATH=$blender_bin" -- \
+    "$uv_bin" --directory "$bridge" run blender-mcp
+fi
+codex mcp get blender

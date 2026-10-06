@@ -3,7 +3,8 @@
 # `tp-up setup`, and run through sudo with no password, so it trusts nothing it is given:
 #
 #   tp-hosts set     replace the tp-up block of /etc/hosts with the lines on stdin, each
-#                    "<IPv4> <name> [<name>...]" with lowercase DNS names; anything else is refused
+#                    "<IPv4> <name> [<name>...]" with lowercase DNS names (anything else is
+#                    refused), each written with its IPv4-mapped IPv6 twin
 #   tp-hosts clear   remove the block
 #
 # Then it flushes the resolver cache so the change is seen at once. Nothing outside the block
@@ -25,7 +26,10 @@ case "${1:-}" in
         echo "tp-hosts: refused line: $line" >&2
         exit 65
       fi
-      block+="$line"$'\n'
+      # The IPv4-mapped IPv6 twin: with only an A record here, the AAAA lookup goes on to DNS,
+      # which on this Mac is Tailscale's and hangs for a cluster name (2026-10-06), stalling every
+      # client that asks for both.
+      block+="$line"$'\n'"::ffff:$line"$'\n'
     done
     ;;
   clear) ;;

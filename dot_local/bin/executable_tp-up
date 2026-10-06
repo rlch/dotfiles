@@ -54,7 +54,8 @@ setup() {
 }
 
 ready() {
-  [ -x "$BIN" ] && [ -x "$HELPER" ] &&
+  # The helper as installed is the dotfiles' own: a newer one needs `tp-up setup` again.
+  [ -x "$BIN" ] && [ -x "$HELPER" ] && cmp -s "$HELPER" "$HELPER_SRC" &&
     sudo -n -l "$BIN" >/dev/null 2>&1 && sudo -n -l "$HELPER" >/dev/null 2>&1
 }
 
@@ -79,7 +80,7 @@ hosts() {
 
 up() {
   if ! ready; then
-    say "not set up: run \`tp-up setup\` once in a terminal (it asks your password once)"
+    say "not set up, or the helper changed: run \`tp-up setup\` in a terminal (it asks your password once)"
     exit 2
   fi
   if ! connected || ! "$BIN" status 2>/dev/null | grep -q "Namespace *: $NAMESPACE\$"; then
