@@ -19,6 +19,8 @@
 #   browser-headed run <name> <cmd>…  a playwright-cli command on the lease, focus put back
 #   browser-headed release [--force]  drop the lease, reap every CDP client
 #   browser-headed status             service, lease holder, attached clients
+#   browser-headed icon               badge Chromium.app's icon as the agents' browser
+#   browser-headed extension <id>     install or update a Web Store extension (the user clicks Add)
 #   browser-headed serve              the watchdog the service pane runs (not for agents)
 set -euo pipefail
 
@@ -70,15 +72,55 @@ holder() { # prints "<pid> <name> <since>" of a live lease, or nothing
   if kill -0 "$pid" 2>/dev/null; then echo "$pid $name $since"; fi
 }
 
+cmd_icon() {
+  # Chromium is the agents' browser and nothing else, so its icon says so: a
+  # robot badge (~/.local/share/browser-headed/agent-chromium.png). A Finder
+  # custom icon (an `Icon\r` file in the bundle), not an edited app.icns: the
+  # app is Developer ID signed. A cask upgrade replaces the bundle and drops it,
+  # so every launch puts it back.
+  local png="$HOME/.local/share/browser-headed/agent-chromium.png"
+  [[ -f "$png" && -d "$app" ]] || return 0
+  [[ -f "$app/Icon"$'\r' && "${1:-}" != --force ]] && return 0
+  osascript -l JavaScript -e "ObjC.import('AppKit');
+    \$.NSWorkspace.sharedWorkspace.setIconForFileOptions(
+      \$.NSImage.alloc.initWithContentsOfFile('$png'), '$app', 0)" >/dev/null
+}
+
 launch() {
-  # `open -g` launches without activating the app, so no window comes forward;
-  # aerospace files it under the `agent` workspace. MacAppCodeSignClone off, or
-  # every launch that ends in a kill leaks a whole app copy under $TMPDIR/../X.
+  cmd_icon || true
+  # `open -g` asks for no activation, but Chromium activates itself once its
+  # first window is up and aerospace follows it to `agent` (2026-10-06). So the
+  # window the user had focused is put back once the browser answers.
+  local prev
+  prev=$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null || true)
+  # MacAppCodeSignClone off, or every launch that ends in a kill leaks a whole
+  # app copy under $TMPDIR/../X.
   open -g -n -a "$app" --args \
     --disable-features=MacAppCodeSignClone \
     --remote-debugging-port="$port" \
     --user-data-dir="$profile" \
     --no-first-run
+  for _ in $(seq 40); do healthy && break; sleep 0.25; done
+  sleep 1
+  if [[ -n "$prev" && "$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null)" != "$prev" ]]; then
+    aerospace focus --window-id "$prev" 2>/dev/null || true
+  fi
+}
+
+cmd_extension() {
+  # ungoogled-chromium has no Web Store install button. With its flag
+  # extension-mime-request-handling set to "Always prompt for install" (set
+  # once in chrome://flags, kept in the profile's Local State), opening a CRX
+  # URL raises Chromium's own "Add extension?" dialog, which only the user can
+  # click. Opened by a bare CDP call: Playwright cancels every download, the
+  # CRX included. Re-running it on an installed id updates the extension.
+  local id=${1:?usage: browser-headed extension <web store id>} url
+  healthy || cmd_up >/dev/null
+  url="https://clients2.google.com/service/update2/crx?response=redirect&prodversion=$(
+    curl -s "$endpoint/json/version" | jq -r '.Browser | split("/")[1]'
+  )&acceptformat=crx2,crx3&x=id%3D$id%26uc"
+  curl -sf -X PUT "$endpoint/json/new?$(jq -rn --arg u "$url" '$u|@uri')" >/dev/null
+  echo "The 'Add extension' dialog is open in Chromium (aerospace workspace 'agent'); click Add."
 }
 
 cmd_serve() {
@@ -193,6 +235,8 @@ case "${1:-status}" in
   run) shift; cmd_run "$@" ;;
   release) shift; cmd_release "$@" ;;
   status) cmd_status ;;
+  icon) shift; cmd_icon --force ;;
+  extension) shift; cmd_extension "$@" ;;
   serve) cmd_serve ;;
-  *) sed -n '2,22p' "$0" >&2; exit 64 ;;
+  *) sed -n '2,24p' "$0" >&2; exit 64 ;;
 esac

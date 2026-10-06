@@ -58,6 +58,8 @@ browser-headed release                              # always; it also reaps ever
   browser from your own shell.
 - **Logging in:** the user signs in by hand or with the 1Password extension in that profile. Never type a password
   or read one from `op` yourself.
+- **Extensions:** ungoogled Chromium has no Web Store button. `browser-headed extension <web store id>` opens
+  Chromium's own "Add extension?" dialog (it also updates an installed one); only the user can click Add.
 - **Never bring the window forward yourself:** no `Page.bringToFront` in `run-code`.
 
 ## Reusing a login headlessly
