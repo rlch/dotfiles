@@ -45,14 +45,6 @@ set -x CARGO_HOME $HOME/.cargo
 # gh enhance — bubbletint theme id (https://lrstanley.github.io/bubbletint/).
 set -x ENHANCE_THEME catppuccin_mocha
 
-# revdiff — UI theme (status bar/borders/panels) + chroma syntax theme +
-# vim-style motions. UI theme is initialized on first install via
-# `revdiff --init-themes` — see .chezmoiscripts/run_onchange_post-install-revdiff.sh.tmpl.
-set -x REVDIFF_THEME        mocha-clear
-set -x REVDIFF_CHROMA_STYLE catppuccin-mocha
-set -x REVDIFF_VIM_MOTION   true
-set -x REVDIFF_LINE_NUMBERS true
-set -x REVDIFF_WORD_DIFF    true
 
 # Point SSH_AUTH_SOCK at 1Password's agent so non-OpenSSH clients (Go-based
 # tools like upterm, terraform, gcloud, yazi VFS, etc.) find the keys. The

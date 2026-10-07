@@ -1,11 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/jesseduffield/lazygit/master/schema/config.json
 #
 # Diff strategy:
-#   - Inline panel  → delta (streaming ANSI). revdiff is a TUI; it can't drive
-#                     the small side-panel.
-#   - <c-o> in any  → revdiff fullscreen on the current selection ("open"
-#     diff context     externally). Annotations are written to
-#                      ~/.config/revdiff/history/ on quit.
+#   - Inline panel  → delta (streaming ANSI).
 #   - <c-d>         → reserved for scrollDownMain (lazygit's alt2 default).
 
 promptToReturnFromSubprocess: false
@@ -28,22 +24,3 @@ git:
     - colorArg: always
       pager: delta --paging=never --dark
   parseEmoji: false
-
-customCommands:
-  - key: "<c-o>"
-    description: "Review the selected file in revdiff"
-    context: "files"
-    command: 'revdiff --only={{.SelectedFile.Name | quote}}'
-    output: terminal
-
-  - key: "<c-o>"
-    description: "Review the selected commit in revdiff"
-    context: "commits"
-    command: 'revdiff {{.SelectedLocalCommit.Sha}}~1 {{.SelectedLocalCommit.Sha}}'
-    output: terminal
-
-  - key: "<c-o>"
-    description: "Review uncommitted changes in revdiff"
-    context: "global"
-    command: "revdiff"
-    output: terminal

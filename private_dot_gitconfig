@@ -21,9 +21,8 @@
 	gpgsign = true
 	verbose = true   ; show the full diff in the commit-message editor
 
-; revdiff isn't a stdin pager — it generates diffs from refs itself, so
-; we don't wire pager.diff/show. delta stays as the streaming pager for
-; commands like `git log -p` and as the diffFilter for `git add -p`.
+; delta is the streaming pager for commands like `git log -p` and the
+; diffFilter for `git add -p`.
 [pager]
 	log = delta
 	reflog = delta
