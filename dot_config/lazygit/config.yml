@@ -20,7 +20,7 @@ gui:
     unstagedChangesColor: ["#f38ba8"]
 
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --dark
+      command: delta --paging=never --dark
   parseEmoji: false
