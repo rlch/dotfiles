@@ -1,0 +1,19 @@
+# How each repo lands a finished branch. Read by the `land` script
+# (~/dev/skills/plugins/rjm/skills/land). Keyed by the origin's owner/name.
+#
+#   mode   ff    rebase onto local main, fast-forward local main, push main
+#          push  rebase onto origin/main, push the tip straight to origin main
+#          pr    rebase onto origin/main, push the branch, open a squash-merged PR
+#   push   ff only: also push main (default true)
+#   check  a command that must pass on the rebased tip
+#   admin  pr only: merge now with --admin instead of --auto
+
+[default]
+mode = "ff"
+push = true
+
+# Lands on local main; main is pushed in batches from the main checkout, since
+# every push starts the Main workflow and a superseded run skips its delivery.
+[repo."MathGaps/schools-ts"]
+mode = "ff"
+push = false

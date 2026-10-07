@@ -77,6 +77,10 @@ told you belongs back in that skill so the next run does not hit the same gap.
 - **Never `git stash`** (hook-enforced): `refs/stash` is one ref shared by every
   worktree and agent. Park work in a commit instead, and revert only specific
   unauthorized paths. Never `--no-verify` either.
+- **Finished and green means landed.** The session that did the work lands its
+  own branch with the `land` skill (it knows each repo's mode from
+  `~/.config/land/config.toml`); it does not park the branch and wait for
+  "merge". The ask-first list above is the exception.
 - Use isolated worktrees for parallel edit agents. Never let one agent's
   cleanup revert or overwrite another agent's work.
 

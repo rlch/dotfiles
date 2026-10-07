@@ -35,9 +35,9 @@
   change, use `rjm:opsx-worktree` by default. A literal `/opsx:apply`, an
   explicit in-place request, unavailable herdr, or a non-git directory uses the
   in-place flow instead.
-- The worktree implementer stops with a clean, green, fast-forward-ready branch.
-  It never pushes or moves local `main`; the operator lands it from the parent
-  checkout.
+- The worktree implementer lands its own branch with `rjm:land` when it is clean
+  and green (operator, 2026-10-07). A repo's own `CLAUDE.md` wins where it says
+  who lands.
 
 ## Model selection
 

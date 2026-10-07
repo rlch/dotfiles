@@ -138,7 +138,8 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   worktree off `main` **and launches a fresh Claude session inside that new
   workspace, seeded to run the `/opsx:apply` loop there** — so the main session
   hands off and stays free while the implementer session commits per task-group
-  and leaves a ready-to-PR branch. (The old `wt` fish helper
+  and lands its own branch with `rjm:land` (per-repo mode in
+  `dot_config/land/config.toml`). (The old `wt` fish helper
   was removed 2026-07-01 — the skill supersedes it for the agent flow; the raw
   `herdr worktree {create,remove}` CLI covers scripting.) Freeform slug = branch
   name (change name); add the conventional-commit prefix at squash-PR time. Base
