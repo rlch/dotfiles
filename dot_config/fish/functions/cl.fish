@@ -18,6 +18,15 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
         end
     end
 
+    # desk's agent plugin: the skills and MCP tools deskd writes for agents
+    # (~/dev/desk docs/deskd.md). Read live from the folder, so it follows deskd's
+    # config and enabled plugins. Only for a session, not for `cl mcp ...` and
+    # the other subcommands, and only where deskd has written it.
+    set -l desk_plugin ~/.local/state/desk/agent-plugin
+    if test -d $desk_plugin; and not contains -- "$args[1]" mcp plugin update install doctor config auth agents setup-token
+        set -p args --plugin-dir $desk_plugin
+    end
+
     # clodcurrent picks the highest-quota account not already running in another
     # pane, trusts the launch folder in that account's config, kicks off the
     # conversation sync in the background, then exec's `claude` with
