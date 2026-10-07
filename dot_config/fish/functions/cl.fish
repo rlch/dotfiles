@@ -1,7 +1,8 @@
 function cl --wraps claude --description 'clodcurrent: launch best free account; model shortcuts'
     # Translate model shortcuts into `--model <id>` (passed through to claude).
-    # opus/fable are pinned to the 1M-context ([1m]) variants; sonnet/haiku use
-    # claude's own "latest" aliases so they auto-track releases. Bump opus/fable
+    # opus/fable are pinned to the 1M-context ([1m]) variants; sonnet uses
+    # claude's own "latest" alias so it auto-tracks releases. No --haiku: the
+    # global model rule bans it. Bump opus/fable
     # here when a newer 1M model ships.
     set -l args
     for a in $argv
@@ -12,8 +13,6 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
                 set -a args --model 'claude-fable-5-1[1m]'
             case --sonnet
                 set -a args --model sonnet
-            case --haiku
-                set -a args --model haiku
             case '*'
                 set -a args $a
         end

@@ -15,6 +15,28 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 - Never write a paragraph where a sentence works, or a sentence where a word
   works.
 
+# Working with me
+
+- **Act on your own recommendation.** If you would recommend a step and it can
+  be undone, do it and tell me afterwards. Never end a turn on "shall I?" for
+  something you already think is right.
+- **Ask first only for these**, with a plain explanation of what changes, how it
+  fits what exists, what it costs, and the alternative:
+  - a change to an AI's prompts, tools, agent loop or harness;
+  - new infrastructure, a new dependency or service, or a new architectural pattern;
+  - anything that could affect performance;
+  - who pays or spends a seat, who can see or delete whose data;
+  - anything run against production, and anything that cannot be undone.
+  Bug fixes and changes that follow existing patterns are not on this list.
+- **Ask once.** Park the item, carry on with the rest, and never repeat an open
+  question.
+- **End every report with the next step:** what you are doing next, or the one
+  thing you need from me.
+- These are refused by a hook (`~/.claude/guard.py`), under every permission
+  mode: `git stash`, `--no-verify`, force-pushing `main`/`master`, herdr focus,
+  `playwright-cli close-all`/`kill-all`, editing a chezmoi-deployed file, and a
+  Haiku subagent. Do not look for a way round it; say what you needed.
+
 # Dotfiles
 
 When editing anything under `~/.config/`, `~/.claude/`, `~/.agents/`,
@@ -49,15 +71,12 @@ told you belongs back in that skill so the next run does not hit the same gap.
 - PRs are squash-merged. The PR title becomes the squashed conventional commit.
 - Force-push is allowed on personal branches, never on `main` or `master`.
 - **`git push` needs no approval, from anywhere: push when the work is ready** (operator,
-  2026-09-30, replacing the 2026-08-27 rule and its worktree ban; the push guard hook is
-  gone). A worktree, including a Claude worktree, pushes its own branch. Never force-push
-  `main`/`master` (settings still deny it), and pushing a branch nobody asked you to create
+  2026-09-30). A worktree, including a Claude worktree, pushes its own branch. Never force-push
+  `main`/`master` (hook-enforced), and pushing a branch nobody asked you to create
   is still out of scope.
-- **Never `git stash`, anywhere, for any reason.** `refs/stash` is one shared ref
-  in the common git dir, so every worktree and agent pops the same stack; a
-  conflicting pop leaves markers and unmerged entries that block `merge
-  --ff-only` (left `main` unmergeable mid-landing, 2026-07-29). Park work in a
-  commit instead, and revert only specific unauthorized paths.
+- **Never `git stash`** (hook-enforced): `refs/stash` is one ref shared by every
+  worktree and agent. Park work in a commit instead, and revert only specific
+  unauthorized paths. Never `--no-verify` either.
 - Use isolated worktrees for parallel edit agents. Never let one agent's
   cleanup revert or overwrite another agent's work.
 
@@ -84,11 +103,12 @@ request.
   `focus` to `false`, so this only makes the intent unmissable to the next
   reader — but never rely on the default by omitting the flag, and never pass
   `--focus`.
-- Never steal focus. `--focus`, `workspace focus`, `tab focus`, `pane focus`,
-  and `agent focus` are for one case only: the user asked to be taken somewhere
-  in this request. Prior approval does not carry over to the next run. Wanting
-  the user to see the result is not a reason — report the workspace or tab by
-  name and let them jump there.
+- Never steal focus (hook-enforced). `--focus`, `workspace focus`, `tab focus`,
+  `pane focus`, and `agent focus` are for one case only: the user asked to be
+  taken somewhere in this request, and then the command carries the prefix
+  `HERDR_FOCUS=asked`. Prior approval does not carry over to the next run.
+  Wanting the user to see the result is not a reason — report the workspace or
+  tab by name and let them jump there.
 - This holds even when the calling skill closes its own tab afterwards. Create
   in the background regardless; if the self-close moves focus somewhere
   unhelpful, that is the accepted trade, not a bug to patch with `--focus`.
@@ -102,30 +122,9 @@ request.
 
 # Browser
 
-- The `browser` skill is the only way to a browser: `playwright-cli`, run on
-  demand. No browser MCP server, no Claude in Chrome, no stable Google Chrome,
-  and no Chromium launched by hand. Repos carry no browser setup of their own;
-  this file and that skill own it for every account.
-- Headless is the default: a browser of your own per task,
-  `playwright-cli -s=<unique name> open --idle-timeout=600000`, closed when
-  done. Never `close-all` or `kill-all`; they end other agents' browsers.
-- Headed is the shared ungoogled Chromium on `127.0.0.1:9222` (persistent
-  profile: logins, 1Password), one agent at a time: `browser-headed acquire
-  <name>` before attaching, every command through `browser-headed run <name>`
-  (it puts the user's focus back), `browser-headed release` after. A second
-  client on a shared browser can wedge everyone's new tabs blank (2026-10-05),
-  so never attach without the lease and never leave a client attached.
-- **ImmiAccount (`immi.homeaffairs.gov.au`) is never headless.** Akamai blocks
-  it with a 403. Use the headed lease.
-- The headed browser runs as a service in the herdr `browser` workspace
-  (`browser-headed up`, or the human alias `chrome-debug`). Never start it, or
-  any long-lived browser, from your own shell.
-- Never type or fetch a password. The user signs in by hand or through the
-  1Password extension in the headed profile.
-- **Never bring the browser forward.** No `Page.bringToFront`, no driving the
-  user's tabs; open your own tab and close it. It lives in the aerospace
-  `agent` workspace; never move it.
-- Any Chromium launch outside `playwright-cli` passes
-  `--disable-features=MacAppCodeSignClone`. Without it a killed launch leaves a
-  full app copy under `$TMPDIR/../X` (730 copies, 267 GB, filled the disk on
-  2026-09-25).
+- The `browser` skill is the only way to a browser (`playwright-cli`; no browser
+  MCP server, no Claude in Chrome, no Chromium launched by hand). Load it before
+  touching one: it holds the headless default, the lease on the shared headed
+  browser, and the launch flag that stops app copies filling the disk.
+- **ImmiAccount (`immi.homeaffairs.gov.au`) is never headless**; use the headed
+  lease. Never type or fetch a password, and never bring the browser forward.

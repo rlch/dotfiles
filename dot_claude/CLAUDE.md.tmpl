@@ -4,12 +4,10 @@
 
 # Claude Code
 
-- **Never publish through the Artifact tool** (claude.ai artifacts). Multiple
-  Claude accounts are in play and the web login often doesn't match the CLI
-  account, so artifact URLs are dead ends. HTML/visual output is still wanted —
-  write it to a local file and hand over the path (or `open` it, where the
-  content rules allow auto-opening). To share a page by URL, publish it with the
-  `rjm:artifact-publish` skill (artifacts.rjmath.com).
+- The Artifact tool is denied in settings (several Claude accounts are in play,
+  so its URLs are dead ends). Write HTML/visual output to a local file and hand
+  over the path; to share a page by URL use `rjm:artifact-publish`
+  (artifacts.rjmath.com).
 
 ## Worktrees
 
@@ -43,8 +41,7 @@
 
 ## Model selection
 
-Chosen by what the work is (operator, 2026-09-29; replaces the 2026-09-03 tiers,
-which made Fable the planning default). The rule applies wherever a model is
+Chosen by what the work is (operator, 2026-09-29). The rule applies wherever a model is
 picked: `cl --fable | --opus | --sonnet` when launching a session, `model:` on
 the Agent tool, and per-phase `opts.model` in a Workflow.
 
@@ -56,18 +53,14 @@ the Agent tool, and per-phase `opts.model` in a Workflow.
 - **Fable: only the extremely hard.** Brainstorming a genuinely complex problem,
   or a design no ruling shapes where Opus has already fallen short. Never a
   default, never a fan-out, never a routine plan or review.
-- **Haiku: never,** for anything, until Haiku 5.5 ships.
+- **Haiku: never,** for anything, until Haiku 5.5 ships (hook-enforced for subagents).
 - **A fix is picked by complexity** (operator, 2026-09-07): **Sonnet** for a
   one-file or one-line change whose brief names the files and quotes the rule;
   **Opus** for everything else. The dispatcher says which in the brief's first
   line.
-- **The tier is not the effort.** `effortLevel: xhigh` in `settings.json` is
-  inherited by every subagent, so an unset Sonnet one-liner reasons as hard as
-  Fable speccing. The `fix` agent (`~/.claude/agents/fix.md`, dispatched as
-  `subagent_type: fix`, `model:` overriding its Sonnet default) sets
-  `effort: high`; the orchestrator keeps `xhigh`. Measured 2026-09-07
-  (`unspoke/docs/where-the-minutes-go.md`): effort is ~20% of a turn's cost and
-  the turn count is the rest — a fix is one loop, one verification line, never
+- **The tier is not the effort.** `effortLevel: xhigh` is inherited by every
+  subagent. The `fix` agent (`subagent_type: fix`, `model:` overriding its
+  Sonnet default) sets `effort: high`: one loop, one verification line, never
   `pnpm check`.
 - A Workflow chooses per phase, never one model for the whole script. The
   bundled `deep-research` workflow is read-only; reproduce this tiering in a

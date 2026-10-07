@@ -36,7 +36,9 @@ prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
                               (e.g. obsidian-shared/ — see "Obsidian vaults" below)
 Brewfile                    → packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
-dot_claude/                 → ~/.claude/ (settings.json, hooks)
+dot_claude/                 → ~/.claude/ (settings.json, hooks; guard.py is the
+                              PreToolUse hook that enforces the global bans —
+                              run `guard.py --selftest` after editing it)
 dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
                               lazydocker, starship.toml, herdr, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
@@ -124,11 +126,11 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   Claude session that lives in that checkout. Idiom: instead of running
   several agents in one shared `~`/`~/dev`-rooted workspace (which isn't a git
   work tree, so worktree actions warn), give each branch/task/agent its own
-  isolated worktree-workspace. Two tiers, kept distinct by the push-guard:
+  isolated worktree-workspace. Two tiers:
   - `~/.herdr/worktrees/<repo>/<slug>` — **your** branches (interactive or
-    supervised-agent). Pushable with the normal per-instance approval.
+    supervised-agent).
   - `<repo>/.claude/worktrees/*` — CC autonomous `isolation:"worktree"` dispatch;
-    land via parent, push hard-denied by `git-push-guard.sh`.
+    land via parent.
   Drivers: the g-cluster keybinds (`⌃s ⇧g` new · `⌃s g` open/switch · `⌃s ⌃g`
   remove) for ad-hoc interactive worktrees, and — for the main use case,
   **implementing an OpenSpec change on its own branch** — the `rjm:opsx-worktree`
