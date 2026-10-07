@@ -12,11 +12,10 @@
 mode = "ff"
 push = true
 
-# Lands on local main; main is pushed in batches from the main checkout, since
-# every push starts the Main workflow and a superseded run skips its delivery.
+# Every change lands as its own squash-merged pull request, merged at once with
+# --admin: the ruleset wants a review the operator cannot give his own agents'
+# work, and Operators bypass it (schools-ts CLAUDE.md, Pull requests). Main's CI
+# is the check. pr-land merges engineers' PRs the same way.
 [repo."MathGaps/schools-ts"]
-mode = "ff"
-push = false
-# pr-land merges engineers' PRs with --admin: the ruleset wants an operator
-# review the operator cannot give his own agents' fixes, and Operators bypass it.
+mode = "pr"
 admin = true
