@@ -1,0 +1,9 @@
+# herdfile (~/dev/plugins/herdr/herdfile): declarative herdr workspaces.
+
+[agent]
+# Typed at the new pane's shell prompt, so the `cl` function works (it picks a
+# free account and pre-trusts the folder). `{model}` comes from `--model`:
+# `--model opus` runs `cl --opus`; without it the word is dropped.
+command = "cl --{model}"
+
+# [watch] workspaces is left unset: the default, every workspace, is intended.

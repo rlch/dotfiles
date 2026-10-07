@@ -96,17 +96,30 @@ session alive; a handoff replaces it after the new session is verified.
 background.** Both halves hold unless the user states otherwise in the current
 request.
 
-- Put long-running servers, watchers, builds, test runs, and log tails in a
-  herdr tab or pane in your workspace so the user can inspect and control them.
-  Use the shell tool only for short-lived foreground commands.
-- Create tabs, panes, workspaces, and worktrees in your own workspace, not
-  whichever workspace happens to be focused. Target
-  `--workspace "$HERDR_WORKSPACE_ID"`.
-- **Pass `--no-focus` explicitly on every `tab create`, `pane split`,
-  `workspace create`, and `worktree create`.** The socket API already defaults
-  `focus` to `false`, so this only makes the intent unmissable to the next
-  reader — but never rely on the default by omitting the flag, and never pass
-  `--focus`.
+- **Change the screen through `herdfile`, not by creating tabs and panes
+  yourself.** Each workspace has a file saying what is on screen; herdfile makes
+  herdr match it, and what leaves the file is closed.
+  - `herdfile show`: what is in this workspace. Look before you add.
+  - `herdfile place <name> --tab services`: put a long-running server, watcher,
+    build, test run or log tail on screen, so the user can inspect and control
+    it. `<name>` is a command the repo names in `.herdr/services.toml`
+    (`[dev]` / `cmd = "pnpm dev"`); add the entry if it is missing. Placing one
+    that is already there starts nothing new. `herdfile remove <name>` when you
+    are done with it. Use the shell tool only for short-lived foreground commands.
+  - `herdfile ws add <name> --dir <path> [--branch B] --purpose "..." --brief
+    <file> --model opus`: another agent in its own workspace (a herdr worktree
+    with `--branch`), started through `cl` and told to read the brief. The name
+    is lowercase letters, digits, `-` and `_`, and unique.
+  - `herdfile tree`: every workspace, who started it, and its agent's status.
+    `herdfile tell <name|parent> "..."` messages one (`--wait` for its reply).
+    `herdfile ask "..."` puts a question on the user's list.
+  - `herdfile ws remove <name>` closes a workspace once its agent is idle and its
+    branch merged. Never remove your own while the user has yet to read your report.
+- A pane or workspace opened with `herdr` directly still works, but it is
+  recorded `unmanaged` and nothing ever closes it. When you must, target your own
+  workspace (`--workspace "$HERDR_WORKSPACE_ID"`) and pass `--no-focus`
+  (hook-enforced on `tab create`, `pane split`, `workspace create`, `worktree
+  create`).
 - Never steal focus (hook-enforced). `--focus`, `workspace focus`, `tab focus`,
   `pane focus`, and `agent focus` are for one case only: the user asked to be
   taken somewhere in this request, and then the command carries the prefix
