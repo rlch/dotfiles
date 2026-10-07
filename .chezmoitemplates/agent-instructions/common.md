@@ -129,6 +129,12 @@ request.
 - This holds even when the calling skill closes its own tab afterwards. Create
   in the background regardless; if the self-close moves focus somewhere
   unhelpful, that is the accepted trade, not a bug to patch with `--focus`.
+- **Never test on the live herdr server** (operator, 2026-10-07). No throwaway
+  workspaces, panes or agents in the user's session to try out herdr, herdfile, a
+  skill or a script: they flash through the sidebar and type into real panes. Test
+  against a separate server (`herdr --session <name>` has its own socket; point
+  `HERDR_SOCKET_PATH` at it), and if that is not possible, do not test: say what
+  is unverified.
 - Inspect what you spawned with `herdr pane read <pane> --source visible` and
   `herdr pane process-info --pane <pane>` — never by focusing it.
 - The sidebar shows each agent's frontend dev-server port next to its name, so
