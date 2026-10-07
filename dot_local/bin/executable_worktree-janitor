@@ -12,8 +12,15 @@
 #   idle >= CLEAN hours   drop the whole target dir   (the next build is cold,
 #                         ~4 min for schools-ts under sccache; 12 h, the
 #                         operator's timing, 2026-09-30)
-#   --remove-landed       remove a herdr worktree whose branch is on origin/main
-#                         or whose upstream is gone, tree clean, idle >= a day
+#   --remove-landed       remove a worktree whose work is provably elsewhere,
+#                         tree clean, idle >= a day: a branch on main or
+#                         origin/main, or with its upstream gone; and, for a
+#                         subagent (.claude/worktrees) or scratchpad (/private/tmp)
+#                         worktree, a tip another branch already contains. Covers
+#                         every linked worktree of every repo it can find, not
+#                         only ~/.herdr/worktrees (2026-10-07: 92 worktrees in one
+#                         repo, 47 of them subagent leftovers the old pass never
+#                         saw). Also prunes registrations whose folder is gone.
 #
 # Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
 # works oldest-first until free >= GOAL GB.
@@ -216,7 +223,34 @@ idle_hours() {
   echo $(( ($(date +%s) - ${newest:-0}) / 3600 ))
 }
 
+# "common-git-dir<TAB>path<TAB>branch" for every linked worktree of every repo
+# that has a herdr worktree or a .claude/worktrees folder. The main checkout
+# (first in each list) is never included.
+all_worktrees() {
+  {
+    for wt in "$HOME"/.herdr/worktrees/*/*/; do
+      git -C "$wt" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
+    done
+    find "$HOME/dev" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" -o -name node_modules \
+      -o -name target \) -prune -o -type d -path '*/.claude/worktrees' -print 2>/dev/null | while IFS= read -r d; do
+      git -C "${d%/.claude/worktrees}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
+    done
+  } | sort -u | while IFS= read -r common; do
+    git --git-dir="$common" worktree list --porcelain 2>/dev/null | awk -v c="$common" '
+      /^worktree / { if (n++ && path != "") print c "\t" path "\t" branch; path = substr($0, 10); branch = "" }
+      /^branch /   { branch = substr($0, 8); sub("^refs/heads/", "", branch) }
+      END          { if (n > 1 && path != "") print c "\t" path "\t" branch }' | tail -n +2
+  done
+}
+
 targets() {
+  {
+  # A subagent worktree sits too deep for the root walk below (it found none of
+  # the 40-day-old targets under <repo>/.claude/worktrees, 207 GB, 2026-10-07).
+  while IFS=$'\t' read -r _ wt _; do
+    [[ -d "$wt" ]] && find "$wt" -maxdepth 3 \( -name node_modules -o -name .git -o -name incremental \
+      -o -name deps -o -name .fingerprint \) -prune -o -name CACHEDIR.TAG -print 2>/dev/null
+  done <<<"$worktree_list"
   for root in "${ROOTS[@]}"; do
     [[ -d "$root" ]] || continue
     # Read-only clones and forks hold no build of ours; walking them was most
@@ -224,7 +258,8 @@ targets() {
     find "$root" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" \
       -o -name node_modules -o -name .git -o -name incremental -o -name deps -o -name .fingerprint \) -prune \
       -o -name CACHEDIR.TAG -print 2>/dev/null
-  done | while IFS= read -r tag; do
+  done
+  } | sort -u | while IFS= read -r tag; do
     t=$(dirname "$tag")
     [[ -f "$t/.rustc_info.json" ]] && echo "$(idle_hours "$t") $t"
   done | sort -rn # oldest first
@@ -257,31 +292,58 @@ remove_worktree() { # $1 = worktree, $2 = branch
   if [[ -n "$ws" ]]; then herdr worktree remove --workspace "$ws" --json >/dev/null || return 1
   else git --git-dir="$common" worktree remove "$1" || return 1; fi
   # -D: a squash-merged branch is never an ancestor of main; landing was checked by the caller.
-  git --git-dir="$common" branch -D "$2" >/dev/null
+  [[ -z "$2" ]] || git --git-dir="$common" branch -D "$2" >/dev/null
 }
 
-# A herdr worktree whose work is on origin/main (fast-forward or cherry-picked
-# tip) or whose remote branch is gone (a squash-merged PR with delete-on-merge),
-# with nothing uncommitted or unpushed, is finished: remove it and its branch.
+# A worktree is finished when its tree is clean, nothing has its cwd in it, it
+# has been idle a day, and its work is provably elsewhere:
+#   - its tip is on main or origin/main (fast-forward or cherry-picked tip), or
+#   - its remote branch is gone (a squash-merged PR with delete-on-merge), or
+#   - it is a subagent or scratchpad worktree whose tip another branch contains
+#     (the parent session merged or cherry-picked it; the leftover is a husk).
+#     Another subagent's branch does not count: two husks must not vouch for
+#     each other and both go.
+# A branch with commits nothing else holds is never removed, whatever its age.
 remove_landed_worktrees() {
-  local wt branch track idle
-  for wt in "$HOME"/.herdr/worktrees/*/*/; do
-    wt=${wt%/}
-    [[ -f "$wt/.git" ]] || continue
-    branch=$(git -C "$wt" branch --show-current 2>/dev/null) || continue
-    [[ -n "$branch" && -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
+  local common wt branch track idle why trunk others
+  while IFS=$'\t' read -r common wt branch; do
+    [[ -d "$wt" && -e "$wt/.git" ]] || continue
+    [[ -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
     # A worktree holding the trunk itself is always "on origin/main"; never remove it or its branch.
     [[ "$branch" == main || "$branch" == master ]] && continue
     grep -qF -- "$wt" <<<"$busy_cwds" && continue
     idle=$(( ($(date +%s) - $(stat -f %m "$(git -C "$wt" rev-parse --git-dir)/logs/HEAD" 2>/dev/null || echo 0)) / 3600 ))
     (( idle >= LANDED_H )) || continue
-    track=$(git -C "$wt" for-each-ref --format='%(upstream:track)' "refs/heads/$branch")
-    if [[ "$track" == "[gone]" ]] || git -C "$wt" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
-      act "remove landed worktree $wt ($branch, idle ${idle} h)"
-      $dry && continue
-      remove_worktree "$wt" "$branch" || log "could not remove $wt; left as it is"
+    why=
+    for trunk in origin/main main origin/master master; do
+      git -C "$wt" merge-base --is-ancestor HEAD "$trunk" 2>/dev/null && { why="on $trunk"; break; }
+    done
+    if [[ -z "$why" && -n "$branch" ]]; then
+      track=$(git -C "$wt" for-each-ref --format='%(upstream:track)' "refs/heads/$branch")
+      [[ "$track" == "[gone]" ]] && why="upstream gone"
     fi
+    if [[ -z "$why" && ( "$wt" == */.claude/worktrees/* || "$wt" == /private/tmp/* ) ]]; then
+      others=$(git -C "$wt" for-each-ref --contains HEAD --format='%(refname)' refs/heads refs/remotes \
+        | grep -vxF -- "refs/heads/$branch" | grep -v '^refs/heads/worktree-agent-' | head -1 || true)
+      [[ -n "$others" ]] && why="tip held by ${others#refs/}"
+    fi
+    [[ -n "$why" ]] || continue
+    act "remove landed worktree $wt (${branch:-detached}, $why, idle ${idle} h)"
+    $dry && continue
+    remove_worktree "$wt" "$branch" || log "could not remove $wt; left as it is"
+  done <<<"$worktree_list"
+  # Registrations whose folder is gone, and (listed only, never removed) folders
+  # under ~/.herdr/worktrees that git no longer knows.
+  cut -f1 <<<"$worktree_list" | sort -u | while IFS= read -r common; do
+    [[ -n "$common" ]] || continue
+    if $dry; then git --git-dir="$common" worktree prune -n 2>/dev/null | sed "s/^/$(date '+%F %T') worktree-janitor: would prune: /"
+    else git --git-dir="$common" worktree prune 2>/dev/null || true; fi
   done
+  if $dry; then
+    for wt in "$HOME"/.herdr/worktrees/*/*/; do
+      git -C "$wt" rev-parse --git-dir >/dev/null 2>&1 || log "untracked folder, left for you: ${wt%/}"
+    done
+  fi
 }
 
 reap_orphans
@@ -290,6 +352,7 @@ $reap_only && exit 0
 
 # Every cwd of every process, once: a checkout with a process in it is in use.
 busy_cwds=$(lsof -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | sort -u || true)
+worktree_list=$(all_worktrees)
 before=$(free_gb)
 $remove_landed && remove_landed_worktrees
 sweep "$PRUNE_H" "$CLEAN_H" 0
