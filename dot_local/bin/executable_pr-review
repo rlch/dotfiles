@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# pr-review <owner/repo> <number> <repo-path> [--dry-run]
+# Start a review agent for one pull request, in its own herdr worktree workspace.
+# Bound to a key in gh-dash (~/.config/gh-dash/config.yml); the agent follows the
+# rjm:pr-review skill. Never takes focus.
+set -euo pipefail
+REPO=${1:?owner/repo}; N=${2:?pr number}; DIR=${3:?local path of the repo}; DRY=${4:-}
+DIR="${DIR/#\~/$HOME}"
+git -C "$DIR" rev-parse --git-dir >/dev/null 2>&1 || { echo "pr-review: $DIR is not a checkout of $REPO"; exit 1; }
+DIR=$(dirname "$(git -C "$DIR" rev-parse --path-format=absolute --git-common-dir)")
+read -r STATE DRAFT HEAD < <(gh pr view "$N" --repo "$REPO" --json state,isDraft,headRefName \
+  --jq '"\(.state) \(.isDraft) \(.headRefName)"')
+[ "$STATE" = OPEN ] || { echo "pr-review: #$N is $STATE"; exit 1; }
+[ "$DRAFT" = false ] || { echo "pr-review: #$N is a draft; drafts are left alone"; exit 1; }
+BR="pr-$N"
+SEED="cl --opus \"Use the rjm:pr-review skill on pull request $N of $REPO (head branch $HEAD). You are in its worktree, on branch $BR.\""
+if [ "$DRY" = --dry-run ]; then
+  echo "would fetch pull/$N/head into $BR in $DIR, open a worktree workspace labelled $BR, and run: $SEED"; exit 0
+fi
+OPEN=$(herdr worktree list --cwd "$DIR" 2>/dev/null | python3 -c '
+import json,sys
+try: ws=json.load(sys.stdin)["result"]["worktrees"]
+except Exception: ws=[]
+print(next((w.get("open_workspace_id") or "" for w in ws if w.get("branch")==sys.argv[1]), ""))' "$BR")
+[ -z "$OPEN" ] || { echo "pr-review: #$N already has a workspace open ($BR)"; exit 0; }
+if git -C "$DIR" show-ref --verify -q "refs/heads/$BR"; then
+  CREATE=$(herdr worktree open --cwd "$DIR" --branch "$BR" --label "$BR" --no-focus)
+else
+  git -C "$DIR" fetch -q origin "pull/$N/head:$BR"
+  CREATE=$(herdr worktree create --cwd "$DIR" --branch "$BR" --label "$BR" --no-focus)
+fi
+PANE=$(printf '%s' "$CREATE" | python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')
+herdr pane run "$PANE" "$SEED" >/dev/null
+echo "pr-review: #$N review agent started in workspace $BR"
+[ -t 1 ] && sleep 2 || true

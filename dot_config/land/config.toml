@@ -6,7 +6,7 @@
 #          pr    rebase onto origin/main, push the branch, open a squash-merged PR
 #   push   ff only: also push main (default true)
 #   check  a command that must pass on the rebased tip
-#   admin  pr only: merge now with --admin instead of --auto
+#   admin  merge PRs with --admin (land's pr mode, and pr-land)
 
 [default]
 mode = "ff"
@@ -17,3 +17,6 @@ push = true
 [repo."MathGaps/schools-ts"]
 mode = "ff"
 push = false
+# pr-land merges engineers' PRs with --admin: the ruleset wants an operator
+# review the operator cannot give his own agents' fixes, and Operators bypass it.
+admin = true

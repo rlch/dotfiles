@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# pr-land <owner/repo> <number> [--main-red] [--dry-run]
+# Squash-merge someone's pull request at the head you looked at. Refuses a draft,
+# a conflict, and a red or pending check. --main-red merges when the only red
+# checks are main's own (the caller has checked that). Uses --admin for repos
+# marked admin = true in ~/.config/land/config.toml.
+set -euo pipefail
+REPO=${1:?owner/repo}; N=${2:?pr number}; shift 2
+MAINRED=; DRY=
+stop() { echo "STOPPED: $1"; [ -t 0 ] && read -n1 -r -p "press any key " || true; exit 1; }
+for a in "$@"; do case $a in --main-red) MAINRED=1 ;; --dry-run) DRY=1 ;; *) echo "pr-land: unknown option $a"; exit 1 ;; esac; done
+read -r STATE DRAFT MERGEABLE SHA < <(gh pr view "$N" --repo "$REPO" --json state,isDraft,mergeable,headRefOid \
+  --jq '"\(.state) \(.isDraft) \(.mergeable) \(.headRefOid)"')
+[ "$STATE" = OPEN ] || stop "#$N is $STATE"
+[ "$DRAFT" = false ] || stop "#$N is a draft; drafts are never marked ready or merged"
+[ "$MERGEABLE" = MERGEABLE ] || stop "#$N is not mergeable ($MERGEABLE); bring main in first"
+BAD=$(gh pr checks "$N" --repo "$REPO" --json name,bucket \
+  --jq '[.[]|select(.bucket=="fail" or .bucket=="pending" or .bucket=="cancel")|"\(.name)=\(.bucket)"]|join(", ")' 2>/dev/null || true)
+if [ -n "$BAD" ] && [ -z "$MAINRED" ]; then stop "#$N checks not green: $BAD"; fi
+ADMIN=$(python3 - "$REPO" <<'PY'
+import os, sys, tomllib
+p = os.path.expanduser("~/.config/land/config.toml")
+cfg = tomllib.load(open(p, "rb")) if os.path.exists(p) else {}
+print("--admin" if cfg.get("repo", {}).get(sys.argv[1], {}).get("admin") else "")
+PY
+)
+if [ -n "$DRY" ]; then echo "would merge #$N of $REPO at ${SHA:0:10} (squash $ADMIN)${BAD:+, over: $BAD}"; exit 0; fi
+if [ -t 0 ]; then
+  printf 'squash-merge %s#%s at %s%s? [y/N] ' "$REPO" "$N" "${SHA:0:10}" "${BAD:+ over $BAD}"
+  read -n1 -r ans; echo
+  case "$ans" in [yY]) ;; *) echo cancelled; exit 0 ;; esac
+fi
+gh pr merge "$N" --repo "$REPO" --squash $ADMIN --match-head-commit "$SHA" >/dev/null
+[ "$(gh pr view "$N" --repo "$REPO" --json state --jq .state)" = MERGED ] \
+  || stop "#$N did not merge (a required review or check may be missing)"
+echo "LANDED #$N of $REPO at ${SHA:0:10}"
