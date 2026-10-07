@@ -13,29 +13,22 @@ read -r STATE DRAFT HEAD < <(gh pr view "$N" --repo "$REPO" --json state,isDraft
 [ "$STATE" = OPEN ] || { echo "pr-review: #$N is $STATE"; exit 1; }
 [ "$DRAFT" = false ] || { echo "pr-review: #$N is a draft; drafts are left alone"; exit 1; }
 BR="pr-$N"
-SEED="cl --opus \"Use the rjm:pr-review skill on pull request $N of $REPO (head branch $HEAD). You are in its worktree, on branch $BR.\""
+BRIEF="${TMPDIR:-/tmp}/pr-review-${REPO//\//-}-$N.md"
+PURPOSE="review PR #$N of $REPO"
 if [ "$DRY" = --dry-run ]; then
-  echo "would fetch pull/$N/head into $BR in $DIR, open a worktree workspace labelled $BR, and run: $SEED"; exit 0
+  echo "would fetch pull/$N/head into $BR in $DIR and start a review agent in a worktree workspace named $BR"; exit 0
 fi
-OPEN=$(herdr worktree list --cwd "$DIR" 2>/dev/null | python3 -c '
-import json,sys
-try: ws=json.load(sys.stdin)["result"]["worktrees"]
-except Exception: ws=[]
-print(next((w.get("open_workspace_id") or "" for w in ws if w.get("branch")==sys.argv[1]), ""))' "$BR")
-[ -z "$OPEN" ] || { echo "pr-review: #$N already has a workspace open ($BR)"; exit 0; }
-if git -C "$DIR" show-ref --verify -q "refs/heads/$BR"; then
-  CREATE=$(herdr worktree open --cwd "$DIR" --branch "$BR" --label "$BR" --no-focus)
+if herdfile tree 2>/dev/null | grep -qE "[ ─]$BR( |$)"; then
+  echo "pr-review: #$N already has a workspace open ($BR)"; exit 0
+fi
+git -C "$DIR" show-ref --verify -q "refs/heads/$BR" || git -C "$DIR" fetch -q origin "pull/$N/head:$BR"
+printf 'Use the rjm:pr-review skill on pull request %s of %s (head branch %s). You are in its worktree, on branch %s.\n' \
+  "$N" "$REPO" "$HEAD" "$BR" > "$BRIEF"
+# One command: the worktree workspace (opened where the fetched branch stands),
+# the agent through `cl`, and the brief. It never takes focus.
+if herdfile ws add "$BR" --dir "$DIR" --branch "$BR" --purpose "$PURPOSE" --brief "$BRIEF" --model opus; then
+  echo "pr-review: #$N review agent started in workspace $BR"
 else
-  git -C "$DIR" fetch -q origin "pull/$N/head:$BR"
-  CREATE=$(herdr worktree create --cwd "$DIR" --branch "$BR" --label "$BR" --no-focus)
+  echo "pr-review: #$N could not be started; see the message above"; [ -t 0 ] && read -n1 -r -p "press any key " || true; exit 1
 fi
-PANE=$(printf '%s' "$CREATE" | python3 -c 'import sys,json; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')
-herdr pane run "$PANE" "$SEED" >/dev/null
-# Verify it booted: the foreground process stops being the shell.
-for _ in 1 2 3 4 5 6 7 8; do
-  python3 -c 'import time; time.sleep(2)'
-  FG=$(herdr pane process-info --pane "$PANE" 2>/dev/null || true)
-  case "$FG" in *claude*|*node*) echo "pr-review: #$N review agent started in workspace $BR"; BOOTED=1; break ;; esac
-done
-[ -n "${BOOTED:-}" ] || echo "pr-review: #$N workspace $BR is open, but no agent is running in it yet; check that pane"
 [ -t 1 ] && sleep 2 || true
