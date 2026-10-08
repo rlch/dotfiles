@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# Call a Slack Web API method AS RICHARD with his user token (xoxp), e.g.:
-#   slack-api chat.postMessage channel=#schools text="hello"     (POST form fields)
-#   slack-api conversations.history channel=C123 limit=20
-# The token is read from ~/.config/slack/user-token (0600); it is never printed.
+# Call a Slack Web API method AS RICHARD, through his web-client session (the way wee-slack / slack-term do):
+# the xoxc- token from app.slack.com's localStorage and its `d` cookie (xoxd-), both under ~/.config/slack (0600),
+# for the Tutero Tech workspace (T021RT1NCA3). No app is installed. Never printed. Refresh them when Slack logs the
+# browser session out. Examples:
+#   slack-api auth.test
+#   slack-api chat.postMessage channel=C0123 text="hello"
+#   slack-api conversations.list types=public_channel,private_channel limit=200
 set -euo pipefail
 m=${1:?method}; shift
-tok=$(tr -d '[:space:]' < "$HOME/.config/slack/user-token")
+D="$HOME/.config/slack"
+tok=$(tr -d '[:space:]' < "$D/user-token"); ck=$(tr -d '[:space:]' < "$D/d-cookie")
 args=(); for kv in "$@"; do args+=(--data-urlencode "$kv"); done
-curl -s -X POST "https://slack.com/api/$m" -H "Authorization: Bearer $tok" "${args[@]}"
+curl -s -X POST "https://slack.com/api/$m" -H "Authorization: Bearer $tok" -H "Cookie: d=$ck" "${args[@]}"
