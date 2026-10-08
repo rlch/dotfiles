@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Save each Stripe key from the clipboard into ~/.config/mathgaps-iac/<file> (0600), never printing it.
+# For each prompt: copy that key in the Stripe dashboard, then press Enter. Type s + Enter to skip one.
+set -euo pipefail
+dir="$HOME/.config/mathgaps-iac"
+mkdir -p "$dir"
+if [ "${1:-}" = migrate ]; then keys=(
+  "stripe-au-migrate-key|AU LIVE migrate (Read: Customers, Subscriptions, Prices)|rk_live_"
+  "stripe-us-migrate-key|US LIVE migrate (Read: Customers, Subscriptions, Prices)|rk_live_"
+); else keys=(
+  "stripe-au-plan-key|AU LIVE iac-plan (read-only)|rk_live_"
+  "stripe-au-key|AU LIVE iac-apply (write)|rk_live_"
+  "stripe-us-plan-key|US LIVE iac-plan (read-only)|rk_live_"
+  "stripe-us-key|US LIVE iac-apply (write)|rk_live_"
+  "stripe-au-server-key|AU LIVE schools-ts-server|rk_live_"
+  "stripe-us-server-key|US LIVE schools-ts-server|rk_live_"
+); fi
+last=""
+for row in "${keys[@]}"; do
+  IFS='|' read -r file label prefix <<<"$row"
+  while true; do
+    printf '\n%s\n  copy it, then Enter (s = skip): ' "$label"
+    read -r ans
+    [ "$ans" = s ] && { echo "  skipped"; break; }
+    val=$(pbpaste | tr -d '[:space:]')
+    if [[ "$val" != "$prefix"* ]]; then
+      echo "  clipboard doesn't start with $prefix, copy the right key and try again"; continue
+    fi
+    if [ "$val" = "$last" ]; then
+      echo "  same key as the previous one, copy the next key and try again"; continue
+    fi
+    printf '%s\n' "$val" >"$dir/$file"; chmod 600 "$dir/$file"
+    last="$val"; echo "  saved $file"; break
+  done
+done
+printf '' | pbcopy
+echo; echo "Done. Clipboard cleared. Saved:"; ls "$dir" | grep '^stripe' | sed 's/^/  /'
