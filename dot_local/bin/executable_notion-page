@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Print a Notion page (and its properties, comments not included) as plain text, AS RICHARD, through his web session
+(the token_v2 cookie in ~/.config/notion/token_v2, 0600, never printed). Unofficial internal API (/api/v3), like the
+Slack session helper. Usage: notion-page <page url or id> [--json]
+When it fails with 401/redirect, the browser session ended: re-read token_v2 from the headed Chromium."""
+import json, os, re, sys, urllib.request
+arg = sys.argv[1] if len(sys.argv) > 1 else sys.exit(__doc__)
+m = re.findall(r"[0-9a-f]{32}", arg.replace("-", ""))
+if not m: sys.exit("no page id in " + arg)
+h = m[-1]; pid = f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
+tok = open(os.path.expanduser("~/.config/notion/token_v2")).read().strip()
+uid = open(os.path.expanduser("~/.config/notion/user-id")).read().strip()
+def call(path, body):
+    r = urllib.request.Request("https://www.notion.so/api/v3/" + path, data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json", "Cookie": f"token_v2={tok}; notion_user_id={uid}", "x-notion-active-user-header": uid})
+    return json.load(urllib.request.urlopen(r))
+blocks, cursor = {}, {"stack": []}
+for _ in range(20):
+    d = call("loadPageChunk", {"pageId": pid, "limit": 100, "cursor": cursor, "chunkNumber": 0, "verticalColumns": False})
+    for k, v in d["recordMap"].get("block", {}).items():
+        v = v.get("value", v); blocks[k] = v.get("value", v) if isinstance(v.get("value"), dict) else v
+    cursor = d.get("cursor", {})
+    if not cursor.get("stack"): break
+if "--json" in sys.argv: print(json.dumps(blocks)); sys.exit()
+def text(b):
+    t = b.get("properties", {}).get("title", [])
+    return "".join(seg[0] for seg in t if seg)
+def walk(bid, depth):
+    b = blocks.get(bid);  
+    if not b: return
+    ty = b.get("type", "")
+    pre = {"header": "# ", "sub_header": "## ", "sub_sub_header": "### ", "bulleted_list": "- ", "numbered_list": "1. ",
+           "to_do": "[ ] ", "quote": "> ", "callout": "> ", "code": "```\n"}.get(ty, "")
+    if ty == "image": print("  " * depth + "[image] " + b.get("format", {}).get("display_source", ""))
+    elif ty not in ("page",) or depth == 0:
+        s = text(b)
+        if ty == "page" and depth == 0:
+            print("# " + s)
+            for k, v in b.get("properties", {}).items():
+                if k != "title": print(f"  {k}: " + "".join(x[0] for x in v if x))
+        elif s or pre: print("  " * max(depth - 1, 0) + pre + s + ("\n```" if ty == "code" else ""))
+    else: print("  " * depth + "[page] " + text(b))
+    for c in b.get("content", []): walk(c, depth + 1)
+walk(pid, 0)
