@@ -354,7 +354,6 @@
     "refreshInterval": 10
   },
   "enabledPlugins": {
-    "slack@anthropic-plugin-directory": true,
     "chrome-devtools-mcp@claude-plugins-official": false,
     "ck@cavekit-marketplace": false,
     "clangd-lsp@claude-plugins-official": true,
