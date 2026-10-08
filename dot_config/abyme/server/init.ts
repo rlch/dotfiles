@@ -1,14 +1,14 @@
-// Runs inside deskd, once, before it listens; again whenever you save a file in server/.
-// `desk` is the API every plugin's server half has, plus `desk.options`, which deskd reads
-// once when it starts. See docs/deskd.md, "Your config".
+// Runs inside abymed, once, before it listens; again whenever you save a file in server/.
+// `abyme` is the API every plugin's server half has, plus `abyme.options`, which abymed reads
+// once when it starts. See docs/abymed.md, "Your config".
 
-import { desk } from "@desk/server";
+import { abyme } from "@abyme/server";
 
-// desk.options.port = 4477;
-// desk.options.bind = ["127.0.0.1", "tailscale"];
+// abyme.options.port = 4477;
+// abyme.options.bind = ["127.0.0.1", "tailscale"];
 
-// The built client deskd serves: a stable copy, so a build in ~/dev/desk never changes what an
-// open page is running. `scripts/promote` in ~/dev/desk copies a finished build here.
-desk.options.clientDir = "~/.local/share/desk/client";
+// The built client abymed serves: a stable copy, so a build in ~/dev/abyme never changes what an
+// open page is running. `scripts/promote` in ~/dev/abyme copies a finished build here.
+abyme.options.clientDir = "~/.local/share/abyme/client";
 
-// desk.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
+// abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
