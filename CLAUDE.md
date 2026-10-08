@@ -187,7 +187,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   duplicate skill names selecting the wrong implementation. Shared skills point
   at one source under `~/dev/skills/plugins/rjm/skills`; non-shareable workflows
   such as handoff/spinoff have client-specific sources. `~/.claude/skills/desk`
-  links to the plugin deskd writes (`~/.local/state/desk/agent-plugin`: the
+  links to the plugin deskd writes (`~/.local/state/desk/claude`: the
   `desk:canvas` and `desk:openui` skills and the canvas MCP tools); it dangles,
   harmlessly, where deskd has not run. `opencode.json` remains
   installer-owned and is not managed by chezmoi.
