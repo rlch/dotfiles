@@ -4,7 +4,8 @@
     "launchOptions": {
       "executablePath": "/Applications/Chromium.app/Contents/MacOS/Chromium",
       "headless": true,
-      "args": ["--disable-features=MacAppCodeSignClone"]
+      "args": ["--disable-features=MacAppCodeSignClone"],
+      "ignoreDefaultArgs": ["--hide-scrollbars"]
     }
   },
   "outputDir": "{{ .chezmoi.homeDir }}/Library/Caches/playwright-cli"

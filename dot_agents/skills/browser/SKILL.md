@@ -33,6 +33,21 @@ playwright-cli -s=$S close                          # always, when done
 
 - The session daemon outlives your shell. `--idle-timeout` (10 min here) reaps it if you forget `close`.
 - Never `close-all` or `kill-all`: they end other agents' browsers.
+- **One session, one browser.** Never launch a browser inside `run-code`
+  (`browser.browserType().launch()`, `chromium.launch()`): `close` and the idle timeout do not know
+  it, and every launch whose script throws before its own `close()` stays running (2026-10-09: one
+  session leaked ~25 Chromiums, 24 GB). For another size, scale or colour scheme, make a context on
+  the session's browser and close it in `finally`:
+  ```js
+  async page => {
+    const ctx = await page.context().browser().newContext({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 2, colorScheme: "dark" });
+    try { const p = await ctx.newPage(); /* … */ } finally { await ctx.close(); }
+  }
+  ```
+- Scrollbars take their real width headless (the config drops Playwright's `--hide-scrollbars`),
+  so a page lays out as in a real browser; there is no reason to launch one of your own.
+- Done with a session: `pgrep -f playwright_chromiumdev_profile | wc -l` should drop when you
+  `close` it. If it does not, your session leaked: say so, and `close` it.
 - `playwright-cli --help` lists every command.
 
 ## Headed: logins, 1Password, sites that block headless
