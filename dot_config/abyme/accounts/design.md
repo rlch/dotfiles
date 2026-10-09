@@ -45,18 +45,11 @@ starting point; this says where it changes.
 | Score, tiers, model windows | as clodcurrent; the model is the launch's value of category `model` |
 | Busy | abyme's live agents per account (`agents.items`, `config_dir`, status not `done`), plus launches it picked in the last 60 s that are not listed yet, plus `sessions.json` read only |
 | Spread | among accounts that are not capped, fewer running agents first, then score: twenty launches spread instead of all landing in tier 2's best |
-| Resume | stays on the account whose folder holds the session; if that account is capped, picks another and copies that one transcript there first |
+| Sync | as clodcurrent: the newest copy of each conversation touched in 14 days into every account folder, mtime kept; in the background on each launch, and finished before a resume starts (operator, 2026-10-10) |
 | Trust | as clodcurrent, written only at the version read (`ifVersion`) |
 | Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin |
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
-| Left out | the all-folders sync, `history.jsonl`, shared-config symlinks, `add`, login |
-
-**Why no sync.** The `claude` reader now looks in the agent's own `config_dir` first, so abyme never
-needs a copy. A resume needs the transcript in the folder it runs under; staying on the session's
-account does that with no copy, and the one-file copy covers a switch. What the operator loses: an
-abyme agent's conversation is not in the other accounts' folders until a terminal `cl` launch runs
-clodcurrent's own sync, which it does on every launch anyway. What they gain: no copying of every
-recent transcript into every folder every few minutes.
+| Left out | `history.jsonl`, shared-config symlinks, `add`, login |
 
 ## Tokens
 
