@@ -178,12 +178,12 @@ async function terminalSlugs(): Promise<string[]> {
 }
 
 /** Live abyme agents per account folder. */
-function agentsByDir(): Map<string, { id: string; name: string; session: string | null }[]> {
-  const out = new Map<string, { id: string; name: string; session: string | null }[]>();
+function agentsByDir(): Map<string, { id: string; name: string }[]> {
+  const out = new Map<string, { id: string; name: string }[]>();
   if (!agents.ready) return out;
   for (const x of agents.items.list()) {
     if (!x.config_dir || x.status === "done") continue;
-    out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: `${x.plugin}:${x.id}`, name: x.name ?? x.id, session: x.session_id ?? null }]);
+    out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: `${x.plugin}:${x.id}`, name: x.name ?? x.id }]);
   }
   return out;
 }
@@ -210,12 +210,15 @@ type Seen = {
   error: string | null;
   agents: number;
 };
-const view = abyme.value<{ accounts: Seen[]; at: number }>({ accounts: [], at: 0 });
+/** Each account, and each live agent with the account it runs on. */
+const view = abyme.value<{ accounts: Seen[]; agents: { agent: string; slug: string; pinned: boolean }[]; at: number }>({ accounts: [], agents: [], at: 0 });
 
 function show(all: Account[], q: Map<string, Quota>) {
   const dirs = agentsByDir();
+  const pinned = pins();
   view.set({
     at: Date.now(),
+    agents: all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, slug: a.slug, pinned: pinned[x.id] === a.slug }))),
     accounts: all.map((a) => {
       const x = q.get(a.key);
       const u = x && "usage" in x ? x : null;
@@ -249,14 +252,17 @@ function serial<T>(f: () => Promise<T>): Promise<T> {
   return run;
 }
 
-/** The pin of a session: the account its resumes run on. */
+/** The pin of an agent (by its id in abyme): the account its resumes run on. */
 const pins = () => (abyme.store.get("pins") ?? {}) as Record<string, string>;
 
-function pick(model: string | null, how: { session?: string; count?: boolean } = {}): Promise<{ account: Account; why: string }> {
+/** What New agent's Account field says when nothing is pinned. */
+const BY_QUOTA = "auto";
+
+function pick(model: string | null, how: { pinned?: string; count?: boolean } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
     const all = await discover();
     if (!all.length) throw new Error(`no Claude account in ${HOME} (~/.claude or ~/.claude-<slug>)`);
-    const pinned = how.session ? pins()[how.session] : undefined;
+    const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
     const busy = await busyKeys(all);
     const q = await quotas(all, busy);
     show(all, q);
@@ -380,12 +386,17 @@ agents.prepare.register({
     const model = await modelOf(l);
     // A resume needs another account's copy in place before claude looks for it.
     if (l.resume) await sync(true);
-    const { account, why } = await pick(model, { session: l.resume, count: !l.probe });
+    // The agent's pin: the menu's, else what New agent's Account field picked, which is kept as
+    // the agent's pin so the menu shows it and can take it off ("auto").
+    const field = l.with?.["accounts.account"];
+    if (l.agent && field && pins()[l.agent] === undefined) abyme.store.set("pins", { ...pins(), [l.agent]: field });
+    const pinned = l.agent ? pins()[l.agent] : undefined;
+    const { account, why } = await pick(model, { pinned, count: !l.probe });
     if (!l.probe) {
       await trust(account, l.cwd);
       if (!l.resume) void sync(false).catch((e) => abyme.log.warn("sync:", (e as Error).message));
     }
-    abyme.log.info(`${l.probe ? "choices" : l.resume ? "resume" : "launch"} ${l.cwd}: ${account.slug} (${why})`);
+    abyme.log.info(`${l.probe ? "choices" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
     return { env: account.main ? {} : { CLAUDE_CONFIG_DIR: account.dir }, configDir: account.dir };
   },
 });
@@ -416,18 +427,19 @@ export default {
   async agents() {
     const all = await discover();
     const dirs = agentsByDir();
-    return all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, name: x.name, account: a.slug, pinned: x.session ? (pins()[x.session] ?? null) : null })));
+    return all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, name: x.name, account: a.slug, pinned: pins()[x.id] ?? null })));
   },
-  /** The account a session's resumes run on; null takes the pin off. */
-  async pin(a: { session: string; slug: string | null }) {
+  /** The account an agent's resumes run on; null picks by quota again. */
+  async pin(a: { agent: string; slug: string | null }) {
     const now = { ...pins() };
-    if (a.slug === null) delete now[a.session];
+    if (a.slug === null) now[a.agent] = BY_QUOTA;
     else {
       if (!(await discover()).some((x) => x.slug === a.slug)) throw new Error(`no account ${a.slug}`);
-      now[a.session] = a.slug;
+      now[a.agent] = a.slug;
     }
     abyme.store.set("pins", now);
-    return { session: a.session, slug: a.slug };
+    void showCached();
+    return { agent: a.agent, slug: a.slug };
   },
   pins: () => pins(),
   /** `abyme call accounts sync`: the conversation sync now; how many copies it made. */

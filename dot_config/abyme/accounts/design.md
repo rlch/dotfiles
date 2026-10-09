@@ -72,11 +72,13 @@ config file instead, live since f66d5564.
   session). Pinning a new agent needs a field on New agent and the agent's id on the launch; neither
   exists. Gaps.
 
-## Gaps for abyme (with the off-herdr session)
+## Pins and the agent's row (abyme a9ec1b9c)
 
-1. `Launch` carries no agent id: a pin per new agent, and matching a pick to the agent it became,
-   are not possible.
-2. No list for a plugin to add to an agent's row, chat header or the New agent form.
+- New agent has an **Account** field (`agents.fields`): By quota, or an account. Its pick reaches
+  `prepare` as `with["accounts.account"]` and is kept as the agent's pin, by `launch.agent`.
+- "Run on account…" in the agent's menu changes that pin; "By quota" sets it to `auto`, which
+  overrides the field on later resumes.
+- Each agent's row and chat header say its account (`agents.badges`), "pinned" or "by quota" on hover.
 
 ## As built (2026-10-10)
 
@@ -86,7 +88,7 @@ config file instead, live since f66d5564.
   selection and scoring tests against `pick.ts`: `node dot_config/abyme/accounts/test.ts`.
 - The service: `abyme call accounts pick [model=…]` (what a launch would get, counting nothing),
   `agents`, `pin session=… slug=…` (`slug:=null` takes it off), `pins`, `sync`, `view`.
-- "Run on account…" shows on an agent whose `kind` is `claude` or unsaid.
+- "Run on account…" shows on an agent whose `kind` is `claude` or unsaid. Pins are by agent id.
 - Checked on a scratch abymed with a fake home, keychain and API: picks in order b, a, main, then b
   in use; a Fable launch skips the account whose Fable week is spent; codex untouched; trust written;
   sync copies newest, times kept; a pinned resume runs on the pin; an expired idle token renewed
