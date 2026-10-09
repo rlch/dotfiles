@@ -1,7 +1,8 @@
 // Runs inside abymed, once, before it listens; again whenever you save it or a file it imports.
-// It says what runs: `x.setup(options)` turns a plugin on. See docs/abymed.md, "Your config".
+// It says what runs: `x.setup(options)` turns a plugin on. Its scope is `@abyme/plugin`, as in any
+// plugin. See docs/abymed.md, "Your config".
 
-import { abyme } from "@abyme/config";
+import abyme from "@abyme/plugin";
 import standard from "@abyme/standard";
 import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
