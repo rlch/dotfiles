@@ -109,6 +109,8 @@ async function token(a: Account, busy: boolean): Promise<string | null> {
 
 type Quota = { at: number; usage: Usage; windows: ModelWindow[] } | { at: number; error: string };
 const quota = new Map<string, { at: number; data: Record<string, unknown> }>();
+/** What each identity's last read said, an error included, for the status bar between reads. */
+const last = new Map<string, Quota>();
 
 const answer = (at: number, data: Record<string, unknown>): Quota => {
   const now = expirePast(data, Date.now());
@@ -151,6 +153,7 @@ async function quotas(all: Account[], busy: Set<string>): Promise<Map<string, Qu
         if ("usage" in q) break;
       }
       out.set(key, q);
+      last.set(key, q);
     }),
   );
   return out;
@@ -409,7 +412,7 @@ async function showCached() {
   const q = new Map<string, Quota>();
   for (const a of all) {
     const had = quota.get(a.key);
-    q.set(a.key, had ? answer(had.at, had.data) : { at: 0, error: "not read yet" });
+    q.set(a.key, had ? answer(had.at, had.data) : (last.get(a.key) ?? { at: 0, error: "not read yet" }));
   }
   show(all, q);
 }

@@ -6,6 +6,7 @@ import abyme from "@abyme/plugin";
 import standard from "@abyme/standard";
 import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
+import accounts from "./accounts";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1", "tailscale"] });
 
@@ -18,5 +19,7 @@ standard.setup();
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
 inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
+// Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
+accounts.setup();
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
