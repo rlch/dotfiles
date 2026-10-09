@@ -6,7 +6,7 @@
 #          pr    rebase onto origin/main, push the branch, open a squash-merged PR
 #   push   ff only: also push main (default true)
 #   check  a command that must pass on the rebased tip
-#   admin  merge PRs with --admin (land's pr mode, and pr-land)
+#   admin  merge PRs with --admin (land's pr mode, and pr-land), only once their checks pass
 
 [default]
 mode = "ff"
@@ -14,8 +14,8 @@ push = true
 
 # Every change lands as its own squash-merged pull request, merged at once with
 # --admin: the ruleset wants a review the operator cannot give his own agents'
-# work, and Operators bypass it (schools-ts CLAUDE.md, Pull requests). Main's CI
-# is the check. pr-land merges engineers' PRs the same way.
+# work, and Operators bypass it (schools-ts CLAUDE.md, Pull requests). land waits
+# for the PR's checks first and refuses on a red one (operator, 2026-10-10). pr-land merges engineers' PRs the same way.
 [repo."MathGaps/schools-ts"]
 mode = "pr"
 admin = true
