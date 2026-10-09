@@ -46,7 +46,7 @@ starting point; this says where it changes.
 | Busy | as clodcurrent, per identity: `sessions.json` read only (terminal sessions), plus abyme's live agents by `config_dir` (status not `done`), plus a pick counted from the moment it is made, as clodcurrent registers at launch (operator, 2026-10-10: same logic as clodcurrent) |
 | Sync | as clodcurrent: the newest copy of each conversation touched in 14 days into every account folder, mtime kept; in the background on each launch, and finished before a resume starts (operator, 2026-10-10) |
 | Trust | as clodcurrent, written only at the version read (`ifVersion`) |
-| Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin |
+| Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin (operator, 2026-10-10: renew) |
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
 | Left out | `history.jsonl`, shared-config symlinks, `add`, login |
 
