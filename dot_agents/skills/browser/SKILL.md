@@ -50,6 +50,23 @@ playwright-cli -s=$S close                          # always, when done
   `close` it. If it does not, your session leaked: say so, and `close` it.
 - `playwright-cli --help` lists every command.
 
+## Firefox (Gecko): a site the user opens in Zen or Firefox
+
+Playwright's own Firefox build is in `~/Library/Caches/ms-playwright` (`firefox-<rev>`; if
+`playwright-cli` asks for a newer one, `npx playwright install firefox`, about 90 MB). Never drive
+`/Applications/Zen.app` or `/Applications/Firefox.app`: they are the user's, with their profiles.
+A config of your own says Firefox, with an output folder outside any repo (without one,
+`playwright-cli` writes logs into the current directory):
+
+```bash
+printf '{ "browser": { "browserName": "firefox", "launchOptions": { "headless": true } }, "outputDir": "%s" }\n' "$HOME/Library/Caches/playwright-cli" >/tmp/ff-$S.json
+playwright-cli -s=$S --config=/tmp/ff-$S.json open --idle-timeout=600000 https://example.com
+playwright-cli -s=$S eval "navigator.userAgent"      # says Firefox/<version>
+```
+
+- Every other command is the same, on the session, with no `--config`.
+- Firefox has no `long-animation-frame` performance entries; a frame budget is Chromium's alone.
+
 ## Headed: logins, 1Password, sites that block headless
 
 ImmiAccount (`immi.homeaffairs.gov.au`) is always headed: Akamai returns 403 to headless.
