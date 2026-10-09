@@ -59,10 +59,8 @@ starting point; this says where it changes.
 - Pages see an account's slug and its windows' percentages and reset times; never an email, uuid
   or token.
 
-**Gap in abyme**: `abyme.net.fetch` runs `curl -H "<name>: <value>"` (crates/abymed/src/host/procs.rs,
-`fetch`), so a bearer header is on curl's command line, readable in `ps` for the length of the
-request. The plugin is not to be turned on until `fetch` takes headers off the command line (curl
-reads them from a file or stdin: `-H @file`, `-K -`).
+`abyme.net.fetch` used to put headers on curl's command line; abyme 60b13e6c gives curl a 0600
+config file instead, live since f66d5564.
 
 ## What the operator sees
 
@@ -74,9 +72,25 @@ reads them from a file or stdin: `-H @file`, `-K -`).
   session). Pinning a new agent needs a field on New agent and the agent's id on the launch; neither
   exists. Gaps.
 
-## Gaps for abyme
+## Gaps for abyme (with the off-herdr session)
 
-1. `net.fetch` puts headers on curl's command line.
-2. `Launch` carries no agent id: a pin per new agent, and matching a pick to the agent it became,
+1. `Launch` carries no agent id: a pin per new agent, and matching a pick to the agent it became,
    are not possible.
-3. No list for a plugin to add to an agent's row, chat header or the New agent form.
+2. No list for a plugin to add to an agent's row, chat header or the New agent form.
+
+## As built (2026-10-10)
+
+- `server.ts` (the hook, quota, tokens, busy, trust, sync, the service), `pick.ts` (clodcurrent's
+  score, tiers and model windows, nothing of abyme), `client.tsx` and `segment.tsx` (the status
+  segment, "Run on account…"), `options.ts`. `test.ts`, in the source only, is clodcurrent's
+  selection and scoring tests against `pick.ts`: `node dot_config/abyme/accounts/test.ts`.
+- The service: `abyme call accounts pick [model=…]` (what a launch would get, counting nothing),
+  `agents`, `pin session=… slug=…` (`slug:=null` takes it off), `pins`, `sync`, `view`.
+- "Run on account…" shows on an agent whose `kind` is `claude` or unsaid.
+- Checked on a scratch abymed with a fake home, keychain and API: picks in order b, a, main, then b
+  in use; a Fable launch skips the account whose Fable week is spent; codex untouched; trust written;
+  sync copies newest, times kept; a pinned resume runs on the pin; an expired idle token renewed
+  over stdin, other fields kept; an account in clodcurrent's register is busy and not renewed; no
+  token in `security`'s arguments, abymed's log or its state; the segment, its tooltip and the menu
+  pin in a headless page, console clean. No real quota read was made.
+- Not on until `init.ts` sets it up: `import accounts from "./accounts"; accounts.setup();`.
