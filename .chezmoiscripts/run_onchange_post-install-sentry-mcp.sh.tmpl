@@ -6,7 +6,9 @@
 # and lapsed, so every account and every expiry asked for a login again; it is
 # disabled in dot_claude/settings.json. Same idiom as the langfuse script:
 # `.claude.json` (mcpServers) is per-account. No secret lands in any
-# .claude.json — the wrapper reads the file at launch.
+# .claude.json — the wrapper reads the file at launch. `sentry-abyme` is the same
+# wrapper on the operator's own org (abyme.sentry.io), never Tutero's; it is
+# registered only where its token file is.
 #
 # Wrapper hash: {{ include "dot_local/bin/executable_sentry-mcp-token" | sha256sum }}
 
@@ -17,6 +19,7 @@ if ! command -v claude >/dev/null 2>&1; then
   echo "sentry-mcp: claude CLI not on PATH; skipping"; exit 0
 fi
 WRAPPER="$HOME/.local/bin/sentry-mcp-token"
+ABYME_TOKEN="$HOME/.config/sentry/abyme-mcp-token"
 
 for dir in "$HOME/.claude" "$HOME"/.claude-*; do
   case "$dir" in *-swap-backup) continue ;; esac
@@ -26,6 +29,13 @@ for dir in "$HOME/.claude" "$HOME"/.claude-*; do
     echo "sentry-mcp: registered in $(basename "$dir")"
   else
     echo "sentry-mcp: registration FAILED in $(basename "$dir")" >&2
+  fi
+  CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user sentry-abyme >/dev/null 2>&1 || true
+  [ -r "$ABYME_TOKEN" ] || continue
+  if CLAUDE_CONFIG_DIR="$dir" claude mcp add sentry-abyme -s user -e SENTRY_ORG=abyme -e "SENTRY_TOKEN_FILE=$ABYME_TOKEN" -- "$WRAPPER" >/dev/null 2>&1; then
+    echo "sentry-abyme-mcp: registered in $(basename "$dir")"
+  else
+    echo "sentry-abyme-mcp: registration FAILED in $(basename "$dir")" >&2
   fi
 done
 {{- end }}

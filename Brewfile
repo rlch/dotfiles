@@ -54,6 +54,7 @@ brew "jq"
 brew "yq"          # jq for YAML/TOML/XML — deterministic query/edit of structured configs
 brew "sops"        # decrypt MathGaps/infrastructure's SOPS secrets (age recipients)
 brew "age"         # the key format sops uses there; private key at ~/.config/sops/age/keys.txt (never in this repo)
+cask "sentry-cli"  # abyme's scripts/promote gives Sentry the build's source maps
 brew "gron"        # flatten JSON to greppable `path = value` lines (`gron | rg`; reverse with -u)
 brew "duckdb"      # embedded analytical SQL over Parquet/CSV/JSON; drives the drift perf-lake queries (~/dev/game/tools/perf/queries/*.sql) headlessly so an agent can investigate frame/span/resource data without a GUI
 brew "tokei"       # code line counter by language

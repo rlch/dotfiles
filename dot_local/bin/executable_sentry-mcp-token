@@ -3,6 +3,8 @@
 # than OAuth, so no account dir (~/.claude, ~/.claude-<slug>) ever asks to log
 # in or re-authorize. The token is the tutero-au `iac` internal integration's
 # (org:read, project:read/write/admin, releases, team), kept outside the repo.
+# SENTRY_ORG and SENTRY_TOKEN_FILE point it at another org: `sentry-abyme` is the
+# operator's own abyme.sentry.io, with a token of theirs in ~/.config/sentry.
 # Registered in every account by run_onchange_post-install-sentry-mcp.sh.tmpl.
 set -euo pipefail
 
@@ -13,4 +15,4 @@ if [ ! -r "$TOKEN_FILE" ]; then
 fi
 SENTRY_ACCESS_TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
 export SENTRY_ACCESS_TOKEN
-exec npx -y @sentry/mcp-server@0.40.0 --organization-slug=tutero-au "$@"
+exec npx -y @sentry/mcp-server@0.40.0 --organization-slug="${SENTRY_ORG:-tutero-au}" "$@"
