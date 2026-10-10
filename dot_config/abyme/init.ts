@@ -7,6 +7,7 @@ import standard from "@abyme/standard";
 import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
 import vim from "@abyme/vim";
+import sentry from "@abyme/sentry";
 import accounts from "./accounts";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1", "tailscale"] });
@@ -26,5 +27,7 @@ agentation.setup();
 vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
 accounts.setup();
+// Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
+sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
