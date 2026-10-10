@@ -10,7 +10,7 @@ import vim from "@abyme/vim";
 import sentry from "@abyme/sentry";
 import accounts from "./accounts";
 
-// abyme.server({ port: 4477, bind: ["127.0.0.1", "tailscale"] });
+// abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
 // The built client abymed serves: a stable copy, so a build in ~/dev/abyme never changes what an
 // open page is running. `scripts/promote` in ~/dev/abyme copies a finished build here.
