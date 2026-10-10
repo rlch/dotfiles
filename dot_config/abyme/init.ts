@@ -6,6 +6,7 @@ import abyme from "@abyme/plugin";
 import standard from "@abyme/standard";
 import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
+import vim from "@abyme/vim";
 import accounts from "./accounts";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1", "tailscale"] });
@@ -19,6 +20,10 @@ standard.setup();
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
 inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
+// Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
+// used, and files open read-only in normal mode. A member of the standard set, so this line gives
+// it its `when` and is no second setup. An iPad is a tablet with or without its keyboard.
+vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
 accounts.setup();
 
