@@ -183,8 +183,7 @@ async function terminalSlugs(): Promise<string[]> {
 /** Live abyme agents per account folder. */
 function agentsByDir(): Map<string, { id: string; name: string }[]> {
   const out = new Map<string, { id: string; name: string }[]>();
-  if (!agents.ready) return out;
-  for (const x of agents.items.list()) {
+  for (const x of agents.items.items()) {
     if (!x.config_dir || x.status === "done") continue;
     out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: `${x.plugin}:${x.id}`, name: x.name ?? x.id }]);
   }
@@ -383,7 +382,7 @@ function sync(wait: boolean): Promise<number> {
 
 // ---- the hook every abyme launch passes through ----
 
-agents.prepare.register({
+agents.prepare.add({
   async prepare(l) {
     if (l.kind !== "claude") return {};
     const model = await modelOf(l);

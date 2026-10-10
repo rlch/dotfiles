@@ -5,11 +5,11 @@ import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents";
 import { createStore, type AgentBadge } from "@abyme/client";
-import commands from "@abyme/commands";
-import menus from "@abyme/menus";
+import commands from "@abyme/commands/inventory";
+import menus from "@abyme/menus/inventory";
 import notifications from "@abyme/notifications";
 import palette from "@abyme/palette";
-import status from "@abyme/status";
+import status from "@abyme/status/inventory";
 import { Quota } from "./segment.tsx";
 
 /** The value of "pick by quota", in the field and the picker; the server half's too. */
@@ -31,8 +31,8 @@ function follow() {
 abyme.effect(() => seen.on("change", follow));
 follow();
 
-agents.fields.register({ id: "accounts.account", title: "Account", options, default: BY_QUOTA });
-agents.badges.register({ id: "accounts.account", store: badges });
+agents.fields.add({ id: "accounts.account", title: "Account", options, default: BY_QUOTA });
+agents.badges.add({ id: "accounts.account", store: badges });
 
 /** The agent a menu was opened on, if abyme knows it. */
 const agentOf = (target?: { all: Record<string, unknown> }): string | null => {
@@ -51,7 +51,7 @@ async function choose(agent: string) {
   });
 }
 
-commands.register({
+commands.add({
   id: "accounts.pin",
   title: "Run on account…",
   group: "Agents",
@@ -61,5 +61,5 @@ commands.register({
     if (agent) void choose(agent);
   },
 });
-menus.register({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
-status.segments.register({ id: "accounts.quota", side: "right", order: 30, Component: Quota });
+menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
+status.segments.add({ id: "accounts.quota", side: "right", order: 30, Component: Quota });
