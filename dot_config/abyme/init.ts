@@ -16,6 +16,9 @@ import accounts from "./accounts";
 // open page is running. `scripts/promote` in ~/dev/abyme copies a finished build here.
 abyme.server({ clientDir: "~/.local/share/abyme/client" });
 
+// The names abyme answers for besides IP addresses and localhost: the phone's address.
+abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
+
 // The built-ins most setups run.
 standard.setup();
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
