@@ -64,8 +64,8 @@ config file instead, live since f66d5564.
 
 ## What the operator sees
 
-- **Status segment** (right): each account's 5-hour use, the 7-day and model windows in its title;
-  a capped one dimmed.
+- **Status segment** (right): how many accounts have quota left ("4/8 accounts"), each account's
+  windows in its tooltip (operator, 2026-10-10: one item, not one per account).
 - **Which account an agent is on**: its `config_dir` is kept on the agent, but nothing a plugin can
   add shows on an agent's row or chat header. A gap; meanwhile `abyme call accounts agents`.
 - **A pin**: the agent menu's "Run on account…" sets the account for that agent's next resume (by its

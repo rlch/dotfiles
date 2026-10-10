@@ -1,4 +1,4 @@
-// The status bar's segment: each account's 5-hour use, its weeks in the tooltip.
+// The status bar's segment: how many accounts have quota left, each account in the tooltip.
 import accounts from "@abyme/accounts";
 import { useStore } from "@abyme/client";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@abyme/ui/components/ui/tooltip";
@@ -24,39 +24,31 @@ function until(at: string | null): string {
 }
 const pct = (n: number | null) => (n === null ? "?" : `${Math.round(n)}%`);
 
-function Account({ a }: { a: Seen }) {
-  const lines = a.error
-    ? [a.error]
-    : [
-        `5 hours ${pct(a.five)}${a.fiveResets ? `, resets in ${until(a.fiveResets)}` : ""}`,
-        `7 days ${pct(a.seven)}${a.sevenResets ? `, resets in ${until(a.sevenResets)}` : ""}`,
-        ...a.windows.filter((w) => w.utilization !== null).map((w) => `${w.name} ${pct(w.utilization)}${w.resetsAt ? `, resets in ${until(w.resetsAt)}` : ""}`),
-      ];
-  if (a.agents) lines.push(`${a.agents} ${a.agents === 1 ? "agent" : "agents"} on it`);
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span data-account={a.slug} className="tabular-nums" style={{ opacity: a.capped || a.error ? 0.45 : 1 }}>
-          {a.slug} {a.error ? "–" : pct(a.five)}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top">
-        {lines.map((l) => (
-          <div key={l}>{l}</div>
-        ))}
-      </TooltipContent>
-    </Tooltip>
-  );
+/** One account's line in the tooltip. */
+function line(a: Seen): string {
+  if (a.error) return `${a.slug}: ${a.error}`;
+  const models = a.windows.filter((w) => w.utilization !== null).map((w) => ` ${w.name} ${pct(w.utilization)}`).join("");
+  const reset = a.capped && a.fiveResets ? `, back in ${until(a.fiveResets)}` : "";
+  const on = a.agents ? `, ${a.agents} ${a.agents === 1 ? "agent" : "agents"}` : "";
+  return `${a.slug}: 5h ${pct(a.five)} 7d ${pct(a.seven)}${models}${reset}${on}`;
 }
 
 export function Quota() {
   const seen = useStore(accounts.server.view(), (s) => (s as { accounts: Seen[] } | undefined)?.accounts ?? null);
   if (!seen?.length) return null;
+  const free = seen.filter((a) => !a.capped && !a.error).length;
   return (
-    <span className="inline-flex items-center gap-2.5">
-      {seen.map((a) => (
-        <Account key={a.slug} a={a} />
-      ))}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span data-accounts className="tabular-nums" style={{ opacity: free ? 1 : 0.45 }}>
+          {free}/{seen.length} accounts
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        {seen.map((a) => (
+          <div key={a.slug}>{line(a)}</div>
+        ))}
+      </TooltipContent>
+    </Tooltip>
   );
 }
