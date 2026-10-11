@@ -35,8 +35,12 @@ bind --mode=insert <C-u> scrollpage -0.5
 bind --mode=insert <C-j> scrollline 10
 bind --mode=insert <C-k> scrollline -10
 
-autocmd DocStart localhost mode ignore
-autocmd DocStart 127\.0\.0\.1 mode ignore
+" Tridactyl is off entirely (no keys, no command line, no mode indicator) on local pages and abyme.
+seturl localhost superignore true
+seturl 127\.0\.0\.1 superignore true
+seturl \[::1\] superignore true
+seturl tail21822e\.ts\.net superignore true
+seturl abyme\.studio superignore true
 autocmd DocStart stan\.com\.au mode ignore
 autocmd DocStart wanikani\.com mode ignore
 autocmd DocStart bunpro\.jp mode ignore
