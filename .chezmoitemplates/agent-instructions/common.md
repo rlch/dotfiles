@@ -34,8 +34,8 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   thing you need from me.
 - These are refused by a hook (`~/.claude/guard.py`), under every permission
   mode: `git stash`, `--no-verify`, force-pushing `main`/`master`, herdr focus,
-  `playwright-cli close-all`/`kill-all`, editing a chezmoi-deployed file, and a
-  Haiku subagent. Do not look for a way round it; say what you needed.
+  `playwright-cli close-all`/`kill-all`, `pkill`/`killall` (kill only PIDs you
+  started), editing a chezmoi-deployed file, and a Haiku subagent. Do not look for a way round it; say what you needed.
 
 # Dotfiles
 
