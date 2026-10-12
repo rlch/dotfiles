@@ -19,8 +19,8 @@ abyme.server({ clientDir: "~/.local/share/abyme/client" });
 // The names abyme answers for besides IP addresses and localhost: the phone's address.
 abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 
-// The built-ins most setups run.
-standard.setup();
+// The built-ins most setups run, but herdr: its panes are not abyme's agents.
+standard.setup({ except: ["herdr"] });
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
 inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
