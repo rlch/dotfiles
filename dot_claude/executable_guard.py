@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """PreToolUse hook: refuse the few things the global CLAUDE.md forbids outright.
 
+Also bans pkill and killall: kill recorded PIDs only.
+
 A hook still blocks under bypassPermissions, where `ask` rules are skipped and
 `Bash(git stash:*)` patterns miss `git -C dir stash`. It reads the command the
 model wrote (hooks all see the original input, before rtk's rewrite), and fails
@@ -159,6 +161,10 @@ def check_bash(command, cwd):
             reason = check_git(argv, cwd)
         elif prog == "herdr":
             reason = check_herdr(env, argv)
+        elif prog in ("pkill", "killall"):
+            reason = ("%s is banned: a pattern matches other agents' processes (on 2026-10-12 one killed "
+                      "every Claude session on the Mac). Kill only PIDs you started and recorded: "
+                      "`kill <pid>`." % prog)
         elif prog == "playwright-cli" and {"close-all", "kill-all"} & set(argv[1:]):
             reason = ("playwright-cli close-all/kill-all end other agents' browsers. "
                       "Close your own session: playwright-cli -s=<name> close.")
@@ -213,7 +219,8 @@ def selftest():
         "playwright-cli kill-all", "playwright-cli -s=a close-all",
         "herdr workspace focus w1", "herdr tab create --workspace w1 --focus",
         "herdr tab create --workspace w1", "herdr pane split p1 --direction right",
-        "echo hi\ngit stash",
+        "echo hi\ngit stash", 'pkill -f "abymed .*" -P 1', "killall node", "rtk pkill x",
+        "cd x && /usr/bin/pkill -f y",
     ]
     allow = [
         "git stash list", "git stash show -p stash@{0}", "git status", "git commit -m 'never git stash'",
@@ -222,6 +229,7 @@ def selftest():
         "playwright-cli -s=a close", "herdr tab create --workspace w1 --no-focus",
         "HERDR_FOCUS=asked herdr workspace focus w1", "herdr pane read p1 --source visible",
         "cat <<'EOF'\ngit stash\nEOF", "echo 'git stash'", "grep -rn 'git stash' .",
+        "kill 1234", "kill $(cat x.pid)", "pgrep -fl abymed", "echo pkill",
     ]
     bad = [c for c in block if not check_bash(c, "/")] + ["ALLOWED? " + c for c in allow if check_bash(c, "/")]
     if decide({"tool_name": "Agent", "tool_input": {"model": "haiku"}}) is None:
