@@ -20,16 +20,18 @@ abyme.server({ clientDir: "~/.local/share/abyme/client" });
 // The names abyme answers for besides IP addresses and localhost: the phone's address.
 abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 
-// The built-ins most setups run, but herdr: its panes are not abyme's agents.
-standard.setup({ except: ["herdr"] });
+// The built-ins most setups run, but herdr (its panes are not abyme's agents), with the mono font
+// Ghostty uses here in the editor, code blocks and terminals. A member's own line below stands in
+// place of the set's setup of it, before or after this line.
+standard.setup({ herdr: false, mono: { font: "JetBrainsMono Nerd Font" } });
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
 inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
-// The terminal in the font and cell height Ghostty uses here.
-terminal.setup({ font: "JetBrainsMono Nerd Font", size: 15, cellHeight: "10%" });
+// The terminal in the size and cell height Ghostty uses here; its font is the mono font above.
+terminal.setup({ size: 15, cellHeight: "10%" });
 // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
-// used, and files open read-only in normal mode. A member of the standard set, so this line gives
-// it its `when` and is no second setup. An iPad is a tablet with or without its keyboard.
+// used, and files open read-only in normal mode. A member of the standard set, so this line stands
+// in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
 vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
 accounts.setup();
