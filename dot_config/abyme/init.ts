@@ -7,6 +7,7 @@ import standard from "@abyme/standard";
 import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
 import vim from "@abyme/vim";
+import terminal from "@abyme/terminal";
 import sentry from "@abyme/sentry";
 import accounts from "./accounts";
 
@@ -24,6 +25,8 @@ standard.setup({ except: ["herdr"] });
 // How an answer to an inbox file reaches the agent that wrote it: through herdfile.
 inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
+// The terminal draws with Ghostty's font, size and colours, read from ~/.config/ghostty/config.
+terminal.setup({ followGhostty: true });
 // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
 // used, and files open read-only in normal mode. A member of the standard set, so this line gives
 // it its `when` and is no second setup. An iPad is a tablet with or without its keyboard.
