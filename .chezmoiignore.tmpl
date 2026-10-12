@@ -19,12 +19,13 @@ LICENSE
 # round-trip the live target.
 .config/nvim/lazy-lock.json
 
-# OpenD (moomoo trading gateway) + nats-server (JetStream bus) only run on the
-# mbp; on a non-mbp host they'd loop on missing binaries. Skip them there.
+# OpenD (moomoo trading gateway) + nats-server (JetStream bus) + abymed only run on
+# the mbp; on a non-mbp host they'd loop on missing binaries. Skip them there.
 {{ if ne .role "mbp" -}}
 Library/LaunchAgents/com.moomoo.opend.plist
 Library/LaunchAgents/com.synadia.nats-server.plist
 Library/LaunchAgents/com.rjm.wireproxy-nl.plist
+Library/LaunchAgents/com.rjm.abymed.plist
 {{- end }}
 
 # wireproxy's WG config carries a ProtonVPN private key — never manage/commit it.
