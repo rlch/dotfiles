@@ -124,6 +124,8 @@ abyme is not running.
     its status and id.
   - `abyme call agents tell to=<name|parent> text="..."` messages one
     (`wait:=true` for its reply).
+  - `abyme call agents reply agent=<name|parent>` reads its last words without
+    messaging it.
   - `abyme call inbox ask title="..." text="..."` puts a question on the user's
     list; their answer comes back to you as a message.
   - `abyme call agents remove '["<id>"]'` closes an agent and the worktree its
