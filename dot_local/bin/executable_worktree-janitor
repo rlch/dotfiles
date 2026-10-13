@@ -72,7 +72,8 @@ LANDED_H=${JANITOR_LANDED_HOURS:-24}
 FLOOR_GB=${JANITOR_FLOOR_GB:-200}
 GOAL_GB=${JANITOR_GOAL_GB:-400}
 # ~/.herdr/worktrees: herdr's worktrees, for their build output until the last is gone.
-ROOTS=("$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
+# ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
+ROOTS=("$HOME/.local/share/abyme/worktrees" "$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
 
 free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
 log() { echo "$(date '+%F %T') worktree-janitor: $*"; }
