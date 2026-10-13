@@ -17,10 +17,13 @@
 #                         origin/main, or with its upstream gone; and, for a
 #                         subagent (.claude/worktrees) or scratchpad (/private/tmp)
 #                         worktree, a tip another branch already contains. Covers
-#                         every linked worktree of every repo it can find, not
-#                         only ~/.herdr/worktrees (2026-10-07: 92 worktrees in one
-#                         repo, 47 of them subagent leftovers the old pass never
-#                         saw). Also prunes registrations whose folder is gone.
+#                         every linked worktree under ROOTS, found by its .git
+#                         file (2026-10-07: 92 worktrees in one repo, 47 of them
+#                         subagent leftovers an older pass never saw). An abyme
+#                         agent recorded in one goes with it, through `abyme call
+#                         agents remove`; while abyme is not answering, no
+#                         worktree is removed. Also prunes registrations whose
+#                         folder is gone.
 #
 # Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
 # works oldest-first until free >= GOAL GB.
@@ -68,6 +71,7 @@ CLEAN_H=${JANITOR_CLEAN_HOURS:-12}
 LANDED_H=${JANITOR_LANDED_HOURS:-24}
 FLOOR_GB=${JANITOR_FLOOR_GB:-200}
 GOAL_GB=${JANITOR_GOAL_GB:-400}
+# ~/.herdr/worktrees: herdr's worktrees, for their build output until the last is gone.
 ROOTS=("$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
 
 free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
@@ -109,7 +113,7 @@ never_touch() { # $1 = command
   [[ "$exe" == */claude/versions/* || "$exe" == *orbstack* || "$exe" == *docker* ]] && return 0
   [[ "$exe" == "$HOME"/actions-runner* || "${rest%% *}" == "$HOME"/actions-runner* ]] && return 0
   case "${exe##*/}" in
-    mosh-server|herdr|claude|sccache|launchd*|docker*|com.docker.*|orbstack*|OrbStack*|ollama|Ollama|Runner.*) return 0 ;;
+    mosh-server|abymed|herdr|claude|sccache|launchd*|docker*|com.docker.*|orbstack*|OrbStack*|ollama|Ollama|Runner.*) return 0 ;;
   esac
   return 1
 }
@@ -224,18 +228,17 @@ idle_hours() {
 }
 
 # "common-git-dir<TAB>path<TAB>branch" for every linked worktree of every repo
-# that has a herdr worktree or a .claude/worktrees folder. The main checkout
+# with one under ROOTS: a linked worktree's .git is a file. The main checkout
 # (first in each list) is never included.
 all_worktrees() {
-  {
-    for wt in "$HOME"/.herdr/worktrees/*/*/; do
-      git -C "$wt" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
-    done
-    find "$HOME/dev" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" -o -name node_modules \
-      -o -name target \) -prune -o -type d -path '*/.claude/worktrees' -print 2>/dev/null | while IFS= read -r d; do
-      git -C "${d%/.claude/worktrees}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
-    done
-  } | sort -u | while IFS= read -r common; do
+  local root
+  for root in "${ROOTS[@]}"; do
+    [[ -d "$root" ]] || continue
+    find "$root" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" -o -name node_modules \
+      -o -name target -o \( -name .git -type d \) \) -prune -o -name .git -type f -print 2>/dev/null
+  done | while IFS= read -r g; do
+    git -C "${g%/.git}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true
+  done | sort -u | while IFS= read -r common; do
     git --git-dir="$common" worktree list --porcelain 2>/dev/null | awk -v c="$common" '
       /^worktree / { if (n++ && path != "") print c "\t" path "\t" branch; path = substr($0, 10); branch = "" }
       /^branch /   { branch = substr($0, 8); sub("^refs/heads/", "", branch) }
@@ -280,19 +283,20 @@ sweep() { # $1 = prune hours, $2 = clean hours, $3 = stop once free >= this (0 =
   done < <(targets)
 }
 
-# Remove one worktree and its branch. Addressed through the common git dir, not
+# Remove one worktree and its branch, and first the abyme agents recorded in it:
+# `agents remove` refuses one that is working, ends what was placed there, and
+# removes a worktree its start made. Addressed through the common git dir, not
 # the "main" checkout: for a submodule (ai-gateway under the metarepo) that
 # checkout is .git/modules/<path>, which `git -C` cannot run in (the first real
 # run died there, 2026-09-30).
 remove_worktree() { # $1 = worktree, $2 = branch
-  local common ws
+  local common ids
   common=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir) || return 1
-  ws=$(herdr worktree list --cwd "$1" --json 2>/dev/null | jq -r --arg b "$2" \
-    '.result.worktrees[] | select(.branch == $b) | .open_workspace_id // empty' || true)
-  if [[ -n "$ws" ]]; then herdr worktree remove --workspace "$ws" --json >/dev/null || return 1
-  else git --git-dir="$common" worktree remove "$1" || return 1; fi
+  ids=$(jq -c --arg w "$1" '[.agents[] | select(.cwd == $w or ((.cwd // "") | startswith($w + "/"))) | .id]' <<<"$abyme_agents")
+  if [[ "$ids" != "[]" ]]; then abyme call agents remove "$ids" >/dev/null || return 1; fi
+  [[ ! -e "$1" ]] || git --git-dir="$common" worktree remove "$1" || return 1
   # -D: a squash-merged branch is never an ancestor of main; landing was checked by the caller.
-  [[ -z "$2" ]] || git --git-dir="$common" branch -D "$2" >/dev/null
+  [[ -z "$2" ]] || ! git --git-dir="$common" show-ref --verify --quiet "refs/heads/$2" || git --git-dir="$common" branch -D "$2" >/dev/null
 }
 
 # A worktree is finished when its tree is clean, nothing has its cwd in it, it
@@ -305,7 +309,11 @@ remove_worktree() { # $1 = worktree, $2 = branch
 #     each other and both go.
 # A branch with commits nothing else holds is never removed, whatever its age.
 remove_landed_worktrees() {
-  local common wt branch track idle why trunk others
+  local common wt branch track idle why trunk others abyme_agents
+  # The agents abyme records, each with its folder; none removed without them.
+  if ! abyme_agents=$(abyme call agents tree --json 2>/dev/null); then
+    log "abyme is not answering; no landed worktree removed"; return 0
+  fi
   while IFS=$'\t' read -r common wt branch; do
     [[ -d "$wt" && -e "$wt/.git" ]] || continue
     [[ -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
@@ -332,18 +340,12 @@ remove_landed_worktrees() {
     $dry && continue
     remove_worktree "$wt" "$branch" || log "could not remove $wt; left as it is"
   done <<<"$worktree_list"
-  # Registrations whose folder is gone, and (listed only, never removed) folders
-  # under ~/.herdr/worktrees that git no longer knows.
+  # Registrations whose folder is gone.
   cut -f1 <<<"$worktree_list" | sort -u | while IFS= read -r common; do
     [[ -n "$common" ]] || continue
     if $dry; then git --git-dir="$common" worktree prune -n 2>/dev/null | sed "s/^/$(date '+%F %T') worktree-janitor: would prune: /"
     else git --git-dir="$common" worktree prune 2>/dev/null || true; fi
   done
-  if $dry; then
-    for wt in "$HOME"/.herdr/worktrees/*/*/; do
-      git -C "$wt" rev-parse --git-dir >/dev/null 2>&1 || log "untracked folder, left for you: ${wt%/}"
-    done
-  fi
 }
 
 reap_orphans
