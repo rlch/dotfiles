@@ -40,7 +40,7 @@ seturl localhost superignore true
 seturl 127\.0\.0\.1 superignore true
 seturl \[::1\] superignore true
 seturl tail21822e\.ts\.net superignore true
-seturl abyme\.studio superignore true
+seturl abyme\.app superignore true
 autocmd DocStart stan\.com\.au mode ignore
 autocmd DocStart wanikani\.com mode ignore
 autocmd DocStart bunpro\.jp mode ignore
