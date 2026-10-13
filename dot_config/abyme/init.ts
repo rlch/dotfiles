@@ -4,7 +4,6 @@
 
 import abyme from "@abyme/plugin";
 import standard from "@abyme/standard";
-import inbox from "@abyme/inbox";
 import agentation from "@abyme/agentation";
 import vim from "@abyme/vim";
 import terminal from "@abyme/terminal";
@@ -24,8 +23,6 @@ abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 // Ghostty uses here in the editor, code blocks and terminals. A member's own line below stands in
 // place of the set's setup of it, before or after this line.
 standard.setup({ herdr: false, mono: { font: "JetBrainsMono Nerd Font" } });
-// How an answer to an inbox file reaches the agent that wrote it: through herdfile.
-inbox.setup({ deliver: ["herdfile", "tell", "{from}", "{answer}\n(item: {path})"] });
 agentation.setup();
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font above.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4, paddingBalance: true });

@@ -21,8 +21,6 @@ HOME = os.path.expanduser("~")
 PROTECTED = ("main", "master")
 WRAPPERS = {"rtk", "proxy", "command", "env", "time", "noglob", "sudo", "exec"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
-HERDR_CREATES = {("tab", "create"), ("pane", "split"), ("workspace", "create"), ("worktree", "create")}
-HERDR_FOCUS_NOUNS = {"workspace", "tab", "pane", "agent"}
 MANAGED_ROOTS = tuple(os.path.join(HOME, d) + "/" for d in (".config", ".claude", ".agents", ".local"))
 UNMANAGED = (os.path.join(HOME, ".claude", "projects") + "/",)
 
@@ -135,18 +133,6 @@ def check_git(argv, cwd):
     return None
 
 
-def check_herdr(env, argv):
-    args = argv[1:]
-    asked = env.get("HERDR_FOCUS") == "asked"
-    focus_verb = len(args) >= 2 and args[0] in HERDR_FOCUS_NOUNS and args[1] == "focus"
-    if (focus_verb or "--focus" in args) and not asked:
-        return ("Never steal focus. Report the workspace or tab by name instead. Only if the user "
-                "asked in this request to be taken there, prefix the command with HERDR_FOCUS=asked.")
-    if tuple(args[:2]) in HERDR_CREATES and "--no-focus" not in args and "--focus" not in args:
-        return "Pass --no-focus explicitly on herdr %s %s." % (args[0], args[1])
-    return None
-
-
 def check_bash(command, cwd):
     try:
         segs = list(segments(command))
@@ -159,8 +145,6 @@ def check_bash(command, cwd):
         reason = None
         if prog == "git":
             reason = check_git(argv, cwd)
-        elif prog == "herdr":
-            reason = check_herdr(env, argv)
         elif prog in ("pkill", "killall"):
             reason = ("%s is banned: a pattern matches other agents' processes (on 2026-10-12 one killed "
                       "every Claude session on the Mac). Kill only PIDs you started and recorded: "
@@ -217,8 +201,6 @@ def selftest():
         "git push --force-with-lease origin master", "git push origin :main",
         "git push origin --delete main", "git push -f --all",
         "playwright-cli kill-all", "playwright-cli -s=a close-all",
-        "herdr workspace focus w1", "herdr tab create --workspace w1 --focus",
-        "herdr tab create --workspace w1", "herdr pane split p1 --direction right",
         "echo hi\ngit stash", 'pkill -f "abymed .*" -P 1', "killall node", "rtk pkill x",
         "cd x && /usr/bin/pkill -f y",
     ]
@@ -226,8 +208,7 @@ def selftest():
         "git stash list", "git stash show -p stash@{0}", "git status", "git commit -m 'never git stash'",
         "git push origin feature", "git push --force origin feature", "git push -f origin +feature",
         "git push origin main", "git log -n 5", "git commit -m 'x' -a",
-        "playwright-cli -s=a close", "herdr tab create --workspace w1 --no-focus",
-        "HERDR_FOCUS=asked herdr workspace focus w1", "herdr pane read p1 --source visible",
+        "playwright-cli -s=a close",
         "cat <<'EOF'\ngit stash\nEOF", "echo 'git stash'", "grep -rn 'git stash' .",
         "kill 1234", "kill $(cat x.pid)", "pgrep -fl abymed", "echo pkill",
     ]

@@ -33,7 +33,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 - **End every report with the next step:** what you are doing next, or the one
   thing you need from me.
 - These are refused by a hook (`~/.claude/guard.py`), under every permission
-  mode: `git stash`, `--no-verify`, force-pushing `main`/`master`, herdr focus,
+  mode: `git stash`, `--no-verify`, force-pushing `main`/`master`,
   `playwright-cli close-all`/`kill-all`, `pkill`/`killall` (kill only PIDs you
   started), editing a chezmoi-deployed file, and a Haiku subagent. Do not look for a way round it; say what you needed.
 
@@ -87,61 +87,54 @@ told you belongs back in that skill so the next run does not hit the same gap.
 # Session Handoffs
 
 "Spin off" and "hand off" mean launching the corresponding session-spawning
-skill in herdr, never dispatching an inline subagent. A spinoff keeps this
+skill in abyme, never dispatching an inline subagent. A spinoff keeps this
 session alive; a handoff replaces it after the new session is verified.
 
-# Herdr
+# abyme
 
-**Herdr is always the place to put work, and that work always runs in the
+**abyme is where agents and their work live, and that work always runs in the
 background.** Both halves hold unless the user states otherwise in the current
 request.
 
-- **Change the screen through `herdfile`, not by creating tabs and panes
-  yourself.** Each workspace has a file saying what is on screen; herdfile makes
-  herdr match it, and what leaves the file is closed.
-  - `herdfile show`: what is in this workspace. Look before you add.
-  - `herdfile place <name> --tab services`: put a long-running server, watcher,
-    build, test run or log tail on screen, so the user can inspect and control
-    it. `<name>` is a command the repo names in `.herdr/services.toml`
-    (`[dev]` / `cmd = "pnpm dev"`); add the entry if it is missing. Placing one
-    that is already there starts nothing new. `herdfile remove <name>` when you
-    are done with it. Use the shell tool only for short-lived foreground commands.
-  - `herdfile ws add <name> --dir <path> [--branch B] --purpose "..." --brief
-    <file> --model opus`: another agent in its own workspace (a herdr worktree
-    with `--branch`), started through `cl` and told to read the brief. The name
-    is lowercase letters, digits, `-` and `_`, and unique.
-  - `herdfile tree`: every workspace, who started it, and its agent's status.
-    `herdfile tell <name|parent> "..."` messages one (`--wait` for its reply).
-    `herdfile ask "..."` puts a question on the user's list.
-  - `herdfile ws remove <name>` closes a workspace once its agent is idle and its
-    branch merged. Never remove your own while the user has yet to read your report.
-- A pane or workspace opened with `herdr` directly still works, but it is
-  recorded `unmanaged` and nothing ever closes it. When you must, target your own
-  workspace (`--workspace "$HERDR_WORKSPACE_ID"`) and pass `--no-focus`
-  (hook-enforced on `tab create`, `pane split`, `workspace create`, `worktree
-  create`).
-- Never steal focus (hook-enforced). `--focus`, `workspace focus`, `tab focus`,
-  `pane focus`, and `agent focus` are for one case only: the user asked to be
-  taken somewhere in this request, and then the command carries the prefix
-  `HERDR_FOCUS=asked`. Prior approval does not carry over to the next run.
-  Wanting the user to see the result is not a reason — report the workspace or
-  tab by name and let them jump there.
-- This holds even when the calling skill closes its own tab afterwards. Create
-  in the background regardless; if the self-close moves focus somewhere
-  unhelpful, that is the accepted trade, not a bug to patch with `--focus`.
-- **Never test on the live herdr server** (operator, 2026-10-07). No throwaway
-  workspaces, panes or agents in the user's session to try out herdr, herdfile, a
-  skill or a script: they flash through the sidebar and type into real panes. Test
-  against a separate server (`herdr --session <name>` has its own socket; point
-  `HERDR_SOCKET_PATH` at it), and if that is not possible, do not test: say what
-  is unverified.
-- Inspect what you spawned with `herdr pane read <pane> --source visible` and
-  `herdr pane process-info --pane <pane>` — never by focusing it.
-- The sidebar shows each agent's frontend dev-server port next to its name, so
-  the user can open it. That is automatic when the server runs in your pane, or
-  in a pane of your tab or workspace where you are the only agent. Otherwise,
-  once you start one, claim it from your own shell: `herdr-port <port>`
-  (`--clear` drops it). Only frontends show: a port that serves HTML at `/`.
+Everything here is `abyme call <service> <function> key=value ...` from your
+shell: `key:=<json>` passes JSON, one bare JSON array passes the arguments in
+order, and `--json` prints the whole answer. It knows which agent you are and
+which folder you are in. Exit 1 means it refused, and says why; exit 3 means
+abyme is not running.
+
+- **A long-running server, watcher, build, test run or log tail goes in a
+  process, not in your shell:** `abyme call processes place name=<name>`. It runs
+  in a terminal of its own the user sees under Terminals and can type into, and
+  survives abyme restarting. `<name>` is one the repo names in
+  `.abyme/processes.ts`; add it if missing:
+  ```ts
+  import type { ProcessFile } from "@abyme/processes";
+  export default { dev: { cmd: "pnpm dev" } } satisfies ProcessFile;
+  ```
+  Placing one that runs starts nothing new. `abyme call processes remove
+  name=<name>` when you are done with it; `abyme call processes list` says what
+  runs. The port it serves shows beside your name. Use the shell tool only for
+  short-lived foreground commands.
+- **Another agent:** `abyme call agents start provider=acp dir=<repo>
+  [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
+  brief="Read <file> and follow it."` starts one on a worktree of its own with
+  `branch`, on the account abyme picks, with you as its parent. The name is
+  lowercase letters, digits, `-` and `_`, and unique.
+  - `abyme call agents tree`: every agent under the one that started it, with
+    its status and id.
+  - `abyme call agents tell to=<name|parent> text="..."` messages one
+    (`wait:=true` for its reply).
+  - `abyme call inbox ask title="..." text="..."` puts a question on the user's
+    list; their answer comes back to you as a message.
+  - `abyme call agents remove '["<id>"]'` closes an agent and the worktree its
+    start made, once it is idle and its branch landed. Never remove your own
+    while the user has yet to read your report.
+- Nothing here opens anything on the user's screen. Report an agent or a process
+  by name and let them look; never drive their screen with `remote_run` unless
+  they asked for it in this request.
+- **Never test on the live abyme** (port 4477, `~/.config/abyme`,
+  `~/.local/state/abyme`). A test abymed runs on its own port with its own state
+  folder; if that is not possible, do not test: say what is unverified.
 
 # Browser
 
