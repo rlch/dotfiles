@@ -25,7 +25,7 @@ abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 standard.setup({ herdr: false, mono: { font: "JetBrainsMono Nerd Font" } });
 agentation.setup();
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font above.
-terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4, paddingBalance: true });
+terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
 // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
 // used, and files open read-only in normal mode. A member of the standard set, so this line stands
 // in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
