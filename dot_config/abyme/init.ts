@@ -18,6 +18,8 @@ abyme.server({ clientDir: "~/.local/share/abyme/client" });
 
 // The names abyme answers for besides IP addresses and localhost: the phone's address.
 abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
+// The address devices reach abyme at, shown under Add a device.
+abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
 // The built-ins most setups run, but herdr (its panes are not abyme's agents), with the mono font
 // Ghostty uses here in the editor, code blocks and terminals. A member's own line below stands in
