@@ -18,6 +18,11 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
         end
     end
 
+    # abyme's tools and skills: the Claude Code plugin abymed writes. Agents abyme
+    # starts get them from abyme itself; a session started here loads the folder.
+    set -l abyme_plugin $HOME/.local/state/abyme/claude
+    test -d $abyme_plugin; and set -p args --plugin-dir $abyme_plugin
+
     # clodcurrent picks the highest-quota account not already running in another
     # pane, trusts the launch folder in that account's config, kicks off the
     # conversation sync in the background, then exec's `claude` with
