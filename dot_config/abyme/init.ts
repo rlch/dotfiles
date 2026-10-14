@@ -9,6 +9,7 @@ import vim from "@abyme/vim";
 import terminal from "@abyme/terminal";
 import sentry from "@abyme/sentry";
 import accounts from "./accounts";
+import agents from "@abyme/agents/inventory";
 import publish from "./publish";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
@@ -37,6 +38,20 @@ vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 accounts.setup();
 // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
 publish.setup();
+// My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same brief): a
+// fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
+// (~/.pi/agent/auth.json).
+agents.presets.add({
+  id: "assistant",
+  title: "Assistant",
+  provider: "acp",
+  harness: "pi",
+  model: "deepseek/deepseek-flash",
+  name: "assistant",
+  brief:
+    "You are the operator's assistant in abyme. They may be speaking to you; keep answers to one to three short sentences, no markdown unless asked. You do not write code yourself: start agents for work and tell them how to report back to you by name; read and tell agents; read the inbox; drive abyme with remote_run (read the layout before changing it). Call agents_skill before work a skill covers. Say what you did, then stop.",
+  dock: "right",
+});
 // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
 sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
 
