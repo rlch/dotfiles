@@ -1,0 +1,6 @@
+{
+  "deepseek": {
+    "type": "api_key",
+    "key": "!security find-generic-password -s deepseek -a rjm -w"
+  }
+}
