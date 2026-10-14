@@ -312,7 +312,7 @@ remove_worktree() { # $1 = worktree, $2 = branch
 remove_landed_worktrees() {
   local common wt branch track idle why trunk others abyme_agents
   # The agents abyme records, each with its folder; none removed without them.
-  if ! abyme_agents=$(abyme call agents tree --json 2>/dev/null); then
+  if ! abyme_agents=$(abyme call agents list --json 2>/dev/null); then
     log "abyme is not answering; no landed worktree removed"; return 0
   fi
   while IFS=$'\t' read -r common wt branch; do

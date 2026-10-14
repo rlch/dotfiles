@@ -119,14 +119,17 @@ abyme is not running.
   [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
   brief="Read <file> and follow it."` starts one on a worktree of its own with
   `branch` (`~/.local/share/abyme/worktrees/<repo>/<branch>`, never beside the
-  repo), on the account abyme picks, with you as its parent. The name is
-  lowercase letters, digits, `-` and `_`, and unique.
-  - `abyme call agents tree`: every agent under the one that started it, with
-    its status and id.
-  - `abyme call agents tell to=<name|parent> text="..."` messages one
-    (`wait:=true` for its reply).
-  - `abyme call agents reply agent=<name|parent>` reads its last words without
+  repo), on the account abyme picks. The name is lowercase letters, digits,
+  `-` and `_`, and unique. abyme keeps no relation between agents: to hear
+  back, name yourself in the brief.
+  - `abyme call agents list [cwd=<dir>] [branch=<b>] [name=<name>]`: every
+    agent, with its id, name, status, branch and folder.
+  - `abyme call agents tell to=<name> text="..."` messages one (`wait:=true`
+    for its reply).
+  - `abyme call agents reply agent=<name>` reads its last words without
     messaging it.
+  - `abyme call agents wait agent=<name> until:='["idle","blocked"]'` answers
+    once it is in one of those states.
   - `abyme call inbox ask title="..." text="..."` puts a question on the user's
     list; their answer comes back to you as a message.
   - `abyme call agents remove '["<id>"]'` closes an agent and the worktree its
