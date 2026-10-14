@@ -9,6 +9,7 @@ import vim from "@abyme/vim";
 import terminal from "@abyme/terminal";
 import sentry from "@abyme/sentry";
 import accounts from "./accounts";
+import publish from "./publish";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -34,6 +35,8 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
 accounts.setup();
+// "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
+publish.setup();
 // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
 sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
 
