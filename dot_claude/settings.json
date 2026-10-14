@@ -354,6 +354,7 @@
     "refreshInterval": 10
   },
   "enabledPlugins": {
+    "abyme@abyme": true,
     "chrome-devtools-mcp@claude-plugins-official": false,
     "ck@cavekit-marketplace": false,
     "clangd-lsp@claude-plugins-official": true,
@@ -373,6 +374,14 @@
     "skill-creator@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "abyme": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/rjm/.local/state/abyme/claude"
+      }
+    }
   },
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
@@ -413,5 +422,6 @@
       "**Trusted repo**: The git repository the agent started in (this checkout \u2014 a herdr worktree of ~/dev/sonzai) and its configured remote github.com/rlch/sonzai. The repo is PRIVATE, so confidential material of this project is fine to commit or push here; secrets and sensitive data (personal & entrusted) are never cleared into any repo by its visibility",
       "**Org-specific CLIs**: herdr (session/tab/pane multiplexer \u2014 work runs in background tabs, never steal focus), openspec (spec-driven change flow), just (task runner), chezmoi (dotfiles source-of-truth flow), chrome-debug (debug-Chromium launcher) \u2014 all corroborated by shell history and/or this project's transcripts"
     ]
-  }
+  },
+  "theme": "dark"
 }
