@@ -1,10 +1,9 @@
 // accounts, in every page: each account's quota in the status bar, an Account field in New agent,
-// the account in each agent's row and chat header, and "Run on account…" in an agent's menu, which
-// pins the account that agent's resumes run on.
+// and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on.
 import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents";
-import { createStore, type AgentBadge } from "@abyme/client";
+import { createStore } from "@abyme/client";
 import commands from "@abyme/commands/inventory";
 import menus from "@abyme/menus/inventory";
 import notifications from "@abyme/notifications";
@@ -21,18 +20,15 @@ const view = (): View | undefined => seen.getState() as View | undefined;
 const label = (a: View["accounts"][number]) => (a.five === null ? a.slug : `${a.slug}  5h ${Math.round(a.five)}%  7d ${Math.round(a.seven ?? 0)}%`);
 
 const options = createStore<readonly { value: string; name: string; description?: string }[]>([]);
-const badges = createStore<ReadonlyMap<string, AgentBadge>>(new Map());
 function follow() {
   const v = view();
   if (!v) return;
   options.set(() => (v.accounts.length < 2 ? [] : [{ value: BY_QUOTA, name: "By quota" }, ...v.accounts.map((a) => ({ value: a.slug, name: a.slug, description: label(a) }))]));
-  badges.set(() => new Map(v.agents.map((x) => [x.agent, { text: x.slug, tooltip: x.pinned ? `On ${x.slug}, pinned` : `On ${x.slug}, by quota` }])));
 }
 abyme.effect(() => seen.on("change", follow));
 follow();
 
 agents.fields.add({ id: "accounts.account", title: "Account", options, default: BY_QUOTA });
-agents.badges.add({ id: "accounts.account", store: badges });
 
 /** The agent a menu was opened on, if abyme knows it. */
 const agentOf = (target?: { all: Record<string, unknown> }): string | null => {
