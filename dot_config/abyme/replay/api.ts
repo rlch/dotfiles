@@ -30,7 +30,16 @@ export type Read = {
 };
 
 /** A save's first line: a save is JSON lines, gzipped, this and then one rrweb event a line. */
-export type Head = { replay: 1; page: string; label: string; reason: string; saved: number; minutes: number };
+export type Head = {
+  replay: 1;
+  page: string;
+  label: string;
+  reason: string;
+  saved: number;
+  minutes: number;
+  /** The stylesheets its events name as `replay-css:<sha256>`, by hash. */
+  css?: Record<string, string>;
+};
 
 export type Replay = {
   /** A page's next batch: appended to its open segment on disk. */

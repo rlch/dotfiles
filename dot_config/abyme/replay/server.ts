@@ -3,7 +3,10 @@
 // checkout (rrweb's full snapshot, where a replay can start) closes it, gzipped, as
 // `<start>-<end>.jsonl.gz`, and a segment that ended over `keep` minutes ago is deleted. A save is
 // its head, then the segments since the checkout it starts at, zipped as one gzip member when it is
-// written; the ring itself is never decompressed.
+// written; the ring itself is never decompressed. A stylesheet rrweb inlines (abyme's own, the
+// same in every full snapshot) is kept once, `<dir>/css/<sha256>.css`, and the event holds
+// `replay-css:<sha256>` in its place; each page lists the ones it used in `css`, and a save's
+// head carries them, so a save is whole on its own (format.ts puts them back).
 import abyme from "@abyme/plugin";
 import mcp from "@abyme/mcp/inventory";
 import { HttpError, respond, type Json } from "@abyme/server";
@@ -14,6 +17,9 @@ import type { Batch, Head, Read, Replay, Save } from "./api";
 const o = abyme.with(options).plugin.options;
 const DIR = (o.dir || `${abyme.options.stateDir}/replays`).replace(/^~(?=\/|$)/, abyme.env.HOME ?? "~");
 const RING = `${DIR}/ring`;
+const CSS = `${DIR}/css`;
+/** A stylesheet shorter than this stays where it is. */
+const CSS_AT = 1024;
 const KEEP_MS = Math.max(1, o.keep) * 60_000;
 const CLIP = Math.max(1, Math.min(o.clip, o.keep));
 const SAVES = Math.max(1, Math.floor(o.saves));
@@ -25,11 +31,11 @@ const stamp = (t: number) => new Date(t).toISOString().replace(/\.\d+Z$/, "").re
 const clean = (s: string) => s.replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "page";
 
 /** Each page that is recording: its open segment, and the work on its files, in order. */
-type Page = { label: string; written: string; open: { path: string; start: number } | null; last: number; errorSaved: number; queue: Promise<unknown> };
+type Page = { label: string; written: string; css: Set<string>; open: { path: string; start: number } | null; last: number; errorSaved: number; queue: Promise<unknown> };
 const pages = new Map<string, Page>();
 const pageOf = (page: string, label = ""): Page => {
   let p = pages.get(page);
-  if (!p) pages.set(page, (p = { label, written: "", open: null, last: Date.now(), errorSaved: 0, queue: Promise.resolve() }));
+  if (!p) pages.set(page, (p = { label, written: "", css: new Set(), open: null, last: Date.now(), errorSaved: 0, queue: Promise.resolve() }));
   if (label) p.label = label;
   return p;
 };
@@ -51,6 +57,33 @@ async function close(path: string, end: number) {
   const done = path.replace(/\.jsonl$/, `-${end}.jsonl`);
   await abyme.fs.rename(path, done);
   await gzip(["-f", done]);
+}
+
+type Node = { type?: number; isStyle?: boolean; textContent?: string; attributes?: Record<string, unknown>; childNodes?: Node[] };
+/** Stylesheets on disk this run knows of. */
+const stored = new Set<string>();
+
+/**
+ * Takes each big stylesheet out of an event (a full snapshot's, or a link or style a mutation
+ * adds), leaving `replay-css:<sha256>`: answers the sheets new to the page, to write.
+ */
+function outline(e: { type: number; data: any }, p: Page): { hash: string; text: string }[] {
+  const found: { hash: string; text: string }[] = [];
+  const ref = (text: string) => {
+    const hash = abyme.crypto.hash("sha256", text);
+    if (!p.css.has(hash)) found.push({ hash, text });
+    return `replay-css:${hash}`;
+  };
+  const visit = (n: Node | undefined) => {
+    if (!n) return;
+    const a = n.attributes;
+    if (a && typeof a._cssText === "string" && a._cssText.length >= CSS_AT) a._cssText = ref(a._cssText);
+    if (n.type === 3 && n.isStyle && typeof n.textContent === "string" && n.textContent.length >= CSS_AT) n.textContent = ref(n.textContent);
+    for (const c of n.childNodes ?? []) visit(c);
+  };
+  if (e.type === 2) visit(e.data?.node);
+  else if (e.type === 3 && e.data?.source === 0) for (const add of e.data.adds ?? []) visit(add.node);
+  return found;
 }
 
 /** A page's segments on disk, oldest first: closed ones with their span, the open one with none. */
@@ -85,6 +118,17 @@ async function sweep() {
     // Nothing left of a page but its label: the folder goes.
     if (!(await segments(d.name)).length && ![...pages.keys()].some((id) => clean(id) === d.name)) await abyme.fs.remove(`${RING}/${d.name}`);
   }
+  // A stylesheet no page lists any more goes too.
+  const used = new Set<string>();
+  for (const d of (await abyme.fs.list(RING)) ?? []) for (const h of ((await abyme.fs.read(`${RING}/${d.name}/css`)) ?? "").split("\n")) if (h) used.add(h);
+  for (const p of pages.values()) for (const h of p.css) used.add(h);
+  for (const f of (await abyme.fs.list(CSS)) ?? []) {
+    const h = f.name.replace(/\.css$/, "");
+    if (!used.has(h)) {
+      await abyme.fs.remove(`${CSS}/${f.name}`);
+      stored.delete(h);
+    }
+  }
 }
 // The half's engine stops with the plugin, and its timers with it.
 setInterval(() => void sweep().catch((e: unknown) => abyme.log.warn(`replay sweep: ${e instanceof Error ? e.message : e}`)), 60_000);
@@ -106,8 +150,27 @@ const api: Replay = {
     if (typeof page !== "string" || !Array.isArray(events) || !events.length) return Promise.resolve();
     const p = pageOf(page, label);
     p.last = Date.now();
-    const lines = events.map((e) => JSON.stringify(e)).join("\n") + "\n";
+    const sheets: { hash: string; text: string }[] = [];
+    const lines =
+      events
+        .map((e) => {
+          const line = JSON.stringify(e);
+          if (!line.includes('"_cssText"') && !line.includes('"isStyle"')) return line;
+          sheets.push(...outline(e as { type: number; data: unknown }, p));
+          return JSON.stringify(e);
+        })
+        .join("\n") + "\n";
+    for (const s of sheets) p.css.add(s.hash);
     return queued(p, async () => {
+      for (const s of sheets) {
+        if (!stored.has(s.hash) && !(await abyme.fs.stat(`${CSS}/${s.hash}.css`))) {
+          await abyme.fs.mkdir(CSS);
+          await abyme.fs.write(`${CSS}/${s.hash}.css`, s.text);
+        }
+        stored.add(s.hash);
+        await abyme.fs.mkdir(`${RING}/${clean(page)}`);
+        await abyme.fs.append(`${RING}/${clean(page)}/css`, `${s.hash}\n`);
+      }
       if (checkout && p.open) {
         await close(p.open.path, p.last);
         p.open = null;
@@ -146,7 +209,14 @@ const api: Replay = {
       const tmp = `${DIR}/.${base}`;
       await abyme.fs.mkdir(tmp);
       try {
-        const head: Head = { replay: 1, page, label: p.label, reason, saved: now, minutes: span };
+        // The stylesheets the page used, which its events name by hash.
+        const used = new Set(((await abyme.fs.read(`${RING}/${clean(page)}/css`)) ?? "").split("\n").filter(Boolean));
+        const css: Record<string, string> = {};
+        for (const h of used) {
+          const text = await abyme.fs.read(`${CSS}/${h}.css`);
+          if (typeof text === "string") css[h] = text;
+        }
+        const head: Head = { replay: 1, page, label: p.label, reason, saved: now, minutes: span, css };
         await abyme.fs.write(`${tmp}/0.jsonl`, `${JSON.stringify(head)}\n`);
         await gzip(["-f", `${tmp}/0.jsonl`]);
         const parts = [`${tmp}/0.jsonl.gz`];
@@ -213,7 +283,7 @@ mcp.tools.add(
   {
     name: "saves",
     description:
-      "The operator's UI recordings of abyme pages (rrweb), newest first: name, path, time, size. A save is gzipped JSON lines (`gunzip -c <path>`: its head, then an rrweb event a line), from a full snapshot up to when it was saved: the last 10 minutes by default, up to an hour. One is written when the operator saves one and when a page has an uncaught error.",
+      "The operator's UI recordings of abyme pages (rrweb), newest first: name, path, time, size. A save is gzipped JSON lines (`gunzip -c <path>`: its head, then an rrweb event a line; a stylesheet in an event is `replay-css:<sha256>`, its text in the head's `css`; replay_read puts them back), from a full snapshot up to when it was saved: the last 10 minutes by default, up to an hour. One is written when the operator saves one and when a page has an uncaught error.",
     inputSchema: { type: "object", properties: {} },
     readOnly: true,
     call: async () => (await list()) as unknown as Json,

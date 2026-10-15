@@ -19,7 +19,7 @@ let rec: ReturnType<typeof recording> | null = null;
 let stopped = false;
 // After the page has drawn, so it costs the load nothing.
 abyme.on("ready", () => {
-  if (!stopped) rec = recording({ checkout: Math.max(5_000, o.checkout), terminals: o.terminals, coalesce: Math.max(0, o.coalesce) });
+  if (!stopped) rec = recording({ checkout: Math.max(5_000, o.checkout), terminals: o.terminals });
 });
 abyme.effect(() => () => {
   stopped = true;

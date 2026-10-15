@@ -38,17 +38,9 @@ const SEND_AT = 500;
  * (`replay.terminal`), its whole screen again at each checkout so a replay from there has it.
  * Answers how to stop it, and to send what is pending now (before a save).
  */
-export function recording(o: { checkout: number; terminals: boolean; coalesce: number }): { stop(): void; flush(): void } {
+export function recording(o: { checkout: number; terminals: boolean }): { stop(): void; flush(): void } {
   let pending: RecordEvent[] = [];
   let checkout = false;
-  // Coalescing: after a mutation goes out, rrweb's buffer is frozen for `coalesce` ms. It still
-  // tracks what changes, and a node added and removed again meanwhile is dropped unserialised, so a
-  // streaming chat that re-renders its code on every token is serialised once a window, not once a
-  // token. Any input, scroll or click unfreezes it at once (rrweb's own rule), and the tick does at
-  // the window's end. The first change after a quiet moment goes out at once.
-  let holding = false;
-  let stopped = false;
-  let tick: ReturnType<typeof setTimeout> | undefined;
   const flush = () => {
     if (!pending.length) return;
     void replay.server.push({ page: PAGE, label: label(), checkout, events: pending });
@@ -58,7 +50,6 @@ export function recording(o: { checkout: number; terminals: boolean; coalesce: n
   const followed = new Map<string, Followed>();
   const stopRecord = record({
     emit(event) {
-      if (event.type === 5 && (event.data as { tag?: string })?.tag === "replay.tick") return;
       // A Meta event begins every full snapshot, the first and each checkout.
       if (event.type === 4) {
         flush();
@@ -66,14 +57,6 @@ export function recording(o: { checkout: number; terminals: boolean; coalesce: n
         for (const t of followed.values()) t.store.retry();
       }
       pending.push(event);
-      if (o.coalesce > 0 && !holding && !stopped && event.type === 3 && (event.data as { source?: number }).source === 0) {
-        holding = true;
-        record.freezePage();
-        tick = setTimeout(() => {
-          holding = false;
-          if (!stopped) record.addCustomEvent("replay.tick", 0);
-        }, o.coalesce);
-      }
       // A full snapshot is the biggest event there is: it goes now, not held two seconds.
       if (event.type === 2 || pending.length >= SEND_AT) flush();
     },
@@ -136,8 +119,6 @@ export function recording(o: { checkout: number; terminals: boolean; coalesce: n
     for (const t of followed.values()) t.off.dispose();
     followed.clear();
     recordingNow = false;
-    stopped = true;
-    clearTimeout(tick);
     stopRecord?.();
     clearInterval(timer);
     flush();

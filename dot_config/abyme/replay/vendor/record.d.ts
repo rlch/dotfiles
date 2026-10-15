@@ -14,5 +14,4 @@ export function record(options: {
 export namespace record {
   function addCustomEvent<T>(tag: string, payload: T): void;
   function takeFullSnapshot(isCheckout?: boolean): void;
-  function freezePage(): void;
 }
