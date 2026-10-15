@@ -113,8 +113,7 @@ abyme is not running.
   ```
   Placing one that runs starts nothing new. `abyme call processes remove
   name=<name>` when you are done with it; `abyme call processes list` says what
-  runs. The port it serves shows beside your name. Use the shell tool only for
-  short-lived foreground commands.
+  runs. Use the shell tool only for short-lived foreground commands.
 - **Another agent:** `abyme call agents start provider=acp dir=<repo>
   [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
   brief="Read <file> and follow it."` starts one on a worktree of its own with
