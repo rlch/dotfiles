@@ -26,7 +26,11 @@ admin = true
 # scripts/check once on the lot and lands them together, splitting a red batch to find
 # the branch that broke it. Before, each land ran the gate alone inside the queue (~11 min
 # plus a heavy-slot wait), and eight lands waited 30 min to 2 h behind each other.
+# scripts/check is the local lane (what the batch's change can move); after each batch,
+# scripts/after-land is the heavy lane on main: the full gate and the walk, reverting a
+# landing that turned main red, then promoting the newest green main, at most every 30 min.
 [repo."Abyme-Studio/abyme"]
 check = "scripts/check"
 batch = true
+after = "scripts/after-land"
 patience_min = 120
