@@ -21,11 +21,12 @@ push = true
 mode = "pr"
 admin = true
 
-# Several sessions land in the same hour; one landed past a red gate because its green
-# check ran on a tip main had since moved past (2026-10-15). land runs scripts/check on
-# the rebased tip only when main moved since this tip's check passed (scripts/check
-# records the trees it passed), inside the queue: ~11 min plus a wait for a gate slot,
-# so a land behind it waits as long.
+# A merge queue (operator, 2026-10-15): a land hands its branch to the queue and is told;
+# whichever waiting land holds the queue rebases every waiting branch onto main, runs
+# scripts/check once on the lot and lands them together, splitting a red batch to find
+# the branch that broke it. Before, each land ran the gate alone inside the queue (~11 min
+# plus a heavy-slot wait), and eight lands waited 30 min to 2 h behind each other.
 [repo."Abyme-Studio/abyme"]
 check = "scripts/check"
+batch = true
 patience_min = 120
