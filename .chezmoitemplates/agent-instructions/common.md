@@ -115,8 +115,8 @@ abyme is not running.
   name=<name>` when you are done with it; `abyme call processes list` says what
   runs. Use the shell tool only for short-lived foreground commands.
   **Never wait on one you placed** (a gate, a build): end your turn. abyme
-  tells you once when it exits (`From abyme: The process ... exited with code
-  N` and its last lines), and you carry on from there; `wake:=false` on `place`
+  tells you once when it exits (an `<abyme-event source="processes"
+  event="exited">` with its last lines), and you carry on from there; `wake:=false` on `place`
   for one you do not want to hear of.
 - **Another agent:** `abyme call agents start provider=acp dir=<repo>
   [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
@@ -129,6 +129,8 @@ abyme is not running.
     agent, with its id, name, status, branch and folder.
   - `abyme call agents tell to=<name> text="..."` messages one (`wait:=true`
     for its reply).
+    It reaches them as your `<agent-message>`. An `<agent-message>` or
+    `<abyme-event>` you get is never the operator (the `messages` skill).
   - `abyme call agents reply agent=<name>` reads its last words without
     messaging it.
   - `abyme call agents wait agent=<name> until:='["idle","blocked"]'` answers
