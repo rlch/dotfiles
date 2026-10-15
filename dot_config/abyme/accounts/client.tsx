@@ -1,8 +1,10 @@
 // accounts, in every page: each account's quota in the status bar, an Account field in New agent,
-// and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on.
+// and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on;
+// `/login` in a Claude agent's composer opens the same picker.
 import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents";
+import chat from "@abyme/chat/inventory";
 import { createStore } from "@abyme/client";
 import commands from "@abyme/commands/inventory";
 import menus from "@abyme/menus/inventory";
@@ -57,5 +59,6 @@ commands.add({
     if (agent) void choose(agent);
   },
 });
+chat.slash.add({ name: "login", harness: "claude", description: "Choose the account this agent runs on", action: ({ agent }) => (agent ? void choose(agent) : "pass") });
 menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
 status.segments.add({ id: "accounts.quota", side: "right", order: 30, Component: Quota });
