@@ -69,15 +69,24 @@ async function writeCredentials(a: Account, c: Credentials) {
   if (r.code !== 0) throw new Error(`${a.slug}: the keychain refused the renewed token`);
 }
 
-/** The account's access token, renewed first when it has expired, renewal is on, it is not main's
- * and nothing runs on it: a running Claude renews its own, and a second renewal rotates its
- * refresh token away. */
+/** A renewal refused, by account: not asked again until `until`, each refusal doubling the wait
+ * (5 min to 2 h). Every quota read asked again, and the token endpoint answered 429 to three
+ * accounts every 1-4 minutes all day (2026-10-15). */
+const refused = new Map<string, { until: number; wait: number }>();
+const RENEW_WAIT_MS = 5 * 60_000;
+const RENEW_WAIT_MAX_MS = 2 * 60 * 60_000;
+
+/** The account's access token, renewed first when it has expired, renewal is on, it is not main's,
+ * nothing runs on it and its last renewal was not refused a moment ago: a running Claude renews
+ * its own, and a second renewal rotates its refresh token away. */
 async function token(a: Account, busy: boolean): Promise<string | null> {
   const c = await credentials(a);
   const t = c?.claudeAiOauth;
   if (!t?.accessToken) return null;
   const expired = t.expiresAt !== undefined && Date.now() + 5 * 60_000 >= t.expiresAt;
   if (!expired || !o.renew || busy || a.main || !t.refreshToken) return t.accessToken;
+  const no = refused.get(a.key);
+  if (no && Date.now() < no.until) return t.accessToken;
   const r = await abyme.net.fetch(o.tokenUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -85,9 +94,12 @@ async function token(a: Account, busy: boolean): Promise<string | null> {
     timeoutMs: 10_000,
   });
   if (r.status !== 200) {
-    abyme.log.warn(`${a.slug}: renewing the token answered HTTP ${r.status}`);
+    const wait = no ? Math.min(no.wait * 2, RENEW_WAIT_MAX_MS) : RENEW_WAIT_MS;
+    refused.set(a.key, { until: Date.now() + wait, wait });
+    abyme.log.warn(`${a.slug}: renewing the token answered HTTP ${r.status}; not asked again for ${Math.round(wait / 60_000)} min`);
     return t.accessToken;
   }
+  refused.delete(a.key);
   const n = JSON.parse(r.body) as { access_token?: string; expires_in?: number; refresh_token?: string; scope?: string };
   if (!n.access_token) return t.accessToken;
   const next: Credentials = {
@@ -415,7 +427,15 @@ async function showCached() {
   }
   show(all, q);
 }
-agents.items.on("change", () => void showCached());
+// An agent's list changes many times a second while agents work, and each show lists the home
+// folder and reads every account's identity: once a moment at most.
+let showing: ReturnType<typeof setTimeout> | null = null;
+agents.items.on("change", () => {
+  showing ??= setTimeout(() => {
+    showing = null;
+    void showCached();
+  }, 2_000);
+});
 
 export default {
   /** `abyme call accounts pick model=…`: the account a launch would get now, and why. Counts nothing. */
