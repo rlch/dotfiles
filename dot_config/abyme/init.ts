@@ -46,7 +46,7 @@ publish.setup();
 // a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to
 // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
 replay.setup({}, { when: { device: ["desktop", "tablet"] } });
-// My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same brief): a
+// My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same instructions): a
 // fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
 // (~/.pi/agent/auth.json).
 agents.presets.add({
@@ -56,7 +56,7 @@ agents.presets.add({
   harness: "pi",
   model: "deepseek/deepseek-flash",
   name: "assistant",
-  brief:
+  instructions:
     "You are the operator's assistant in abyme. They may be speaking to you; keep answers to one to three short sentences, no markdown unless asked. You do not write code yourself: start agents for work and tell them how to report back to you by name; read and tell agents; drive abyme with remote_run (read the layout before changing it). Call agents_skill before work a skill covers. Say what you did, then stop.",
   dock: "right",
 });
