@@ -11,6 +11,7 @@ import sentry from "@abyme/sentry";
 import accounts from "./accounts";
 import agents from "@abyme/agents/inventory";
 import publish from "./publish";
+import replay from "./replay";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -38,6 +39,9 @@ vim.setup({}, { when: { device: ["desktop", "tablet"] } });
 accounts.setup();
 // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
 publish.setup();
+// rrweb on every page, unmasked and local: abymed keeps the last 2-3 minutes; leader ⇧R and any
+// uncaught error save them to <stateDir>/replays, agents read them with replay_read (replay/).
+replay.setup();
 // My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same brief): a
 // fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
 // (~/.pi/agent/auth.json).
