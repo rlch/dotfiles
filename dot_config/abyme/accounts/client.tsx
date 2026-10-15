@@ -61,4 +61,4 @@ commands.add({
 });
 chat.slash.add({ name: "login", harness: "claude", description: "Choose the account this agent runs on", action: ({ agent }) => (agent ? void choose(agent) : "pass") });
 menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
-status.segments.add({ id: "accounts.quota", side: "right", order: 30, Component: Quota });
+status.segments.add({ id: "accounts.quota", side: "right", order: 32, Component: Quota });
