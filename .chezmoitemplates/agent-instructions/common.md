@@ -133,6 +133,8 @@ abyme is not running.
     messaging it.
   - `abyme call agents wait agent=<name> until:='["idle","blocked"]'` answers
     once it is in one of those states.
+  - `abyme call agents messages [agent=<name>]` lists recent tells, who to
+    whom and whether each was answered.
   - `abyme call agents remove '["<id>"]'` closes an agent and the worktree its
     start made, once it is idle and its branch landed. Never remove your own
     while the user has yet to read your report.
