@@ -39,9 +39,10 @@ vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
 accounts.setup();
 // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
 publish.setup();
-// rrweb on every page, unmasked and local: abymed keeps the last 2-3 minutes; leader ⇧R and any
-// uncaught error save them to <stateDir>/replays, agents read them with replay_read (replay/).
-replay.setup();
+// rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,
+// a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to
+// <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
+replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 // My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same brief): a
 // fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
 // (~/.pi/agent/auth.json).

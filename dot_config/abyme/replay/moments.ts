@@ -18,7 +18,7 @@ export type Moment = {
 
 /** A save's file name: `<UTC time>_<device>-<view>_<why>_<page>.json.gz` (older saves have no why). */
 export function parseName(name: string): { time: number; device: string; view: string; why: "key" | "error" | null } {
-  const parts = name.replace(/\.json\.gz$/, "").split("_");
+  const parts = name.replace(/\.jsonl?\.gz$/, "").split("_");
   const [d, t] = (parts[0] ?? "").split("T");
   const time = Date.parse(`${d}T${(t ?? "").replace(/-/g, ":")}Z`);
   const label = parts[1] ?? "";

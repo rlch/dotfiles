@@ -26,25 +26,39 @@ let recordingNow = false;
 
 type Followed = { store: { on(e: "change", fn: () => void): { dispose(): void }; getState(): unknown; retry(): void }; off: { dispose(): void } };
 
+/** How often the page sends what it recorded, and how many events send at once. */
+const SEND_MS = 2000;
+const SEND_AT = 500;
+
 /**
- * Records the page with rrweb and sends it to abymed a second at a time, each checkout (a full
- * snapshot) starting a batch of its own. A terminal draws on a canvas in a worker, which rrweb
- * records blank: each visible one's output and size go in beside it as custom events
+ * Records the page with rrweb and sends it to abymed every two seconds as it is (the call's own
+ * JSON is the one serialisation; nothing here stringifies), each checkout (a full snapshot)
+ * starting a batch of its own and going at once. A terminal draws on a canvas in a worker, which
+ * rrweb records blank: each visible one's output and size go in beside it as custom events
  * (`replay.terminal`), its whole screen again at each checkout so a replay from there has it.
  * Answers how to stop it, and to send what is pending now (before a save).
  */
-export function recording(o: { checkout: number; terminals: boolean }): { stop(): void; flush(): void } {
+export function recording(o: { checkout: number; terminals: boolean; coalesce: number }): { stop(): void; flush(): void } {
   let pending: RecordEvent[] = [];
   let checkout = false;
+  // Coalescing: after a mutation goes out, rrweb's buffer is frozen for `coalesce` ms. It still
+  // tracks what changes, and a node added and removed again meanwhile is dropped unserialised, so a
+  // streaming chat that re-renders its code on every token is serialised once a window, not once a
+  // token. Any input, scroll or click unfreezes it at once (rrweb's own rule), and the tick does at
+  // the window's end. The first change after a quiet moment goes out at once.
+  let holding = false;
+  let stopped = false;
+  let tick: ReturnType<typeof setTimeout> | undefined;
   const flush = () => {
     if (!pending.length) return;
-    replay.server.push({ page: PAGE, label: label(), checkout, events: JSON.stringify(pending) });
+    void replay.server.push({ page: PAGE, label: label(), checkout, events: pending });
     pending = [];
     checkout = false;
   };
   const followed = new Map<string, Followed>();
   const stopRecord = record({
     emit(event) {
+      if (event.type === 5 && (event.data as { tag?: string })?.tag === "replay.tick") return;
       // A Meta event begins every full snapshot, the first and each checkout.
       if (event.type === 4) {
         flush();
@@ -52,15 +66,28 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
         for (const t of followed.values()) t.store.retry();
       }
       pending.push(event);
+      if (o.coalesce > 0 && !holding && !stopped && event.type === 3 && (event.data as { source?: number }).source === 0) {
+        holding = true;
+        record.freezePage();
+        tick = setTimeout(() => {
+          holding = false;
+          if (!stopped) record.addCustomEvent("replay.tick", 0);
+        }, o.coalesce);
+      }
+      // A full snapshot is the biggest event there is: it goes now, not held two seconds.
+      if (event.type === 2 || pending.length >= SEND_AT) flush();
     },
     checkoutEveryNms: o.checkout,
+    // Unmasked, but a password's value is recorded as asterisks. (A blockSelector would check
+    // every mutation's ancestors against it: too dear on a streaming page.)
     maskAllInputs: false,
-    sampling: { mousemove: 50, scroll: 100, input: "last" },
+    maskInputOptions: { password: true },
+    sampling: { scroll: 100, input: "last" },
     recordCanvas: false,
     collectFonts: false,
   });
   recordingNow = true;
-  const timer = setInterval(flush, 1000);
+  const timer = setInterval(flush, SEND_MS);
 
   // The shells abymed runs, oldest first: what a terminal view asked for nothing shows.
   const shells = o.terminals ? (terminal?.server.shells() as Followed["store"] | undefined) : undefined;
@@ -109,6 +136,8 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
     for (const t of followed.values()) t.off.dispose();
     followed.clear();
     recordingNow = false;
+    stopped = true;
+    clearTimeout(tick);
     stopRecord?.();
     clearInterval(timer);
     flush();

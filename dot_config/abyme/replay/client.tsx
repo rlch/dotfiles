@@ -1,7 +1,7 @@
-// replay, in every page: rrweb records the page, unmasked, and abymed keeps the last few checkouts
-// (about 2-3 minutes); nothing leaves the machine. "Save replay" (leader shift+r) and any uncaught
-// error, rejection or fault write them to the saves folder, which agents read with replay_read and
-// the view Replays plays.
+// replay, in every page it loads on: rrweb records the page, unmasked but for passwords, and abymed
+// keeps the last `keep` minutes on disk; nothing leaves the machine. "Save replay" (leader shift+r,
+// the last `clip` minutes), "Save replay of the last hour" and any uncaught error, rejection or
+// fault write a save, which agents read with replay_read and the view Replays plays.
 import abyme from "@abyme/plugin";
 import replay from "@abyme/replay";
 import { restParam } from "@abyme/client";
@@ -19,17 +19,17 @@ let rec: ReturnType<typeof recording> | null = null;
 let stopped = false;
 // After the page has drawn, so it costs the load nothing.
 abyme.on("ready", () => {
-  if (!stopped) rec = recording({ checkout: Math.max(5_000, o.checkout), terminals: o.terminals });
+  if (!stopped) rec = recording({ checkout: Math.max(5_000, o.checkout), terminals: o.terminals, coalesce: Math.max(0, o.coalesce) });
 });
 abyme.effect(() => () => {
   stopped = true;
   rec?.stop();
 });
 
-async function save(reason: string) {
+async function save(reason: string, minutes?: number) {
   mark("replay.save", { reason });
   rec?.flush();
-  return replay.server.save(PAGE, reason);
+  return replay.server.save(PAGE, reason, minutes);
 }
 
 if (o.onError) {
@@ -63,33 +63,44 @@ if (o.onError) {
 
 views.add({
   id: "replay",
-  title: (p) => (p.save ? `Replay ${p.save.replace(/\.json\.gz$/, "")}` : "Replays"),
+  title: (p) => (p.save ? `Replay ${p.save.replace(/\.jsonl?\.gz$/, "")}` : "Replays"),
   keywords: ["rrweb", "recording", "session", "jank", "debug"],
   url: restParam("save"),
   describe: (p) => ({ save: p.save ?? null }),
   load: () => import("./Player.tsx").then((m) => m.ReplayView),
 });
 
-commands.add({
-  id: "replay.save",
-  title: "Save replay of the last 2 minutes",
-  group: "Replay",
-  keywords: ["rrweb", "record", "jank", "bug"],
-  run: async (event) => {
-    try {
-      const s = await save("asked");
-      if (!s) return void notifications?.notify({ level: "info", title: "Nothing recorded yet", body: "The first checkout has not reached abymed." });
-      notifications?.notify({
-        level: "success",
-        title: "Replay saved",
-        body: s.name,
-        detail: s.path,
-        key: "replay.saved",
-        action: { label: "Watch", run: (e) => layout.open({ view: "replay", params: { save: s.name } }, { event: e ?? event }) },
-      });
-    } catch (e) {
-      notifications?.notify({ level: "error", title: "Replay not saved", body: (e as Error).message, output: "replay" });
-    }
+async function saveNow(minutes: number | undefined, event?: unknown) {
+  try {
+    const s = await save("asked", minutes);
+    if (!s) return void notifications?.notify({ level: "info", title: "Nothing recorded yet", body: "The first checkout has not reached abymed." });
+    notifications?.notify({
+      level: "success",
+      title: "Replay saved",
+      body: s.name,
+      detail: s.path,
+      key: "replay.saved",
+      action: { label: "Watch", run: (e) => layout.open({ view: "replay", params: { save: s.name } }, { event: (e ?? event) as never }) },
+    });
+  } catch (e) {
+    notifications?.notify({ level: "error", title: "Replay not saved", body: (e as Error).message, output: "replay" });
+  }
+}
+
+commands.add(
+  {
+    id: "replay.save",
+    title: `Save replay of the last ${o.clip} minutes`,
+    group: "Replay",
+    keywords: ["rrweb", "record", "jank", "bug"],
+    run: (event) => saveNow(undefined, event),
   },
-});
+  {
+    id: "replay.save.all",
+    title: o.keep === 60 ? "Save replay of the last hour" : `Save replay of the last ${o.keep} minutes`,
+    group: "Replay",
+    keywords: ["rrweb", "record", "jank", "bug", "hour", "all"],
+    run: (event) => saveNow(o.keep, event),
+  },
+);
 keys.add({ keys: "leader shift+r", command: "replay.save" });

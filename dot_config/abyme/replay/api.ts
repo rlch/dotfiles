@@ -1,8 +1,8 @@
 // What the server half answers, for both halves and the contract. Types alone.
 
-/** A page's recording as the page sends it: rrweb's events, JSON-encoded as one array. A batch
- * that begins a checkout starts with its Meta event (`checkout`), so abymed cuts there unread. */
-export type Batch = { page: string; label: string; checkout: boolean; events: string };
+/** A page's next events. A batch that begins a checkout starts with its Meta event (`checkout`):
+ * abymed starts a new segment there, since a replay can start only at a full snapshot. */
+export type Batch = { page: string; label: string; checkout: boolean; events: unknown[] };
 
 /** A save on disk. */
 export type Save = {
@@ -29,12 +29,16 @@ export type Read = {
   events: unknown[];
 };
 
+/** A save's first line: a save is JSON lines, gzipped, this and then one rrweb event a line. */
+export type Head = { replay: 1; page: string; label: string; reason: string; saved: number; minutes: number };
+
 export type Replay = {
-  /** A page's next batch: kept in its ring of the last checkouts. */
-  push(batch: Batch): void;
-  /** Writes the page's ring to the saves folder; answers the save, or null when it has nothing or
+  /** A page's next batch: appended to its open segment on disk. */
+  push(batch: Batch): Promise<void>;
+  /** Writes the page's last `minutes` (the option `clip` unless given, at most `keep`) to the saves
+   * folder, from the checkout at or before then; answers the save, or null when it has nothing or
    * saved for an error under a minute ago (`reason` beginning `error`). */
-  save(page: string, reason: string): Promise<Save | null>;
+  save(page: string, reason: string, minutes?: number): Promise<Save | null>;
   /** The saves on disk, newest first. */
   saves(): Promise<Save[]>;
   /** A save's events from `from`, at most `limit` (500), optionally only those of the rrweb `types`. */

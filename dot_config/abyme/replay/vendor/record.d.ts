@@ -4,6 +4,8 @@ export function record(options: {
   emit(event: RecordEvent, isCheckout?: boolean): void;
   checkoutEveryNms?: number;
   maskAllInputs?: boolean;
+  maskInputOptions?: { password?: boolean };
+  blockSelector?: string;
   sampling?: { mousemove?: boolean | number; scroll?: number; input?: "all" | "last" };
   recordCanvas?: boolean;
   collectFonts?: boolean;
@@ -12,4 +14,5 @@ export function record(options: {
 export namespace record {
   function addCustomEvent<T>(tag: string, payload: T): void;
   function takeFullSnapshot(isCheckout?: boolean): void;
+  function freezePage(): void;
 }

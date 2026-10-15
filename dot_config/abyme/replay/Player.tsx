@@ -28,6 +28,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSPrope
 import { Replayer } from "./vendor/replay.js";
 import type { Read, Save } from "./api.ts";
 import { clock, kb, moments, parseName, type Event, type Kind, type Moment } from "./moments.ts";
+import { parseSave } from "./format.ts";
 import * as I from "./icons.tsx";
 
 const SHEET = new URL("./vendor/replay.css", import.meta.url).href;
@@ -74,9 +75,9 @@ type Loaded = Pick<Read, "name" | "page" | "label" | "reason" | "saved"> & { eve
 async function load(name: string): Promise<Loaded> {
   const r = await fetch(`/api/replay/saves/${encodeURIComponent(name)}`);
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
-  const json = r.body!.pipeThrough(new DecompressionStream("gzip"));
-  const all = (await new Response(json).json()) as Omit<Loaded, "name">;
-  return { ...all, name };
+  const text = await new Response(r.body!.pipeThrough(new DecompressionStream("gzip"))).text();
+  const { page, label, reason, saved, events } = parseSave(text);
+  return { name, page, label, reason, saved, events };
 }
 
 const when = (t: number) => new Date(t).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
@@ -89,8 +90,10 @@ export function ReplayView({ params, api }: ViewProps) {
   const name = params.save ?? saves?.[0]?.name;
   const [data, setData] = useState<Loaded | null>(null);
 
+  const [tries, setTries] = useState(0);
   const refresh = () => {
     setFailed(null);
+    setTries((n) => n + 1);
     replay.server.saves().then(setSaves, (e: Error) => setFailed(e.message));
   };
   useEffect(refresh, []);
@@ -103,14 +106,14 @@ export function ReplayView({ params, api }: ViewProps) {
       (e: Error) => live && setFailed(e.message),
     );
     return () => void (live = false);
-  }, [name]);
+  }, [name, tries]);
   useEffect(() => {
     if (name) api.setTitle(`Replay ${time(parseName(name).time)}`);
   }, [name]);
 
   if (failed) return <ViewState kind="failed" title="Replay not read" detail={failed} action={{ label: "Retry", onClick: refresh }} />;
   if (!saves) return <ViewState kind="loading" />;
-  if (!saves.length && !params.save) return <ViewState kind="empty" title="No replays saved" detail="Save replay of the last 2 minutes: leader ⇧R. An error on a page saves one too." />;
+  if (!saves.length && !params.save) return <ViewState kind="empty" title="No replays saved" detail="Save replay: leader ⇧R. An error on a page saves one too." />;
   const save = saves.find((s) => s.name === name);
   const pick = (next: string) => layout.open({ view: "replay", params: { save: next } }, { target: "replace", from: api.key });
   return (
