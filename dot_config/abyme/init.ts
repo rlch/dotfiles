@@ -34,7 +34,7 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
 // used, and files open read-only in normal mode. A member of the standard set, so this line stands
 // in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
-vim.setup({}, { when: { device: ["desktop", "tablet"] } });
+vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
 // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
 accounts.setup();
 // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
