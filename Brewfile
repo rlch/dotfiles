@@ -130,10 +130,6 @@ brew "uv"          # fast Python package/venv manager (pip + virtualenv replacem
 # uv-managed Python CLIs (euporie, etc.) install via
 # .chezmoiscripts/run_onchange_post-install-uv-tools.sh — not on homebrew-core.
 
-# === Flutter ===
-# Per-project Flutter SDK pinning via .fvmrc (mise doesn't manage Flutter).
-tap "leoafarias/fvm"
-brew "leoafarias/fvm/fvm"
 
 # === Android device automation ===
 # adb/fastboot for driving the phone (OPPO Find N6) from the terminal and from
