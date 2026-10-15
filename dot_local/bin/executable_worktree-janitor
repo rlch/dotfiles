@@ -23,7 +23,10 @@
 #                         agent recorded in one goes with it, through `abyme call
 #                         agents remove`; while abyme is not answering, no
 #                         worktree is removed. Also prunes registrations whose
-#                         folder is gone.
+#                         folder is gone. Never one under abyme's worktrees
+#                         folder: abyme's worktree pass is their one remover
+#                         (2026-10-15, after two removers each left folders
+#                         half gone).
 #
 # Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
 # works oldest-first until free >= GOAL GB.
@@ -73,7 +76,8 @@ FLOOR_GB=${JANITOR_FLOOR_GB:-200}
 GOAL_GB=${JANITOR_GOAL_GB:-400}
 # ~/.herdr/worktrees: herdr's worktrees, for their build output until the last is gone.
 # ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
-ROOTS=("$HOME/.local/share/abyme/worktrees" "$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
+ABYME_WORKTREES="$HOME/.local/share/abyme/worktrees"
+ROOTS=("$ABYME_WORKTREES" "$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
 
 free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
 log() { echo "$(date '+%F %T') worktree-janitor: $*"; }
@@ -317,6 +321,8 @@ remove_landed_worktrees() {
   fi
   while IFS=$'\t' read -r common wt branch; do
     [[ -d "$wt" && -e "$wt/.git" ]] || continue
+    # abyme removes its own: landed, half removed, or asked of the operator.
+    [[ "$wt" == "$ABYME_WORKTREES"/* ]] && continue
     [[ -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
     # A worktree holding the trunk itself is always "on origin/main"; never remove it or its branch.
     [[ "$branch" == main || "$branch" == master ]] && continue
