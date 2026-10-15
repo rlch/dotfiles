@@ -7,6 +7,7 @@
 #   push   ff only: also push main (default true)
 #   check  a command that must pass on the rebased tip
 #   admin  merge PRs with --admin (land's pr mode, and pr-land), only once their checks pass
+#   patience_min  ff and push: how long a land waits behind another before it stops (default 60)
 
 [default]
 mode = "ff"
@@ -19,3 +20,12 @@ push = true
 [repo."MathGaps/schools-ts"]
 mode = "pr"
 admin = true
+
+# Several sessions land in the same hour; one landed past a red gate because its green
+# check ran on a tip main had since moved past (2026-10-15). land runs scripts/check on
+# the rebased tip only when main moved since this tip's check passed (scripts/check
+# records the trees it passed), inside the queue: ~11 min plus a wait for a gate slot,
+# so a land behind it waits as long.
+[repo."Abyme-Studio/abyme"]
+check = "scripts/check"
+patience_min = 120
