@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The one headed Chromium agents share, one agent at a time.
 #
-# Headless work never comes here: every agent opens its own browser with
-# `playwright-cli -s=<name> open` (the `browser` skill). This is for what
+# Headless work never comes here: abyme gives every agent a browser of its own
+# (`abyme call browser session`, abyme's `browser` skill). This is for what
 # headless cannot do: a logged-in profile (1Password lives in it), a site that
 # blocks headless (ImmiAccount, always), a page the user watches.
 #

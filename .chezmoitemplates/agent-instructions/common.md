@@ -143,9 +143,13 @@ abyme is not running.
 
 # Browser
 
-- The `browser` skill is the only way to a browser (`playwright-cli`; no browser
-  MCP server, no Claude in Chrome, no Chromium launched by hand). Load it before
-  touching one: it holds the headless default, the lease on the shared headed
-  browser, and the launch flag that stops app copies filling the disk.
+- **Your browser is abyme's**: its `browser` skill. `abyme call browser session`
+  starts a headless Chrome of your own and prints the `playwright-cli -s=<you>
+  attach --cdp=…` line; the operator watches it beside your chat and can take it
+  over. Sign-ins and payments go to them: `abyme call browser handoff
+  reason="Sign in to GitHub"`, then end your turn. No browser MCP server, no
+  Claude in Chrome, no `playwright-cli open`, no Chromium launched by hand.
 - **ImmiAccount (`immi.homeaffairs.gov.au`) is never headless**; use the headed
-  lease. Never type or fetch a password, and never bring the browser forward.
+  lease: `browser-headed acquire <task>`, attach to the address it prints, every
+  command through `browser-headed run <task> …`, and `browser-headed release`
+  when done. Never type or fetch a password, and never bring the browser forward.
