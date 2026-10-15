@@ -71,7 +71,9 @@ const api: Replay = {
       if (now - ring.errorSaved < ERROR_GAP_MS) return null;
       ring.errorSaved = now;
     }
-    const base = `${stamp(now)}_${clean(ring.label)}_${clean(page).slice(0, 8)}`;
+    // The name says when, where and why, so a list of saves needs no file opened.
+    const why = reason.startsWith("error") ? "error" : "key";
+    const base = `${stamp(now)}_${clean(ring.label)}_${why}_${clean(page).slice(0, 8)}`;
     const json = `${DIR}/${base}.json`;
     const head = JSON.stringify({ page, label: ring.label, reason, saved: now });
     const events = ring.checkouts.flat().join(",");

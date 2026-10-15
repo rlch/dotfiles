@@ -12,7 +12,7 @@ import layout from "@abyme/layout";
 import plugins from "@abyme/plugins";
 import notifications from "@abyme/notifications/optional";
 import options from "./options.ts";
-import { PAGE, recording } from "./parts.tsx";
+import { mark, PAGE, recording } from "./parts.tsx";
 
 const o = abyme.with(options).plugin.options;
 let rec: ReturnType<typeof recording> | null = null;
@@ -27,19 +27,23 @@ abyme.effect(() => () => {
 });
 
 async function save(reason: string) {
+  mark("replay.save", { reason });
   rec?.flush();
   return replay.server.save(PAGE, reason);
 }
 
 if (o.onError) {
   // What follows an error is part of it: the save waits a moment for it.
-  const soon = (reason: string) => setTimeout(() => void save(`error: ${reason}`.slice(0, 300)).catch(() => {}), 1500);
+  const soon = (reason: string, stack?: string) => {
+    mark("replay.error", { message: reason.slice(0, 1000), stack: stack?.slice(0, 4000) });
+    setTimeout(() => void save(`error: ${reason}`.slice(0, 300)).catch(() => {}), 1500);
+  };
   // An error event with no error is the browser's word alone (the ResizeObserver loop notice, a
   // script of another origin), no fault: the sentry plugin skips it too.
   const uncaught = (e: ErrorEvent) => {
-    if (e.error) soon(e.error instanceof Error ? e.error.message : String(e.error));
+    if (e.error) soon(e.error instanceof Error ? e.error.message : String(e.error), e.error instanceof Error ? e.error.stack : undefined);
   };
-  const rejected = (e: PromiseRejectionEvent) => soon(e.reason instanceof Error ? e.reason.message : String(e.reason));
+  const rejected = (e: PromiseRejectionEvent) => soon(e.reason instanceof Error ? e.reason.message : String(e.reason), e.reason instanceof Error ? e.reason.stack : undefined);
   window.addEventListener("error", uncaught);
   window.addEventListener("unhandledrejection", rejected);
   const seen = new Set(plugins.faults.getState().map((f) => f.id));
@@ -47,7 +51,7 @@ if (o.onError) {
     for (const f of plugins.faults.getState()) {
       if (seen.has(f.id)) continue;
       seen.add(f.id);
-      soon(`fault ${f.plugin} ${f.kind}: ${f.error?.message ?? f.what}`);
+      soon(`fault ${f.plugin} ${f.kind}: ${f.error?.message ?? f.what}`, f.error?.stack);
     }
   });
   abyme.effect(() => () => {

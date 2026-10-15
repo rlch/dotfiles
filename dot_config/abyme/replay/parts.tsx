@@ -11,8 +11,18 @@ export const PAGE = crypto.randomUUID();
 /** What a save is named by besides its time: the device and the view the operator is in. */
 export function label(): string {
   const form = layout.current.getState().env.formFactor;
-  return `${form}-${layout.active()?.view ?? "none"}`;
+  // The view the operator is in, else the one in front in the main frame (focus in a dock).
+  const tree = layout.tree();
+  const main = tree.views.find((v) => v.key === tree.frames[0]?.active)?.ref.view;
+  return `${form}-${layout.active()?.view ?? main ?? "page"}`;
 }
+
+/** A moment worth finding in a replay (an error, a save), put in the recording as a custom event
+ * the view marks; nothing while the page is not recording. */
+export function mark(tag: "replay.error" | "replay.save", payload: Record<string, unknown>) {
+  if (recordingNow) record.addCustomEvent(tag, payload);
+}
+let recordingNow = false;
 
 type Followed = { store: { on(e: "change", fn: () => void): { dispose(): void }; getState(): unknown; retry(): void }; off: { dispose(): void } };
 
@@ -49,16 +59,29 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
     recordCanvas: false,
     collectFonts: false,
   });
+  recordingNow = true;
   const timer = setInterval(flush, 1000);
 
+  // The shells abymed runs, oldest first: what a terminal view asked for nothing shows.
+  const shells = o.terminals ? (terminal?.server.shells() as Followed["store"] | undefined) : undefined;
   /** Follows each terminal on screen, and lets go of each that is not. */
   const reconcile = () => {
     const want = new Map<string, { source: string; id: string }>();
-    for (const v of layout.tree().views) {
-      if (!v.visible || v.ref.view !== "terminal") continue;
+    const tree = layout.tree();
+    const views = tree.views.filter((v) => v.ref.view === "terminal");
+    const inTabs = new Set(views.map((v) => v.ref.params?.id).filter(Boolean));
+    // What a terminal asked for nothing shows, as the terminal's dock picks (terminal/Docked.tsx):
+    // the newest shell not open in a tab. A dock says which view it shows, never its params.
+    const free = () => ((shells?.getState() ?? []) as { id: string }[]).filter((s) => !inTabs.has(s.id)).at(-1)?.id;
+    for (const v of views) {
+      if (!v.visible) continue;
       const source = v.ref.params?.source || "shell";
-      const id = v.ref.params?.id;
+      const id = v.ref.params?.id ?? free();
       if (id) want.set(`${source}/${id}`, { source, id });
+    }
+    for (const d of tree.docks) {
+      const id = d.shown && d.showing === "terminal" ? free() : undefined;
+      if (id) want.set(`shell/${id}`, { source: "shell", id });
     }
     for (const [key, t] of followed)
       if (!want.has(key)) {
@@ -77,12 +100,15 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
     }
   };
   const offLayout = o.terminals ? layout.on("change", reconcile) : null;
+  const offShells = shells?.on("change", reconcile);
   if (o.terminals) reconcile();
 
   const stop = () => {
     offLayout?.dispose();
+    offShells?.dispose();
     for (const t of followed.values()) t.off.dispose();
     followed.clear();
+    recordingNow = false;
     stopRecord?.();
     clearInterval(timer);
     flush();

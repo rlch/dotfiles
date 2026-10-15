@@ -1,405 +1,7 @@
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-function noop() {
-}
-function assign(tar, src) {
-  for (const k in src) tar[k] = src[k];
-  return (
-    /** @type {T & S} */
-    tar
-  );
-}
-function run(fn) {
-  return fn();
-}
-function blank_object() {
-  return /* @__PURE__ */ Object.create(null);
-}
-function run_all(fns) {
-  fns.forEach(run);
-}
-function is_function(thing) {
-  return typeof thing === "function";
-}
-function safe_not_equal(a2, b) {
-  return a2 != a2 ? b == b : a2 !== b || a2 && typeof a2 === "object" || typeof a2 === "function";
-}
-function is_empty(obj) {
-  return Object.keys(obj).length === 0;
-}
-function exclude_internal_props(props) {
-  const result2 = {};
-  for (const k in props) if (k[0] !== "$") result2[k] = props[k];
-  return result2;
-}
-function append(target, node2) {
-  target.appendChild(node2);
-}
-function insert(target, node2, anchor) {
-  target.insertBefore(node2, anchor || null);
-}
-function detach(node2) {
-  if (node2.parentNode) {
-    node2.parentNode.removeChild(node2);
-  }
-}
-function destroy_each(iterations, detaching) {
-  for (let i = 0; i < iterations.length; i += 1) {
-    if (iterations[i]) iterations[i].d(detaching);
-  }
-}
-function element(name) {
-  return document.createElement(name);
-}
-function svg_element(name) {
-  return document.createElementNS("http://www.w3.org/2000/svg", name);
-}
-function text(data) {
-  return document.createTextNode(data);
-}
-function space() {
-  return text(" ");
-}
-function empty() {
-  return text("");
-}
-function listen(node2, event, handler, options) {
-  node2.addEventListener(event, handler, options);
-  return () => node2.removeEventListener(event, handler, options);
-}
-function attr(node2, attribute, value) {
-  if (value == null) node2.removeAttribute(attribute);
-  else if (node2.getAttribute(attribute) !== value) node2.setAttribute(attribute, value);
-}
-function children(element2) {
-  return Array.from(element2.childNodes);
-}
-function set_data(text2, data) {
-  data = "" + data;
-  if (text2.data === data) return;
-  text2.data = /** @type {string} */
-  data;
-}
-function set_style(node2, key, value, important) {
-  if (value == null) {
-    node2.style.removeProperty(key);
-  } else {
-    node2.style.setProperty(key, value, "");
-  }
-}
-function toggle_class(element2, name, toggle) {
-  element2.classList.toggle(name, !!toggle);
-}
-function custom_event(type, detail, { bubbles = false, cancelable = false } = {}) {
-  return new CustomEvent(type, { detail, bubbles, cancelable });
-}
-let current_component;
-function set_current_component(component) {
-  current_component = component;
-}
-function get_current_component() {
-  if (!current_component) throw new Error("Function called outside component initialization");
-  return current_component;
-}
-function onMount(fn) {
-  get_current_component().$$.on_mount.push(fn);
-}
-function afterUpdate(fn) {
-  get_current_component().$$.after_update.push(fn);
-}
-function onDestroy(fn) {
-  get_current_component().$$.on_destroy.push(fn);
-}
-function createEventDispatcher() {
-  const component = get_current_component();
-  return (type, detail, { cancelable = false } = {}) => {
-    const callbacks = component.$$.callbacks[type];
-    if (callbacks) {
-      const event = custom_event(
-        /** @type {string} */
-        type,
-        detail,
-        { cancelable }
-      );
-      callbacks.slice().forEach((fn) => {
-        fn.call(component, event);
-      });
-      return !event.defaultPrevented;
-    }
-    return true;
-  };
-}
-const dirty_components = [];
-const binding_callbacks = [];
-let render_callbacks = [];
-const flush_callbacks = [];
-const resolved_promise = /* @__PURE__ */ Promise.resolve();
-let update_scheduled = false;
-function schedule_update() {
-  if (!update_scheduled) {
-    update_scheduled = true;
-    resolved_promise.then(flush);
-  }
-}
-function add_render_callback(fn) {
-  render_callbacks.push(fn);
-}
-function add_flush_callback(fn) {
-  flush_callbacks.push(fn);
-}
-const seen_callbacks = /* @__PURE__ */ new Set();
-let flushidx = 0;
-function flush() {
-  if (flushidx !== 0) {
-    return;
-  }
-  const saved_component = current_component;
-  do {
-    try {
-      while (flushidx < dirty_components.length) {
-        const component = dirty_components[flushidx];
-        flushidx++;
-        set_current_component(component);
-        update(component.$$);
-      }
-    } catch (e2) {
-      dirty_components.length = 0;
-      flushidx = 0;
-      throw e2;
-    }
-    set_current_component(null);
-    dirty_components.length = 0;
-    flushidx = 0;
-    while (binding_callbacks.length) binding_callbacks.pop()();
-    for (let i = 0; i < render_callbacks.length; i += 1) {
-      const callback = render_callbacks[i];
-      if (!seen_callbacks.has(callback)) {
-        seen_callbacks.add(callback);
-        callback();
-      }
-    }
-    render_callbacks.length = 0;
-  } while (dirty_components.length);
-  while (flush_callbacks.length) {
-    flush_callbacks.pop()();
-  }
-  update_scheduled = false;
-  seen_callbacks.clear();
-  set_current_component(saved_component);
-}
-function update($$) {
-  if ($$.fragment !== null) {
-    $$.update();
-    run_all($$.before_update);
-    const dirty = $$.dirty;
-    $$.dirty = [-1];
-    $$.fragment && $$.fragment.p($$.ctx, dirty);
-    $$.after_update.forEach(add_render_callback);
-  }
-}
-function flush_render_callbacks(fns) {
-  const filtered = [];
-  const targets = [];
-  render_callbacks.forEach((c2) => fns.indexOf(c2) === -1 ? filtered.push(c2) : targets.push(c2));
-  targets.forEach((c2) => c2());
-  render_callbacks = filtered;
-}
-const outroing = /* @__PURE__ */ new Set();
-let outros;
-function group_outros() {
-  outros = {
-    r: 0,
-    c: [],
-    p: outros
-    // parent group
-  };
-}
-function check_outros() {
-  if (!outros.r) {
-    run_all(outros.c);
-  }
-  outros = outros.p;
-}
-function transition_in(block, local) {
-  if (block && block.i) {
-    outroing.delete(block);
-    block.i(local);
-  }
-}
-function transition_out(block, local, detach2, callback) {
-  if (block && block.o) {
-    if (outroing.has(block)) return;
-    outroing.add(block);
-    outros.c.push(() => {
-      outroing.delete(block);
-      if (callback) {
-        if (detach2) block.d(1);
-        callback();
-      }
-    });
-    block.o(local);
-  } else if (callback) {
-    callback();
-  }
-}
-function ensure_array_like(array_like_or_iterator) {
-  return (array_like_or_iterator == null ? void 0 : array_like_or_iterator.length) !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
-}
-function bind(component, name, callback) {
-  const index2 = component.$$.props[name];
-  if (index2 !== void 0) {
-    component.$$.bound[index2] = callback;
-    callback(component.$$.ctx[index2]);
-  }
-}
-function create_component(block) {
-  block && block.c();
-}
-function mount_component(component, target, anchor) {
-  const { fragment, after_update } = component.$$;
-  fragment && fragment.m(target, anchor);
-  add_render_callback(() => {
-    const new_on_destroy = component.$$.on_mount.map(run).filter(is_function);
-    if (component.$$.on_destroy) {
-      component.$$.on_destroy.push(...new_on_destroy);
-    } else {
-      run_all(new_on_destroy);
-    }
-    component.$$.on_mount = [];
-  });
-  after_update.forEach(add_render_callback);
-}
-function destroy_component(component, detaching) {
-  const $$ = component.$$;
-  if ($$.fragment !== null) {
-    flush_render_callbacks($$.after_update);
-    run_all($$.on_destroy);
-    $$.fragment && $$.fragment.d(detaching);
-    $$.on_destroy = $$.fragment = null;
-    $$.ctx = [];
-  }
-}
-function make_dirty(component, i) {
-  if (component.$$.dirty[0] === -1) {
-    dirty_components.push(component);
-    schedule_update();
-    component.$$.dirty.fill(0);
-  }
-  component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
-}
-function init(component, options, instance2, create_fragment2, not_equal, props, append_styles = null, dirty = [-1]) {
-  const parent_component = current_component;
-  set_current_component(component);
-  const $$ = component.$$ = {
-    fragment: null,
-    ctx: [],
-    // state
-    props,
-    update: noop,
-    not_equal,
-    bound: blank_object(),
-    // lifecycle
-    on_mount: [],
-    on_destroy: [],
-    on_disconnect: [],
-    before_update: [],
-    after_update: [],
-    context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
-    // everything else
-    callbacks: blank_object(),
-    dirty,
-    skip_bound: false,
-    root: options.target || parent_component.$$.root
-  };
-  append_styles && append_styles($$.root);
-  let ready = false;
-  $$.ctx = instance2 ? instance2(component, options.props || {}, (i, ret, ...rest) => {
-    const value = rest.length ? rest[0] : ret;
-    if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-      if (!$$.skip_bound && $$.bound[i]) $$.bound[i](value);
-      if (ready) make_dirty(component, i);
-    }
-    return ret;
-  }) : [];
-  $$.update();
-  ready = true;
-  run_all($$.before_update);
-  $$.fragment = create_fragment2 ? create_fragment2($$.ctx) : false;
-  if (options.target) {
-    if (options.hydrate) {
-      const nodes = children(options.target);
-      $$.fragment && $$.fragment.l(nodes);
-      nodes.forEach(detach);
-    } else {
-      $$.fragment && $$.fragment.c();
-    }
-    if (options.intro) transition_in(component.$$.fragment);
-    mount_component(component, options.target, options.anchor);
-    flush();
-  }
-  set_current_component(parent_component);
-}
-class SvelteComponent {
-  constructor() {
-    /**
-     * ### PRIVATE API
-     *
-     * Do not use, may change at any time
-     *
-     * @type {any}
-     */
-    __publicField(this, "$$");
-    /**
-     * ### PRIVATE API
-     *
-     * Do not use, may change at any time
-     *
-     * @type {any}
-     */
-    __publicField(this, "$$set");
-  }
-  /** @returns {void} */
-  $destroy() {
-    destroy_component(this, 1);
-    this.$destroy = noop;
-  }
-  /**
-   * @template {Extract<keyof Events, string>} K
-   * @param {K} type
-   * @param {((e: Events[K]) => void) | null | undefined} callback
-   * @returns {() => void}
-   */
-  $on(type, callback) {
-    if (!is_function(callback)) {
-      return noop;
-    }
-    const callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
-    callbacks.push(callback);
-    return () => {
-      const index2 = callbacks.indexOf(callback);
-      if (index2 !== -1) callbacks.splice(index2, 1);
-    };
-  }
-  /**
-   * @param {Partial<Props>} props
-   * @returns {void}
-   */
-  $set(props) {
-    if (this.$$set && !is_empty(props)) {
-      this.$$.skip_bound = true;
-      this.$$set(props);
-      this.$$.skip_bound = false;
-    }
-  }
-}
-const PUBLIC_VERSION = "4";
-if (typeof window !== "undefined")
-  (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(PUBLIC_VERSION);
-var __defProp2 = Object.defineProperty;
-var __defNormalProp2 = (obj, key, value) => key in obj ? __defProp2(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField2 = (obj, key, value) => __defNormalProp2(obj, typeof key !== "symbol" ? key + "" : key, value);
-var _a$1;
+var _a;
 var __defProp$1 = Object.defineProperty;
 var __defNormalProp$1 = (obj, key, value) => key in obj ? __defProp$1(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField$1 = (obj, key, value) => __defNormalProp$1(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -639,8 +241,8 @@ function requireCssSyntaxError$1() {
       let mark, aside;
       if (color) {
         let { bold, gray, red } = pico.createColors(true);
-        mark = (text2) => bold(red(text2));
-        aside = (text2) => gray(text2);
+        mark = (text) => bold(red(text));
+        aside = (text) => gray(text);
       } else {
         mark = aside = (str) => str;
       }
@@ -1307,10 +909,10 @@ function requireNode$1() {
       });
       return result2;
     }
-    warn(result2, text2, opts) {
+    warn(result2, text, opts) {
       let data = { node: this };
       for (let i2 in opts) data[i2] = opts[i2];
-      return result2.warn(text2, data);
+      return result2.warn(text, data);
     }
     get proxyOf() {
       return this;
@@ -1390,12 +992,12 @@ function requirePreviousMap$1() {
       this.loadAnnotation(css);
       this.inline = this.startWith(this.annotation, "data:");
       let prev = opts.map ? opts.map.prev : void 0;
-      let text2 = this.loadMap(opts.from, prev);
+      let text = this.loadMap(opts.from, prev);
       if (!this.mapFile && opts.from) {
         this.mapFile = opts.from;
       }
       if (this.mapFile) this.root = dirname(this.mapFile);
-      if (text2) this.text = text2;
+      if (text) this.text = text;
     }
     consumer() {
       if (!this.consumerCache) {
@@ -1403,18 +1005,18 @@ function requirePreviousMap$1() {
       }
       return this.consumerCache;
     }
-    decodeInline(text2) {
+    decodeInline(text) {
       let baseCharsetUri = /^data:application\/json;charset=utf-?8;base64,/;
       let baseUri = /^data:application\/json;base64,/;
       let charsetUri = /^data:application\/json;charset=utf-?8,/;
       let uri = /^data:application\/json,/;
-      if (charsetUri.test(text2) || uri.test(text2)) {
-        return decodeURIComponent(text2.substr(RegExp.lastMatch.length));
+      if (charsetUri.test(text) || uri.test(text)) {
+        return decodeURIComponent(text.substr(RegExp.lastMatch.length));
       }
-      if (baseCharsetUri.test(text2) || baseUri.test(text2)) {
-        return fromBase64(text2.substr(RegExp.lastMatch.length));
+      if (baseCharsetUri.test(text) || baseUri.test(text)) {
+        return fromBase64(text.substr(RegExp.lastMatch.length));
       }
-      let encoding = text2.match(/data:application\/json;([^,]+),/)[1];
+      let encoding = text.match(/data:application\/json;([^,]+),/)[1];
       throw new Error("Unsupported source map encoding " + encoding);
     }
     getAnnotationURL(sourceMapString) {
@@ -1608,12 +1210,12 @@ function requireInput$1() {
       if (offset >= lastLine) {
         min = lineToIndex.length - 1;
       } else {
-        let max2 = lineToIndex.length - 2;
+        let max = lineToIndex.length - 2;
         let mid;
-        while (min < max2) {
-          mid = min + (max2 - min >> 1);
+        while (min < max) {
+          mid = min + (max - min >> 1);
           if (offset < lineToIndex[mid]) {
-            max2 = mid - 1;
+            max = mid - 1;
           } else if (offset >= lineToIndex[mid + 1]) {
             min = mid + 1;
           } else {
@@ -2054,8 +1656,8 @@ function requireContainer$1() {
     }
   }
   class Container extends Node2 {
-    append(...children2) {
-      for (let child of children2) {
+    append(...children) {
+      for (let child of children) {
         let nodes = this.normalize(child, this.last);
         for (let node2 of nodes) this.proxyOf.nodes.push(node2);
       }
@@ -2221,9 +1823,9 @@ function requireContainer$1() {
       });
       return processed;
     }
-    prepend(...children2) {
-      children2 = children2.reverse();
-      for (let child of children2) {
+    prepend(...children) {
+      children = children.reverse();
+      for (let child of children) {
         let nodes = this.normalize(child, this.first, "prepend").reverse();
         for (let node2 of nodes) this.proxyOf.nodes.unshift(node2);
         for (let id in this.indexes) {
@@ -2455,9 +2057,9 @@ function requireWarning$1() {
   if (hasRequiredWarning$1) return warning$1;
   hasRequiredWarning$1 = 1;
   class Warning {
-    constructor(text2, opts = {}) {
+    constructor(text, opts = {}) {
       this.type = "warning";
-      this.text = text2;
+      this.text = text;
       if (opts.node && opts.node.source) {
         let range = opts.node.rangeBy(opts);
         this.line = range.start.line;
@@ -2503,13 +2105,13 @@ function requireResult$1() {
     toString() {
       return this.css;
     }
-    warn(text2, opts = {}) {
+    warn(text, opts = {}) {
       if (!opts.plugin) {
         if (this.lastPlugin && this.lastPlugin.postcssPlugin) {
           opts.plugin = this.lastPlugin.postcssPlugin;
         }
       }
-      let warning2 = new Warning(text2, opts);
+      let warning2 = new Warning(text, opts);
       this.messages.push(warning2);
       return warning2;
     }
@@ -2561,7 +2163,7 @@ function requireTokenize$1() {
     let pos = 0;
     let buffer = [];
     let returned = [];
-    function position2() {
+    function position() {
       return pos;
     }
     function unclosed(what) {
@@ -2734,7 +2336,7 @@ function requireTokenize$1() {
       back,
       endOfFile,
       nextToken,
-      position: position2
+      position
     };
   };
   return tokenize$1;
@@ -2750,13 +2352,13 @@ function requireAtRule$1() {
       super(defaults);
       this.type = "atrule";
     }
-    append(...children2) {
+    append(...children) {
       if (!this.proxyOf.nodes) this.nodes = [];
-      return super.append(...children2);
+      return super.append(...children);
     }
-    prepend(...children2) {
+    prepend(...children) {
       if (!this.proxyOf.nodes) this.nodes = [];
-      return super.prepend(...children2);
+      return super.prepend(...children);
     }
   }
   atRule$1 = AtRule;
@@ -3030,8 +2632,8 @@ function requireParser$1() {
     colon(tokens) {
       let brackets = 0;
       let token, type, prev;
-      for (let [i2, element2] of tokens.entries()) {
-        token = element2;
+      for (let [i2, element] of tokens.entries()) {
+        token = element;
         type = token[0];
         if (type === "(") {
           brackets += 1;
@@ -3057,13 +2659,13 @@ function requireParser$1() {
       this.init(node2, token[2]);
       node2.source.end = this.getPosition(token[3] || token[2]);
       node2.source.end.offset++;
-      let text2 = token[1].slice(2, -2);
-      if (/^\s*$/.test(text2)) {
+      let text = token[1].slice(2, -2);
+      if (/^\s*$/.test(text)) {
         node2.text = "";
-        node2.raws.left = text2;
+        node2.raws.left = text;
         node2.raws.right = "";
       } else {
-        let match = text2.match(/^(\s*)([^]*\S)(\s*)$/);
+        let match = text.match(/^(\s*)([^]*\S)(\s*)$/);
         node2.text = match[2];
         node2.raws.left = match[1];
         node2.raws.right = match[3];
@@ -4765,17 +4367,17 @@ function createSandboxedIframe(options) {
   sandboxedRebuildDocuments.add(doc);
   return iframe;
 }
+var __defProp2 = Object.defineProperty;
+var __defNormalProp2 = (obj, key, value) => key in obj ? __defProp2(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField2 = (obj, key, value) => __defNormalProp2(obj, typeof key !== "symbol" ? key + "" : key, value);
 var __defProp22 = Object.defineProperty;
 var __defNormalProp22 = (obj, key, value) => key in obj ? __defProp22(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField22 = (obj, key, value) => __defNormalProp22(obj, typeof key !== "symbol" ? key + "" : key, value);
-var __defProp222 = Object.defineProperty;
-var __defNormalProp222 = (obj, key, value) => key in obj ? __defProp222(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField222 = (obj, key, value) => __defNormalProp222(obj, typeof key !== "symbol" ? key + "" : key, value);
 if (!/* @__PURE__ */ /[1-9][0-9]{12}/.test(Date.now().toString())) ;
 let Mirror$1 = class Mirror2 {
   constructor() {
-    __publicField222(this, "idNodeMap", /* @__PURE__ */ new Map());
-    __publicField222(this, "nodeMetaMap", /* @__PURE__ */ new WeakMap());
+    __publicField22(this, "idNodeMap", /* @__PURE__ */ new Map());
+    __publicField22(this, "nodeMetaMap", /* @__PURE__ */ new WeakMap());
   }
   getId(n2) {
     var _a2;
@@ -4935,8 +4537,8 @@ function requireCssSyntaxError() {
       let mark, aside;
       if (color) {
         let { bold, gray, red } = pico.createColors(true);
-        mark = (text2) => bold(red(text2));
-        aside = (text2) => gray(text2);
+        mark = (text) => bold(red(text));
+        aside = (text) => gray(text);
       } else {
         mark = aside = (str) => str;
       }
@@ -5603,10 +5205,10 @@ function requireNode() {
       });
       return result2;
     }
-    warn(result2, text2, opts) {
+    warn(result2, text, opts) {
       let data = { node: this };
       for (let i2 in opts) data[i2] = opts[i2];
-      return result2.warn(text2, data);
+      return result2.warn(text, data);
     }
     get proxyOf() {
       return this;
@@ -5686,12 +5288,12 @@ function requirePreviousMap() {
       this.loadAnnotation(css);
       this.inline = this.startWith(this.annotation, "data:");
       let prev = opts.map ? opts.map.prev : void 0;
-      let text2 = this.loadMap(opts.from, prev);
+      let text = this.loadMap(opts.from, prev);
       if (!this.mapFile && opts.from) {
         this.mapFile = opts.from;
       }
       if (this.mapFile) this.root = dirname(this.mapFile);
-      if (text2) this.text = text2;
+      if (text) this.text = text;
     }
     consumer() {
       if (!this.consumerCache) {
@@ -5699,18 +5301,18 @@ function requirePreviousMap() {
       }
       return this.consumerCache;
     }
-    decodeInline(text2) {
+    decodeInline(text) {
       let baseCharsetUri = /^data:application\/json;charset=utf-?8;base64,/;
       let baseUri = /^data:application\/json;base64,/;
       let charsetUri = /^data:application\/json;charset=utf-?8,/;
       let uri = /^data:application\/json,/;
-      if (charsetUri.test(text2) || uri.test(text2)) {
-        return decodeURIComponent(text2.substr(RegExp.lastMatch.length));
+      if (charsetUri.test(text) || uri.test(text)) {
+        return decodeURIComponent(text.substr(RegExp.lastMatch.length));
       }
-      if (baseCharsetUri.test(text2) || baseUri.test(text2)) {
-        return fromBase64(text2.substr(RegExp.lastMatch.length));
+      if (baseCharsetUri.test(text) || baseUri.test(text)) {
+        return fromBase64(text.substr(RegExp.lastMatch.length));
       }
-      let encoding = text2.match(/data:application\/json;([^,]+),/)[1];
+      let encoding = text.match(/data:application\/json;([^,]+),/)[1];
       throw new Error("Unsupported source map encoding " + encoding);
     }
     getAnnotationURL(sourceMapString) {
@@ -5904,12 +5506,12 @@ function requireInput() {
       if (offset >= lastLine) {
         min = lineToIndex.length - 1;
       } else {
-        let max2 = lineToIndex.length - 2;
+        let max = lineToIndex.length - 2;
         let mid;
-        while (min < max2) {
-          mid = min + (max2 - min >> 1);
+        while (min < max) {
+          mid = min + (max - min >> 1);
           if (offset < lineToIndex[mid]) {
-            max2 = mid - 1;
+            max = mid - 1;
           } else if (offset >= lineToIndex[mid + 1]) {
             min = mid + 1;
           } else {
@@ -6350,8 +5952,8 @@ function requireContainer() {
     }
   }
   class Container extends Node2 {
-    append(...children2) {
-      for (let child of children2) {
+    append(...children) {
+      for (let child of children) {
         let nodes = this.normalize(child, this.last);
         for (let node2 of nodes) this.proxyOf.nodes.push(node2);
       }
@@ -6517,9 +6119,9 @@ function requireContainer() {
       });
       return processed;
     }
-    prepend(...children2) {
-      children2 = children2.reverse();
-      for (let child of children2) {
+    prepend(...children) {
+      children = children.reverse();
+      for (let child of children) {
         let nodes = this.normalize(child, this.first, "prepend").reverse();
         for (let node2 of nodes) this.proxyOf.nodes.unshift(node2);
         for (let id in this.indexes) {
@@ -6751,9 +6353,9 @@ function requireWarning() {
   if (hasRequiredWarning) return warning;
   hasRequiredWarning = 1;
   class Warning {
-    constructor(text2, opts = {}) {
+    constructor(text, opts = {}) {
       this.type = "warning";
-      this.text = text2;
+      this.text = text;
       if (opts.node && opts.node.source) {
         let range = opts.node.rangeBy(opts);
         this.line = range.start.line;
@@ -6799,13 +6401,13 @@ function requireResult() {
     toString() {
       return this.css;
     }
-    warn(text2, opts = {}) {
+    warn(text, opts = {}) {
       if (!opts.plugin) {
         if (this.lastPlugin && this.lastPlugin.postcssPlugin) {
           opts.plugin = this.lastPlugin.postcssPlugin;
         }
       }
-      let warning2 = new Warning(text2, opts);
+      let warning2 = new Warning(text, opts);
       this.messages.push(warning2);
       return warning2;
     }
@@ -6857,7 +6459,7 @@ function requireTokenize() {
     let pos = 0;
     let buffer = [];
     let returned = [];
-    function position2() {
+    function position() {
       return pos;
     }
     function unclosed(what) {
@@ -7030,7 +6632,7 @@ function requireTokenize() {
       back,
       endOfFile,
       nextToken,
-      position: position2
+      position
     };
   };
   return tokenize;
@@ -7046,13 +6648,13 @@ function requireAtRule() {
       super(defaults);
       this.type = "atrule";
     }
-    append(...children2) {
+    append(...children) {
       if (!this.proxyOf.nodes) this.nodes = [];
-      return super.append(...children2);
+      return super.append(...children);
     }
-    prepend(...children2) {
+    prepend(...children) {
       if (!this.proxyOf.nodes) this.nodes = [];
-      return super.prepend(...children2);
+      return super.prepend(...children);
     }
   }
   atRule = AtRule;
@@ -7326,8 +6928,8 @@ function requireParser() {
     colon(tokens) {
       let brackets = 0;
       let token, type, prev;
-      for (let [i2, element2] of tokens.entries()) {
-        token = element2;
+      for (let [i2, element] of tokens.entries()) {
+        token = element;
         type = token[0];
         if (type === "(") {
           brackets += 1;
@@ -7353,13 +6955,13 @@ function requireParser() {
       this.init(node2, token[2]);
       node2.source.end = this.getPosition(token[3] || token[2]);
       node2.source.end.offset++;
-      let text2 = token[1].slice(2, -2);
-      if (/^\s*$/.test(text2)) {
+      let text = token[1].slice(2, -2);
+      if (/^\s*$/.test(text)) {
         node2.text = "";
-        node2.raws.left = text2;
+        node2.raws.left = text;
         node2.raws.right = "";
       } else {
-        let match = text2.match(/^(\s*)([^]*\S)(\s*)$/);
+        let match = text.match(/^(\s*)([^]*\S)(\s*)$/);
         node2.text = match[2];
         node2.raws.left = match[1];
         node2.raws.right = match[3];
@@ -8625,18 +8227,18 @@ const hyphenate = (str) => {
 class BaseRRNode {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   constructor(..._args) {
-    __publicField22(this, "parentElement", null);
-    __publicField22(this, "parentNode", null);
-    __publicField22(this, "ownerDocument");
-    __publicField22(this, "firstChild", null);
-    __publicField22(this, "lastChild", null);
-    __publicField22(this, "previousSibling", null);
-    __publicField22(this, "nextSibling", null);
-    __publicField22(this, "ELEMENT_NODE", 1);
-    __publicField22(this, "TEXT_NODE", 3);
-    __publicField22(this, "nodeType");
-    __publicField22(this, "nodeName");
-    __publicField22(this, "RRNodeType");
+    __publicField2(this, "parentElement", null);
+    __publicField2(this, "parentNode", null);
+    __publicField2(this, "ownerDocument");
+    __publicField2(this, "firstChild", null);
+    __publicField2(this, "lastChild", null);
+    __publicField2(this, "previousSibling", null);
+    __publicField2(this, "nextSibling", null);
+    __publicField2(this, "ELEMENT_NODE", 1);
+    __publicField2(this, "TEXT_NODE", 3);
+    __publicField2(this, "nodeType");
+    __publicField2(this, "nodeName");
+    __publicField2(this, "RRNodeType");
   }
   get childNodes() {
     const childNodes2 = [];
@@ -8683,11 +8285,11 @@ class BaseRRDocument extends BaseRRNode {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(...args) {
     super(args);
-    __publicField22(this, "nodeType", 9);
-    __publicField22(this, "nodeName", "#document");
-    __publicField22(this, "compatMode", "CSS1Compat");
-    __publicField22(this, "RRNodeType", NodeType$1.Document);
-    __publicField22(this, "textContent", null);
+    __publicField2(this, "nodeType", 9);
+    __publicField2(this, "nodeName", "#document");
+    __publicField2(this, "compatMode", "CSS1Compat");
+    __publicField2(this, "RRNodeType", NodeType$1.Document);
+    __publicField2(this, "textContent", null);
     this.ownerDocument = this;
   }
   get documentElement() {
@@ -8775,17 +8377,17 @@ class BaseRRDocument extends BaseRRNode {
     return doctype;
   }
   createElement(tagName) {
-    const element2 = new BaseRRElement(tagName);
-    element2.ownerDocument = this;
-    return element2;
+    const element = new BaseRRElement(tagName);
+    element.ownerDocument = this;
+    return element;
   }
   createElementNS(_namespaceURI, qualifiedName) {
     return this.createElement(qualifiedName);
   }
   createTextNode(data) {
-    const text2 = new BaseRRText(data);
-    text2.ownerDocument = this;
-    return text2;
+    const text = new BaseRRText(data);
+    text.ownerDocument = this;
+    return text;
   }
   createComment(data) {
     const comment2 = new BaseRRComment(data);
@@ -8804,12 +8406,12 @@ class BaseRRDocument extends BaseRRNode {
 class BaseRRDocumentType extends BaseRRNode {
   constructor(qualifiedName, publicId, systemId) {
     super();
-    __publicField22(this, "nodeType", 10);
-    __publicField22(this, "RRNodeType", NodeType$1.DocumentType);
-    __publicField22(this, "name");
-    __publicField22(this, "publicId");
-    __publicField22(this, "systemId");
-    __publicField22(this, "textContent", null);
+    __publicField2(this, "nodeType", 10);
+    __publicField2(this, "RRNodeType", NodeType$1.DocumentType);
+    __publicField2(this, "name");
+    __publicField2(this, "publicId");
+    __publicField2(this, "systemId");
+    __publicField2(this, "textContent", null);
     this.name = qualifiedName;
     this.publicId = publicId;
     this.systemId = systemId;
@@ -8822,13 +8424,13 @@ class BaseRRDocumentType extends BaseRRNode {
 class BaseRRElement extends BaseRRNode {
   constructor(tagName) {
     super();
-    __publicField22(this, "nodeType", 1);
-    __publicField22(this, "RRNodeType", NodeType$1.Element);
-    __publicField22(this, "tagName");
-    __publicField22(this, "attributes", {});
-    __publicField22(this, "shadowRoot", null);
-    __publicField22(this, "scrollLeft");
-    __publicField22(this, "scrollTop");
+    __publicField2(this, "nodeType", 1);
+    __publicField2(this, "RRNodeType", NodeType$1.Element);
+    __publicField2(this, "tagName");
+    __publicField2(this, "attributes", {});
+    __publicField2(this, "shadowRoot", null);
+    __publicField2(this, "scrollLeft");
+    __publicField2(this, "scrollTop");
     this.tagName = tagName.toUpperCase();
     this.nodeName = tagName.toUpperCase();
   }
@@ -8920,12 +8522,12 @@ class BaseRRElement extends BaseRRNode {
 class BaseRRMediaElement extends BaseRRElement {
   constructor() {
     super(...arguments);
-    __publicField22(this, "currentTime");
-    __publicField22(this, "volume");
-    __publicField22(this, "paused");
-    __publicField22(this, "muted");
-    __publicField22(this, "playbackRate");
-    __publicField22(this, "loop");
+    __publicField2(this, "currentTime");
+    __publicField2(this, "volume");
+    __publicField2(this, "paused");
+    __publicField2(this, "muted");
+    __publicField2(this, "playbackRate");
+    __publicField2(this, "loop");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   attachShadow(_init) {
@@ -8943,8 +8545,8 @@ class BaseRRMediaElement extends BaseRRElement {
 class BaseRRDialogElement extends BaseRRElement {
   constructor() {
     super(...arguments);
-    __publicField22(this, "tagName", "DIALOG");
-    __publicField22(this, "nodeName", "DIALOG");
+    __publicField2(this, "tagName", "DIALOG");
+    __publicField2(this, "nodeName", "DIALOG");
   }
   get isModal() {
     return this.getAttribute("rr_open_mode") === "modal";
@@ -8968,10 +8570,10 @@ class BaseRRDialogElement extends BaseRRElement {
 class BaseRRText extends BaseRRNode {
   constructor(data) {
     super();
-    __publicField22(this, "nodeType", 3);
-    __publicField22(this, "nodeName", "#text");
-    __publicField22(this, "RRNodeType", NodeType$1.Text);
-    __publicField22(this, "data");
+    __publicField2(this, "nodeType", 3);
+    __publicField2(this, "nodeName", "#text");
+    __publicField2(this, "RRNodeType", NodeType$1.Text);
+    __publicField2(this, "data");
     this.data = data;
   }
   get textContent() {
@@ -8987,10 +8589,10 @@ class BaseRRText extends BaseRRNode {
 class BaseRRComment extends BaseRRNode {
   constructor(data) {
     super();
-    __publicField22(this, "nodeType", 8);
-    __publicField22(this, "nodeName", "#comment");
-    __publicField22(this, "RRNodeType", NodeType$1.Comment);
-    __publicField22(this, "data");
+    __publicField2(this, "nodeType", 8);
+    __publicField2(this, "nodeName", "#comment");
+    __publicField2(this, "RRNodeType", NodeType$1.Comment);
+    __publicField2(this, "data");
     this.data = data;
   }
   get textContent() {
@@ -9006,10 +8608,10 @@ class BaseRRComment extends BaseRRNode {
 class BaseRRCDATASection extends BaseRRNode {
   constructor(data) {
     super();
-    __publicField22(this, "nodeName", "#cdata-section");
-    __publicField22(this, "nodeType", 4);
-    __publicField22(this, "RRNodeType", NodeType$1.CDATA);
-    __publicField22(this, "data");
+    __publicField2(this, "nodeName", "#cdata-section");
+    __publicField2(this, "nodeType", 4);
+    __publicField2(this, "RRNodeType", NodeType$1.CDATA);
+    __publicField2(this, "data");
     this.data = data;
   }
   get textContent() {
@@ -9024,9 +8626,9 @@ class BaseRRCDATASection extends BaseRRNode {
 }
 class ClassList {
   constructor(classText, onChange) {
-    __publicField22(this, "onChange");
-    __publicField22(this, "classes", []);
-    __publicField22(this, "add", (...classNames) => {
+    __publicField2(this, "onChange");
+    __publicField2(this, "classes", []);
+    __publicField2(this, "add", (...classNames) => {
       for (const item of classNames) {
         const className = String(item);
         if (this.classes.indexOf(className) >= 0) continue;
@@ -9034,7 +8636,7 @@ class ClassList {
       }
       this.onChange && this.onChange(this.classes.join(" "));
     });
-    __publicField22(this, "remove", (...classNames) => {
+    __publicField2(this, "remove", (...classNames) => {
       this.classes = this.classes.filter(
         (item) => classNames.indexOf(item) === -1
       );
@@ -9544,10 +9146,10 @@ function nodeMatching(node1, node2, domMirror, rrdomMirror) {
 class RRDocument extends BaseRRDocument {
   constructor(mirror2) {
     super();
-    __publicField22(this, "UNSERIALIZED_STARTING_ID", -2);
-    __publicField22(this, "_unserializedId", this.UNSERIALIZED_STARTING_ID);
-    __publicField22(this, "mirror", createMirror());
-    __publicField22(this, "scrollData", null);
+    __publicField2(this, "UNSERIALIZED_STARTING_ID", -2);
+    __publicField2(this, "_unserializedId", this.UNSERIALIZED_STARTING_ID);
+    __publicField2(this, "mirror", createMirror());
+    __publicField2(this, "scrollData", null);
     if (mirror2) {
       this.mirror = mirror2;
     }
@@ -9572,30 +9174,30 @@ class RRDocument extends BaseRRDocument {
   }
   createElement(tagName) {
     const upperTagName = tagName.toUpperCase();
-    let element2;
+    let element;
     switch (upperTagName) {
       case "AUDIO":
       case "VIDEO":
-        element2 = new RRMediaElement(upperTagName);
+        element = new RRMediaElement(upperTagName);
         break;
       case "IFRAME":
-        element2 = new RRIFrameElement(upperTagName, this.mirror);
+        element = new RRIFrameElement(upperTagName, this.mirror);
         break;
       case "CANVAS":
-        element2 = new RRCanvasElement(upperTagName);
+        element = new RRCanvasElement(upperTagName);
         break;
       case "STYLE":
-        element2 = new RRStyleElement(upperTagName);
+        element = new RRStyleElement(upperTagName);
         break;
       case "DIALOG":
-        element2 = new RRDialogElement(upperTagName);
+        element = new RRDialogElement(upperTagName);
         break;
       default:
-        element2 = new RRElement(upperTagName);
+        element = new RRElement(upperTagName);
         break;
     }
-    element2.ownerDocument = this;
-    return element2;
+    element.ownerDocument = this;
+    return element;
   }
   createComment(data) {
     const commentNode = new RRComment(data);
@@ -9626,8 +9228,8 @@ const RRDocumentType = BaseRRDocumentType;
 class RRElement extends BaseRRElement {
   constructor() {
     super(...arguments);
-    __publicField22(this, "inputData", null);
-    __publicField22(this, "scrollData", null);
+    __publicField2(this, "inputData", null);
+    __publicField2(this, "scrollData", null);
   }
 }
 class RRMediaElement extends BaseRRMediaElement {
@@ -9637,8 +9239,8 @@ class RRDialogElement extends BaseRRDialogElement {
 class RRCanvasElement extends RRElement {
   constructor() {
     super(...arguments);
-    __publicField22(this, "rr_dataURL", null);
-    __publicField22(this, "canvasMutations", []);
+    __publicField2(this, "rr_dataURL", null);
+    __publicField2(this, "canvasMutations", []);
   }
   /**
    * This is a dummy implementation to distinguish RRCanvasElement from real HTMLCanvasElement.
@@ -9650,24 +9252,24 @@ class RRCanvasElement extends RRElement {
 class RRStyleElement extends RRElement {
   constructor() {
     super(...arguments);
-    __publicField22(this, "rules", []);
+    __publicField2(this, "rules", []);
   }
 }
 class RRIFrameElement extends RRElement {
   constructor(upperTagName, mirror2) {
     super(upperTagName);
-    __publicField22(this, "contentDocument", new RRDocument());
+    __publicField2(this, "contentDocument", new RRDocument());
     this.contentDocument.mirror = mirror2;
   }
 }
 const RRText = BaseRRText;
 const RRComment = BaseRRComment;
 const RRCDATASection = BaseRRCDATASection;
-function getValidTagName(element2) {
-  if (element2 instanceof HTMLFormElement) {
+function getValidTagName(element) {
+  if (element instanceof HTMLFormElement) {
     return "FORM";
   }
-  return element2.tagName.toUpperCase();
+  return element.tagName.toUpperCase();
 }
 function buildFromNode(node2, rrdom, domMirror, parentRRNode) {
   let rrNode;
@@ -9757,8 +9359,8 @@ function createMirror() {
 }
 class Mirror22 {
   constructor() {
-    __publicField22(this, "idNodeMap", /* @__PURE__ */ new Map());
-    __publicField22(this, "nodeMetaMap", /* @__PURE__ */ new WeakMap());
+    __publicField2(this, "idNodeMap", /* @__PURE__ */ new Map());
+    __publicField2(this, "nodeMetaMap", /* @__PURE__ */ new WeakMap());
   }
   getId(n2) {
     var _a2;
@@ -9892,9 +9494,9 @@ function getUntaintedPrototype(key) {
     accessorNames && // @ts-expect-error 2345
     accessorNames.every(
       (accessor) => {
-        var _a2, _b2;
+        var _a2, _b;
         return Boolean(
-          (_b2 = (_a2 = Object.getOwnPropertyDescriptor(defaultPrototype, accessor)) == null ? void 0 : _a2.get) == null ? void 0 : _b2.toString().includes("[native code]")
+          (_b = (_a2 = Object.getOwnPropertyDescriptor(defaultPrototype, accessor)) == null ? void 0 : _a2.get) == null ? void 0 : _b.toString().includes("[native code]")
         );
       }
     )
@@ -9938,31 +9540,31 @@ function getUntaintedPrototype(key) {
   }
 }
 const untaintedAccessorCache = {};
-function getUntaintedAccessor(key, instance2, accessor) {
-  var _a2, _b2;
+function getUntaintedAccessor(key, instance, accessor) {
+  var _a2, _b;
   const cached = (_a2 = untaintedAccessorCache[key]) == null ? void 0 : _a2[accessor];
-  if (cached) return cached.call(instance2);
+  if (cached) return cached.call(instance);
   const untaintedPrototype = getUntaintedPrototype(key);
-  const untaintedAccessor = (_b2 = Object.getOwnPropertyDescriptor(
+  const untaintedAccessor = (_b = Object.getOwnPropertyDescriptor(
     untaintedPrototype,
     accessor
-  )) == null ? void 0 : _b2.get;
-  if (!untaintedAccessor) return instance2[accessor];
+  )) == null ? void 0 : _b.get;
+  if (!untaintedAccessor) return instance[accessor];
   (untaintedAccessorCache[key] || (untaintedAccessorCache[key] = {}))[accessor] = untaintedAccessor;
-  return untaintedAccessor.call(instance2);
+  return untaintedAccessor.call(instance);
 }
 const untaintedMethodCache = {};
-function getUntaintedMethod(key, instance2, method) {
+function getUntaintedMethod(key, instance, method) {
   const cacheKey = `${key}.${String(method)}`;
   if (untaintedMethodCache[cacheKey])
     return untaintedMethodCache[cacheKey].bind(
-      instance2
+      instance
     );
   const untaintedPrototype = getUntaintedPrototype(key);
   const untaintedMethod = untaintedPrototype[method];
-  if (typeof untaintedMethod !== "function") return instance2[method];
+  if (typeof untaintedMethod !== "function") return instance[method];
   untaintedMethodCache[cacheKey] = untaintedMethod;
-  return untaintedMethod.bind(instance2);
+  return untaintedMethod.bind(instance);
 }
 function ownerDocument(n2) {
   return getUntaintedAccessor("Node", n2, "ownerDocument");
@@ -10160,8 +9762,8 @@ function isSerializedIframe(n2, mirror2) {
   return Boolean(n2.nodeName === "IFRAME" && mirror2.getMeta(n2));
 }
 function getBaseDimension(node2, rootIframe) {
-  var _a2, _b2;
-  const frameElement = (_b2 = (_a2 = node2.ownerDocument) == null ? void 0 : _a2.defaultView) == null ? void 0 : _b2.frameElement;
+  var _a2, _b;
+  const frameElement = (_b = (_a2 = node2.ownerDocument) == null ? void 0 : _a2.defaultView) == null ? void 0 : _b.frameElement;
   if (!frameElement || frameElement === rootIframe) {
     return {
       x: 0,
@@ -10187,15 +9789,15 @@ function hasShadowRoot(n2) {
   }
   return Boolean(index.shadowRoot(n2));
 }
-function getNestedRule(rules2, position2) {
-  const rule2 = rules2 == null ? void 0 : rules2[position2[0]];
+function getNestedRule(rules2, position) {
+  const rule2 = rules2 == null ? void 0 : rules2[position[0]];
   if (!rule2) {
     return null;
   }
-  if (position2.length === 1) {
+  if (position.length === 1) {
     return rule2;
   } else {
-    return getNestedRule(rule2.cssRules, position2.slice(1));
+    return getNestedRule(rule2.cssRules, position.slice(1));
   }
 }
 function getPositionsAndIndex(nestedIndex) {
@@ -10217,9 +9819,9 @@ function uniqueTextMutations(mutations) {
 }
 class StyleSheetMirror {
   constructor() {
-    __publicField2(this, "id", 1);
-    __publicField2(this, "styleIDMap", /* @__PURE__ */ new WeakMap());
-    __publicField2(this, "idStyleMap", /* @__PURE__ */ new Map());
+    __publicField(this, "id", 1);
+    __publicField(this, "styleIDMap", /* @__PURE__ */ new WeakMap());
+    __publicField(this, "idStyleMap", /* @__PURE__ */ new Map());
   }
   getId(stylesheet) {
     return this.styleIDMap.get(stylesheet) ?? -1;
@@ -10252,7 +9854,7 @@ class StyleSheetMirror {
     return this.id++;
   }
 }
-var EventType$1 = /* @__PURE__ */ ((EventType2) => {
+var EventType = /* @__PURE__ */ ((EventType2) => {
   EventType2[EventType2["DomContentLoaded"] = 0] = "DomContentLoaded";
   EventType2[EventType2["Load"] = 1] = "Load";
   EventType2[EventType2["FullSnapshot"] = 2] = "FullSnapshot";
@@ -10262,8 +9864,8 @@ var EventType$1 = /* @__PURE__ */ ((EventType2) => {
   EventType2[EventType2["Plugin"] = 6] = "Plugin";
   EventType2[EventType2["Asset"] = 7] = "Asset";
   return EventType2;
-})(EventType$1 || {});
-var IncrementalSource$1 = /* @__PURE__ */ ((IncrementalSource2) => {
+})(EventType || {});
+var IncrementalSource = /* @__PURE__ */ ((IncrementalSource2) => {
   IncrementalSource2[IncrementalSource2["Mutation"] = 0] = "Mutation";
   IncrementalSource2[IncrementalSource2["MouseMove"] = 1] = "MouseMove";
   IncrementalSource2[IncrementalSource2["MouseInteraction"] = 2] = "MouseInteraction";
@@ -10282,7 +9884,7 @@ var IncrementalSource$1 = /* @__PURE__ */ ((IncrementalSource2) => {
   IncrementalSource2[IncrementalSource2["AdoptedStyleSheet"] = 15] = "AdoptedStyleSheet";
   IncrementalSource2[IncrementalSource2["CustomElement"] = 16] = "CustomElement";
   return IncrementalSource2;
-})(IncrementalSource$1 || {});
+})(IncrementalSource || {});
 var MouseInteractions = /* @__PURE__ */ ((MouseInteractions2) => {
   MouseInteractions2[MouseInteractions2["MouseUp"] = 0] = "MouseUp";
   MouseInteractions2[MouseInteractions2["MouseDown"] = 1] = "MouseDown";
@@ -10371,7 +9973,7 @@ try {
   if (Array.from([1], (x) => x * 2)[0] !== 2) {
     const cleanFrame = document.createElement("iframe");
     document.body.appendChild(cleanFrame);
-    Array.from = ((_a$1 = cleanFrame.contentWindow) == null ? void 0 : _a$1.Array.from) || Array.from;
+    Array.from = ((_a = cleanFrame.contentWindow) == null ? void 0 : _a.Array.from) || Array.from;
     document.body.removeChild(cleanFrame);
   }
 } catch (err) {
@@ -10614,11 +10216,11 @@ function polyfill(w = window, d = document) {
 }
 class Timer {
   constructor(actions = [], config) {
-    __publicField2(this, "timeOffset", 0);
-    __publicField2(this, "speed");
-    __publicField2(this, "actions");
-    __publicField2(this, "raf", null);
-    __publicField2(this, "lastTimestamp");
+    __publicField(this, "timeOffset", 0);
+    __publicField(this, "speed");
+    __publicField(this, "actions");
+    __publicField(this, "raf", null);
+    __publicField(this, "lastTimestamp");
     this.actions = actions;
     this.speed = config.speed;
   }
@@ -10698,7 +10300,7 @@ class Timer {
   }
 }
 function addDelay(event, baselineTime) {
-  if (event.type === EventType$1.IncrementalSnapshot && event.data.source === IncrementalSource$1.MouseMove && event.data.positions && event.data.positions.length) {
+  if (event.type === EventType.IncrementalSnapshot && event.data.source === IncrementalSource.MouseMove && event.data.positions && event.data.positions.length) {
     const firstOffset = event.data.positions[0].timeOffset;
     const firstTimestamp = event.timestamp + firstOffset;
     event.delay = firstTimestamp - baselineTime;
@@ -10749,7 +10351,7 @@ function r(t2) {
 function o(t2) {
   return { type: "xstate.assign", assignment: t2 };
 }
-function i$2(t2, n2) {
+function i(t2, n2) {
   return "string" == typeof (t2 = "string" == typeof t2 && n2 && n2[t2] ? n2[t2] : t2) ? { type: t2 } : "function" == typeof t2 ? { type: t2.name, exec: t2 } : t2;
 }
 function a(t2) {
@@ -10779,7 +10381,7 @@ function f(t2, n2, e2) {
 function s(n2, o2) {
   void 0 === o2 && (o2 = {});
   var s2 = t(f(r(n2.states[n2.initial].entry).map(function(t2) {
-    return i$2(t2, o2.actions);
+    return i(t2, o2.actions);
   }), n2.context, e), 2), l2 = s2[0], v2 = s2[1], y = { config: n2, _options: o2, initialState: { value: n2.initial, actions: l2, context: v2, matches: a(n2.initial) }, transition: function(e2, o3) {
     var s3, l3, v3 = "string" == typeof e2 ? { value: e2, context: n2.context } : e2, p = v3.value, g = v3.context, d = u(o3), x = n2.states[p];
     if (x.on) {
@@ -10802,7 +10404,7 @@ function s(n2, o2) {
             var q = t(f((_ ? r(R) : [].concat(x.exit, R, T.entry).filter(function(t2) {
               return t2;
             })).map(function(t2) {
-              return i$2(t2, y._options.actions);
+              return i(t2, y._options.actions);
             }), g, d), 3), z = q[0], A = q[1], B = q[2], C = null != j ? j : p;
             return { value: C, context: A, actions: z, changed: j !== p || z.length > 0 || B, matches: a(C) };
           }
@@ -10854,7 +10456,7 @@ function v(t2) {
 function discardPriorSnapshots(events, baselineTime) {
   for (let idx = events.length - 1; idx >= 0; idx--) {
     const event = events[idx];
-    if (event.type === EventType$1.Meta) {
+    if (event.type === EventType.Meta) {
       if (event.timestamp <= baselineTime) {
         return events.slice(idx);
       }
@@ -10953,7 +10555,7 @@ function createPlayerService(context, { getCastFn, applyEventsSynchronously, emi
           }
           const neededEvents = discardPriorSnapshots(events, baselineTime);
           let lastPlayedTimestamp = lastPlayedEvent == null ? void 0 : lastPlayedEvent.timestamp;
-          if ((lastPlayedEvent == null ? void 0 : lastPlayedEvent.type) === EventType$1.IncrementalSnapshot && lastPlayedEvent.data.source === IncrementalSource$1.MouseMove) {
+          if ((lastPlayedEvent == null ? void 0 : lastPlayedEvent.type) === EventType.IncrementalSnapshot && lastPlayedEvent.data.source === IncrementalSource.MouseMove) {
             lastPlayedTimestamp = lastPlayedEvent.timestamp + ((_a2 = lastPlayedEvent.data.positions[0]) == null ? void 0 : _a2.timeOffset);
           }
           if (baselineTime < (lastPlayedTimestamp || 0)) {
@@ -11288,13 +10890,13 @@ async function canvasMutation({
 }
 class MediaManager {
   constructor(options) {
-    __publicField2(this, "mediaMap", /* @__PURE__ */ new Map());
-    __publicField2(this, "warn");
-    __publicField2(this, "service");
-    __publicField2(this, "speedService");
-    __publicField2(this, "emitter");
-    __publicField2(this, "getCurrentTime");
-    __publicField2(this, "metadataCallbackMap", /* @__PURE__ */ new Map());
+    __publicField(this, "mediaMap", /* @__PURE__ */ new Map());
+    __publicField(this, "warn");
+    __publicField(this, "service");
+    __publicField(this, "speedService");
+    __publicField(this, "emitter");
+    __publicField(this, "getCurrentTime");
+    __publicField(this, "metadataCallbackMap", /* @__PURE__ */ new Map());
     this.warn = options.warn;
     this.service = options.service;
     this.speedService = options.speedService;
@@ -11528,40 +11130,40 @@ const defaultMouseTailConfig = {
   strokeStyle: "red"
 };
 function indicatesTouchDevice(e2) {
-  return e2.type == EventType$1.IncrementalSnapshot && (e2.data.source == IncrementalSource$1.TouchMove || e2.data.source == IncrementalSource$1.MouseInteraction && e2.data.type == MouseInteractions.TouchStart);
+  return e2.type == EventType.IncrementalSnapshot && (e2.data.source == IncrementalSource.TouchMove || e2.data.source == IncrementalSource.MouseInteraction && e2.data.type == MouseInteractions.TouchStart);
 }
 class Replayer {
   constructor(events, config) {
-    __publicField2(this, "wrapper");
-    __publicField2(this, "iframe");
-    __publicField2(this, "UNSAFE_replayCanvas", false);
-    __publicField2(this, "service");
-    __publicField2(this, "speedService");
-    __publicField2(this, "config");
-    __publicField2(this, "usingVirtualDom", false);
-    __publicField2(this, "virtualDom", new RRDocument());
-    __publicField2(this, "mouse");
-    __publicField2(this, "mouseTail", null);
-    __publicField2(this, "tailPositions", []);
-    __publicField2(this, "emitter", mitt());
-    __publicField2(this, "nextUserInteractionEvent");
-    __publicField2(this, "legacy_missingNodeRetryMap", {});
-    __publicField2(this, "cache", createCache());
-    __publicField2(this, "imageMap", /* @__PURE__ */ new Map());
-    __publicField2(this, "canvasEventMap", /* @__PURE__ */ new Map());
-    __publicField2(this, "mirror", createMirror$2());
-    __publicField2(this, "styleMirror", new StyleSheetMirror());
-    __publicField2(this, "mediaManager");
-    __publicField2(this, "firstFullSnapshot", null);
-    __publicField2(this, "newDocumentQueue", []);
-    __publicField2(this, "mousePos", null);
-    __publicField2(this, "touchActive", null);
-    __publicField2(this, "lastMouseDownEvent", null);
-    __publicField2(this, "lastHoveredRootNode");
-    __publicField2(this, "lastSelectionData", null);
-    __publicField2(this, "constructedStyleMutations", []);
-    __publicField2(this, "adoptedStyleSheets", []);
-    __publicField2(this, "handleResize", (dimension) => {
+    __publicField(this, "wrapper");
+    __publicField(this, "iframe");
+    __publicField(this, "UNSAFE_replayCanvas", false);
+    __publicField(this, "service");
+    __publicField(this, "speedService");
+    __publicField(this, "config");
+    __publicField(this, "usingVirtualDom", false);
+    __publicField(this, "virtualDom", new RRDocument());
+    __publicField(this, "mouse");
+    __publicField(this, "mouseTail", null);
+    __publicField(this, "tailPositions", []);
+    __publicField(this, "emitter", mitt());
+    __publicField(this, "nextUserInteractionEvent");
+    __publicField(this, "legacy_missingNodeRetryMap", {});
+    __publicField(this, "cache", createCache());
+    __publicField(this, "imageMap", /* @__PURE__ */ new Map());
+    __publicField(this, "canvasEventMap", /* @__PURE__ */ new Map());
+    __publicField(this, "mirror", createMirror$2());
+    __publicField(this, "styleMirror", new StyleSheetMirror());
+    __publicField(this, "mediaManager");
+    __publicField(this, "firstFullSnapshot", null);
+    __publicField(this, "newDocumentQueue", []);
+    __publicField(this, "mousePos", null);
+    __publicField(this, "touchActive", null);
+    __publicField(this, "lastMouseDownEvent", null);
+    __publicField(this, "lastHoveredRootNode");
+    __publicField(this, "lastSelectionData", null);
+    __publicField(this, "constructedStyleMutations", []);
+    __publicField(this, "adoptedStyleSheets", []);
+    __publicField(this, "handleResize", (dimension) => {
       this.iframe.style.display = "inherit";
       for (const el of [this.mouseTail, this.iframe]) {
         if (!el) {
@@ -11571,40 +11173,40 @@ class Replayer {
         el.setAttribute("height", String(dimension.height));
       }
     });
-    __publicField2(this, "applyEventsSynchronously", (events2) => {
+    __publicField(this, "applyEventsSynchronously", (events2) => {
       for (const event of events2) {
         switch (event.type) {
-          case EventType$1.DomContentLoaded:
-          case EventType$1.Load:
+          case EventType.DomContentLoaded:
+          case EventType.Load:
             continue;
-          case EventType$1.FullSnapshot:
-          case EventType$1.Meta:
-          case EventType$1.Plugin:
-          case EventType$1.IncrementalSnapshot:
+          case EventType.FullSnapshot:
+          case EventType.Meta:
+          case EventType.Plugin:
+          case EventType.IncrementalSnapshot:
             break;
         }
         const castFn = this.getCastFn(event, true);
         castFn();
       }
     });
-    __publicField2(this, "getCastFn", (event, isSync = false) => {
+    __publicField(this, "getCastFn", (event, isSync = false) => {
       let castFn;
       switch (event.type) {
-        case EventType$1.DomContentLoaded:
-        case EventType$1.Load:
+        case EventType.DomContentLoaded:
+        case EventType.Load:
           break;
-        case EventType$1.Custom:
+        case EventType.Custom:
           castFn = () => {
             this.emitter.emit(ReplayerEvents.CustomEvent, event);
           };
           break;
-        case EventType$1.Meta:
+        case EventType.Meta:
           castFn = () => this.emitter.emit(ReplayerEvents.Resize, {
             width: event.data.width,
             height: event.data.height
           });
           break;
-        case EventType$1.FullSnapshot:
+        case EventType.FullSnapshot:
           castFn = () => {
             var _a2;
             if (this.firstFullSnapshot) {
@@ -11621,7 +11223,7 @@ class Replayer {
             (_a2 = this.iframe.contentWindow) == null ? void 0 : _a2.scrollTo(event.data.initialOffset);
           };
           break;
-        case EventType$1.IncrementalSnapshot:
+        case EventType.IncrementalSnapshot:
           castFn = () => {
             this.applyIncremental(event, isSync);
             if (isSync) {
@@ -11683,7 +11285,7 @@ class Replayer {
             this.emitter.emit(ReplayerEvents.Finish);
           };
           let finishBuffer = 50;
-          if (event.type === EventType$1.IncrementalSnapshot && event.data.source === IncrementalSource$1.MouseMove && event.data.positions.length) {
+          if (event.type === EventType.IncrementalSnapshot && event.data.source === IncrementalSource.MouseMove && event.data.positions.length) {
             finishBuffer += Math.max(0, -event.data.positions[0].timeOffset);
           }
           setTimeout(finish, finishBuffer);
@@ -11741,9 +11343,9 @@ class Replayer {
           applyInput: this.applyInput.bind(this),
           applyScroll: this.applyScroll.bind(this),
           applyStyleSheetMutation: (data, styleSheet) => {
-            if (data.source === IncrementalSource$1.StyleSheetRule)
+            if (data.source === IncrementalSource.StyleSheetRule)
               this.applyStyleSheetRule(data, styleSheet);
-            else if (data.source === IncrementalSource$1.StyleDeclaration)
+            else if (data.source === IncrementalSource.StyleDeclaration)
               this.applyStyleDeclaration(data, styleSheet);
           },
           afterAppend: (node2, id) => {
@@ -11873,10 +11475,10 @@ class Replayer {
       getCurrentTime: this.getCurrentTime.bind(this)
     });
     const firstMeta = this.service.state.context.events.find(
-      (e2) => e2.type === EventType$1.Meta
+      (e2) => e2.type === EventType.Meta
     );
     const firstFullsnapshot = this.service.state.context.events.find(
-      (e2) => e2.type === EventType$1.FullSnapshot
+      (e2) => e2.type === EventType.FullSnapshot
     );
     if (firstMeta) {
       const { width, height } = firstMeta.data;
@@ -11988,18 +11590,18 @@ class Replayer {
    * @param timeOffset - number
    */
   play(timeOffset = 0) {
-    var _a2, _b2;
+    var _a2, _b;
     if (this.service.state.matches("paused")) {
       this.service.send({ type: "PLAY", payload: { timeOffset } });
     } else {
       this.service.send({ type: "PAUSE" });
       this.service.send({ type: "PLAY", payload: { timeOffset } });
     }
-    (_b2 = (_a2 = this.iframe.contentDocument) == null ? void 0 : _a2.getElementsByTagName("html")[0]) == null ? void 0 : _b2.classList.remove("rrweb-paused");
+    (_b = (_a2 = this.iframe.contentDocument) == null ? void 0 : _a2.getElementsByTagName("html")[0]) == null ? void 0 : _b.classList.remove("rrweb-paused");
     this.emitter.emit(ReplayerEvents.Start);
   }
   pause(timeOffset) {
-    var _a2, _b2;
+    var _a2, _b;
     if (timeOffset === void 0 && this.service.state.matches("playing")) {
       this.service.send({ type: "PAUSE" });
     }
@@ -12007,7 +11609,7 @@ class Replayer {
       this.play(timeOffset);
       this.service.send({ type: "PAUSE" });
     }
-    (_b2 = (_a2 = this.iframe.contentDocument) == null ? void 0 : _a2.getElementsByTagName("html")[0]) == null ? void 0 : _b2.classList.add("rrweb-paused");
+    (_b = (_a2 = this.iframe.contentDocument) == null ? void 0 : _a2.getElementsByTagName("html")[0]) == null ? void 0 : _b.classList.add("rrweb-paused");
     this.emitter.emit(ReplayerEvents.Pause);
   }
   resume(timeOffset = 0) {
@@ -12177,7 +11779,7 @@ class Replayer {
       );
       documentElement.insertBefore(styleEl, head);
       styleEl.rules.push({
-        source: IncrementalSource$1.StyleSheetRule,
+        source: IncrementalSource.StyleSheetRule,
         adds: injectStylesRules.map((cssText, index2) => ({
           rule: cssText,
           index: index2
@@ -12305,7 +11907,7 @@ class Replayer {
   async preloadAllImages() {
     const promises = [];
     for (const event of this.service.state.context.events) {
-      if (event.type === EventType$1.IncrementalSnapshot && event.data.source === IncrementalSource$1.CanvasMutation) {
+      if (event.type === EventType.IncrementalSnapshot && event.data.source === IncrementalSource.CanvasMutation) {
         promises.push(
           this.deserializeAndPreloadCanvasEvents(event.data, event)
         );
@@ -12351,10 +11953,10 @@ class Replayer {
     }
   }
   applyIncremental(e2, isSync) {
-    var _a2, _b2, _c;
+    var _a2, _b, _c;
     const { data: d } = e2;
     switch (d.source) {
-      case IncrementalSource$1.Mutation: {
+      case IncrementalSource.Mutation: {
         try {
           this.applyMutation(d, isSync);
         } catch (error) {
@@ -12362,9 +11964,9 @@ class Replayer {
         }
         break;
       }
-      case IncrementalSource$1.Drag:
-      case IncrementalSource$1.TouchMove:
-      case IncrementalSource$1.MouseMove:
+      case IncrementalSource.Drag:
+      case IncrementalSource.TouchMove:
+      case IncrementalSource.MouseMove:
         if (isSync) {
           const lastPosition = d.positions[d.positions.length - 1];
           this.mousePos = {
@@ -12391,7 +11993,7 @@ class Replayer {
           });
         }
         break;
-      case IncrementalSource$1.MouseInteraction: {
+      case IncrementalSource.MouseInteraction: {
         if (d.id === -1) {
           break;
         }
@@ -12471,7 +12073,7 @@ class Replayer {
         }
         break;
       }
-      case IncrementalSource$1.Scroll: {
+      case IncrementalSource.Scroll: {
         if (d.id === -1) {
           break;
         }
@@ -12486,13 +12088,13 @@ class Replayer {
         this.applyScroll(d, isSync);
         break;
       }
-      case IncrementalSource$1.ViewportResize:
+      case IncrementalSource.ViewportResize:
         this.emitter.emit(ReplayerEvents.Resize, {
           width: d.width,
           height: d.height
         });
         break;
-      case IncrementalSource$1.Input: {
+      case IncrementalSource.Input: {
         if (d.id === -1) {
           break;
         }
@@ -12507,7 +12109,7 @@ class Replayer {
         this.applyInput(d);
         break;
       }
-      case IncrementalSource$1.MediaInteraction: {
+      case IncrementalSource.MediaInteraction: {
         const target = this.usingVirtualDom ? this.virtualDom.mirror.getNode(d.id) : this.mirror.getNode(d.id);
         if (!target) {
           return this.debugNodeNotFound(d, d.id);
@@ -12521,16 +12123,16 @@ class Replayer {
         });
         break;
       }
-      case IncrementalSource$1.StyleSheetRule:
-      case IncrementalSource$1.StyleDeclaration: {
+      case IncrementalSource.StyleSheetRule:
+      case IncrementalSource.StyleDeclaration: {
         if (this.usingVirtualDom) {
           if (d.styleId) this.constructedStyleMutations.push(d);
           else if (d.id)
-            (_b2 = this.virtualDom.mirror.getNode(d.id)) == null ? void 0 : _b2.rules.push(d);
+            (_b = this.virtualDom.mirror.getNode(d.id)) == null ? void 0 : _b.rules.push(d);
         } else this.applyStyleSheetMutation(d);
         break;
       }
-      case IncrementalSource$1.CanvasMutation: {
+      case IncrementalSource.CanvasMutation: {
         if (!this.config.UNSAFE_replayCanvas) {
           return;
         }
@@ -12561,7 +12163,7 @@ class Replayer {
         }
         break;
       }
-      case IncrementalSource$1.Font: {
+      case IncrementalSource.Font: {
         try {
           const fontFace = new FontFace(
             d.family,
@@ -12574,7 +12176,7 @@ class Replayer {
         }
         break;
       }
-      case IncrementalSource$1.Selection: {
+      case IncrementalSource.Selection: {
         if (isSync) {
           this.lastSelectionData = d;
           break;
@@ -12582,7 +12184,7 @@ class Replayer {
         this.applySelection(d);
         break;
       }
-      case IncrementalSource$1.AdoptedStyleSheet: {
+      case IncrementalSource.AdoptedStyleSheet: {
         if (this.usingVirtualDom) this.adoptedStyleSheets.push(d);
         else this.applyAdoptedStyleSheet(d);
         break;
@@ -12671,7 +12273,7 @@ class Replayer {
       return false;
     };
     const appendNode = (mutation) => {
-      var _a2, _b2;
+      var _a2, _b;
       if (!this.iframe.contentDocument) {
         return this.warn("Looks like your replayer has been destroyed.");
       }
@@ -12777,7 +12379,7 @@ class Replayer {
         parent.appendChild(target);
       }
       afterAppend(target, mutation.node.id);
-      if (this.usingVirtualDom && target.nodeName === "#text" && parent.nodeName === "STYLE" && ((_b2 = parent.rules) == null ? void 0 : _b2.length) > 0)
+      if (this.usingVirtualDom && target.nodeName === "#text" && parent.nodeName === "STYLE" && ((_b = parent.rules) == null ? void 0 : _b.length) > 0)
         parent.rules = [];
       if (isSerializedIframe(target, this.mirror)) {
         const targetId = this.mirror.getId(target);
@@ -12962,7 +12564,7 @@ class Replayer {
    * @param isSync - whether the replayer is in sync mode(fast-forward)
    */
   applyScroll(d, isSync) {
-    var _a2, _b2;
+    var _a2, _b;
     const target = this.mirror.getNode(d.id);
     if (!target) {
       return this.debugNodeNotFound(d, d.id);
@@ -12975,7 +12577,7 @@ class Replayer {
         behavior: isSync ? "auto" : "smooth"
       });
     } else if ((sn == null ? void 0 : sn.type) === NodeType.Document) {
-      (_b2 = target.defaultView) == null ? void 0 : _b2.scrollTo({
+      (_b = target.defaultView) == null ? void 0 : _b.scrollTo({
         top: d.y,
         left: d.x,
         behavior: isSync ? "auto" : "smooth"
@@ -13035,13 +12637,13 @@ class Replayer {
     else if (data.id)
       styleSheet = ((_a2 = this.mirror.getNode(data.id)) == null ? void 0 : _a2.sheet) || null;
     if (!styleSheet) return;
-    if (data.source === IncrementalSource$1.StyleSheetRule)
+    if (data.source === IncrementalSource.StyleSheetRule)
       this.applyStyleSheetRule(data, styleSheet);
-    else if (data.source === IncrementalSource$1.StyleDeclaration)
+    else if (data.source === IncrementalSource.StyleDeclaration)
       this.applyStyleDeclaration(data, styleSheet);
   }
   applyStyleSheetRule(data, styleSheet) {
-    var _a2, _b2, _c, _d;
+    var _a2, _b, _c, _d;
     (_a2 = data.adds) == null ? void 0 : _a2.forEach(({ rule: rule2, index: nestedIndex }) => {
       try {
         if (Array.isArray(nestedIndex)) {
@@ -13055,7 +12657,7 @@ class Replayer {
       } catch (e2) {
       }
     });
-    (_b2 = data.removes) == null ? void 0 : _b2.forEach(({ index: nestedIndex }) => {
+    (_b = data.removes) == null ? void 0 : _b.forEach(({ index: nestedIndex }) => {
       try {
         if (Array.isArray(nestedIndex)) {
           const { positions, index: index2 } = getPositionsAndIndex(nestedIndex);
@@ -13131,7 +12733,7 @@ class Replayer {
         this.styleMirror.add(newStyleSheet, style.styleId);
         this.applyStyleSheetRule(
           {
-            source: IncrementalSource$1.StyleSheetRule,
+            source: IncrementalSource.StyleSheetRule,
             adds: style.rules
           },
           newStyleSheet
@@ -13198,7 +12800,7 @@ class Replayer {
     }
     this.hoverElements(target);
   }
-  drawMouseTail(position2) {
+  drawMouseTail(position) {
     if (!this.mouseTail) {
       return;
     }
@@ -13220,10 +12822,10 @@ class Replayer {
       this.tailPositions.forEach((p) => ctx.lineTo(p.x, p.y));
       ctx.stroke();
     };
-    this.tailPositions.push(position2);
+    this.tailPositions.push(position);
     draw();
     setTimeout(() => {
-      this.tailPositions = this.tailPositions.filter((p) => p !== position2);
+      this.tailPositions = this.tailPositions.filter((p) => p !== position);
       draw();
     }, duration / this.speedService.state.context.timer.speed);
   }
@@ -13242,10 +12844,10 @@ class Replayer {
     }
   }
   isUserInteraction(event) {
-    if (event.type !== EventType$1.IncrementalSnapshot) {
+    if (event.type !== EventType.IncrementalSnapshot) {
       return false;
     }
-    return event.data.source > IncrementalSource$1.Mutation && event.data.source <= IncrementalSource$1.Input;
+    return event.data.source > IncrementalSource.Mutation && event.data.source <= IncrementalSource.Input;
   }
   backToNormal() {
     this.nextUserInteractionEvent = null;
@@ -13279,2269 +12881,6 @@ class Replayer {
     this.config.logger.log(REPLAY_CONSOLE_PREFIX, ...args);
   }
 }
-var u8 = Uint8Array, u16 = Uint16Array, u32 = Uint32Array;
-var fleb = new u8([
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  1,
-  1,
-  2,
-  2,
-  2,
-  2,
-  3,
-  3,
-  3,
-  3,
-  4,
-  4,
-  4,
-  4,
-  5,
-  5,
-  5,
-  5,
-  0,
-  /* unused */
-  0,
-  0,
-  /* impossible */
-  0
-]);
-var fdeb = new u8([
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  2,
-  2,
-  3,
-  3,
-  4,
-  4,
-  5,
-  5,
-  6,
-  6,
-  7,
-  7,
-  8,
-  8,
-  9,
-  9,
-  10,
-  10,
-  11,
-  11,
-  12,
-  12,
-  13,
-  13,
-  /* unused */
-  0,
-  0
-]);
-var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
-var freb = function(eb, start) {
-  var b = new u16(31);
-  for (var i = 0; i < 31; ++i) {
-    b[i] = start += 1 << eb[i - 1];
-  }
-  var r2 = new u32(b[30]);
-  for (var i = 1; i < 30; ++i) {
-    for (var j = b[i]; j < b[i + 1]; ++j) {
-      r2[j] = j - b[i] << 5 | i;
-    }
-  }
-  return [b, r2];
-};
-var _a = freb(fleb, 2), fl = _a[0], revfl = _a[1];
-fl[28] = 258, revfl[258] = 28;
-var _b = freb(fdeb, 0), fd = _b[0];
-var rev = new u16(32768);
-for (var i = 0; i < 32768; ++i) {
-  var x = (i & 43690) >>> 1 | (i & 21845) << 1;
-  x = (x & 52428) >>> 2 | (x & 13107) << 2;
-  x = (x & 61680) >>> 4 | (x & 3855) << 4;
-  rev[i] = ((x & 65280) >>> 8 | (x & 255) << 8) >>> 1;
-}
-var hMap = function(cd, mb, r2) {
-  var s2 = cd.length;
-  var i = 0;
-  var l2 = new u16(mb);
-  for (; i < s2; ++i)
-    ++l2[cd[i] - 1];
-  var le = new u16(mb);
-  for (i = 0; i < mb; ++i) {
-    le[i] = le[i - 1] + l2[i - 1] << 1;
-  }
-  var co;
-  if (r2) {
-    co = new u16(1 << mb);
-    var rvb = 15 - mb;
-    for (i = 0; i < s2; ++i) {
-      if (cd[i]) {
-        var sv = i << 4 | cd[i];
-        var r_1 = mb - cd[i];
-        var v2 = le[cd[i] - 1]++ << r_1;
-        for (var m = v2 | (1 << r_1) - 1; v2 <= m; ++v2) {
-          co[rev[v2] >>> rvb] = sv;
-        }
-      }
-    }
-  } else {
-    co = new u16(s2);
-    for (i = 0; i < s2; ++i)
-      co[i] = rev[le[cd[i] - 1]++] >>> 15 - cd[i];
-  }
-  return co;
-};
-var flt = new u8(288);
-for (var i = 0; i < 144; ++i)
-  flt[i] = 8;
-for (var i = 144; i < 256; ++i)
-  flt[i] = 9;
-for (var i = 256; i < 280; ++i)
-  flt[i] = 7;
-for (var i = 280; i < 288; ++i)
-  flt[i] = 8;
-var fdt = new u8(32);
-for (var i = 0; i < 32; ++i)
-  fdt[i] = 5;
-var flrm = /* @__PURE__ */ hMap(flt, 9, 1);
-var fdrm = /* @__PURE__ */ hMap(fdt, 5, 1);
-var max = function(a2) {
-  var m = a2[0];
-  for (var i = 1; i < a2.length; ++i) {
-    if (a2[i] > m)
-      m = a2[i];
-  }
-  return m;
-};
-var bits = function(d, p, m) {
-  var o2 = p / 8 >> 0;
-  return (d[o2] | d[o2 + 1] << 8) >>> (p & 7) & m;
-};
-var bits16 = function(d, p) {
-  var o2 = p / 8 >> 0;
-  return (d[o2] | d[o2 + 1] << 8 | d[o2 + 2] << 16) >>> (p & 7);
-};
-var shft = function(p) {
-  return (p / 8 >> 0) + (p & 7 && 1);
-};
-var slc = function(v2, s2, e2) {
-  if (e2 == null || e2 > v2.length)
-    e2 = v2.length;
-  var n2 = new (v2 instanceof u16 ? u16 : v2 instanceof u32 ? u32 : u8)(e2 - s2);
-  n2.set(v2.subarray(s2, e2));
-  return n2;
-};
-var inflt = function(dat, buf, st) {
-  var sl = dat.length;
-  var noBuf = !buf || st;
-  var noSt = !st || st.i;
-  if (!st)
-    st = {};
-  if (!buf)
-    buf = new u8(sl * 3);
-  var cbuf = function(l22) {
-    var bl = buf.length;
-    if (l22 > bl) {
-      var nbuf = new u8(Math.max(bl * 2, l22));
-      nbuf.set(buf);
-      buf = nbuf;
-    }
-  };
-  var final = st.f || 0, pos = st.p || 0, bt = st.b || 0, lm = st.l, dm = st.d, lbt = st.m, dbt = st.n;
-  var tbts = sl * 8;
-  do {
-    if (!lm) {
-      st.f = final = bits(dat, pos, 1);
-      var type = bits(dat, pos + 1, 3);
-      pos += 3;
-      if (!type) {
-        var s2 = shft(pos) + 4, l2 = dat[s2 - 4] | dat[s2 - 3] << 8, t2 = s2 + l2;
-        if (t2 > sl) {
-          if (noSt)
-            throw "unexpected EOF";
-          break;
-        }
-        if (noBuf)
-          cbuf(bt + l2);
-        buf.set(dat.subarray(s2, t2), bt);
-        st.b = bt += l2, st.p = pos = t2 * 8;
-        continue;
-      } else if (type == 1)
-        lm = flrm, dm = fdrm, lbt = 9, dbt = 5;
-      else if (type == 2) {
-        var hLit = bits(dat, pos, 31) + 257, hcLen = bits(dat, pos + 10, 15) + 4;
-        var tl = hLit + bits(dat, pos + 5, 31) + 1;
-        pos += 14;
-        var ldt = new u8(tl);
-        var clt = new u8(19);
-        for (var i = 0; i < hcLen; ++i) {
-          clt[clim[i]] = bits(dat, pos + i * 3, 7);
-        }
-        pos += hcLen * 3;
-        var clb = max(clt), clbmsk = (1 << clb) - 1;
-        if (!noSt && pos + tl * (clb + 7) > tbts)
-          break;
-        var clm = hMap(clt, clb, 1);
-        for (var i = 0; i < tl; ) {
-          var r2 = clm[bits(dat, pos, clbmsk)];
-          pos += r2 & 15;
-          var s2 = r2 >>> 4;
-          if (s2 < 16) {
-            ldt[i++] = s2;
-          } else {
-            var c2 = 0, n2 = 0;
-            if (s2 == 16)
-              n2 = 3 + bits(dat, pos, 3), pos += 2, c2 = ldt[i - 1];
-            else if (s2 == 17)
-              n2 = 3 + bits(dat, pos, 7), pos += 3;
-            else if (s2 == 18)
-              n2 = 11 + bits(dat, pos, 127), pos += 7;
-            while (n2--)
-              ldt[i++] = c2;
-          }
-        }
-        var lt = ldt.subarray(0, hLit), dt = ldt.subarray(hLit);
-        lbt = max(lt);
-        dbt = max(dt);
-        lm = hMap(lt, lbt, 1);
-        dm = hMap(dt, dbt, 1);
-      } else
-        throw "invalid block type";
-      if (pos > tbts)
-        throw "unexpected EOF";
-    }
-    if (noBuf)
-      cbuf(bt + 131072);
-    var lms = (1 << lbt) - 1, dms = (1 << dbt) - 1;
-    var mxa = lbt + dbt + 18;
-    while (noSt || pos + mxa < tbts) {
-      var c2 = lm[bits16(dat, pos) & lms], sym = c2 >>> 4;
-      pos += c2 & 15;
-      if (pos > tbts)
-        throw "unexpected EOF";
-      if (!c2)
-        throw "invalid length/literal";
-      if (sym < 256)
-        buf[bt++] = sym;
-      else if (sym == 256) {
-        lm = null;
-        break;
-      } else {
-        var add = sym - 254;
-        if (sym > 264) {
-          var i = sym - 257, b = fleb[i];
-          add = bits(dat, pos, (1 << b) - 1) + fl[i];
-          pos += b;
-        }
-        var d = dm[bits16(dat, pos) & dms], dsym = d >>> 4;
-        if (!d)
-          throw "invalid distance";
-        pos += d & 15;
-        var dt = fd[dsym];
-        if (dsym > 3) {
-          var b = fdeb[dsym];
-          dt += bits16(dat, pos) & (1 << b) - 1, pos += b;
-        }
-        if (pos > tbts)
-          throw "unexpected EOF";
-        if (noBuf)
-          cbuf(bt + 131072);
-        var end = bt + add;
-        for (; bt < end; bt += 4) {
-          buf[bt] = buf[bt - dt];
-          buf[bt + 1] = buf[bt + 1 - dt];
-          buf[bt + 2] = buf[bt + 2 - dt];
-          buf[bt + 3] = buf[bt + 3 - dt];
-        }
-        bt = end;
-      }
-    }
-    st.l = lm, st.p = pos, st.b = bt;
-    if (lm)
-      final = 1, st.m = lbt, st.d = dm, st.n = dbt;
-  } while (!final);
-  return bt == buf.length ? buf : slc(buf, 0, bt);
-};
-var zlv = function(d) {
-  if ((d[0] & 15) != 8 || d[0] >>> 4 > 7 || (d[0] << 8 | d[1]) % 31)
-    throw "invalid zlib data";
-  if (d[1] & 32)
-    throw "invalid zlib data: preset dictionaries not supported";
-};
-function unzlibSync(data, out) {
-  return inflt((zlv(data), data.subarray(2, -4)), out);
-}
-function strToU8(str, latin1) {
-  var l2 = str.length;
-  var ar = new u8(str.length + (str.length >>> 1));
-  var ai = 0;
-  var w = function(v2) {
-    ar[ai++] = v2;
-  };
-  for (var i = 0; i < l2; ++i) {
-    if (ai + 5 > ar.length) {
-      var n2 = new u8(ai + 8 + (l2 - i << 1));
-      n2.set(ar);
-      ar = n2;
-    }
-    var c2 = str.charCodeAt(i);
-    w(c2);
-  }
-  return slc(ar, 0, ai);
-}
-function strFromU8(dat, latin1) {
-  var r2 = "";
-  if (typeof TextDecoder != "undefined")
-    return new TextDecoder().decode(dat);
-  for (var i = 0; i < dat.length; ) {
-    var c2 = dat[i++];
-    if (c2 < 128 || latin1)
-      r2 += String.fromCharCode(c2);
-    else if (c2 < 224)
-      r2 += String.fromCharCode((c2 & 31) << 6 | dat[i++] & 63);
-    else if (c2 < 240)
-      r2 += String.fromCharCode((c2 & 15) << 12 | (dat[i++] & 63) << 6 | dat[i++] & 63);
-    else
-      c2 = ((c2 & 15) << 18 | (dat[i++] & 63) << 12 | (dat[i++] & 63) << 6 | dat[i++] & 63) - 65536, r2 += String.fromCharCode(55296 | c2 >> 10, 56320 | c2 & 1023);
-  }
-  return r2;
-}
-const MARK = "v1";
-const unpack = (raw) => {
-  if (typeof raw !== "string") {
-    return raw;
-  }
-  try {
-    const e2 = JSON.parse(raw);
-    if (e2.timestamp) {
-      return e2;
-    }
-  } catch (error) {
-  }
-  try {
-    const e2 = JSON.parse(
-      strFromU8(unzlibSync(strToU8(raw, true)))
-    );
-    if (e2.v === MARK) {
-      return e2;
-    }
-    throw new Error(
-      `These events were packed with packer ${e2.v} which is incompatible with current packer ${MARK}.`
-    );
-  } catch (error) {
-    console.error(error);
-    throw new Error("Unknown data format.");
-  }
-};
-var EventType = /* @__PURE__ */ ((EventType2) => {
-  EventType2[EventType2["DomContentLoaded"] = 0] = "DomContentLoaded";
-  EventType2[EventType2["Load"] = 1] = "Load";
-  EventType2[EventType2["FullSnapshot"] = 2] = "FullSnapshot";
-  EventType2[EventType2["IncrementalSnapshot"] = 3] = "IncrementalSnapshot";
-  EventType2[EventType2["Meta"] = 4] = "Meta";
-  EventType2[EventType2["Custom"] = 5] = "Custom";
-  EventType2[EventType2["Plugin"] = 6] = "Plugin";
-  EventType2[EventType2["Asset"] = 7] = "Asset";
-  return EventType2;
-})(EventType || {});
-var IncrementalSource = /* @__PURE__ */ ((IncrementalSource2) => {
-  IncrementalSource2[IncrementalSource2["Mutation"] = 0] = "Mutation";
-  IncrementalSource2[IncrementalSource2["MouseMove"] = 1] = "MouseMove";
-  IncrementalSource2[IncrementalSource2["MouseInteraction"] = 2] = "MouseInteraction";
-  IncrementalSource2[IncrementalSource2["Scroll"] = 3] = "Scroll";
-  IncrementalSource2[IncrementalSource2["ViewportResize"] = 4] = "ViewportResize";
-  IncrementalSource2[IncrementalSource2["Input"] = 5] = "Input";
-  IncrementalSource2[IncrementalSource2["TouchMove"] = 6] = "TouchMove";
-  IncrementalSource2[IncrementalSource2["MediaInteraction"] = 7] = "MediaInteraction";
-  IncrementalSource2[IncrementalSource2["StyleSheetRule"] = 8] = "StyleSheetRule";
-  IncrementalSource2[IncrementalSource2["CanvasMutation"] = 9] = "CanvasMutation";
-  IncrementalSource2[IncrementalSource2["Font"] = 10] = "Font";
-  IncrementalSource2[IncrementalSource2["Log"] = 11] = "Log";
-  IncrementalSource2[IncrementalSource2["Drag"] = 12] = "Drag";
-  IncrementalSource2[IncrementalSource2["StyleDeclaration"] = 13] = "StyleDeclaration";
-  IncrementalSource2[IncrementalSource2["Selection"] = 14] = "Selection";
-  IncrementalSource2[IncrementalSource2["AdoptedStyleSheet"] = 15] = "AdoptedStyleSheet";
-  IncrementalSource2[IncrementalSource2["CustomElement"] = 16] = "CustomElement";
-  return IncrementalSource2;
-})(IncrementalSource || {});
-function inlineCss(cssObj) {
-  let style = "";
-  Object.keys(cssObj).forEach((key) => {
-    style += `${key}: ${cssObj[key]};`;
-  });
-  return style;
-}
-function padZero(num, len = 2) {
-  let str = String(num);
-  const threshold = Math.pow(10, len - 1);
-  if (num < threshold) {
-    while (String(threshold).length > str.length) {
-      str = `0${num}`;
-    }
-  }
-  return str;
-}
-const SECOND = 1e3;
-const MINUTE = 60 * SECOND;
-const HOUR = 60 * MINUTE;
-function formatTime(ms) {
-  if (ms <= 0) {
-    return "00:00";
-  }
-  const hour = Math.floor(ms / HOUR);
-  ms = ms % HOUR;
-  const minute = Math.floor(ms / MINUTE);
-  ms = ms % MINUTE;
-  const second = Math.floor(ms / SECOND);
-  if (hour) {
-    return `${padZero(hour)}:${padZero(minute)}:${padZero(second)}`;
-  }
-  return `${padZero(minute)}:${padZero(second)}`;
-}
-function openFullscreen(el) {
-  if (el.requestFullscreen) {
-    return el.requestFullscreen();
-  } else if (el.mozRequestFullScreen) {
-    return el.mozRequestFullScreen();
-  } else if (el.webkitRequestFullscreen) {
-    return el.webkitRequestFullscreen();
-  } else if (el.msRequestFullscreen) {
-    return el.msRequestFullscreen();
-  }
-  return Promise.resolve();
-}
-function exitFullscreen() {
-  if (document.exitFullscreen) {
-    return document.exitFullscreen();
-  } else if (document.mozExitFullscreen) {
-    return document.mozExitFullscreen();
-  } else if (document.webkitExitFullscreen) {
-    return document.webkitExitFullscreen();
-  } else if (document.msExitFullscreen) {
-    return document.msExitFullscreen();
-  }
-  return Promise.resolve();
-}
-function isFullscreen() {
-  let fullscreen = false;
-  [
-    "fullscreen",
-    "webkitIsFullScreen",
-    "mozFullScreen",
-    "msFullscreenElement"
-  ].forEach((fullScreenAccessor) => {
-    if (fullScreenAccessor in document) {
-      fullscreen = fullscreen || Boolean(document[fullScreenAccessor]);
-    }
-  });
-  return fullscreen;
-}
-function onFullscreenChange(handler) {
-  document.addEventListener("fullscreenchange", handler);
-  document.addEventListener("webkitfullscreenchange", handler);
-  document.addEventListener("mozfullscreenchange", handler);
-  document.addEventListener("MSFullscreenChange", handler);
-  return () => {
-    document.removeEventListener("fullscreenchange", handler);
-    document.removeEventListener("webkitfullscreenchange", handler);
-    document.removeEventListener("mozfullscreenchange", handler);
-    document.removeEventListener("MSFullscreenChange", handler);
-  };
-}
-function typeOf(obj) {
-  const toString = Object.prototype.toString;
-  const map = {
-    "[object Boolean]": "boolean",
-    "[object Number]": "number",
-    "[object String]": "string",
-    "[object Function]": "function",
-    "[object Array]": "array",
-    "[object Date]": "date",
-    "[object RegExp]": "regExp",
-    "[object Undefined]": "undefined",
-    "[object Null]": "null",
-    "[object Object]": "object"
-  };
-  return map[toString.call(obj)];
-}
-function isUserInteraction(event) {
-  if (event.type !== EventType.IncrementalSnapshot) {
-    return false;
-  }
-  return event.data.source > IncrementalSource.Mutation && event.data.source <= IncrementalSource.Input;
-}
-function getInactivePeriods(events, inactivePeriodThreshold) {
-  const inactivePeriods = [];
-  let lastActiveTime = events[0].timestamp;
-  for (const event of events) {
-    if (!isUserInteraction(event)) continue;
-    if (event.timestamp - lastActiveTime > inactivePeriodThreshold) {
-      inactivePeriods.push([lastActiveTime, event.timestamp]);
-    }
-    lastActiveTime = event.timestamp;
-  }
-  return inactivePeriods;
-}
-function create_fragment$2(ctx) {
-  let div;
-  let input2;
-  let t0;
-  let label_1;
-  let t1;
-  let span;
-  let t2;
-  let mounted;
-  let dispose;
-  return {
-    c() {
-      div = element("div");
-      input2 = element("input");
-      t0 = space();
-      label_1 = element("label");
-      t1 = space();
-      span = element("span");
-      t2 = text(
-        /*label*/
-        ctx[3]
-      );
-      attr(input2, "type", "checkbox");
-      attr(
-        input2,
-        "id",
-        /*id*/
-        ctx[2]
-      );
-      input2.disabled = /*disabled*/
-      ctx[1];
-      attr(input2, "class", "svelte-a6h7w7");
-      attr(
-        label_1,
-        "for",
-        /*id*/
-        ctx[2]
-      );
-      attr(label_1, "class", "svelte-a6h7w7");
-      attr(span, "class", "label svelte-a6h7w7");
-      attr(div, "class", "switch svelte-a6h7w7");
-      toggle_class(
-        div,
-        "disabled",
-        /*disabled*/
-        ctx[1]
-      );
-    },
-    m(target, anchor) {
-      insert(target, div, anchor);
-      append(div, input2);
-      input2.checked = /*checked*/
-      ctx[0];
-      append(div, t0);
-      append(div, label_1);
-      append(div, t1);
-      append(div, span);
-      append(span, t2);
-      if (!mounted) {
-        dispose = listen(
-          input2,
-          "change",
-          /*input_change_handler*/
-          ctx[4]
-        );
-        mounted = true;
-      }
-    },
-    p(ctx2, [dirty]) {
-      if (dirty & /*id*/
-      4) {
-        attr(
-          input2,
-          "id",
-          /*id*/
-          ctx2[2]
-        );
-      }
-      if (dirty & /*disabled*/
-      2) {
-        input2.disabled = /*disabled*/
-        ctx2[1];
-      }
-      if (dirty & /*checked*/
-      1) {
-        input2.checked = /*checked*/
-        ctx2[0];
-      }
-      if (dirty & /*id*/
-      4) {
-        attr(
-          label_1,
-          "for",
-          /*id*/
-          ctx2[2]
-        );
-      }
-      if (dirty & /*label*/
-      8) set_data(
-        t2,
-        /*label*/
-        ctx2[3]
-      );
-      if (dirty & /*disabled*/
-      2) {
-        toggle_class(
-          div,
-          "disabled",
-          /*disabled*/
-          ctx2[1]
-        );
-      }
-    },
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(div);
-      }
-      mounted = false;
-      dispose();
-    }
-  };
-}
-function instance$2($$self, $$props, $$invalidate) {
-  let { disabled } = $$props;
-  let { checked } = $$props;
-  let { id } = $$props;
-  let { label } = $$props;
-  function input_change_handler() {
-    checked = this.checked;
-    $$invalidate(0, checked);
-  }
-  $$self.$$set = ($$props2) => {
-    if ("disabled" in $$props2) $$invalidate(1, disabled = $$props2.disabled);
-    if ("checked" in $$props2) $$invalidate(0, checked = $$props2.checked);
-    if ("id" in $$props2) $$invalidate(2, id = $$props2.id);
-    if ("label" in $$props2) $$invalidate(3, label = $$props2.label);
-  };
-  return [checked, disabled, id, label, input_change_handler];
-}
-class Switch extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance$2, create_fragment$2, safe_not_equal, { disabled: 1, checked: 0, id: 2, label: 3 });
-  }
-}
-function get_each_context(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[38] = list[i];
-  return child_ctx;
-}
-function get_each_context_1(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[41] = list[i];
-  return child_ctx;
-}
-function get_each_context_2(ctx, list, i) {
-  const child_ctx = ctx.slice();
-  child_ctx[44] = list[i];
-  return child_ctx;
-}
-function create_if_block$1(ctx) {
-  let div5;
-  let div3;
-  let span0;
-  let t0_value = formatTime(
-    /*currentTime*/
-    ctx[6]
-  ) + "";
-  let t0;
-  let t1;
-  let div2;
-  let div0;
-  let t2;
-  let t3;
-  let t4;
-  let div1;
-  let t5;
-  let span1;
-  let t6_value = formatTime(
-    /*meta*/
-    ctx[8].totalTime
-  ) + "";
-  let t6;
-  let t7;
-  let div4;
-  let button0;
-  let t8;
-  let t9;
-  let switch_1;
-  let updating_checked;
-  let t10;
-  let button1;
-  let current;
-  let mounted;
-  let dispose;
-  let each_value_2 = ensure_array_like(
-    /*inactivePeriods*/
-    ctx[13]
-  );
-  let each_blocks_2 = [];
-  for (let i = 0; i < each_value_2.length; i += 1) {
-    each_blocks_2[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
-  }
-  let each_value_1 = ensure_array_like(
-    /*customEvents*/
-    ctx[9]
-  );
-  let each_blocks_1 = [];
-  for (let i = 0; i < each_value_1.length; i += 1) {
-    each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
-  }
-  function select_block_type(ctx2, dirty) {
-    if (
-      /*playerState*/
-      ctx2[7] === "playing"
-    ) return create_if_block_1;
-    return create_else_block;
-  }
-  let current_block_type = select_block_type(ctx);
-  let if_block = current_block_type(ctx);
-  let each_value = ensure_array_like(
-    /*speedOption*/
-    ctx[3]
-  );
-  let each_blocks = [];
-  for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-  }
-  function switch_1_checked_binding(value) {
-    ctx[29](value);
-  }
-  let switch_1_props = {
-    id: "skip",
-    disabled: (
-      /*speedState*/
-      ctx[10] === "skipping"
-    ),
-    label: "skip inactive"
-  };
-  if (
-    /*skipInactive*/
-    ctx[0] !== void 0
-  ) {
-    switch_1_props.checked = /*skipInactive*/
-    ctx[0];
-  }
-  switch_1 = new Switch({ props: switch_1_props });
-  binding_callbacks.push(() => bind(switch_1, "checked", switch_1_checked_binding));
-  return {
-    c() {
-      div5 = element("div");
-      div3 = element("div");
-      span0 = element("span");
-      t0 = text(t0_value);
-      t1 = space();
-      div2 = element("div");
-      div0 = element("div");
-      t2 = space();
-      for (let i = 0; i < each_blocks_2.length; i += 1) {
-        each_blocks_2[i].c();
-      }
-      t3 = space();
-      for (let i = 0; i < each_blocks_1.length; i += 1) {
-        each_blocks_1[i].c();
-      }
-      t4 = space();
-      div1 = element("div");
-      t5 = space();
-      span1 = element("span");
-      t6 = text(t6_value);
-      t7 = space();
-      div4 = element("div");
-      button0 = element("button");
-      if_block.c();
-      t8 = space();
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        each_blocks[i].c();
-      }
-      t9 = space();
-      create_component(switch_1.$$.fragment);
-      t10 = space();
-      button1 = element("button");
-      button1.innerHTML = `<svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16"><defs><style type="text/css"></style></defs><path d="M916 380c-26.4 0-48-21.6-48-48L868 223.2 613.6 477.6c-18.4
-            18.4-48.8 18.4-68 0-18.4-18.4-18.4-48.8 0-68L800 156 692 156c-26.4
-            0-48-21.6-48-48 0-26.4 21.6-48 48-48l224 0c26.4 0 48 21.6 48 48l0
-            224C964 358.4 942.4 380 916 380zM231.2 860l108.8 0c26.4 0 48 21.6 48
-            48s-21.6 48-48 48l-224 0c-26.4 0-48-21.6-48-48l0-224c0-26.4 21.6-48
-            48-48 26.4 0 48 21.6 48 48L164 792l253.6-253.6c18.4-18.4 48.8-18.4
-            68 0 18.4 18.4 18.4 48.8 0 68L231.2 860z"></path></svg>`;
-      attr(span0, "class", "rr-timeline__time svelte-189zk2r");
-      attr(div0, "class", "rr-progress__step svelte-189zk2r");
-      set_style(
-        div0,
-        "width",
-        /*percentage*/
-        ctx[12]
-      );
-      attr(div1, "class", "rr-progress__handler svelte-189zk2r");
-      set_style(
-        div1,
-        "left",
-        /*percentage*/
-        ctx[12]
-      );
-      attr(div2, "class", "rr-progress svelte-189zk2r");
-      toggle_class(
-        div2,
-        "disabled",
-        /*speedState*/
-        ctx[10] === "skipping"
-      );
-      attr(span1, "class", "rr-timeline__time svelte-189zk2r");
-      attr(div3, "class", "rr-timeline svelte-189zk2r");
-      attr(button0, "class", "svelte-189zk2r");
-      attr(button1, "class", "svelte-189zk2r");
-      attr(div4, "class", "rr-controller__btns svelte-189zk2r");
-      attr(div5, "class", "rr-controller svelte-189zk2r");
-    },
-    m(target, anchor) {
-      insert(target, div5, anchor);
-      append(div5, div3);
-      append(div3, span0);
-      append(span0, t0);
-      append(div3, t1);
-      append(div3, div2);
-      append(div2, div0);
-      append(div2, t2);
-      for (let i = 0; i < each_blocks_2.length; i += 1) {
-        if (each_blocks_2[i]) {
-          each_blocks_2[i].m(div2, null);
-        }
-      }
-      append(div2, t3);
-      for (let i = 0; i < each_blocks_1.length; i += 1) {
-        if (each_blocks_1[i]) {
-          each_blocks_1[i].m(div2, null);
-        }
-      }
-      append(div2, t4);
-      append(div2, div1);
-      ctx[27](div2);
-      append(div3, t5);
-      append(div3, span1);
-      append(span1, t6);
-      append(div5, t7);
-      append(div5, div4);
-      append(div4, button0);
-      if_block.m(button0, null);
-      append(div4, t8);
-      for (let i = 0; i < each_blocks.length; i += 1) {
-        if (each_blocks[i]) {
-          each_blocks[i].m(div4, null);
-        }
-      }
-      append(div4, t9);
-      mount_component(switch_1, div4, null);
-      append(div4, t10);
-      append(div4, button1);
-      current = true;
-      if (!mounted) {
-        dispose = [
-          listen(
-            div2,
-            "click",
-            /*handleProgressClick*/
-            ctx[15]
-          ),
-          listen(
-            div2,
-            "keydown",
-            /*handleProgressKeydown*/
-            ctx[16]
-          ),
-          listen(
-            button0,
-            "click",
-            /*toggle*/
-            ctx[4]
-          ),
-          listen(
-            button1,
-            "click",
-            /*click_handler_1*/
-            ctx[30]
-          )
-        ];
-        mounted = true;
-      }
-    },
-    p(ctx2, dirty) {
-      if ((!current || dirty[0] & /*currentTime*/
-      64) && t0_value !== (t0_value = formatTime(
-        /*currentTime*/
-        ctx2[6]
-      ) + "")) set_data(t0, t0_value);
-      if (!current || dirty[0] & /*percentage*/
-      4096) {
-        set_style(
-          div0,
-          "width",
-          /*percentage*/
-          ctx2[12]
-        );
-      }
-      if (dirty[0] & /*inactivePeriods*/
-      8192) {
-        each_value_2 = ensure_array_like(
-          /*inactivePeriods*/
-          ctx2[13]
-        );
-        let i;
-        for (i = 0; i < each_value_2.length; i += 1) {
-          const child_ctx = get_each_context_2(ctx2, each_value_2, i);
-          if (each_blocks_2[i]) {
-            each_blocks_2[i].p(child_ctx, dirty);
-          } else {
-            each_blocks_2[i] = create_each_block_2(child_ctx);
-            each_blocks_2[i].c();
-            each_blocks_2[i].m(div2, t3);
-          }
-        }
-        for (; i < each_blocks_2.length; i += 1) {
-          each_blocks_2[i].d(1);
-        }
-        each_blocks_2.length = each_value_2.length;
-      }
-      if (dirty[0] & /*customEvents*/
-      512) {
-        each_value_1 = ensure_array_like(
-          /*customEvents*/
-          ctx2[9]
-        );
-        let i;
-        for (i = 0; i < each_value_1.length; i += 1) {
-          const child_ctx = get_each_context_1(ctx2, each_value_1, i);
-          if (each_blocks_1[i]) {
-            each_blocks_1[i].p(child_ctx, dirty);
-          } else {
-            each_blocks_1[i] = create_each_block_1(child_ctx);
-            each_blocks_1[i].c();
-            each_blocks_1[i].m(div2, t4);
-          }
-        }
-        for (; i < each_blocks_1.length; i += 1) {
-          each_blocks_1[i].d(1);
-        }
-        each_blocks_1.length = each_value_1.length;
-      }
-      if (!current || dirty[0] & /*percentage*/
-      4096) {
-        set_style(
-          div1,
-          "left",
-          /*percentage*/
-          ctx2[12]
-        );
-      }
-      if (!current || dirty[0] & /*speedState*/
-      1024) {
-        toggle_class(
-          div2,
-          "disabled",
-          /*speedState*/
-          ctx2[10] === "skipping"
-        );
-      }
-      if ((!current || dirty[0] & /*meta*/
-      256) && t6_value !== (t6_value = formatTime(
-        /*meta*/
-        ctx2[8].totalTime
-      ) + "")) set_data(t6, t6_value);
-      if (current_block_type !== (current_block_type = select_block_type(ctx2))) {
-        if_block.d(1);
-        if_block = current_block_type(ctx2);
-        if (if_block) {
-          if_block.c();
-          if_block.m(button0, null);
-        }
-      }
-      if (dirty[0] & /*speedState, speedOption, speed, setSpeed*/
-      1066) {
-        each_value = ensure_array_like(
-          /*speedOption*/
-          ctx2[3]
-        );
-        let i;
-        for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context(ctx2, each_value, i);
-          if (each_blocks[i]) {
-            each_blocks[i].p(child_ctx, dirty);
-          } else {
-            each_blocks[i] = create_each_block(child_ctx);
-            each_blocks[i].c();
-            each_blocks[i].m(div4, t9);
-          }
-        }
-        for (; i < each_blocks.length; i += 1) {
-          each_blocks[i].d(1);
-        }
-        each_blocks.length = each_value.length;
-      }
-      const switch_1_changes = {};
-      if (dirty[0] & /*speedState*/
-      1024) switch_1_changes.disabled = /*speedState*/
-      ctx2[10] === "skipping";
-      if (!updating_checked && dirty[0] & /*skipInactive*/
-      1) {
-        updating_checked = true;
-        switch_1_changes.checked = /*skipInactive*/
-        ctx2[0];
-        add_flush_callback(() => updating_checked = false);
-      }
-      switch_1.$set(switch_1_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(switch_1.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(switch_1.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(div5);
-      }
-      destroy_each(each_blocks_2, detaching);
-      destroy_each(each_blocks_1, detaching);
-      ctx[27](null);
-      if_block.d();
-      destroy_each(each_blocks, detaching);
-      destroy_component(switch_1);
-      mounted = false;
-      run_all(dispose);
-    }
-  };
-}
-function create_each_block_2(ctx) {
-  let div;
-  let div_title_value;
-  return {
-    c() {
-      div = element("div");
-      attr(div, "title", div_title_value = /*period*/
-      ctx[44].name);
-      set_style(
-        div,
-        "width",
-        /*period*/
-        ctx[44].width
-      );
-      set_style(div, "height", "4px");
-      set_style(div, "position", "absolute");
-      set_style(
-        div,
-        "background",
-        /*period*/
-        ctx[44].background
-      );
-      set_style(
-        div,
-        "left",
-        /*period*/
-        ctx[44].position
-      );
-    },
-    m(target, anchor) {
-      insert(target, div, anchor);
-    },
-    p(ctx2, dirty) {
-      if (dirty[0] & /*inactivePeriods*/
-      8192 && div_title_value !== (div_title_value = /*period*/
-      ctx2[44].name)) {
-        attr(div, "title", div_title_value);
-      }
-      if (dirty[0] & /*inactivePeriods*/
-      8192) {
-        set_style(
-          div,
-          "width",
-          /*period*/
-          ctx2[44].width
-        );
-      }
-      if (dirty[0] & /*inactivePeriods*/
-      8192) {
-        set_style(
-          div,
-          "background",
-          /*period*/
-          ctx2[44].background
-        );
-      }
-      if (dirty[0] & /*inactivePeriods*/
-      8192) {
-        set_style(
-          div,
-          "left",
-          /*period*/
-          ctx2[44].position
-        );
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(div);
-      }
-    }
-  };
-}
-function create_each_block_1(ctx) {
-  let div;
-  let div_title_value;
-  return {
-    c() {
-      div = element("div");
-      attr(div, "title", div_title_value = /*event*/
-      ctx[41].name);
-      set_style(div, "width", "10px");
-      set_style(div, "height", "5px");
-      set_style(div, "position", "absolute");
-      set_style(div, "top", "2px");
-      set_style(div, "transform", "translate(-50%, -50%)");
-      set_style(
-        div,
-        "background",
-        /*event*/
-        ctx[41].background
-      );
-      set_style(
-        div,
-        "left",
-        /*event*/
-        ctx[41].position
-      );
-    },
-    m(target, anchor) {
-      insert(target, div, anchor);
-    },
-    p(ctx2, dirty) {
-      if (dirty[0] & /*customEvents*/
-      512 && div_title_value !== (div_title_value = /*event*/
-      ctx2[41].name)) {
-        attr(div, "title", div_title_value);
-      }
-      if (dirty[0] & /*customEvents*/
-      512) {
-        set_style(
-          div,
-          "background",
-          /*event*/
-          ctx2[41].background
-        );
-      }
-      if (dirty[0] & /*customEvents*/
-      512) {
-        set_style(
-          div,
-          "left",
-          /*event*/
-          ctx2[41].position
-        );
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(div);
-      }
-    }
-  };
-}
-function create_else_block(ctx) {
-  let svg;
-  let path;
-  return {
-    c() {
-      svg = svg_element("svg");
-      path = svg_element("path");
-      attr(path, "d", "M170.65984 896l0-768 640 384zM644.66944\n              512l-388.66944-233.32864 0 466.65728z");
-      attr(svg, "class", "icon");
-      attr(svg, "viewBox", "0 0 1024 1024");
-      attr(svg, "version", "1.1");
-      attr(svg, "xmlns", "http://www.w3.org/2000/svg");
-      attr(svg, "xmlns:xlink", "http://www.w3.org/1999/xlink");
-      attr(svg, "width", "16");
-      attr(svg, "height", "16");
-    },
-    m(target, anchor) {
-      insert(target, svg, anchor);
-      append(svg, path);
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(svg);
-      }
-    }
-  };
-}
-function create_if_block_1(ctx) {
-  let svg;
-  let path;
-  return {
-    c() {
-      svg = svg_element("svg");
-      path = svg_element("path");
-      attr(path, "d", "M682.65984 128q53.00224 0 90.50112 37.49888t37.49888 90.50112l0\n              512q0 53.00224-37.49888 90.50112t-90.50112\n              37.49888-90.50112-37.49888-37.49888-90.50112l0-512q0-53.00224\n              37.49888-90.50112t90.50112-37.49888zM341.34016 128q53.00224 0\n              90.50112 37.49888t37.49888 90.50112l0 512q0 53.00224-37.49888\n              90.50112t-90.50112\n              37.49888-90.50112-37.49888-37.49888-90.50112l0-512q0-53.00224\n              37.49888-90.50112t90.50112-37.49888zM341.34016 213.34016q-17.67424\n              0-30.16704 12.4928t-12.4928 30.16704l0 512q0 17.67424 12.4928\n              30.16704t30.16704 12.4928 30.16704-12.4928\n              12.4928-30.16704l0-512q0-17.67424-12.4928-30.16704t-30.16704-12.4928zM682.65984\n              213.34016q-17.67424 0-30.16704 12.4928t-12.4928 30.16704l0 512q0\n              17.67424 12.4928 30.16704t30.16704 12.4928 30.16704-12.4928\n              12.4928-30.16704l0-512q0-17.67424-12.4928-30.16704t-30.16704-12.4928z");
-      attr(svg, "class", "icon");
-      attr(svg, "viewBox", "0 0 1024 1024");
-      attr(svg, "version", "1.1");
-      attr(svg, "xmlns", "http://www.w3.org/2000/svg");
-      attr(svg, "xmlns:xlink", "http://www.w3.org/1999/xlink");
-      attr(svg, "width", "16");
-      attr(svg, "height", "16");
-    },
-    m(target, anchor) {
-      insert(target, svg, anchor);
-      append(svg, path);
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(svg);
-      }
-    }
-  };
-}
-function create_each_block(ctx) {
-  let button;
-  let t0_value = (
-    /*s*/
-    ctx[38] + ""
-  );
-  let t0;
-  let t1;
-  let button_disabled_value;
-  let mounted;
-  let dispose;
-  function click_handler() {
-    return (
-      /*click_handler*/
-      ctx[28](
-        /*s*/
-        ctx[38]
-      )
-    );
-  }
-  return {
-    c() {
-      button = element("button");
-      t0 = text(t0_value);
-      t1 = text("x");
-      button.disabled = button_disabled_value = /*speedState*/
-      ctx[10] === "skipping";
-      attr(button, "class", "svelte-189zk2r");
-      toggle_class(
-        button,
-        "active",
-        /*s*/
-        ctx[38] === /*speed*/
-        ctx[1] && /*speedState*/
-        ctx[10] !== "skipping"
-      );
-    },
-    m(target, anchor) {
-      insert(target, button, anchor);
-      append(button, t0);
-      append(button, t1);
-      if (!mounted) {
-        dispose = listen(button, "click", click_handler);
-        mounted = true;
-      }
-    },
-    p(new_ctx, dirty) {
-      ctx = new_ctx;
-      if (dirty[0] & /*speedOption*/
-      8 && t0_value !== (t0_value = /*s*/
-      ctx[38] + "")) set_data(t0, t0_value);
-      if (dirty[0] & /*speedState*/
-      1024 && button_disabled_value !== (button_disabled_value = /*speedState*/
-      ctx[10] === "skipping")) {
-        button.disabled = button_disabled_value;
-      }
-      if (dirty[0] & /*speedOption, speed, speedState*/
-      1034) {
-        toggle_class(
-          button,
-          "active",
-          /*s*/
-          ctx[38] === /*speed*/
-          ctx[1] && /*speedState*/
-          ctx[10] !== "skipping"
-        );
-      }
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(button);
-      }
-      mounted = false;
-      dispose();
-    }
-  };
-}
-function create_fragment$1(ctx) {
-  let if_block_anchor;
-  let current;
-  let if_block = (
-    /*showController*/
-    ctx[2] && create_if_block$1(ctx)
-  );
-  return {
-    c() {
-      if (if_block) if_block.c();
-      if_block_anchor = empty();
-    },
-    m(target, anchor) {
-      if (if_block) if_block.m(target, anchor);
-      insert(target, if_block_anchor, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      if (
-        /*showController*/
-        ctx2[2]
-      ) {
-        if (if_block) {
-          if_block.p(ctx2, dirty);
-          if (dirty[0] & /*showController*/
-          4) {
-            transition_in(if_block, 1);
-          }
-        } else {
-          if_block = create_if_block$1(ctx2);
-          if_block.c();
-          transition_in(if_block, 1);
-          if_block.m(if_block_anchor.parentNode, if_block_anchor);
-        }
-      } else if (if_block) {
-        group_outros();
-        transition_out(if_block, 1, 1, () => {
-          if_block = null;
-        });
-        check_outros();
-      }
-    },
-    i(local) {
-      if (current) return;
-      transition_in(if_block);
-      current = true;
-    },
-    o(local) {
-      transition_out(if_block);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(if_block_anchor);
-      }
-      if (if_block) if_block.d(detaching);
-    }
-  };
-}
-function position(startTime, endTime, tagTime) {
-  const sessionDuration = endTime - startTime;
-  const eventDuration = endTime - tagTime;
-  const eventPosition = 100 - eventDuration / sessionDuration * 100;
-  return eventPosition.toFixed(2);
-}
-function instance$1($$self, $$props, $$invalidate) {
-  const dispatch = createEventDispatcher();
-  let { replayer } = $$props;
-  let { showController } = $$props;
-  let { autoPlay } = $$props;
-  let { skipInactive } = $$props;
-  let { speedOption } = $$props;
-  let { speed = speedOption.length ? speedOption[0] : 1 } = $$props;
-  let { tags = {} } = $$props;
-  let { inactiveColor } = $$props;
-  let currentTime = 0;
-  let timer = null;
-  let playerState;
-  let speedState;
-  let progress;
-  let finished;
-  let pauseAt = false;
-  let onPauseHook = null;
-  let loop = null;
-  let meta;
-  let percentage;
-  let customEvents;
-  let inactivePeriods;
-  const loopTimer = () => {
-    stopTimer();
-    function update2() {
-      $$invalidate(6, currentTime = replayer.getCurrentTime());
-      if (pauseAt && currentTime >= pauseAt) {
-        if (loop) {
-          playRange(loop.start, loop.end, true, void 0);
-        } else {
-          replayer.pause();
-          if (onPauseHook) {
-            onPauseHook();
-            onPauseHook = null;
-          }
-        }
-      }
-      if (currentTime < meta.totalTime) {
-        timer = requestAnimationFrame(update2);
-      }
-    }
-    timer = requestAnimationFrame(update2);
-  };
-  const stopTimer = () => {
-    if (timer) {
-      cancelAnimationFrame(timer);
-      timer = null;
-    }
-  };
-  const toggle = () => {
-    switch (playerState) {
-      case "playing":
-        pause();
-        break;
-      case "paused":
-        play();
-        break;
-    }
-  };
-  const play = () => {
-    if (playerState !== "paused") {
-      return;
-    }
-    if (finished) {
-      replayer.play();
-      finished = false;
-    } else {
-      replayer.play(currentTime);
-    }
-  };
-  const pause = () => {
-    if (playerState !== "playing") {
-      return;
-    }
-    replayer.pause();
-    pauseAt = false;
-  };
-  const goto = (timeOffset, play2) => {
-    $$invalidate(6, currentTime = timeOffset);
-    pauseAt = false;
-    finished = false;
-    const resumePlaying = typeof play2 === "boolean" ? play2 : playerState === "playing";
-    if (resumePlaying) {
-      replayer.play(timeOffset);
-    } else {
-      replayer.pause(timeOffset);
-    }
-  };
-  const playRange = (timeOffset, endTimeOffset, startLooping = false, afterHook = void 0) => {
-    if (startLooping) {
-      loop = { start: timeOffset, end: endTimeOffset };
-    } else {
-      loop = null;
-    }
-    $$invalidate(6, currentTime = timeOffset);
-    pauseAt = endTimeOffset;
-    onPauseHook = afterHook || null;
-    replayer.play(timeOffset);
-  };
-  const handleProgressClick = (event) => {
-    if (speedState === "skipping") {
-      return;
-    }
-    const progressRect = progress.getBoundingClientRect();
-    const x = event.clientX - progressRect.left;
-    let percent = x / progressRect.width;
-    if (percent < 0) {
-      percent = 0;
-    } else if (percent > 1) {
-      percent = 1;
-    }
-    const timeOffset = meta.totalTime * percent;
-    goto(timeOffset);
-  };
-  const handleProgressKeydown = (event) => {
-    if (speedState === "skipping") {
-      return;
-    }
-    if (event.key === "ArrowLeft") {
-      goto(currentTime - 5);
-    } else if (event.key === "ArrowRight") {
-      goto(currentTime + 5);
-    }
-  };
-  const setSpeed = (newSpeed) => {
-    let needFreeze = playerState === "playing";
-    $$invalidate(1, speed = newSpeed);
-    if (needFreeze) {
-      replayer.pause();
-    }
-    replayer.setConfig({ speed });
-    if (needFreeze) {
-      replayer.play(currentTime);
-    }
-  };
-  const toggleSkipInactive = () => {
-    $$invalidate(0, skipInactive = !skipInactive);
-  };
-  const triggerUpdateMeta = () => {
-    return Promise.resolve().then(() => {
-      $$invalidate(8, meta = replayer.getMetaData());
-    });
-  };
-  onMount(() => {
-    $$invalidate(7, playerState = replayer.service.state.value);
-    $$invalidate(10, speedState = replayer.speedService.state.value);
-    replayer.on("state-change", (states) => {
-      const { player, speed: speed2 } = states;
-      if ((player == null ? void 0 : player.value) && playerState !== player.value) {
-        $$invalidate(7, playerState = player.value);
-        switch (playerState) {
-          case "playing":
-            loopTimer();
-            break;
-          case "paused":
-            stopTimer();
-            break;
-        }
-      }
-      if ((speed2 == null ? void 0 : speed2.value) && speedState !== speed2.value) {
-        $$invalidate(10, speedState = speed2.value);
-      }
-    });
-    replayer.on("finish", () => {
-      finished = true;
-      if (onPauseHook) {
-        onPauseHook();
-        onPauseHook = null;
-      }
-    });
-    if (autoPlay) {
-      replayer.play();
-    }
-  });
-  afterUpdate(() => {
-    if (skipInactive !== replayer.config.skipInactive) {
-      replayer.setConfig({ skipInactive });
-    }
-  });
-  onDestroy(() => {
-    replayer.pause();
-    stopTimer();
-  });
-  function div2_binding($$value) {
-    binding_callbacks[$$value ? "unshift" : "push"](() => {
-      progress = $$value;
-      $$invalidate(11, progress);
-    });
-  }
-  const click_handler = (s2) => setSpeed(s2);
-  function switch_1_checked_binding(value) {
-    skipInactive = value;
-    $$invalidate(0, skipInactive);
-  }
-  const click_handler_1 = () => dispatch("fullscreen");
-  $$self.$$set = ($$props2) => {
-    if ("replayer" in $$props2) $$invalidate(17, replayer = $$props2.replayer);
-    if ("showController" in $$props2) $$invalidate(2, showController = $$props2.showController);
-    if ("autoPlay" in $$props2) $$invalidate(18, autoPlay = $$props2.autoPlay);
-    if ("skipInactive" in $$props2) $$invalidate(0, skipInactive = $$props2.skipInactive);
-    if ("speedOption" in $$props2) $$invalidate(3, speedOption = $$props2.speedOption);
-    if ("speed" in $$props2) $$invalidate(1, speed = $$props2.speed);
-    if ("tags" in $$props2) $$invalidate(19, tags = $$props2.tags);
-    if ("inactiveColor" in $$props2) $$invalidate(20, inactiveColor = $$props2.inactiveColor);
-  };
-  $$self.$$.update = () => {
-    if ($$self.$$.dirty[0] & /*currentTime*/
-    64) {
-      {
-        dispatch("ui-update-current-time", { payload: currentTime });
-      }
-    }
-    if ($$self.$$.dirty[0] & /*playerState*/
-    128) {
-      {
-        dispatch("ui-update-player-state", { payload: playerState });
-      }
-    }
-    if ($$self.$$.dirty[0] & /*replayer*/
-    131072) {
-      $$invalidate(8, meta = replayer.getMetaData());
-    }
-    if ($$self.$$.dirty[0] & /*currentTime, meta*/
-    320) {
-      {
-        const percent = Math.min(1, currentTime / meta.totalTime);
-        $$invalidate(12, percentage = `${100 * percent}%`);
-        dispatch("ui-update-progress", { payload: percent });
-      }
-    }
-    if ($$self.$$.dirty[0] & /*replayer, tags*/
-    655360) {
-      $$invalidate(9, customEvents = (() => {
-        const { context } = replayer.service.state;
-        const totalEvents = context.events.length;
-        const start = context.events[0].timestamp;
-        const end = context.events[totalEvents - 1].timestamp;
-        const customEvents2 = [];
-        context.events.forEach((event) => {
-          if (event.type === EventType.Custom) {
-            const customEvent = {
-              name: event.data.tag,
-              background: tags[event.data.tag] || "rgb(73, 80, 246)",
-              position: `${position(start, end, event.timestamp)}%`
-            };
-            customEvents2.push(customEvent);
-          }
-        });
-        return customEvents2;
-      })());
-    }
-    if ($$self.$$.dirty[0] & /*replayer, inactiveColor*/
-    1179648) {
-      $$invalidate(13, inactivePeriods = (() => {
-        try {
-          const { context } = replayer.service.state;
-          const totalEvents = context.events.length;
-          const start = context.events[0].timestamp;
-          const end = context.events[totalEvents - 1].timestamp;
-          const periods = getInactivePeriods(context.events, replayer.config.inactivePeriodThreshold);
-          const getWidth = (startTime, endTime, tagStart, tagEnd) => {
-            const sessionDuration = endTime - startTime;
-            const eventDuration = tagEnd - tagStart;
-            const width = eventDuration / sessionDuration * 100;
-            return width.toFixed(2);
-          };
-          return periods.map((period) => ({
-            name: "inactive period",
-            background: inactiveColor,
-            position: `${position(start, end, period[0])}%`,
-            width: `${getWidth(start, end, period[0], period[1])}%`
-          }));
-        } catch (e2) {
-          return [];
-        }
-      })());
-    }
-  };
-  return [
-    skipInactive,
-    speed,
-    showController,
-    speedOption,
-    toggle,
-    setSpeed,
-    currentTime,
-    playerState,
-    meta,
-    customEvents,
-    speedState,
-    progress,
-    percentage,
-    inactivePeriods,
-    dispatch,
-    handleProgressClick,
-    handleProgressKeydown,
-    replayer,
-    autoPlay,
-    tags,
-    inactiveColor,
-    play,
-    pause,
-    goto,
-    playRange,
-    toggleSkipInactive,
-    triggerUpdateMeta,
-    div2_binding,
-    click_handler,
-    switch_1_checked_binding,
-    click_handler_1
-  ];
-}
-class Controller extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(
-      this,
-      options,
-      instance$1,
-      create_fragment$1,
-      safe_not_equal,
-      {
-        replayer: 17,
-        showController: 2,
-        autoPlay: 18,
-        skipInactive: 0,
-        speedOption: 3,
-        speed: 1,
-        tags: 19,
-        inactiveColor: 20,
-        toggle: 4,
-        play: 21,
-        pause: 22,
-        goto: 23,
-        playRange: 24,
-        setSpeed: 5,
-        toggleSkipInactive: 25,
-        triggerUpdateMeta: 26
-      },
-      null,
-      [-1, -1]
-    );
-  }
-  get toggle() {
-    return this.$$.ctx[4];
-  }
-  get play() {
-    return this.$$.ctx[21];
-  }
-  get pause() {
-    return this.$$.ctx[22];
-  }
-  get goto() {
-    return this.$$.ctx[23];
-  }
-  get playRange() {
-    return this.$$.ctx[24];
-  }
-  get setSpeed() {
-    return this.$$.ctx[5];
-  }
-  get toggleSkipInactive() {
-    return this.$$.ctx[25];
-  }
-  get triggerUpdateMeta() {
-    return this.$$.ctx[26];
-  }
-}
-function create_if_block(ctx) {
-  let controller_1;
-  let current;
-  let controller_1_props = {
-    replayer: (
-      /*replayer*/
-      ctx[7]
-    ),
-    showController: (
-      /*showController*/
-      ctx[3]
-    ),
-    autoPlay: (
-      /*autoPlay*/
-      ctx[1]
-    ),
-    speedOption: (
-      /*speedOption*/
-      ctx[2]
-    ),
-    skipInactive: (
-      /*skipInactive*/
-      ctx[0]
-    ),
-    tags: (
-      /*tags*/
-      ctx[4]
-    ),
-    inactiveColor: (
-      /*inactiveColor*/
-      ctx[5]
-    )
-  };
-  controller_1 = new Controller({ props: controller_1_props });
-  ctx[32](controller_1);
-  controller_1.$on(
-    "fullscreen",
-    /*fullscreen_handler*/
-    ctx[33]
-  );
-  return {
-    c() {
-      create_component(controller_1.$$.fragment);
-    },
-    m(target, anchor) {
-      mount_component(controller_1, target, anchor);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      const controller_1_changes = {};
-      if (dirty[0] & /*replayer*/
-      128) controller_1_changes.replayer = /*replayer*/
-      ctx2[7];
-      if (dirty[0] & /*showController*/
-      8) controller_1_changes.showController = /*showController*/
-      ctx2[3];
-      if (dirty[0] & /*autoPlay*/
-      2) controller_1_changes.autoPlay = /*autoPlay*/
-      ctx2[1];
-      if (dirty[0] & /*speedOption*/
-      4) controller_1_changes.speedOption = /*speedOption*/
-      ctx2[2];
-      if (dirty[0] & /*skipInactive*/
-      1) controller_1_changes.skipInactive = /*skipInactive*/
-      ctx2[0];
-      if (dirty[0] & /*tags*/
-      16) controller_1_changes.tags = /*tags*/
-      ctx2[4];
-      if (dirty[0] & /*inactiveColor*/
-      32) controller_1_changes.inactiveColor = /*inactiveColor*/
-      ctx2[5];
-      controller_1.$set(controller_1_changes);
-    },
-    i(local) {
-      if (current) return;
-      transition_in(controller_1.$$.fragment, local);
-      current = true;
-    },
-    o(local) {
-      transition_out(controller_1.$$.fragment, local);
-      current = false;
-    },
-    d(detaching) {
-      ctx[32](null);
-      destroy_component(controller_1, detaching);
-    }
-  };
-}
-function create_fragment(ctx) {
-  let div1;
-  let div0;
-  let t2;
-  let current;
-  let if_block = (
-    /*replayer*/
-    ctx[7] && create_if_block(ctx)
-  );
-  return {
-    c() {
-      div1 = element("div");
-      div0 = element("div");
-      t2 = space();
-      if (if_block) if_block.c();
-      attr(div0, "class", "rr-player__frame");
-      attr(
-        div0,
-        "style",
-        /*style*/
-        ctx[11]
-      );
-      attr(div1, "class", "rr-player");
-      attr(
-        div1,
-        "style",
-        /*playerStyle*/
-        ctx[12]
-      );
-    },
-    m(target, anchor) {
-      insert(target, div1, anchor);
-      append(div1, div0);
-      ctx[31](div0);
-      append(div1, t2);
-      if (if_block) if_block.m(div1, null);
-      ctx[34](div1);
-      current = true;
-    },
-    p(ctx2, dirty) {
-      if (!current || dirty[0] & /*style*/
-      2048) {
-        attr(
-          div0,
-          "style",
-          /*style*/
-          ctx2[11]
-        );
-      }
-      if (
-        /*replayer*/
-        ctx2[7]
-      ) {
-        if (if_block) {
-          if_block.p(ctx2, dirty);
-          if (dirty[0] & /*replayer*/
-          128) {
-            transition_in(if_block, 1);
-          }
-        } else {
-          if_block = create_if_block(ctx2);
-          if_block.c();
-          transition_in(if_block, 1);
-          if_block.m(div1, null);
-        }
-      } else if (if_block) {
-        group_outros();
-        transition_out(if_block, 1, 1, () => {
-          if_block = null;
-        });
-        check_outros();
-      }
-      if (!current || dirty[0] & /*playerStyle*/
-      4096) {
-        attr(
-          div1,
-          "style",
-          /*playerStyle*/
-          ctx2[12]
-        );
-      }
-    },
-    i(local) {
-      if (current) return;
-      transition_in(if_block);
-      current = true;
-    },
-    o(local) {
-      transition_out(if_block);
-      current = false;
-    },
-    d(detaching) {
-      if (detaching) {
-        detach(div1);
-      }
-      ctx[31](null);
-      if (if_block) if_block.d();
-      ctx[34](null);
-    }
-  };
-}
-const controllerHeight = 80;
-function instance($$self, $$props, $$invalidate) {
-  let { width = 1024 } = $$props;
-  let { height = 576 } = $$props;
-  let { maxScale = 1 } = $$props;
-  let { events } = $$props;
-  let { skipInactive = true } = $$props;
-  let { autoPlay = true } = $$props;
-  let { speedOption = [1, 2, 4, 8] } = $$props;
-  let { speed = 1 } = $$props;
-  let { showController = true } = $$props;
-  let { tags = {} } = $$props;
-  let { inactiveColor = "#D4D4D4" } = $$props;
-  let replayer;
-  const getMirror = () => replayer.getMirror();
-  let player;
-  let frame;
-  let fullscreenListener;
-  let _width = width;
-  let _height = height;
-  let controller;
-  let style;
-  let playerStyle;
-  const updateScale = (el, frameDimension) => {
-    const widthScale = width / frameDimension.width;
-    const heightScale = height / frameDimension.height;
-    const scale = [widthScale, heightScale];
-    if (maxScale) scale.push(maxScale);
-    el.style.transform = `scale(${Math.min(...scale)})translate(-50%, -50%)`;
-  };
-  const triggerResize = () => {
-    updateScale(replayer.wrapper, {
-      width: replayer.iframe.offsetWidth,
-      height: replayer.iframe.offsetHeight
-    });
-  };
-  const toggleFullscreen = () => {
-    if (player) {
-      isFullscreen() ? exitFullscreen() : openFullscreen(player);
-    }
-  };
-  const addEventListener = (event, handler) => {
-    replayer.on(event, handler);
-    switch (event) {
-      case "ui-update-current-time":
-      case "ui-update-progress":
-      case "ui-update-player-state":
-        controller.$on(event, ({ detail }) => handler(detail));
-    }
-  };
-  const addEvent = (event) => {
-    replayer.addEvent(event);
-    controller.triggerUpdateMeta();
-  };
-  const getMetaData = () => replayer.getMetaData();
-  const getReplayer = () => replayer;
-  const toggle = () => {
-    controller.toggle();
-  };
-  const setSpeed = (speed2) => {
-    controller.setSpeed(speed2);
-  };
-  const toggleSkipInactive = () => {
-    controller.toggleSkipInactive();
-  };
-  const play = () => {
-    controller.play();
-  };
-  const pause = () => {
-    controller.pause();
-  };
-  const goto = (timeOffset, play2) => {
-    controller.goto(timeOffset, play2);
-  };
-  const playRange = (timeOffset, endTimeOffset, startLooping = false, afterHook = void 0) => {
-    controller.playRange(timeOffset, endTimeOffset, startLooping, afterHook);
-  };
-  onMount(() => {
-    if (speedOption !== void 0 && typeOf(speedOption) !== "array") {
-      throw new Error("speedOption must be array");
-    }
-    speedOption.forEach((item) => {
-      if (typeOf(item) !== "number") {
-        throw new Error("item of speedOption must be number");
-      }
-    });
-    if (speedOption.indexOf(speed) < 0) {
-      throw new Error(`speed must be one of speedOption,
-        current config:
-        {
-          ...
-          speed: ${speed},
-          speedOption: [${speedOption.toString()}]
-          ...
-        }
-        `);
-    }
-    $$invalidate(7, replayer = new Replayer(
-      events,
-      {
-        speed,
-        root: frame,
-        unpackFn: unpack,
-        ...$$props
-      }
-    ));
-    replayer.on("resize", (dimension) => {
-      updateScale(replayer.wrapper, dimension);
-    });
-    fullscreenListener = onFullscreenChange(() => {
-      if (isFullscreen()) {
-        setTimeout(
-          () => {
-            _width = width;
-            _height = height;
-            $$invalidate(13, width = player.offsetWidth);
-            $$invalidate(14, height = player.offsetHeight - (showController ? controllerHeight : 0));
-            updateScale(replayer.wrapper, {
-              width: replayer.iframe.offsetWidth,
-              height: replayer.iframe.offsetHeight
-            });
-          },
-          0
-        );
-      } else {
-        $$invalidate(13, width = _width);
-        $$invalidate(14, height = _height);
-        updateScale(replayer.wrapper, {
-          width: replayer.iframe.offsetWidth,
-          height: replayer.iframe.offsetHeight
-        });
-      }
-    });
-  });
-  onDestroy(() => {
-    fullscreenListener && fullscreenListener();
-  });
-  function div0_binding($$value) {
-    binding_callbacks[$$value ? "unshift" : "push"](() => {
-      frame = $$value;
-      $$invalidate(9, frame);
-    });
-  }
-  function controller_1_binding($$value) {
-    binding_callbacks[$$value ? "unshift" : "push"](() => {
-      controller = $$value;
-      $$invalidate(10, controller);
-    });
-  }
-  const fullscreen_handler = () => toggleFullscreen();
-  function div1_binding($$value) {
-    binding_callbacks[$$value ? "unshift" : "push"](() => {
-      player = $$value;
-      $$invalidate(8, player);
-    });
-  }
-  $$self.$$set = ($$new_props) => {
-    $$invalidate(39, $$props = assign(assign({}, $$props), exclude_internal_props($$new_props)));
-    if ("width" in $$new_props) $$invalidate(13, width = $$new_props.width);
-    if ("height" in $$new_props) $$invalidate(14, height = $$new_props.height);
-    if ("maxScale" in $$new_props) $$invalidate(15, maxScale = $$new_props.maxScale);
-    if ("events" in $$new_props) $$invalidate(16, events = $$new_props.events);
-    if ("skipInactive" in $$new_props) $$invalidate(0, skipInactive = $$new_props.skipInactive);
-    if ("autoPlay" in $$new_props) $$invalidate(1, autoPlay = $$new_props.autoPlay);
-    if ("speedOption" in $$new_props) $$invalidate(2, speedOption = $$new_props.speedOption);
-    if ("speed" in $$new_props) $$invalidate(17, speed = $$new_props.speed);
-    if ("showController" in $$new_props) $$invalidate(3, showController = $$new_props.showController);
-    if ("tags" in $$new_props) $$invalidate(4, tags = $$new_props.tags);
-    if ("inactiveColor" in $$new_props) $$invalidate(5, inactiveColor = $$new_props.inactiveColor);
-  };
-  $$self.$$.update = () => {
-    if ($$self.$$.dirty[0] & /*width, height*/
-    24576) {
-      $$invalidate(11, style = inlineCss({
-        width: `${width}px`,
-        height: `${height}px`
-      }));
-    }
-    if ($$self.$$.dirty[0] & /*width, height, showController*/
-    24584) {
-      $$invalidate(12, playerStyle = inlineCss({
-        width: `${width}px`,
-        height: `${height + (showController ? controllerHeight : 0)}px`
-      }));
-    }
-  };
-  $$props = exclude_internal_props($$props);
-  return [
-    skipInactive,
-    autoPlay,
-    speedOption,
-    showController,
-    tags,
-    inactiveColor,
-    toggleFullscreen,
-    replayer,
-    player,
-    frame,
-    controller,
-    style,
-    playerStyle,
-    width,
-    height,
-    maxScale,
-    events,
-    speed,
-    getMirror,
-    triggerResize,
-    addEventListener,
-    addEvent,
-    getMetaData,
-    getReplayer,
-    toggle,
-    setSpeed,
-    toggleSkipInactive,
-    play,
-    pause,
-    goto,
-    playRange,
-    div0_binding,
-    controller_1_binding,
-    fullscreen_handler,
-    div1_binding
-  ];
-}
-let Player$1 = class Player extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(
-      this,
-      options,
-      instance,
-      create_fragment,
-      safe_not_equal,
-      {
-        width: 13,
-        height: 14,
-        maxScale: 15,
-        events: 16,
-        skipInactive: 0,
-        autoPlay: 1,
-        speedOption: 2,
-        speed: 17,
-        showController: 3,
-        tags: 4,
-        inactiveColor: 5,
-        getMirror: 18,
-        triggerResize: 19,
-        toggleFullscreen: 6,
-        addEventListener: 20,
-        addEvent: 21,
-        getMetaData: 22,
-        getReplayer: 23,
-        toggle: 24,
-        setSpeed: 25,
-        toggleSkipInactive: 26,
-        play: 27,
-        pause: 28,
-        goto: 29,
-        playRange: 30
-      },
-      null,
-      [-1, -1]
-    );
-  }
-  get getMirror() {
-    return this.$$.ctx[18];
-  }
-  get triggerResize() {
-    return this.$$.ctx[19];
-  }
-  get toggleFullscreen() {
-    return this.$$.ctx[6];
-  }
-  get addEventListener() {
-    return this.$$.ctx[20];
-  }
-  get addEvent() {
-    return this.$$.ctx[21];
-  }
-  get getMetaData() {
-    return this.$$.ctx[22];
-  }
-  get getReplayer() {
-    return this.$$.ctx[23];
-  }
-  get toggle() {
-    return this.$$.ctx[24];
-  }
-  get setSpeed() {
-    return this.$$.ctx[25];
-  }
-  get toggleSkipInactive() {
-    return this.$$.ctx[26];
-  }
-  get play() {
-    return this.$$.ctx[27];
-  }
-  get pause() {
-    return this.$$.ctx[28];
-  }
-  get goto() {
-    return this.$$.ctx[29];
-  }
-  get playRange() {
-    return this.$$.ctx[30];
-  }
-};
-class Player2 extends Player$1 {
-  constructor(options) {
-    super({
-      target: options.target,
-      props: options.data || options.props
-    });
-  }
-}
 export {
-  Player2 as Player,
-  Player2 as default
+  Replayer
 };
