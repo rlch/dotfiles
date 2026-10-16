@@ -11,7 +11,12 @@ import { common } from "../abyme-common/index.ts";
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
 // The address devices reach abyme at, shown under Add a device.
-abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
+// `proxy`: where the phone's web views reach the Mac's network through abymed
+// (`tailscale serve --tcp 4479 tcp://127.0.0.1:4477`).
+abyme.server({
+  url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443",
+  proxy: "http://richards-macbook-pro-2.tail21822e.ts.net:4479",
+});
 
 common({ lead: true });
 
