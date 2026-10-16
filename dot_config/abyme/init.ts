@@ -10,8 +10,6 @@ import { common } from "../abyme-common/index.ts";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
-// The name the app's menu and the phone list this server by.
-abyme.server({ name: "coding" });
 // The address devices reach abyme at, shown under Add a device.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
