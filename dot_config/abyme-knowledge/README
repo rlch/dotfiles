@@ -1,0 +1,18 @@
+Your abyme config. See docs/abymed.md, "Your config".
+
+  init.ts    runs in abymed: what runs (x.setup(...)), options, secrets, abymed's own
+             settings (abyme.server({ ... }))
+  init.tsx   runs in every page: keys, commands, looks
+  *          anything else is yours: files and folders those two import
+
+abyme reads those two files and what they import, and nothing else here. A plugin runs when
+init.ts sets it up: `standard.setup()` is the line for abyme's built-ins, and without any setup
+abyme shows nothing but how to start. abyme never changes a file you wrote.
+
+abyme writes nothing here once the folder exists, but `plugins.lock`: the version and sha512 of
+each plugin fetched from npm or a URL. Commit it and this folder gives another machine the same
+plugins at the same versions; delete it and ranges are resolved afresh.
+
+Your editor types both files from abyme's contracts: tsconfig.server.json and tsconfig.page.json
+each extend one of abyme's (web/types/ in its source), and tsconfig.json names the two. A folder of
+yours that is a plugin is typed by its own contract.ts (docs/plugins.md, The registry).
