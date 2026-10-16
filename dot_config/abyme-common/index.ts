@@ -1,5 +1,5 @@
 // What every profile of mine shares (coding in ~/.config/abyme, knowledge in
-// ~/.config/abyme-knowledge): each init.ts imports this and calls `common()`. Plain code, imported
+// ~/.config/abyme-knowledge): each init.ts imports this and calls `common({ lead })`. Plain code, imported
 // by a relative path; a save here runs each config that imports it again (docs/abymed.md, Several
 // abymeds). What one profile alone needs stays in its own init.ts.
 
@@ -14,7 +14,9 @@ import accounts from "./accounts";
 import publish from "./publish";
 import replay from "./replay";
 
-export function common() {
+/** `lead`: the profile that renews the accounts' tokens (coding, always running). Two renewing one
+ * refresh token race, and the loser holds a dead one. */
+export function common({ lead }: { lead: boolean }) {
   // The built client abymed serves: a stable copy, so a build in ~/dev/abyme never changes what an
   // open page is running. `scripts/promote` in ~/dev/abyme copies a finished build here.
   abyme.server({ clientDir: "~/.local/share/abyme/client" });
@@ -33,7 +35,7 @@ export function common() {
   // in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
   vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
   // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
-  accounts.setup();
+  accounts.setup({ renew: lead });
   // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
   publish.setup();
   // rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,

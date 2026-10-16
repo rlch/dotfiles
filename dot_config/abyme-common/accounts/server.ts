@@ -121,6 +121,39 @@ async function token(a: Account, busy: boolean): Promise<string | null> {
 
 type Quota = { at: number; usage: Usage; windows: ModelWindow[] } | { at: number; error: string };
 const quota = new Map<string, { at: number; data: Record<string, unknown> }>();
+
+/** The last answer of each identity, shared by every profile's abymed on this Mac (coding,
+ * knowledge): a profile reads the others' before it asks, so two profiles ask no more often
+ * than one. Usage only, never a token. */
+const SHARED = `${HOME}/.local/state/abyme-accounts-usage.json`;
+type Shared = Record<string, { at: number; data: Record<string, unknown> }>;
+async function readShared(): Promise<Shared> {
+  try {
+    return (JSON.parse((await abyme.fs.read(SHARED)) ?? "{}") as Shared) ?? {};
+  } catch {
+    return {};
+  }
+}
+/** One write at a time from this abymed: the identities' reads finish together, and parallel
+ * writes of one file lose all but one. Another profile's write between a read and a write is
+ * retried. */
+let writing: Promise<void> = Promise.resolve();
+function writeShared(key: string, entry: Shared[string]): Promise<void> {
+  writing = writing.then(() => writeOne(key, entry)).catch(() => {});
+  return writing;
+}
+async function writeOne(key: string, entry: Shared[string]) {
+  for (let i = 0; i < 3; i++) {
+    const now = await abyme.fs.read(SHARED, { version: true });
+    let all: Shared = {};
+    try {
+      all = now?.text ? (JSON.parse(now.text) as Shared) : {};
+    } catch {}
+    if ((all[key]?.at ?? 0) >= entry.at) return;
+    all[key] = entry;
+    if ((await abyme.fs.write(SHARED, JSON.stringify(all), { ifVersion: now?.version ?? null })).written) return;
+  }
+}
 /** What each identity's last read said, an error included, for the status bar between reads. */
 const last = new Map<string, Quota>();
 
@@ -130,7 +163,9 @@ const answer = (at: number, data: Record<string, unknown>): Quota => {
 };
 
 async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
-  const had = quota.get(a.key);
+  const mine = quota.get(a.key);
+  const theirs = (await readShared())[a.key];
+  const had = theirs && (!mine || theirs.at > mine.at) ? theirs : mine;
   if (had && Date.now() - had.at < FRESH_MS) return answer(had.at, had.data);
   const t = await token(a, busy);
   if (!t) return { at: Date.now(), error: "no credentials" };
@@ -146,6 +181,7 @@ async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
   try {
     const data = JSON.parse(r.body) as Record<string, unknown>;
     quota.set(a.key, { at: Date.now(), data });
+    await writeShared(a.key, { at: Date.now(), data });
     return answer(Date.now(), data);
   } catch {
     return fallback("an answer that is not JSON");

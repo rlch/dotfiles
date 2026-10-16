@@ -15,7 +15,7 @@ abyme.server({ name: "coding" });
 // The address devices reach abyme at, shown under Add a device.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
-common();
+common({ lead: true });
 
 // Load reads the two heavy slots schools-ts' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
 load.setup({ slots: 2 });

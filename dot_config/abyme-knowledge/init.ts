@@ -16,7 +16,7 @@ abyme.server({ name: "knowledge" });
 // The address devices reach it at: `tailscale serve` on 4446 in front of 127.0.0.1:4478.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4446" });
 
-common();
+common({ lead: false });
 
 // MDX documents, and learning from them: the vault's documents are things to learn, its log
 // (.learn/log.jsonl) the truth FSRS is computed from (docs/learning.md). Beside the Obsidian vault
