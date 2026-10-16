@@ -10,6 +10,8 @@ import { common } from "../abyme-common/index.ts";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
+// The profile, as the app's start window and the phone list it under this Mac.
+abyme.server({ name: "Coding", color: "blue", icon: "code" });
 // The address devices reach abyme at, shown under Add a device.
 // `proxy`: where the phone's web views reach the Mac's network through abymed
 // (`tailscale serve --tcp 4479 tcp://127.0.0.1:4477`).
