@@ -105,7 +105,7 @@ export function Quota() {
             ))}
           </span>
           <span style={free ? undefined : { color: "var(--warning)" }}>
-            {free ? `${free} free` : back ? `back in ${until(back)}` : "none free"}
+            {free ? `${free}` : back ? `back in ${until(back)}` : "none free"}
           </span>
         </span>
       </TooltipTrigger>
