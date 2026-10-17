@@ -26,7 +26,7 @@ import { cn } from "@abyme/ui/lib/utils";
 import { sideRow, ViewState } from "@abyme/ui";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Replayer } from "./vendor/replay.js";
-import type { Read, Save } from "./api.ts";
+import type { Read, Save } from "./api.server.ts";
 import { clock, kb, moments, parseName, type Event, type Kind, type Moment } from "./moments.ts";
 import { parseSave } from "./format.ts";
 import * as I from "./icons.tsx";

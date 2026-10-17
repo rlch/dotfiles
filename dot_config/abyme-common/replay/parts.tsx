@@ -99,7 +99,7 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
       }
     for (const [key, { source, id }] of want) {
       if (followed.has(key)) continue;
-      const store = terminal?.server.screen(id) as Followed["store"] | undefined;
+      const store = terminal?.server.screen({ id }) as Followed["store"] | undefined;
       if (!store) continue;
       const off = store.on("change", () => {
         const now = store.getState();

@@ -29,7 +29,7 @@ abyme.effect(() => () => {
 async function save(reason: string, minutes?: number) {
   mark("replay.save", { reason });
   rec?.flush();
-  return replay.server.save(PAGE, reason, minutes);
+  return replay.server.save({ page: PAGE, reason, ...(minutes !== undefined && { minutes }) });
 }
 
 if (o.onError) {

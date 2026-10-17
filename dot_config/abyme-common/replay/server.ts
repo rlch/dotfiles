@@ -8,11 +8,11 @@
 // `replay-css:<sha256>` in its place; each page lists the ones it used in `css`, and a save's
 // head carries them, so a save is whole on its own (format.ts puts them back).
 import abyme from "@abyme/plugin";
-import mcp from "@abyme/mcp/inventory";
-import { HttpError, respond, type Json } from "@abyme/server";
+import { implement } from "@abyme/schema";
+import { HttpError, respond } from "@abyme/server";
 import options from "./options";
 import { parseSave, SAVE } from "./format";
-import type { Batch, Head, Read, Replay, Save } from "./api";
+import { replay, type Batch, type Head, type Read, type Save } from "./api.server.ts";
 
 const o = abyme.with(options).plugin.options;
 const DIR = (o.dir || `${abyme.options.stateDir}/replays`).replace(/^~(?=\/|$)/, abyme.env.HOME ?? "~");
@@ -145,7 +145,7 @@ async function list(): Promise<Save[]> {
   return saves.sort((a, b) => b.name.localeCompare(a.name));
 }
 
-const api: Replay = {
+const api = {
   push({ page, label, checkout, events }: Batch) {
     if (typeof page !== "string" || !Array.isArray(events) || !events.length) return Promise.resolve();
     const p = pageOf(page, label);
@@ -190,7 +190,7 @@ const api: Replay = {
     });
   },
 
-  async save(page: string, reason: string, minutes = CLIP) {
+  async save({ page, reason, minutes = CLIP }: { page: string; reason: string; minutes?: number }): Promise<Save | null> {
     const p = pageOf(page);
     const now = Date.now();
     if (reason.startsWith("error")) {
@@ -249,9 +249,9 @@ const api: Replay = {
     });
   },
 
-  saves: list,
+  saves: () => list(),
 
-  async read({ name, from = 0, limit = 500, types }: { name: string; from?: number; limit?: number; types?: number[] }) {
+  async read({ name, from = 0, limit = 500, types }: { name: string; from?: number; limit?: number; types?: number[] }): Promise<Read> {
     if (!SAVE.test(name)) throw new Error(`no save named ${name}`);
     const path = `${DIR}/${name}`;
     if (!(await abyme.fs.stat(path))) throw new Error(`no save named ${name}`);
@@ -279,34 +279,5 @@ abyme.http.route("GET", "/api/replay/saves/:name", async (request) => {
   return respond(bytes as Uint8Array, { type: "application/gzip" });
 });
 
-mcp.tools.add(
-  {
-    name: "saves",
-    description:
-      "The operator's UI recordings of abyme pages (rrweb), newest first: name, path, time, size. A save is gzipped JSON lines (`gunzip -c <path>`: its head, then an rrweb event a line; a stylesheet in an event is `replay-css:<sha256>`, its text in the head's `css`; replay_read puts them back), from a full snapshot up to when it was saved: the last 10 minutes by default, up to an hour. One is written when the operator saves one and when a page has an uncaught error.",
-    inputSchema: { type: "object", properties: {} },
-    readOnly: true,
-    call: async () => (await list()) as unknown as Json,
-  },
-  {
-    name: "read",
-    description:
-      "A recording's rrweb events, with its page, label and why it was saved. rrweb types: 2 full snapshot, 3 incremental (data.source 0 mutation, 1 mousemove, 2 click/mouse, 3 scroll, 4 viewport resize, 5 input), 4 meta, 5 custom (`replay.terminal`: a terminal's output, base64, and its size). Page through with from/limit; filter with types.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: { type: "string", description: "A name from replay_saves." },
-        from: { type: "number", description: "First event index (0)." },
-        limit: { type: "number", description: "At most this many events (500, up to 5000)." },
-        types: { type: "array", items: { type: "number" }, description: "Only events of these rrweb types." },
-      },
-      required: ["name"],
-    },
-    readOnly: true,
-    call: async (args) => {
-      return (await api.read(args as { name: string })) as unknown as Json;
-    },
-  },
-);
-
-export default api satisfies Replay;
+// `saves` and `read` are marked `tool`: agents call them as `replay_saves` and `replay_read`.
+export default implement(replay, api);

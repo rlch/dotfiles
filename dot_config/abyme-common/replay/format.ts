@@ -1,6 +1,6 @@
 // A save's text once gunzipped, for both halves: JSON lines (its head, then an event a line), or
 // the one JSON object saves were before 2026-10-15.
-import type { Head } from "./api.ts";
+import type { Head } from "./api.server.ts";
 
 export const SAVE = /^[\w.-]+\.jsonl?\.gz$/;
 

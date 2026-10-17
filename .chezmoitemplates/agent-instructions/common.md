@@ -138,7 +138,7 @@ abyme is not running.
     once it is in one of those states.
   - `abyme call agents messages [agent=<name>]` lists recent tells, who to
     whom and whether each was answered.
-  - `abyme call agents remove '["<id>"]'` closes an agent and the worktree its
+  - `abyme call agents remove ids:='["<id>"]'` closes an agent and the worktree its
     start made, once it is idle and its branch landed. Never remove your own
     while the user has yet to read your report.
 - Nothing here opens anything on the user's screen. Report an agent or a process

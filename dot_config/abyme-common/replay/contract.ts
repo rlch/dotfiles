@@ -2,7 +2,7 @@
 // abyme's registry (docs/plugins.md, The registry).
 import type { Handle } from "@abyme/plugin";
 import type options from "./options.ts";
-import type { Replay } from "./api.ts";
+import type { Replay } from "./api.server.ts";
 
 declare module "@abyme/kernel/registry" {
   interface Services {

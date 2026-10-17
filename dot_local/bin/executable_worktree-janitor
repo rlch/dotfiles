@@ -298,7 +298,7 @@ remove_worktree() { # $1 = worktree, $2 = branch
   local common ids
   common=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir) || return 1
   ids=$(jq -c --arg w "$1" '[.agents[] | select(.cwd == $w or ((.cwd // "") | startswith($w + "/"))) | .id]' <<<"$abyme_agents")
-  if [[ "$ids" != "[]" ]]; then abyme call agents remove "$ids" >/dev/null || return 1; fi
+  if [[ "$ids" != "[]" ]]; then abyme call agents remove ids:="$ids" >/dev/null || return 1; fi
   [[ ! -e "$1" ]] || git --git-dir="$common" worktree remove "$1" || return 1
   # -D: a squash-merged branch is never an ancestor of main; landing was checked by the caller.
   [[ -z "$2" ]] || ! git --git-dir="$common" show-ref --verify --quiet "refs/heads/$2" || git --git-dir="$common" branch -D "$2" >/dev/null
