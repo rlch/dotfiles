@@ -6,7 +6,6 @@
 // com.rjm.abymed.knowledge. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
-import mdx from "@abyme/mdx";
 import learn from "@abyme/learn";
 import { common } from "../abyme-common/index.ts";
 
@@ -18,8 +17,7 @@ abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4446" });
 
 common({ lead: false });
 
-// MDX documents, and learning from them: the vault's documents are things to learn, its log
-// (.learn/log.jsonl) the truth FSRS is computed from (docs/learning.md). Beside the Obsidian vault
-// in ~/Knowledge/vault, not inside it.
-mdx.setup();
+// Learning from documents (`.md`, the standard set's `documents`): the vault's documents are things
+// to learn, its log (.learn/log.jsonl) the truth FSRS is computed from (docs/learning.md). Beside
+// the Obsidian vault in ~/Knowledge/vault, not inside it.
 learn.setup({ vault: "~/Knowledge/learn" });
