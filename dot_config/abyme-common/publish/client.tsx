@@ -1,5 +1,5 @@
-// publish, in every page: "Publish canvas to the web" and "Unpublish canvas" in the palette and on a
-// canvas's menus (its board, its row in Canvases). Publishing asks first, naming the URL and what the
+// publish, in every page: "Publish document to the web" and "Unpublish document" in the palette
+// and on a document's menus (its view, its row). Publishing asks first, naming the URL and what the
 // export holds; the job then runs in abymed, the status bar says so, and its end is a notice with the
 // URL and Copy URL.
 import abyme from "@abyme/plugin";
@@ -16,12 +16,12 @@ import { asking, Confirm, Progress } from "./parts.tsx";
 const seen = publish.server.state();
 const now = (): State | undefined => seen.getState();
 
-/** The canvas a menu was opened on: a board's or a document's, or a view of one. */
-const canvasOf = (t?: MenuTarget): string | null => {
-  const board = t?.all["canvas.board"];
-  if (typeof board === "string") return board;
-  const view = t?.all.view as { view?: string; params?: { id?: string } } | undefined;
-  return view?.view === "canvas" && view.params?.id ? view.params.id : null;
+/** The document a menu was opened on: a `.md` file, or a view of one. */
+const documentOf = (t?: MenuTarget): string | null => {
+  const file = t?.all.file;
+  if (typeof file === "string" && file.endsWith(".md")) return file;
+  const view = t?.all.view as { view?: string; params?: { path?: string } } | undefined;
+  return view?.view === "file" && view.params?.path?.endsWith(".md") ? view.params.path : null;
 };
 
 async function ask(id: string) {
@@ -70,32 +70,32 @@ follow();
 
 commands.add(
   {
-    id: "publish.canvas",
-    title: "Publish canvas to the web",
-    group: "Canvases",
+    id: "publish.document",
+    title: "Publish document to the web",
+    group: "Documents",
     keywords: ["share", "artifact", "public", "url"],
-    args: [{ title: "Canvas", picker: "canvas.all" }],
+    args: [{ title: "Document", picker: "documents.all" }],
     run: (_event, target, answers) => {
-      const id = canvasOf(target) ?? answers?.[0];
+      const id = documentOf(target) ?? answers?.[0];
       if (id) void ask(id);
     },
   },
   {
     id: "publish.unpublish",
-    title: "Unpublish canvas",
-    group: "Canvases",
+    title: "Unpublish document",
+    group: "Documents",
     keywords: ["artifact", "remove", "take down"],
-    args: [{ title: "Canvas", picker: "canvas.all" }],
+    args: [{ title: "Document", picker: "documents.all" }],
     run: (_event, target, answers) => {
-      const id = canvasOf(target) ?? answers?.[0];
+      const id = documentOf(target) ?? answers?.[0];
       if (id) void takeDown(id);
     },
   },
 );
-const published = (t: MenuTarget) => !!now()?.published[canvasOf(t) ?? ""];
-for (const kind of ["canvas.board", "view"]) {
+const published = (t: MenuTarget) => !!now()?.published[documentOf(t) ?? ""];
+for (const kind of ["view", "file"]) {
   menus.add(
-    { kind, command: "publish.canvas", group: "publish", order: 60, title: (t) => (published(t) ? "Publish again" : "Publish to the web"), when: (t) => canvasOf(t) !== null },
+    { kind, command: "publish.document", group: "publish", order: 60, title: (t) => (published(t) ? "Publish again" : "Publish to the web"), when: (t) => documentOf(t) !== null },
     { kind, command: "publish.unpublish", group: "publish", order: 61, title: "Unpublish", when: published },
   );
 }

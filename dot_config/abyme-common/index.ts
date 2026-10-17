@@ -36,7 +36,7 @@ export function common({ lead }: { lead: boolean }) {
   vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
   // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
   accounts.setup({ renew: lead });
-  // "Publish canvas to the web" and "Unpublish canvas": a canvas as a page on artifacts.rjmath.com, asked first (publish/).
+  // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
   publish.setup();
   // rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,
   // a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to

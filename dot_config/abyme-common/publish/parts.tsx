@@ -1,4 +1,4 @@
-// What client.tsx draws: the confirm before a canvas goes on the web, and the status bar's segment
+// What client.tsx draws: the confirm before a document goes on the web, and the status bar's segment
 // while a publish or unpublish runs.
 import publish from "@abyme/publish";
 import { createStore, useStore } from "@abyme/client";
@@ -45,9 +45,6 @@ export function Confirm() {
               </li>
             ))}
           </ul>
-          {!!p?.placeholders.length && (
-            <span className="text-muted-foreground">Drawn as a placeholder there: {p.placeholders.join(", ")}.</span>
-          )}
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" autoFocus onClick={dismiss}>
