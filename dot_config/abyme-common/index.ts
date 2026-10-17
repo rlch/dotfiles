@@ -23,10 +23,10 @@ export function common({ lead }: { lead: boolean }) {
   // The names abyme answers for besides IP addresses and localhost: the phone's address.
   abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 
-  // The built-ins most setups run, but herdr (its panes are not abyme's agents), with the mono font
-  // Ghostty uses here in the editor, code blocks and terminals. A member's own line below stands in
-  // place of the set's setup of it, before or after this line.
-  standard.setup({ herdr: false, mono: { font: "JetBrainsMono Nerd Font" } });
+  // The built-ins most setups run, with the mono font Ghostty uses here in the editor, code blocks
+  // and terminals. A member's own line below stands in place of the set's setup of it, before or
+  // after this line.
+  standard.setup({ mono: { font: "JetBrainsMono Nerd Font" } });
   agentation.setup();
   // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font above.
   terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
