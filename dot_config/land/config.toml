@@ -30,8 +30,7 @@ admin = true
 # scripts/after-land is the heavy lane on main: the full gate and the walk, reverting a
 # landing that turned main red, then promoting the newest green main, at most every 30 min.
 [repo."Abyme-Studio/abyme"]
-# The gate and the walk (scripts/gate): a red walk refuses that land.
-check = "scripts/gate"
+check = "scripts/check"
 batch = true
 after = "scripts/after-land"
 patience_min = 120
