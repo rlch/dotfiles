@@ -2,7 +2,6 @@
 import replay from "@abyme/replay";
 import layout from "@abyme/layout";
 import terminal from "@abyme/terminal/optional";
-import herdr from "@abyme/herdr/optional";
 import { record, type RecordEvent } from "./vendor/record.js";
 
 /** This page, while it is loaded: a reload is another page. */
@@ -100,7 +99,7 @@ export function recording(o: { checkout: number; terminals: boolean }): { stop()
       }
     for (const [key, { source, id }] of want) {
       if (followed.has(key)) continue;
-      const store = (source === "herdr" ? herdr?.server.pane(id) : terminal?.server.screen(id)) as Followed["store"] | undefined;
+      const store = terminal?.server.screen(id) as Followed["store"] | undefined;
       if (!store) continue;
       const off = store.on("change", () => {
         const now = store.getState();
