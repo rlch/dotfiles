@@ -9,6 +9,8 @@ import standard from "@abyme/standard";
 import agentation from "@abyme/agentation";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
+import agents from "@abyme/agents";
+import openrig from "@abyme/openrig";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -39,5 +41,19 @@ replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 
 // Load reads the two heavy slots schools-ts' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
 load.setup({ slots: 2 });
+
+// OpenRig beside abyme, from the fork's branch `abyme` (its daemon is the process `openrig` there,
+// its data in ~/.local/share/openrig-abyme): rigs as spaces, seats as agents, the Flow view.
+// A seat starts from `seat` unless its rigspec member names another (env ABYME_PRESET).
+openrig.setup({ checkout: "~/dev/forks/openrig", preset: "seat" });
+agents.presets.add({
+  id: "seat",
+  title: "Seat",
+  provider: "acp",
+  harness: "claude",
+  model: "sonnet",
+  instructions:
+    "You hold a seat in an OpenRig rig, run by abyme. Work handed to you arrives as a message from the seat that handed it, or as an openrig event. Do the work, say in one or two sentences what you did, and stop.",
+});
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
