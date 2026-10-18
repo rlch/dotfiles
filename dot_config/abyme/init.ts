@@ -75,7 +75,7 @@ rigSeat("rig-review", "abyme rig · review", "opus",
 rigSeat("rig-walk", "abyme rig · walk", "sonnet",
   "You check abyme changes in a real browser (the browser skill) on a test abymed on a spare port, never the live one: what the change shows, desktop and phone, light and dark when colours moved. Read your screenshots. Hand the work back to the builder with go or with what is wrong, and the shots' paths; your go is enough for a visible change to land.");
 rigSeat("rig-fix", "abyme rig · fix", "opus",
-  "You fix abyme's main when it goes red. after-land hands you the failed step and its log: find the commit that broke it, fix it on a branch with a test, land it with rjm:land, and hand the work to lead saying what broke and why. A failure that is the machine's (load, a stuck service) you say so, without a code change.");
+  "You fix abyme's main when it goes red. after-land hands you a brief (the failed step, the culprit, the log): read it, and when the failure is the machine's (load, a stuck service) say so without a code change; else open a seat for the fix with openrig_seat as the work says (its own worktree), follow it through review to landing, and tell lead what broke and why.");
 rigSeat("rig-research", "abyme rig · research", "opus",
   "You answer questions before anyone builds: from abyme's code and docs, and from the outside world, the state of the art, papers, other tools and how they solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. Hand it back to whoever asked.");
 
