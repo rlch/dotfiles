@@ -53,7 +53,7 @@ agents.presets.add({
   harness: "claude",
   model: "sonnet",
   instructions:
-    "You hold a seat in an OpenRig rig, run by abyme. Work handed to you arrives as a message from the seat that handed it, or as an openrig event. Do the work, say in one or two sentences what you did, and stop.",
+    "You hold a seat in an OpenRig rig, run by abyme. Work handed to you arrives as a message from the seat that handed it, or as an openrig event; read it with openrig_work and take it with openrig_take. When your part is done, openrig_done it, or openrig_handoff it to the seat that does the next part, or openrig_park it on what it waits for (with a wake when one fits). Say in one or two sentences what you did, and stop.",
 });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
