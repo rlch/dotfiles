@@ -1,18 +1,16 @@
 // What every profile of mine shares (coding in ~/.config/abyme, knowledge in
 // ~/.config/abyme-knowledge): each init.ts imports this and calls `common({ lead })`. Plain code, imported
 // by a relative path; a save here runs each config that imports it again (docs/abymed.md, Several
-// abymeds). What one profile alone needs stays in its own init.ts.
+// abymeds). What one profile alone needs stays in its own init.ts: which built-ins run is each
+// profile's (coding the standard set, knowledge its own list).
 
 import abyme from "@abyme/plugin";
-import standard from "@abyme/standard";
-import agentation from "@abyme/agentation";
+import theme from "@abyme/theme";
 import vim from "@abyme/vim";
-import terminal from "@abyme/terminal";
 import sentry from "@abyme/sentry";
 import agents from "@abyme/agents/inventory";
 import accounts from "./accounts";
 import publish from "./publish";
-import replay from "./replay";
 
 /** `lead`: the profile that renews the accounts' tokens (coding, always running). Two renewing one
  * refresh token race, and the loser holds a dead one. */
@@ -26,13 +24,8 @@ export function common({ lead }: { lead: boolean }) {
   // where the phone is already allowed.
   abyme.server({ devicesFile: "~/.local/state/abyme/devices.json" });
 
-  // The built-ins most setups run, with the mono font Ghostty uses here in the editor, code blocks
-  // and terminals. A member's own line below stands in place of the set's setup of it, before or
-  // after this line.
-  standard.setup({ mono: { font: "JetBrainsMono Nerd Font" } });
-  agentation.setup();
-  // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font above.
-  terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
+  // The mono font Ghostty uses here, in the editor, code blocks and terminals.
+  theme.setup({ mono: "JetBrainsMono Nerd Font" });
   // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
   // used, and files open read-only in normal mode. A member of the standard set, so this line stands
   // in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
@@ -41,10 +34,6 @@ export function common({ lead }: { lead: boolean }) {
   accounts.setup({ renew: lead });
   // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
   publish.setup();
-  // rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,
-  // a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to
-  // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
-  replay.setup({}, { when: { device: ["desktop", "tablet"] } });
   // My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same instructions): a
   // fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
   // (~/.pi/agent/auth.json).

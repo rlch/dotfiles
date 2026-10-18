@@ -5,8 +5,12 @@
 // The coding profile, on 4477. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
+import standard from "@abyme/standard";
+import agentation from "@abyme/agentation";
+import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import { common } from "../abyme-common/index.ts";
+import replay from "../abyme-common/replay";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -21,6 +25,17 @@ abyme.server({
 });
 
 common({ lead: true });
+
+// The built-ins most setups run. A member's own line (common's theme and vim, the lines below)
+// stands in place of the set's setup of it, before or after this line.
+standard.setup();
+agentation.setup();
+// The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
+terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
+// rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,
+// a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to
+// <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
+replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 
 // Load reads the two heavy slots schools-ts' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
 load.setup({ slots: 2 });
