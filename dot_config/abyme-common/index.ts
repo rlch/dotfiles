@@ -22,6 +22,9 @@ export function common({ lead }: { lead: boolean }) {
   abyme.server({ clientDir: "~/.local/share/abyme/client" });
   // The names abyme answers for besides IP addresses and localhost: the phone's address.
   abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
+  // One list of devices for the Mac: a device paired once reaches every profile. Coding's own file,
+  // where the phone is already allowed.
+  abyme.server({ devicesFile: "~/.local/state/abyme/devices.json" });
 
   // The built-ins most setups run, with the mono font Ghostty uses here in the editor, code blocks
   // and terminals. A member's own line below stands in place of the set's setup of it, before or
