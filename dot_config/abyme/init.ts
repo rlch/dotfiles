@@ -5,7 +5,7 @@
 // The coding profile, on 4477. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
-import standard from "@abyme/standard";
+import code from "@abyme/code";
 import agentation from "@abyme/agentation";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
@@ -29,9 +29,10 @@ abyme.server({
 
 common({ lead: true });
 
-// The built-ins most setups run. A member's own line (common's theme and vim, the lines below)
-// stands in place of the set's setup of it, before or after this line.
-standard.setup();
+// The code app: the platform and code's own plugins (pull requests, line review, a space per
+// worktree). A member's own line (common's theme and vim, the lines below) stands in place of the
+// app's setup of it, before or after this line.
+code.setup();
 agentation.setup();
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });

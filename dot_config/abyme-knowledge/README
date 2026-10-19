@@ -6,8 +6,8 @@ Your abyme config. See docs/abymed.md, "Your config".
   *          anything else is yours: files and folders those two import
 
 abyme reads those two files and what they import, and nothing else here. A plugin runs when
-init.ts sets it up: `standard.setup()` is the line for abyme's built-ins, and without any setup
-abyme shows nothing but how to start. abyme never changes a file you wrote.
+init.ts sets it up: an app's line (`code.setup()`) sets up everything that app runs, and without
+any setup abyme shows nothing but how to start. abyme never changes a file you wrote.
 
 abyme writes nothing here once the folder exists, but `plugins.lock`: the version and sha512 of
 each plugin fetched from npm or a URL. Commit it and this folder gives another machine the same

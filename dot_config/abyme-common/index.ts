@@ -2,7 +2,7 @@
 // ~/.config/abyme-knowledge): each init.ts imports this and calls `common({ lead })`. Plain code, imported
 // by a relative path; a save here runs each config that imports it again (docs/abymed.md, Several
 // abymeds). What one profile alone needs stays in its own init.ts: which built-ins run is each
-// profile's (coding the standard set, knowledge its own list).
+// profile's (coding the code app, knowledge its own list).
 
 import abyme from "@abyme/plugin";
 import theme from "@abyme/theme";
@@ -28,8 +28,8 @@ export function common({ lead }: { lead: boolean }) {
   // The mono font Ghostty uses here, in the editor, code blocks and terminals.
   theme.setup({ mono: "JetBrainsMono Nerd Font" });
   // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
-  // used, and files open read-only in normal mode. A member of the standard set, so this line stands
-  // in place of the set's and is no second setup. An iPad is a tablet with or without its keyboard.
+  // used, and files open read-only in normal mode. A member of every app, so this line stands
+  // in place of the app's and is no second setup. An iPad is a tablet with or without its keyboard.
   vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
   // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
   accounts.setup({ renew: lead });

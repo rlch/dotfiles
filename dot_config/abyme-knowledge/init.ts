@@ -83,7 +83,7 @@ abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4446" });
 
 common({ lead: false });
 
-// Not the standard set: what a vault of notes and learning needs, and nothing for code (no git,
+// No app: what a vault of notes and learning needs, and nothing for code (no git,
 // terminals, language servers or worktrees). Each line is its own setup; a plugin a kept one
 // imports must be here too.
 // The libraries every view draws with.
