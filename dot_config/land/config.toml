@@ -17,6 +17,10 @@ push = true
 # --admin: the ruleset wants a review the operator cannot give his own agents'
 # work, and Operators bypass it (schools CLAUDE.md, Pull requests; the repo was schools-ts until 2026-10-20). land waits
 # for the PR's checks first and refuses on a red one (operator, 2026-10-10). pr-land merges engineers' PRs the same way.
+[repo."MathGaps/iac"]
+# main takes a pull request (ruleset); CI applies each stack on merge.
+mode = "pr"
+
 [repo."MathGaps/schools"]
 mode = "pr"
 admin = true
