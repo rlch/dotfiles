@@ -49,6 +49,7 @@ starting point; this says where it changes.
 | Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin (operator, 2026-10-10: renew) |
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
 | Signed out | an expired access token whose refresh token is past its end or was refused (400, 401) reads "signed out" and is never picked: Claude Code fails such an agent at its first message (2026-10-19) |
+| Limit hit | a launch with `limited` (abyme: the agent's turn hit a usage limit under that folder) marks that account spent until the window its last read says is fullest resets, else an hour, whatever a quota read says meanwhile; the pick then moves the agent, and abyme sends the prompt again there. A pinned agent stays, and abyme shows the limit (2026-10-20) |
 | Login | "Sign in to Claude account…", or a signed-out notice's Sign in, runs `clodcurrent renew --login <slug>` in a terminal (`accounts.login`); its end reads every account again |
 | Ignore | "Ignore Claude account…", or a signed-out notice's, writes clodcurrent's `.clodcurrent-disabled` (`clodcurrent disable`), so `cl` skips it too; "Use Claude account again…" removes it |
 | Left out | `history.jsonl`, shared-config symlinks, `add` |

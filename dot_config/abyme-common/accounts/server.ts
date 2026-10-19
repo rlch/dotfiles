@@ -275,6 +275,33 @@ async function busyKeys(all: Account[]): Promise<Set<string>> {
   return out;
 }
 
+// ---- spent: an account a turn hit its usage limit on ----
+
+/** Accounts a turn hit a usage limit on, by identity, and until when: out of every pick until
+ * then, whatever a quota read says, as the read can lag the limit. */
+const spent = new Map<string, number>();
+/** How long an account is spent when its last read gives no reset still ahead. */
+const SPENT_MS = 60 * 60_000;
+function isSpent(key: string): boolean {
+  const until = spent.get(key);
+  if (until === undefined) return false;
+  if (Date.now() < until) return true;
+  spent.delete(key);
+  return false;
+}
+/** The account of config folder `dir` is spent until the window its last read says is fullest
+ * resets, else for SPENT_MS. */
+async function markSpent(dir: string, why: string) {
+  const a = (await discover()).find((x) => x.dir === dir);
+  if (!a) return;
+  const q = last.get(a.key);
+  const u = q && "usage" in q ? q.usage : null;
+  const reset = u ? Date.parse((u.seven >= 100 ? u.sevenResets : u.fiveResets) ?? "") : NaN;
+  const until = Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + SPENT_MS;
+  spent.set(a.key, until);
+  abyme.log.warn(`${a.slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}`);
+}
+
 // ---- what pages see: no token, no email, no uuid ----
 
 type Seen = {
@@ -307,7 +334,7 @@ function show(all: Account[], q: Map<string, Quota>) {
         fiveResets: u?.usage.fiveResets ?? null,
         sevenResets: u?.usage.sevenResets ?? null,
         windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: w.resetsAt })),
-        capped: u ? capped(u.usage) : false,
+        capped: isSpent(a.key) || (u ? capped(u.usage) : false),
         error: x && "error" in x ? x.error : null,
         agents: dirs.get(a.dir)?.length ?? 0,
       };
@@ -352,13 +379,13 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean } = 
       const f = family(model);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
-        return { slug: a.slug, key: a.key, usage: x && "usage" in x ? x.usage : null, windows: x && "usage" in x ? x.windows : [], busy: busy.has(a.key) };
+        return { slug: a.slug, key: a.key, usage: x && "usage" in x && !isSpent(a.key) ? x.usage : null, windows: x && "usage" in x ? x.windows : [], busy: busy.has(a.key) };
       });
       const out = best(rows, f, Date.now());
       if (out.pick === null) {
         const errors = all.map((a) => {
           const x = q.get(a.key);
-          return `${a.slug}: ${x && "error" in x ? x.error : "spent"}`;
+          return `${a.slug}: ${isSpent(a.key) ? "hit its limit" : x && "error" in x ? x.error : "spent"}`;
         });
         throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why}; ${errors.join(", ")})`);
       }
@@ -469,12 +496,15 @@ agents.prepare.add({
     const field = l.with?.["accounts.account"];
     if (l.agent && field && pins()[l.agent] === undefined) abyme.store.set("pins", { ...pins(), [l.agent]: field });
     const pinned = l.agent ? pins()[l.agent] : undefined;
+    // Its last turn hit a usage limit there: that account is out until it resets, and a pick by
+    // quota moves it (a pinned agent stays, and abyme shows the limit).
+    if (l.limited?.configDir) await markSpent(l.limited.configDir, l.limited.why);
     const { account, why } = await pick(model, { pinned, count: !l.probe });
     if (!l.probe) {
       await trust(account, l.cwd);
       if (!l.resume) void sync(false).catch((e) => abyme.log.warn("sync:", (e as Error).message));
     }
-    abyme.log.info(`${l.probe ? "choices" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
+    abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
     return { env: account.main ? {} : { CLAUDE_CONFIG_DIR: account.dir }, configDir: account.dir };
   },
 });
