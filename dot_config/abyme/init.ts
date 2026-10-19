@@ -10,7 +10,6 @@ import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
 import openrig from "@abyme/openrig";
-import spaces from "@abyme/spaces/inventory";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -113,8 +112,5 @@ rigSeat("ts-review", "schools-ts · review", "opus",
 rigSeat("ts-walk", "schools-ts · walk", "sonnet",
   "You walk what a change shows a teacher, as the drive-the-app skill says: a dev account of its own, on the feature's qa-rig stack, or on dev once it is deployed. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so.");
 
-// An idle agent whose branch has landed folds into a Done group at the foot of its repository's
-// space, out of the way until it wakes (2026-10-19, web/wireframes/quiet-spaces.tsx).
-spaces.rules.add({ id: "done", place: (a) => (a.status === "idle" && a.merged ? { group: "Done", folded: true } : undefined) });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
