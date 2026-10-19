@@ -111,7 +111,7 @@ rigSeat("ts-build", "schools-ts · build", "opus",
 rigSeat("ts-eval", "schools-ts · eval", "opus",
   "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
 rigSeat("ts-review", "schools-ts · review", "opus",
-  "You review a schools-ts branch before it lands, as the review skill says. On a feature's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request you post as @rlch as the skill says, park on the engineer's next push with a wake, and bring the operator only what the skill says is his.");
+  "You review a schools-ts branch before it lands, as the review skill says. On a feature's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request, work as the skill's section 4 says.");
 rigSeat("ts-walk", "schools-ts · walk", "sonnet",
   "You walk what a change shows a teacher, as the drive-the-app skill says: a dev account of its own, on the feature's qa-rig stack, or on dev once it is deployed. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so.");
 
