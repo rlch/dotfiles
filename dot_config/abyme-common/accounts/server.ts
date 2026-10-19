@@ -6,6 +6,7 @@
 // arguments (a renewed one goes to `security -i` on stdin).
 import abyme from "@abyme/plugin";
 import agents from "@abyme/agents";
+import terminal from "@abyme/terminal";
 import options from "./options";
 import { best, capped, expirePast, family, parse, parseModels, type ModelWindow, type Row, type Usage } from "./pick";
 
@@ -49,7 +50,25 @@ async function discover(): Promise<Account[]> {
 
 // ---- tokens ----
 
-type Credentials = { claudeAiOauth?: { accessToken?: string; refreshToken?: string; expiresAt?: number; scopes?: string[] } } & Record<string, unknown>;
+type Credentials = { claudeAiOauth?: { accessToken?: string; refreshToken?: string; expiresAt?: number; refreshTokenExpiresAt?: number; scopes?: string[] } } & Record<string, unknown>;
+
+/** Accounts whose refresh token the token endpoint refused (400, 401): only a browser login brings
+ * them back. Forgotten when the keychain holds another refresh token. */
+const refusedTokens = new Map<string, string>();
+
+/** Signed out: the access token has expired and nothing can renew it, a refresh token past its
+ * end or one refused. Claude Code fails such an agent at its first message ("OAuth session expired
+ * and could not be refreshed", 2026-10-19), so no launch is given one. */
+function signedOut(a: Account, c: Credentials | null): boolean {
+  const t = c?.claudeAiOauth;
+  if (!t?.accessToken) return false;
+  if (t.expiresAt === undefined || Date.now() < t.expiresAt) return false;
+  if (!t.refreshToken) return true;
+  if (t.refreshTokenExpiresAt !== undefined && Date.now() >= t.refreshTokenExpiresAt) return true;
+  const was = refusedTokens.get(a.key);
+  if (was !== undefined && was !== abyme.crypto.hash("sha256", t.refreshToken)) refusedTokens.delete(a.key);
+  return refusedTokens.has(a.key);
+}
 
 async function credentials(a: Account): Promise<Credentials | null> {
   const r = await abyme.process.run(o.security, { args: ["find-generic-password", "-s", a.service, "-a", USER, "-w"] });
@@ -93,6 +112,11 @@ async function token(a: Account, busy: boolean): Promise<string | null> {
     body: JSON.stringify({ grant_type: "refresh_token", refresh_token: t.refreshToken, client_id: "9d1c250a-e61b-44d9-88ed-5944d1962f5e" }),
     timeoutMs: 10_000,
   });
+  if (r.status === 400 || r.status === 401) {
+    refusedTokens.set(a.key, abyme.crypto.hash("sha256", t.refreshToken));
+    abyme.log.warn(`${a.slug}: renewing the token answered HTTP ${r.status}; signed out until a login`);
+    return t.accessToken;
+  }
   if (r.status !== 200) {
     const wait = no ? Math.min(no.wait * 2, RENEW_WAIT_MAX_MS) : RENEW_WAIT_MS;
     refused.set(a.key, { until: Date.now() + wait, wait });
@@ -163,6 +187,10 @@ const answer = (at: number, data: Record<string, unknown>): Quota => {
 };
 
 async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
+  // Before any answer kept: usage read with a token that has since died says nothing.
+  const c = await credentials(a);
+  if (!c?.claudeAiOauth?.accessToken) return { at: Date.now(), error: "no credentials" };
+  if (signedOut(a, c)) return { at: Date.now(), error: "signed out" };
   const mine = quota.get(a.key);
   const theirs = (await readShared())[a.key];
   const had = theirs && (!mine || theirs.at > mine.at) ? theirs : mine;
@@ -502,4 +530,21 @@ export default {
   pins: () => pins(),
   /** `abyme call accounts sync`: the conversation sync now; how many copies it made. */
   sync: () => sync(true),
+  /** `abyme call accounts login slug=…`: clodcurrent's browser login for that account, in a
+   * terminal of its own the operator types into; answers the terminal's id. */
+  async login(a: { slug: string }) {
+    const account = (await discover()).find((x) => x.slug === a.slug);
+    if (!account) throw new Error(`no account ${a.slug}`);
+    const shell = await terminal.run({ key: `accounts.login.${account.slug}`, title: `Sign in: ${account.slug}`, cwd: HOME, command: `clodcurrent renew --login ${account.slug}` });
+    return { shell: shell.id };
+  },
 };
+
+// A login that ended: read every account again, so the status bar and the next pick see it.
+terminal.followers.add({
+  async exited(shell) {
+    if (!shell.key?.startsWith("accounts.login.")) return;
+    quota.clear();
+    await refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
+  },
+});

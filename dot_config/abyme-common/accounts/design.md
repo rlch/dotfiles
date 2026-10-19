@@ -48,7 +48,9 @@ starting point; this says where it changes.
 | Trust | as clodcurrent, written only at the version read (`ifVersion`) |
 | Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin (operator, 2026-10-10: renew) |
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
-| Left out | `history.jsonl`, shared-config symlinks, `add`, login |
+| Signed out | an expired access token whose refresh token is past its end or was refused (400, 401) reads "signed out" and is never picked: Claude Code fails such an agent at its first message (2026-10-19) |
+| Login | "Sign in to Claude account…", or a signed-out notice's Sign in, runs `clodcurrent renew --login <slug>` in a terminal (`accounts.login`); its end reads every account again |
+| Left out | `history.jsonl`, shared-config symlinks, `add` |
 
 ## Tokens
 

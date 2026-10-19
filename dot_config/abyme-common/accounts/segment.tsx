@@ -26,8 +26,9 @@ const pct = (n: number | null) => (n === null ? "" : `${Math.round(n)}%`);
 
 /** What an account's error means, in the operator's words. */
 const SAID: Record<string, string> = {
-  "no credentials": "not signed in",
-  unauthorized: "signed out",
+  "no credentials": "not signed in: Sign in to Claude account…",
+  unauthorized: "signed out: Sign in to Claude account…",
+  "signed out": "signed out: Sign in to Claude account…",
   "not read yet": "not read yet",
 };
 const said = (error: string) => SAID[error] ?? (error.includes("429") ? "rate limited" : error);
