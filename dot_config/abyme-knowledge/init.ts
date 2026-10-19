@@ -71,7 +71,7 @@ import devices from "@abyme/devices";
 import push from "@abyme/push";
 import share from "@abyme/share";
 import browser from "@abyme/browser";
-import schedules from "@abyme/schedules";
+import triggers from "@abyme/triggers";
 import packages from "@abyme/packages";
 import { common } from "../abyme-common/index.ts";
 
@@ -159,7 +159,7 @@ devices.setup();
 push.setup();
 share.setup();
 browser.setup();
-schedules.setup();
+triggers.setup();
 packages.setup();
 
 // Learning from documents (`.md`, the `documents` plugin's): the vault's documents are things
