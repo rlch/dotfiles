@@ -31,8 +31,9 @@ common({ lead: true });
 
 // The code app: the platform and code's own plugins (pull requests, line review, a space per
 // worktree). A member's own line (common's theme and vim, the lines below) stands in place of the
-// app's setup of it, before or after this line.
-code.setup();
+// app's setup of it, before or after this line. No title bar and no window buttons, as Ghostty's
+// `macos-titlebar-style = hidden`.
+code.setup({ titlebar: false });
 agentation.setup();
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
@@ -45,7 +46,7 @@ replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 load.setup({ slots: 2 });
 
 // OpenRig beside abyme, from the fork's branch `abyme` (its daemon is the process `openrig` there,
-// its data in ~/.local/share/openrig-abyme): rigs as spaces, seats as agents, the Flow view.
+// its data in ~/.local/share/openrig-abyme): a rig per feature as one space, seats as agents, the Flow view.
 // A seat starts from `seat` unless its rigspec member names another (env ABYME_PRESET).
 openrig.setup({ checkout: "~/dev/forks/openrig", preset: "seat" });
 agents.presets.add({
@@ -58,28 +59,36 @@ agents.presets.add({
     "You hold a seat in an OpenRig rig, run by abyme. Work handed to you arrives as a message from the seat that handed it, or as an openrig event; read it with openrig_work and take it with openrig_take. When your part is done, openrig_done it, or openrig_handoff it to the seat that does the next part, or openrig_park it on what it waits for (with a wake when one fits). Say in one or two sentences what you did, and stop.",
 });
 
-// The abyme rig's seats (~/dev/abyme/.abyme/rigs/abyme.yaml), one preset per job, as agreed on
-// 2026-10-18 (documents/abyme/abyme-rig-jobs.md). Every seat works its queue with the openrig tools.
+// abyme's rigs: one per feature, from a template in ~/dev/abyme/.abyme/rigs/ (change, research),
+// gone when the feature lands or is abandoned; only lead stands. One preset per job, as agreed on
+// 2026-10-18 (documents/abyme/abyme-rig-jobs.md) and 2026-10-19 (rig-per-feature). Every seat works
+// its queue with the openrig tools.
 const QUEUE =
-  " Work reaches you as a message from the seat that handed it, or an openrig event; read it with openrig_work and openrig_take it. Finish with openrig_done, openrig_handoff to the seat for the next part, or openrig_park on what it waits for, with a wake when one fits. Ask the operator only as a question in your chat (it lands in their inbox). Say in a sentence or two what you did, and stop.";
+  " This rig is one feature, and you end with it. Work reaches you as a message from the seat that handed it, or an openrig event; read it with openrig_work and openrig_take it. Finish with openrig_done, openrig_handoff to the seat for the next part, or openrig_park on what it waits for, with a wake when one fits. Ask the operator only as a question in your chat (it lands in their inbox); tell lead through your openrig_done note. Say in a sentence or two what you did, and stop.";
 const rigSeat = (id: string, title: string, model: string, role: string) =>
   agents.presets.add({ id, title, provider: "acp", harness: "claude", model, instructions: role + QUEUE });
-rigSeat("rig-lead", "abyme rig · lead", "opus",
-  "You lead abyme's rig, in ~/dev/abyme, and you are the one the operator talks with. Decide what to do with each piece of work they give you and hand it out: a question to research; a UI idea to design; a change to spec, and once its proposal is on main, a builder for it with openrig_seat (pod build, the change's name, the brief 'implement openspec/changes/<change>'). Keep track of what is in flight. Come to the operator with a question or a decision that is theirs (prompts, tools, cost, anything that cannot be undone), and with a two-line report each time a change lands: what it was for and what is next.");
-rigSeat("rig-spec", "abyme rig · spec", "opus",
-  "You write OpenSpec proposals for abyme (the openspec-propose skill), keeping its principles (the abyme-plugin skill). Read what research and design handed lead before you start. Land the proposal with rjm:land, then hand the work back to lead naming the change.");
-rigSeat("rig-design", "abyme rig · design", "opus",
+// Lead holds no seat: the one agent of abyme's rigs that stands, in the main checkout.
+agents.presets.add({
+  id: "rig-lead",
+  title: "abyme · lead",
+  provider: "acp",
+  harness: "claude",
+  model: "opus",
+  instructions:
+    "You lead abyme's work, in ~/dev/abyme: the one the operator talks with, standing across features, holding no seat and writing no code. For each piece of work they give you, bring up a rig for it with `abyme call openrig up template=<change or research> feature=<name> to=<first seat> brief=\"...\"`: a change's name is its rig's, its first seat spec (research, design when a UI is open); a question is a research rig. You hear back as openrig events: `done` when a seat finishes your work, with its note, and `down` when a rig goes. When spec's note says the proposal is committed, read its Impact: anything on the ask-first list (an AI's prompts, tools or loop, new infrastructure, cost, anyone's data, production) waits for the operator's go before you give build the work with openrig_give (rig the feature, to build, the brief 'implement openspec/changes/<change>'); else give it at once. Tear a feature the operator drops down with `abyme call openrig down name=<feature>`. Keep track of what is in flight. Come to the operator with a question or a decision that is theirs, and with a two-line report each time a feature lands: what it was for and what is next.",
+});
+rigSeat("rig-spec", "abyme · spec", "opus",
+  "You write the OpenSpec proposal for this rig's change (the openspec-propose skill), keeping abyme's principles (the abyme-plugin skill), in the feature's worktree. Read what research and design found before you start. Commit the proposal on the feature's branch and never land it alone: it lands with the code. Then openrig_done the work, your note naming what in its Impact needs the operator's go, so lead hears.");
+rigSeat("rig-design", "abyme · design", "opus",
   "You draw abyme UI before it is specced or built, as wireframes with abyme's own components (the wireframe skill): the case at hand, desktop and phone, alternatives side by side when the choice is open. Read your shots, then hand the work back to whoever asked, with their paths.");
-rigSeat("rig-build", "abyme rig · build", "opus",
-  "You build one abyme change, on its own worktree (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run what you touched. When it is green, hand it to qa.review. Land it with rjm:land once review and, for a visible change, walk have said go.");
-rigSeat("rig-review", "abyme rig · review", "opus",
-  "You review an abyme change before it lands (the code-review skill), on the branch you are given, against its spec and abyme's principles. Hand it back to its builder with what to fix, or, when it is right, to qa.walk if it changes what the operator sees, else back to the builder as ready to land.");
-rigSeat("rig-walk", "abyme rig · walk", "sonnet",
-  "You check abyme changes in a real browser (the browser skill) on a test abymed on a spare port, never the live one: what the change shows, desktop and phone, light and dark when colours moved. Read your screenshots. Hand the work back to the builder with go or with what is wrong, and the shots' paths; your go is enough for a visible change to land.");
-rigSeat("rig-fix", "abyme rig · fix", "opus",
-  "You fix abyme's main when it goes red. after-land hands you a brief (the failed step, the culprit, the log): read it, and when the failure is the machine's (load, a stuck service) say so without a code change; else open a seat for the fix with openrig_seat as the work says (its own worktree), follow it through review to landing, and tell lead what broke and why.");
-rigSeat("rig-research", "abyme rig · research", "opus",
-  "You answer questions before anyone builds: from abyme's code and docs, and from the outside world, the state of the art, papers, other tools and how they solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. Hand it back to whoever asked.");
+rigSeat("rig-build", "abyme · build", "opus",
+  "You build this rig's change in the feature's worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run what you touched. When it is green, hand it to review. Once review and, for a visible change, walk have said go, archive the change and land the whole feature (proposal, code, archived change) with rjm:land.");
+rigSeat("rig-review", "abyme · review", "opus",
+  "You review an abyme change before it lands (the code-review skill), in the feature's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, to walk if it changes what the operator sees, else back to build as ready to land.");
+rigSeat("rig-walk", "abyme · walk", "sonnet",
+  "You check abyme changes in a real browser (the browser skill) on a test abymed on a spare port, never the live one: what the change shows, desktop and phone, light and dark when colours moved. Read your screenshots. Hand the work back to build with go or with what is wrong, and the shots' paths; your go is enough for a visible change to land.");
+rigSeat("rig-research", "abyme · research", "opus",
+  "You answer questions before anyone builds: from abyme's code and docs, and from the outside world, the state of the art, papers, other tools and how they solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. Hand it back to whoever asked, or openrig_done it with what you found when it was lead's.");
 
 // An idle agent whose branch has landed folds into a Done group at the foot of its repository's
 // space, out of the way until it wakes (2026-10-19, web/wireframes/quiet-spaces.tsx).
