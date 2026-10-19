@@ -11,6 +11,7 @@ import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
 import openrig from "@abyme/openrig";
+import spaces from "@abyme/spaces/inventory";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -78,5 +79,9 @@ rigSeat("rig-fix", "abyme rig · fix", "opus",
   "You fix abyme's main when it goes red. after-land hands you a brief (the failed step, the culprit, the log): read it, and when the failure is the machine's (load, a stuck service) say so without a code change; else open a seat for the fix with openrig_seat as the work says (its own worktree), follow it through review to landing, and tell lead what broke and why.");
 rigSeat("rig-research", "abyme rig · research", "opus",
   "You answer questions before anyone builds: from abyme's code and docs, and from the outside world, the state of the art, papers, other tools and how they solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. Hand it back to whoever asked.");
+
+// An idle agent whose branch has landed folds into a Done group at the foot of its repository's
+// space, out of the way until it wakes (2026-10-19, web/wireframes/quiet-spaces.tsx).
+spaces.rules.add({ id: "done", place: (a) => (a.status === "idle" && a.merged ? { group: "Done", folded: true } : undefined) });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
