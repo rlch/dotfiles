@@ -50,6 +50,7 @@ starting point; this says where it changes.
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
 | Signed out | an expired access token whose refresh token is past its end or was refused (400, 401) reads "signed out" and is never picked: Claude Code fails such an agent at its first message (2026-10-19) |
 | Login | "Sign in to Claude account…", or a signed-out notice's Sign in, runs `clodcurrent renew --login <slug>` in a terminal (`accounts.login`); its end reads every account again |
+| Ignore | "Ignore Claude account…", or a signed-out notice's, writes clodcurrent's `.clodcurrent-disabled` (`clodcurrent disable`), so `cl` skips it too; "Use Claude account again…" removes it |
 | Left out | `history.jsonl`, shared-config symlinks, `add` |
 
 ## Tokens

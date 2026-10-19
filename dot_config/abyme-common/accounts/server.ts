@@ -538,7 +538,30 @@ export default {
     const shell = await terminal.run({ key: `accounts.login.${account.slug}`, title: `Sign in: ${account.slug}`, cwd: HOME, command: `clodcurrent renew --login ${account.slug}` });
     return { shell: shell.id };
   },
+  /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it, by
+   * clodcurrent's own marker (`clodcurrent disable`), so a terminal's `cl` skips it too. */
+  async ignore(a: { slug: string; on?: boolean }) {
+    const marker = `${await folderOf(a.slug)}/.clodcurrent-disabled`;
+    if (a.on === false) await abyme.fs.remove(marker);
+    else await abyme.fs.write(marker, "");
+    await refresh();
+    return { slug: a.slug, ignored: a.on !== false };
+  },
+  /** The accounts ignored: a folder with an identity and the marker. */
+  async ignored() {
+    const out: string[] = [];
+    for (const f of (await abyme.fs.list(HOME)) ?? [])
+      if (f.kind === "dir" && f.name.startsWith(".claude-") && (await abyme.fs.stat(`${HOME}/${f.name}/.clodcurrent-disabled`))) out.push(f.name.slice(8));
+    return out.sort();
+  },
 };
+
+/** The folder of an account by slug, its marker left aside: `main` is ~/.claude. */
+async function folderOf(slug: string): Promise<string> {
+  const dir = slug === "main" ? `${HOME}/.claude` : `${HOME}/.claude-${slug}`;
+  if (!/^[a-z0-9._-]+$/.test(slug) || (await abyme.fs.stat(dir))?.kind !== "dir") throw new Error(`no account ${slug}`);
+  return dir;
+}
 
 // A login that ended: read every account again, so the status bar and the next pick see it.
 terminal.followers.add({

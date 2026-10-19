@@ -73,6 +73,28 @@ async function signIn(slug: string) {
   }
 }
 
+/** Off the rotation, or back on it. */
+async function ignore(slug: string, on = true) {
+  try {
+    await accounts.server.ignore({ slug, on });
+    notifications.notify({ level: "success", title: on ? `${slug} ignored` : `${slug} in use again`, body: on ? "Undo with \"Use Claude account again…\"." : undefined });
+  } catch (e) {
+    notifications.notify({ level: "error", title: `${slug} not changed`, body: (e as Error).message });
+  }
+}
+
+/** What to do about one account: sign in again, or leave it out. */
+function fix(slug: string) {
+  palette.pick({
+    placeholder: slug,
+    items: [
+      { id: "signin", title: `Sign in to ${slug} again` },
+      { id: "ignore", title: `Ignore ${slug}: no agent runs on it until you use it again` },
+    ],
+    onPick: (id) => void (id === "signin" ? signIn(slug) : ignore(slug)),
+  });
+}
+
 const OUT = new Set(["signed out", "no credentials", "unauthorized"]);
 commands.add({
   id: "accounts.signin",
@@ -106,15 +128,39 @@ function tell() {
         level: "warning",
         key: `accounts.signedout.${a.slug}`,
         title: `${a.slug} is signed out`,
-        body: "Its login has ended; no agent is started on it until you sign in again.",
+        body: "Its login has ended; no agent starts on it until you sign in or ignore it.",
         sticky: true,
         resolved: `${a.slug} is signed in`,
-        action: { label: "Sign in", run: () => void signIn(a.slug) },
+        action: { label: "Sign in or ignore…", run: () => fix(a.slug) },
       }),
     );
   }
 }
 abyme.effect(() => seen.on("change", tell));
 tell();
+
+commands.add({
+  id: "accounts.ignore",
+  title: "Ignore Claude account…",
+  group: "Agents",
+  run: async () => {
+    const v = (await accounts.server.view()) as View;
+    palette.pick({
+      placeholder: "The account no agent runs on",
+      items: v.accounts.filter((a) => a.slug !== "main").map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
+      onPick: (slug) => void ignore(slug),
+    });
+  },
+});
+commands.add({
+  id: "accounts.unignore",
+  title: "Use Claude account again…",
+  group: "Agents",
+  run: async () => {
+    const off = (await accounts.server.ignored()) as string[];
+    if (!off.length) return void notifications.notify({ level: "info", title: "No account is ignored" });
+    palette.pick({ placeholder: "The account to use again", items: off.map((slug) => ({ id: slug, title: slug })), onPick: (slug) => void ignore(slug, false) });
+  },
+});
 
 status.segments.add({ id: "accounts.quota", side: "right", order: 32, Component: Quota });
