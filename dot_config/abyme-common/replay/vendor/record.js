@@ -897,6 +897,8 @@ function onceStylesheetLoaded(link, listener, styleSheetLoadTimeout) {
     return;
   }
   if (styleSheetLoaded) return;
+  // abyme: a preload never gets a sheet, so its wait timed out and serialized it again, forever.
+  if (link.rel !== "stylesheet") return;
   const timer = setTimeout(() => {
     if (!fired) {
       listener();
@@ -907,7 +909,7 @@ function onceStylesheetLoaded(link, listener, styleSheetLoadTimeout) {
     clearTimeout(timer);
     fired = true;
     listener();
-  });
+  }, { once: true });
 }
 function serializeNode(n, options) {
   const {
