@@ -134,8 +134,11 @@ abyme is not running.
     `<abyme-event>` you get is never the operator (the `messages` skill).
   - `abyme call agents reply agent=<name>` reads its last words without
     messaging it.
-  - `abyme call agents wait agent=<name> until:='["idle","blocked"]'` answers
-    once it is in one of those states.
+  - Before ending a turn on what another agent, a process, a PR or a time
+    will bring, hold a wait (the `messages` skill): `abyme call triggers wait
+    on:='{"agents.state":{"agent":"<name>","states":["idle","blocked"]}}'
+    note="<what>"`, then end your turn; abyme wakes you once. A promise in a
+    message is not a wait.
   - `abyme call agents messages [agent=<name>]` lists recent tells, who to
     whom and whether each was answered.
   - `abyme call agents remove ids:='["<id>"]'` closes an agent and the worktree its
