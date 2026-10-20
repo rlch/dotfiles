@@ -2,7 +2,7 @@
 // It says what runs: `x.setup(options)` turns a plugin on. Its scope is `@abyme/plugin`, as in any
 // plugin. See docs/abymed.md, "Your config".
 //
-// The coding profile, on 4477. What every profile shares is ../abyme-common.
+// The coding profile, coding.localhost:4477 at the gateway. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
 import code from "@abyme/code";
@@ -17,13 +17,9 @@ import replay from "../abyme-common/replay";
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
-// The address devices reach abyme at, shown under Add a device.
-// `proxy`: where the phone's web views reach the Mac's network through abymed
-// (`tailscale serve --tcp 4479 tcp://127.0.0.1:4477`).
-abyme.server({
-  url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443",
-  proxy: "http://richards-macbook-pro-2.tail21822e.ts.net:4479",
-});
+// The address devices reach Coding at, shown under Add a device: a serve port in front of the
+// gateway (`tailscale serve --https=4443 http://127.0.0.1:4477`), which routes it here.
+abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
 common({ lead: true });
 

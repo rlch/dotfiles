@@ -1,7 +1,7 @@
 // Runs inside abymed, once, before it listens; again whenever you save it or a file it imports.
 // See docs/abymed.md, "Your config" and "Several abymeds".
 //
-// The knowledge profile, on 4478, beside coding (~/.config/abyme, 4477): notes and learning. Its
+// The knowledge profile, knowledge.localhost:4477 beside coding (~/.config/abyme): notes and learning. Its
 // own state (~/.local/state/abyme-knowledge), agents and processes; the gateway starts it when it
 // is opened (`abyme profiles add`). What every profile shares is ../abyme-common.
 
@@ -79,7 +79,8 @@ import { common } from "../abyme-common/index.ts";
 abyme.server({ port: 4478, stateDir: "~/.local/state/abyme-knowledge" });
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Knowledge", color: "green", icon: "book" });
-// The address devices reach it at: `tailscale serve` on 4446 in front of 127.0.0.1:4478.
+// The address devices reach it at: `tailscale serve` on 4446 in front of the gateway (127.0.0.1:4477),
+// which routes it here.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4446" });
 
 common({ lead: false });
