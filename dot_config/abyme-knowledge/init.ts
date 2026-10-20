@@ -2,8 +2,8 @@
 // See docs/abymed.md, "Your config" and "Several abymeds".
 //
 // The knowledge profile, on 4478, beside coding (~/.config/abyme, 4477): notes and learning. Its
-// own state (~/.local/state/abyme-knowledge), agents and processes; launchd job
-// com.rjm.abymed.knowledge. What every profile shares is ../abyme-common.
+// own state (~/.local/state/abyme-knowledge), agents and processes; the gateway starts it when it
+// is opened (`abyme profiles add`). What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
 import learn from "@abyme/learn";
@@ -72,6 +72,7 @@ import push from "@abyme/push";
 import share from "@abyme/share";
 import browser from "@abyme/browser";
 import triggers from "@abyme/triggers";
+import profiles from "@abyme/profiles";
 import packages from "@abyme/packages";
 import { common } from "../abyme-common/index.ts";
 
@@ -160,6 +161,8 @@ push.setup();
 share.setup();
 browser.setup();
 triggers.setup();
+// What keeps this profile in use, which the gateway reads before it suspends it.
+profiles.setup();
 packages.setup();
 
 // Learning from documents (`.md`, the `documents` plugin's): the vault's documents are things
