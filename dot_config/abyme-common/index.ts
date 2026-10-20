@@ -8,7 +8,6 @@ import abyme from "@abyme/plugin";
 import theme from "@abyme/theme";
 import vim from "@abyme/vim";
 import sentry from "@abyme/sentry";
-import agents from "@abyme/agents/inventory";
 import spaces from "@abyme/spaces/inventory";
 import accounts from "./accounts";
 import publish from "./publish";
@@ -35,20 +34,6 @@ export function common({ lead }: { lead: boolean }) {
   accounts.setup({ renew: lead });
   // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
   publish.setup();
-  // My assistant on pi and DeepSeek V4.1 Flash, in place of abyme's Claude one (same id, same instructions): a
-  // fast, cheap model for talk; it delegates real work to agents. pi reads its key from the keychain
-  // (~/.pi/agent/auth.json).
-  agents.presets.add({
-    id: "assistant",
-    title: "Assistant",
-    provider: "acp",
-    harness: "pi",
-    model: "deepseek/deepseek-flash",
-    name: "assistant",
-    instructions:
-      "You are the operator's assistant in abyme. They may be speaking to you; keep answers to one to three short sentences, no markdown unless asked. You do not write code yourself: start agents for work and tell them how to report back to you by name; read and tell agents; drive abyme with remote_run (read the layout before changing it). Call agents_skill before work a skill covers. Say what you did, then stop.",
-    dock: "right",
-  });
   // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
   sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
   // Where agents are listed in Spaces, first answer wins (docs/plugins.md, Spaces): after-land's
