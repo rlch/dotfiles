@@ -1,5 +1,5 @@
 // What every profile of mine shares (coding in ~/.config/abyme, knowledge in
-// ~/.config/abyme-knowledge): each init.ts imports this and calls `common({ lead })`. Plain code, imported
+// ~/.config/abyme-knowledge, bevy in ~/.config/abyme-bevy): each init.ts imports this and calls `common({ lead })`. Plain code, imported
 // by a relative path; a save here runs each config that imports it again (docs/abymed.md, Several
 // abymeds). What one profile alone needs stays in its own init.ts: which built-ins run is each
 // profile's (coding the code app, knowledge its own list).
