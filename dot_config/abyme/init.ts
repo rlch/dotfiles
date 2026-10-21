@@ -10,6 +10,7 @@ import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
 import rail from "@abyme/rail";
+import layoutPanes from "@abyme/layout-panes";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -30,6 +31,9 @@ common({ lead: true });
 code.setup({ titlebar: false });
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
+// One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
+// views open in main as tabs.
+layoutPanes.setup({ docks: { left: "rail" } });
 rail.setup({
   items: [
     "spaces", "agents", "teams.list", "explorer", "github.prs",
