@@ -39,3 +39,7 @@ check = "scripts/gate"
 batch = true
 after = "scripts/after-land"
 patience_min = 120
+
+# Straight to main: rebase onto local main, fast-forward, push (operator, 2026-10-21).
+[repo."Abyme-Studio/bevy-ts"]
+mode = "ff"
