@@ -25,22 +25,16 @@ mode = "pr"
 mode = "pr"
 admin = true
 
-# Land at once, check after (operator, 2026-10-22: "land really quickly and batch checks"). A land
-# runs `check` on its branch alone, rebased onto main, then hands it to the queue (`batch`), which
-# rebases every branch waiting onto main and fast-forwards main to them, checking nothing. abyme's
-# check is scripts/gate, `scripts/check --quick` (fmt, the shapes, the specs, the typecheck the
-# branch moves: about a minute). scripts/after-land, after each batch, is main's one full check: it
-# promotes, runs scripts/check --full, the builds and the walk once per burst, and reverts the landing
-# that turned main red; a tip that moves the live abymed promotes only once green. Before, the queue
-# ran scripts/check on each batch (5-11 min, red 7 times in 11, split 28 times in a day) and lands
-# waited over an hour behind each other.
+# Land at once, check once a day (operator, 2026-10-22: "land everything ... run them much less
+# frequently. Like maybe once a day"). The queue (`batch`) rebases every branch waiting onto main and
+# fast-forwards main to them, checking nothing. scripts/after-land, after each batch, only promotes
+# main's tip (a tip that moves abymed once its release build answers on a spare port). The full
+# check, the builds and the walk run at 04:00 on main (scripts/after-land --daily, the trigger
+# `daily` in the repo's .abyme/triggers.ts), reverting the landing that turned main red.
 [repo."Abyme-Studio/abyme"]
-# No gate before a land (operator, 2026-10-22): lands go straight in; the full check and the walk
-# run once a day on main instead (team daily-check).
 check = ""
 batch = true
-# After a land: promote only, no run (operator, 2026-10-22); the daily run replaces it.
-after = '''env ABYME_AFTER_STEPS='[["noop","true"]]' scripts/after-land'''
+after = "scripts/after-land"
 patience_min = 120
 
 # Straight to main: rebase onto local main, fast-forward, push (operator, 2026-10-21).
