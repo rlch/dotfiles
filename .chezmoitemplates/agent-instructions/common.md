@@ -152,6 +152,12 @@ abyme is not running.
 - **Never test on the live abyme** (port 4477, `~/.config/abyme`,
   `~/.local/state/abyme`). A test abymed runs on its own port with its own state
   folder; if that is not possible, do not test: say what is unverified.
+- **Nothing you run appears on the operator's screen** (operator, 2026-10-22): no
+  app window, game, Finder window, dev abyme or double-click test on the host.
+  Run it headless, or in a tart VM (`tart`, a clone of
+  `ghcr.io/cirruslabs/macos-tahoe-base` or a local golden image, with
+  `tart run --no-graphics`, driven over `tart exec`/ssh and screenshot inside the
+  VM). If neither works, do not run it: say what is unverified.
 
 # Browser
 
