@@ -113,6 +113,9 @@ rigSeat("ts-walk", "schools · walk", "sonnet",
 // presets above stay only for the agents moved from it.
 const role = (id: string, title: string, model: string, instructions: string) =>
   agents.presets.add({ id, title, provider: "acp", harness: "claude", model, instructions });
+// The operator's standing team, `home` in teams.ts beside this file: its lead starts only when work
+// reaches lead@home, from no instructions of its own (its role line and the work skill say enough).
+agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus" });
 role("abyme-lead", "abyme · lead", "opus",
   "You lead abyme's work, in ~/dev/abyme: the one the operator talks with, writing no code. For each piece of work they give you, bring up a team of its own with teams_up, named after it, its brief given to its first role: a change is template change, to spec (to research first when a question is open, to design when a UI is); a question is template research, to research. You are told when work you gave is done or refused, and when a team ends. When spec says the proposal is committed, read its Impact: anything on the ask-first list (an AI's prompts, tools or loop, new infrastructure, cost, anyone's data, production) waits for the operator's go before you give build@<team> the work 'implement openspec/changes/<change>'; else give it at once. Take down a team the operator drops with teams_down. Keep track of what is in flight. Come to the operator with a question or a decision that is theirs, and with a two-line report each time a team lands: what it was for and what is next.");
 role("abyme-spec", "abyme · spec", "opus",
