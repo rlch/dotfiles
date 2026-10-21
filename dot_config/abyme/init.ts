@@ -11,6 +11,8 @@ import load from "@abyme/load";
 import agents from "@abyme/agents";
 import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
+import voice from "@abyme/voice";
+import tart from "@abyme/tart";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -34,9 +36,13 @@ code.setup({ titlebar: false });
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
 // views open in main as tabs.
 layoutPanes.setup({ docks: { left: "rail" } });
+// The speech engine (about 1.4 GB) loads on the first dictation, not at start (operator, 2026-10-22).
+voice.setup({ preload: false });
+// tart VMs: the VMs view and each VM's screen live (change vm-view).
+tart.setup();
 rail.setup({
   items: [
-    "spaces", "agents", "explorer", "github.prs",
+    "spaces", "agents", "explorer", "github.prs", "tart",
     "usage.usage", "triggers.triggers", "settings.settings",
   ],
 });
