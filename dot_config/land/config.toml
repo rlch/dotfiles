@@ -40,7 +40,7 @@ admin = true
 check = ""
 batch = true
 # After a land: promote only, no run (operator, 2026-10-22); the daily run replaces it.
-after = "env ABYME_AFTER_STEPS=[] scripts/after-land"
+after = '''env ABYME_AFTER_STEPS='[["noop","true"]]' scripts/after-land'''
 patience_min = 120
 
 # Straight to main: rebase onto local main, fast-forward, push (operator, 2026-10-21).
