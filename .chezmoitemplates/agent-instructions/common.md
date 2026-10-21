@@ -20,7 +20,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 
 - **Act on your own recommendation, now.** If you would recommend a step and it
   can be undone, take it at once and report the decision afterwards, in one line
-  I can review and reverse (operator, 2026-10-21). No `questions_ahead` timer, no
+  I can review and reverse (operator, 2026-10-21). No `questions_proceed` timer, no
   waiting for a go. Never end a turn on "shall I?" for something you already
   think is right.
 - **Ask first only for these**, with a plain explanation of what changes, how it
@@ -106,7 +106,7 @@ which folder you are in. Exit 1 means it refused, and says why; exit 3 means
 abyme is not running.
 
 - **A long-running server, watcher, build, test run or log tail goes in a
-  process, not in your shell:** `abyme call processes place name=<name>`. It runs
+  process, not in your shell:** `abyme call processes start name=<name>`. It runs
   in a terminal of its own the user sees under Terminals and can type into, and
   survives abyme restarting. `<name>` is one the repo names in
   `.abyme/processes.ts`; add it if missing:
@@ -114,12 +114,12 @@ abyme is not running.
   import type { ProcessFile } from "@abyme/processes";
   export default { dev: { cmd: "pnpm dev" } } satisfies ProcessFile;
   ```
-  Placing one that runs starts nothing new. `abyme call processes remove
+  Starting one that runs starts nothing new. `abyme call processes remove
   name=<name>` when you are done with it; `abyme call processes list` says what
   runs. Use the shell tool only for short-lived foreground commands.
-  **Never wait on one you placed** (a gate, a build): end your turn. abyme
+  **Never wait on one you started** (a gate, a build): end your turn. abyme
   tells you once when it exits (an `<abyme-event source="processes"
-  event="exited">` with its last lines), and you carry on from there; `wake:=false` on `place`
+  event="exited">` with its last lines), and you carry on from there; `wake:=false` on `start`
   for one you do not want to hear of.
 - **Another agent:** `abyme call agents start provider=acp dir=<repo>
   [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
