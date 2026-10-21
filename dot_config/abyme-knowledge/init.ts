@@ -100,7 +100,7 @@ storage.setup();
 // The frame: the layout, the rail, the title bar and status bar, and the app's window.
 shell.setup();
 layoutPanes.setup();
-rail.setup();
+rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "triggers.triggers", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
 status.setup();

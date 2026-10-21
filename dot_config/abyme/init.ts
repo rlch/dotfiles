@@ -9,6 +9,7 @@ import code from "@abyme/code";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
+import rail from "@abyme/rail";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -27,6 +28,14 @@ common({ lead: true });
 // app's setup of it, before or after this line. No title bar and no window buttons, as Ghostty's
 // `macos-titlebar-style = hidden`.
 code.setup({ titlebar: false });
+// The rail, top to bottom: the code app's list without Search, Source control, Ports and Tasks
+// (operator, 2026-10-21); their views, commands and keys stay.
+rail.setup({
+  items: [
+    "spaces", "agents", "teams.list", "explorer", "github.prs",
+    "output", "problems", "terminals", "usage.usage", "triggers.triggers", "settings.settings",
+  ],
+});
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
 // rrweb on every page but a phone's, unmasked but for passwords and local: the last hour on disk,
