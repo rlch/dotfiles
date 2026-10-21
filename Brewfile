@@ -116,7 +116,7 @@ brew "cargo-nextest"        # 2-3× faster test runner; used by `just test` and
                             # aliased as `cargo test` via ~/.cargo/config.toml.
 brew "cargo-llvm-cov"       # line coverage via LLVM; used by `just cov`
 brew "cargo-fuzz"           # libFuzzer driver for codec fuzzing
-brew "sccache"              # shared compile cache: the schools-ts gates wrap their
+brew "sccache"              # shared compile cache: the schools gates wrap their
                             # cargo in it (scripts/cargo.mjs); hand-run cargo does not
                             # (see ~/.cargo/config.toml, incremental).
 
@@ -139,7 +139,7 @@ brew "uv"          # fast Python package/venv manager (pip + virtualenv replacem
 # The mobile MCP server is registered separately via
 # `claude mcp add -s user mobile -- npx -y @mobilenext/mobile-mcp@latest`.
 cask "android-platform-tools"
-# Building Android apps (schools-ts apps/mobile, Tauri): the SDK (sdkmanager,
+# Building Android apps (schools apps/mobile, Tauri): the SDK (sdkmanager,
 # platforms, build-tools, emulator) and the NDK. Gradle wants JDK 17 or 21,
 # not brew's newest openjdk; config.fish points JAVA_HOME at 21.
 cask "android-commandlinetools"

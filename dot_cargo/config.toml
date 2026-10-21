@@ -53,10 +53,10 @@ rustflags = [
 # incremental = true:
 #   Cargo's native incremental cache stays on for the workspace's crates.
 #   sccache (above) now only caches the non-incremental registry crates, so
-#   the two no longer trade off (schools-ts local-gates D6, operator 2026-09-30:
+#   the two no longer trade off (schools local-gates D6, operator 2026-09-30:
 #   two dozen worktrees each rebuilt the same registry crates).
 #   Incremental is 65-73% of a warm target/ and grows ~0.6 GB per edit of a
-#   big crate, but turning it off costs 2.5x on every edit-rebuild (schools-ts,
+#   big crate, but turning it off costs 2.5x on every edit-rebuild (schools,
 #   2026-09-30: 42-47 s on, 100-127 s off). So it stays on while a worktree is
 #   worked in, and ~/.local/bin/worktree-janitor drops `incremental/` after
 #   6 idle hours and the whole target after 12. Do not set

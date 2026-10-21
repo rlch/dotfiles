@@ -2,7 +2,7 @@
 # Keep build output from filling the disk: the lifecycle every worktree lacks.
 #
 # On 2026-09-30 the data volume hit 0 bytes free twice: ~1.1 TB of Rust target/
-# across ~128 herdr worktrees, most idle for days (research: schools-ts
+# across ~128 herdr worktrees, most idle for days (research: schools
 # research/reports/worktree-disk-2026-09-30.md). Build output is a cache, so it
 # gets a cache's lifecycle, by age, whatever repository or session made it:
 #
@@ -10,7 +10,7 @@
 #                         the next edit costs one full compile of the crates it
 #                         touches, ~1-3 min, nothing else rebuilds)
 #   idle >= CLEAN hours   drop the whole target dir   (the next build is cold,
-#                         ~4 min for schools-ts under sccache; 12 h, the
+#                         ~4 min for schools under sccache; 12 h, the
 #                         operator's timing, 2026-09-30)
 #   --remove-landed       remove a worktree whose work is provably elsewhere,
 #                         tree clean, idle >= a day: a branch on main or
