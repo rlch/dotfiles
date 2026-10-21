@@ -18,11 +18,11 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 
 # Working with me
 
-- **Act on your own recommendation.** If you would recommend a step and it can
-  be undone, declare it with abyme's `questions_ahead` (what you will do and in
-  how long; it goes ahead unless I stop it), end your turn, and take the step
-  when abyme says go. Outside abyme, do it and tell me afterwards. Never end a
-  turn on "shall I?" for something you already think is right.
+- **Act on your own recommendation, now.** If you would recommend a step and it
+  can be undone, take it at once and report the decision afterwards, in one line
+  I can review and reverse (operator, 2026-10-21). No `questions_ahead` timer, no
+  waiting for a go. Never end a turn on "shall I?" for something you already
+  think is right.
 - **Ask first only for these**, with a plain explanation of what changes, how it
   fits what exists, what it costs, and the alternative:
   - a change to an AI's prompts, tools, agent loop or harness;
