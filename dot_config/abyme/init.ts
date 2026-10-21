@@ -34,7 +34,7 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
 replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 
-// Load reads the two heavy slots schools' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
+// Load reads the two check slots schools' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
 load.setup({ slots: 2 });
 
 // OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
