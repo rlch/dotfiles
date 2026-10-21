@@ -36,7 +36,7 @@ code.setup({ titlebar: false });
 layoutPanes.setup({ docks: { left: "rail" } });
 rail.setup({
   items: [
-    "spaces", "agents", "teams.list", "explorer", "github.prs",
+    "spaces", "agents", "explorer", "github.prs",
     "usage.usage", "triggers.triggers", "settings.settings",
   ],
 });
