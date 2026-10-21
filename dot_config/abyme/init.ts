@@ -9,7 +9,6 @@ import code from "@abyme/code";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
-import openrig from "@abyme/openrig";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 
@@ -38,10 +37,8 @@ replay.setup({}, { when: { device: ["desktop", "tablet"] } });
 // Load reads the two heavy slots schools' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
 load.setup({ slots: 2 });
 
-// OpenRig beside abyme, from the fork's branch `abyme` (its daemon is the process `openrig` there,
-// its data in ~/.local/share/openrig-abyme): a rig per feature as one space, seats as agents, the Flow view.
-// A seat starts from `seat` unless its rigspec member names another (env ABYME_PRESET).
-openrig.setup({ checkout: "~/dev/forks/openrig", preset: "seat" });
+// OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
+// native teams (moved there 2026-10-21, openspec teams-and-work 7); delete them once those finish.
 agents.presets.add({
   id: "seat",
   title: "Seat",
@@ -112,8 +109,8 @@ rigSeat("ts-walk", "schools · walk", "sonnet",
 // Teams (the teams and work plugins, set up by code's platform list): a team per piece of work from a
 // template in a repository's .abyme/teams.ts, each role's agent starting from one of these presets
 // when work first reaches it; each repository's lead stands as its `orchestrator`. How work moves is
-// the work plugin's skill alone, so each preset says only what its role does. The rig-* and ts-*
-// presets above stay while OpenRig's last rigs drain (openspec teams-and-work, tasks 6.3 and 7).
+// the work plugin's skill alone, so each preset says only what its role does. OpenRig is gone; its
+// presets above stay only for the agents moved from it.
 const role = (id: string, title: string, model: string, instructions: string) =>
   agents.presets.add({ id, title, provider: "acp", harness: "claude", model, instructions });
 role("abyme-lead", "abyme · lead", "opus",
