@@ -13,6 +13,9 @@ import { common } from "../abyme-common";
 abyme.server({ port: 4480, stateDir: "~/.local/state/abyme-bevy" });
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Bevy", color: "orange", icon: "sparkles" });
+// The address devices reach it at: `tailscale serve` on 4447 in front of the gateway (127.0.0.1:4477),
+// which routes it here.
+abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4447" });
 
 common({ lead: false });
 
