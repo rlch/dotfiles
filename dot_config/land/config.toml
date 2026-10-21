@@ -25,14 +25,15 @@ mode = "pr"
 mode = "pr"
 admin = true
 
-# A merge queue (operator, 2026-10-15): a land hands its branch to the queue and is told;
-# whichever waiting land holds the queue rebases every waiting branch onto main, runs
-# scripts/check once on the lot and lands them together, splitting a red batch to find
-# the branch that broke it. Before, each land ran the gate alone inside the queue (~11 min
-# plus a heavy-slot wait), and eight lands waited 30 min to 2 h behind each other.
-# scripts/check is the local lane (what the batch's change can move); after each batch,
-# scripts/after-land is the heavy lane on main: the full gate and the walk, reverting a
-# landing that turned main red, then promoting the newest green main, at most every 30 min.
+# Land at once, check after (operator, 2026-10-22: "land really quickly and batch checks"). A land
+# runs `check` on its branch alone, rebased onto main, then hands it to the queue (`batch`), which
+# rebases every branch waiting onto main and fast-forwards main to them, checking nothing. abyme's
+# check is scripts/gate, `scripts/check --quick` (fmt, the shapes, the specs, the typecheck the
+# branch moves: about a minute). scripts/after-land, after each batch, is main's one full check: it
+# promotes, runs scripts/check --full, the builds and the walk once per burst, and reverts the landing
+# that turned main red; a tip that moves the live abymed promotes only once green. Before, the queue
+# ran scripts/check on each batch (5-11 min, red 7 times in 11, split 28 times in a day) and lands
+# waited over an hour behind each other.
 [repo."Abyme-Studio/abyme"]
 # No gate before a land (operator, 2026-10-22): lands go straight in; the full check and the walk
 # run once a day on main instead (team daily-check).
