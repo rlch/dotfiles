@@ -39,7 +39,8 @@ admin = true
 # run once a day on main instead (team daily-check).
 check = ""
 batch = true
-after = "scripts/after-land"
+# After a land: promote only, no run (operator, 2026-10-22); the daily run replaces it.
+after = "env ABYME_AFTER_STEPS=[] scripts/after-land"
 patience_min = 120
 
 # Straight to main: rebase onto local main, fast-forward, push (operator, 2026-10-21).
