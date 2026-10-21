@@ -87,6 +87,12 @@ export function expirePast(data: Raw, now: number): Raw {
   return out;
 }
 
+/** Between reads, the last read when it was an error newer than the answer kept: an older answer
+ * must not hide it. It did: "hsone is signed out" was raised by each 5-minute read and cleared 2 s
+ * later by the next agent change (2026-10-21). */
+export const errorWins = (kept: { at: number } | undefined, read: { at: number; error?: string } | undefined): boolean =>
+  read?.error !== undefined && (kept === undefined || read.at >= kept.at);
+
 const HORIZON = 5 * 3600;
 const WEEK = 7 * 86400;
 const WEEKLY_FLOOR = 0.15;

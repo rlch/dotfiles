@@ -8,7 +8,7 @@ import abyme from "@abyme/plugin";
 import agents from "@abyme/agents";
 import terminal from "@abyme/terminal";
 import options from "./options";
-import { best, capped, expirePast, family, parse, parseModels, type ModelWindow, type Row, type Usage } from "./pick";
+import { best, capped, errorWins, expirePast, family, parse, parseModels, type ModelWindow, type Row, type Usage } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || abyme.env.HOME!;
@@ -517,7 +517,8 @@ async function showCached() {
   const q = new Map<string, Quota>();
   for (const a of all) {
     const had = quota.get(a.key);
-    q.set(a.key, had ? answer(had.at, had.data) : (last.get(a.key) ?? { at: 0, error: "not read yet" }));
+    const read = last.get(a.key);
+    q.set(a.key, had && !errorWins(had, read) ? answer(had.at, had.data) : (read ?? { at: 0, error: "not read yet" }));
   }
   show(all, q);
 }

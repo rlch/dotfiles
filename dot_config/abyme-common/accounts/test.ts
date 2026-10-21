@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { best, expirePast, family, parse, parseModels, score, type Family, type ModelWindow, type Row, type Usage } from "./pick.ts";
+import { best, errorWins, expirePast, family, parse, parseModels, score, type Family, type ModelWindow, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -107,6 +107,15 @@ test("a window whose reset has passed is zeroed", () => {
   assert.equal(out.five_hour.utilization, 0);
   assert.equal(out.seven_day.utilization, 40);
   assert.equal(out.limits[0]!.utilization, 0);
+});
+
+// server.ts's showCached
+test("an error read after the answer kept is shown", () => {
+  assert.equal(errorWins({ at: 1 }, { at: 2, error: "signed out" }), true);
+  assert.equal(errorWins(undefined, { at: 2, error: "signed out" }), true);
+  assert.equal(errorWins({ at: 3 }, { at: 2, error: "unreachable" }), false);
+  assert.equal(errorWins({ at: 1 }, { at: 2 }), false);
+  assert.equal(errorWins({ at: 1 }, undefined), false);
 });
 
 let failed = 0;
