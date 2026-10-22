@@ -13,6 +13,7 @@ import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
 import voice from "@abyme/voice";
 import mistral from "@abyme/mistral";
+import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
@@ -49,6 +50,7 @@ layoutPanes.setup({
 // Mistral for hearing and speaking in the cloud (operator, 2026-10-22); a local silence gate sends only speech. The key is in the keychain (abyme-mistral), never here.
 mistral.setup({}, { secrets: { MISTRAL_API_KEY: abyme.env.MISTRAL_API_KEY } });
 voice.setup({ preload: false, hearing: "mistral", speaking: "mistral" });
+conversation.setup({ voiceModel: "mistral-small-4" }); // the reply model too, in the cloud
 // tart VMs: the VMs view and each VM's screen live (change vm-view).
 tart.setup();
 rail.setup({
