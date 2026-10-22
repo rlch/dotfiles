@@ -5,7 +5,7 @@
 // The coding profile, coding.localhost:4477 at the gateway. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/plugin";
-import code from "@abyme/code";
+import coding from "./coding";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
@@ -26,11 +26,10 @@ abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
 common({ lead: true });
 
-// The code app: the platform and code's own plugins (pull requests, line review, a space per
-// worktree). A member's own line (common's theme and vim, the lines below) stands in place of the
-// app's setup of it, before or after this line. No title bar and no window buttons, as Ghostty's
-// `macos-titlebar-style = hidden`.
-code.setup({ titlebar: false });
+// The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
+// line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
+// stands in place of the app's setup of it, before or after this line.
+coding.setup();
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
