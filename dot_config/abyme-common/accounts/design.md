@@ -40,7 +40,7 @@ starting point; this says where it changes.
 
 | | the plugin |
 | --- | --- |
-| Accounts | as clodcurrent, through `abyme.fs` |
+| Accounts | as clodcurrent, through `@abyme/fs` |
 | Quota | as clodcurrent, kept in an `abyme.value` (60 s fresh, 30 min stale on failure) |
 | Score, tiers, model windows | as clodcurrent; the model is the launch's value of category `model` |
 | Busy | as clodcurrent, per identity: `sessions.json` read only (terminal sessions), plus abyme's live agents by `config_dir` (status not `done`), plus a pick counted from the moment it is made, as clodcurrent registers at launch (operator, 2026-10-10: same logic as clodcurrent) |

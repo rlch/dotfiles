@@ -5,12 +5,13 @@
 // follow it in `state()`.
 import abyme from "@abyme/plugin";
 import documents from "@abyme/documents";
+import fs from "@abyme/fs/optional";
+import process from "@abyme/process/optional";
 import options from "./options";
 import type { Job, Prepared, Publish, State } from "./api";
 
 const o = abyme.with(options).plugin.options;
-const HOME = abyme.env.HOME!;
-const ROOT = o.root.replace(/^~(?=\/|$)/, HOME);
+const ROOT = o.root.replace(/^~(?=\/|$)/, fs?.home ?? "~");
 const STAGE = `${(abyme.env.TMPDIR ?? "/tmp").replace(/\/+$/, "")}/abyme-publish`;
 const RUN_MS = 20 * 60_000;
 
@@ -35,8 +36,8 @@ async function slugFor(id: string): Promise<string> {
   const taken = async (s: string) =>
     s === "404" ||
     others.has(s) ||
-    !!(await abyme.fs.stat(`${ROOT}/local/${s}`)) ||
-    !!(await abyme.fs.stat(`${ROOT}/artifacts/${s}`));
+    !!(await files().stat(`${ROOT}/local/${s}`)) ||
+    !!(await files().stat(`${ROOT}/artifacts/${s}`));
   if (!(await taken(name))) return name;
   const base = `${clean(parts.at(-2) ?? "")}-${name}`;
   let s = base;
@@ -59,7 +60,7 @@ function setPublished(id: string, p: { slug: string; url: string; at: number } |
 
 /** Runs the artifact CLI on the repository: its lines of output, or a throw with its error. */
 async function artifact(args: string[]): Promise<string[]> {
-  const r = await abyme.process.run(o.command, { args, env: { ARTIFACTS_REPO: ROOT }, timeoutMs: RUN_MS });
+  const r = await processes().run(o.command, { args, env: { ARTIFACTS_REPO: ROOT }, timeoutMs: RUN_MS });
   const lines = r.stdout.split("\n").filter((l) => l.trim());
   if (r.code !== 0) throw new Error(r.stderr.trim().split("\n").pop() || lines.pop() || `${o.command} exited ${r.code}`);
   return lines;
@@ -80,18 +81,29 @@ function run(id: string, action: Job["action"], slug: string, work: () => Promis
   return { slug };
 }
 
+/** The control plane's files, where the artifacts repository is; refused where there are none. */
+function files() {
+  if (!fs) throw new Error("no machine provides fs here, to publish a document");
+  return fs;
+}
+/** The control plane's processes, to run the artifact CLI. */
+function processes() {
+  if (!process) throw new Error(`no machine provides process here, to run ${o.command}`);
+  return process;
+}
+
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const api = {
   async prepare(id: string) {
     const slug = await slugFor(id);
     const dir = `${STAGE}/${slug}`;
-    if (await abyme.fs.stat(dir)) await abyme.fs.remove(dir);
+    if (await files().stat(dir)) await files().remove(dir);
     const out = await documents.export({ path: id, dir });
-    const title = (JSON.parse((await abyme.fs.read(`${dir}/document.json`)) ?? "{}") as { title?: string }).title || id;
+    const title = (JSON.parse((await files().read(`${dir}/document.json`)) ?? "{}") as { title?: string }).title || id;
     // The viewer names its page as it loads; the site's lists read the file's own title.
-    const html = (await abyme.fs.read(`${dir}/index.html`)) ?? "";
-    await abyme.fs.write(`${dir}/index.html`, html.replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`));
+    const html = (await files().read(`${dir}/index.html`)) ?? "";
+    await files().write(`${dir}/index.html`, html.replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`));
     const p: Prepared = {
       id,
       title,
@@ -109,10 +121,10 @@ const api = {
     return run(id, "publish", p.slug, async () => {
       staged.delete(id);
       const target = `${ROOT}/artifacts/${p.slug}`;
-      if (await abyme.fs.stat(target)) await abyme.fs.remove(target);
-      await abyme.fs.mkdir(`${ROOT}/artifacts`);
-      await abyme.fs.copy(p.dir, target);
-      await abyme.fs.remove(p.dir);
+      if (await files().stat(target)) await files().remove(target);
+      await files().mkdir(`${ROOT}/artifacts`);
+      await files().copy(p.dir, target);
+      await files().remove(p.dir);
       const lines = await artifact(["publish", "-m", `feat(artifacts): publish ${p.title}`, p.slug]);
       const url = lines.filter((l) => /^https?:\/\//.test(l.trim())).pop()?.trim();
       if (!url) throw new Error(`${o.command} publish printed no URL`);

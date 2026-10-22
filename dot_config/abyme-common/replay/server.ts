@@ -10,12 +10,14 @@
 import abyme from "@abyme/plugin";
 import { implement } from "@abyme/schema";
 import { HttpError, respond } from "@abyme/server";
+import fs from "@abyme/fs/optional";
+import process from "@abyme/process/optional";
 import options from "./options";
 import { parseSave, SAVE } from "./format";
 import { replay, type Batch, type Head, type Read, type Save } from "./api.server.ts";
 
 const o = abyme.with(options).plugin.options;
-const DIR = (o.dir || `${abyme.options.stateDir}/replays`).replace(/^~(?=\/|$)/, abyme.env.HOME ?? "~");
+const DIR = fs ? (o.dir || `${fs.stateDir}/replays`).replace(/^~(?=\/|$)/, fs.home) : "";
 const RING = `${DIR}/ring`;
 const CSS = `${DIR}/css`;
 /** A stylesheet shorter than this stays where it is. */
@@ -26,6 +28,17 @@ const SAVES = Math.max(1, Math.floor(o.saves));
 /** A page that has sent nothing for this long has gone: its open segment is closed. */
 const GONE_MS = 3 * 60_000;
 const ERROR_GAP_MS = 60_000;
+
+/** The control plane's files, where the recordings are; refused where there are none. */
+function files() {
+  if (!fs) throw new Error("no machine provides fs here, to keep a page's recording");
+  return fs;
+}
+/** The control plane's processes, to run gzip. */
+function processes() {
+  if (!process) throw new Error("no machine provides process here, to run gzip");
+  return process;
+}
 
 const stamp = (t: number) => new Date(t).toISOString().replace(/\.\d+Z$/, "").replace(/:/g, "-");
 const clean = (s: string) => s.replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "page";
@@ -47,7 +60,7 @@ function queued<T>(p: Page, work: () => Promise<T>): Promise<T> {
 }
 
 async function gzip(args: string[]) {
-  const r = await abyme.process.run("/usr/bin/gzip", { args, timeoutMs: 120_000 });
+  const r = await processes().run("/usr/bin/gzip", { args, timeoutMs: 120_000 });
   if (r.code !== 0) throw new Error(`gzip ${args.join(" ")}: ${r.stderr.trim() || `exited ${r.code}`}`);
   return r.stdout;
 }
@@ -55,7 +68,7 @@ async function gzip(args: string[]) {
 /** Closes a raw segment: named for its span, gzipped. */
 async function close(path: string, end: number) {
   const done = path.replace(/\.jsonl$/, `-${end}.jsonl`);
-  await abyme.fs.rename(path, done);
+  await files().rename(path, done);
   await gzip(["-f", done]);
 }
 
@@ -90,7 +103,7 @@ function outline(e: { type: number; data: any }, p: Page): { hash: string; text:
 async function segments(page: string) {
   const dir = `${RING}/${clean(page)}`;
   const out: { path: string; start: number; end: number | null }[] = [];
-  for (const e of (await abyme.fs.list(dir)) ?? []) {
+  for (const e of (await files().list(dir)) ?? []) {
     const m = /^(\d+)(?:-(\d+))?\.jsonl(\.gz)?$/.exec(e.name);
     if (!m || !!m[2] !== !!m[3]) continue;
     out.push({ path: `${dir}/${e.name}`, start: Number(m[1]), end: m[2] ? Number(m[2]) : null });
@@ -109,37 +122,39 @@ async function sweep() {
         pages.delete(id);
       });
   const open = new Set([...pages.values()].map((p) => p.open?.path));
-  for (const d of (await abyme.fs.list(RING)) ?? []) {
+  for (const d of (await files().list(RING)) ?? []) {
     const segs = await segments(d.name);
     for (const s of segs) {
-      if (s.end === null && !open.has(s.path)) await close(s.path, (await abyme.fs.stat(s.path))?.mtime ?? now);
-      else if (s.end !== null && s.end < now - KEEP_MS) await abyme.fs.remove(s.path);
+      if (s.end === null && !open.has(s.path)) await close(s.path, (await files().stat(s.path))?.mtime ?? now);
+      else if (s.end !== null && s.end < now - KEEP_MS) await files().remove(s.path);
     }
     // Nothing left of a page but its label: the folder goes.
-    if (!(await segments(d.name)).length && ![...pages.keys()].some((id) => clean(id) === d.name)) await abyme.fs.remove(`${RING}/${d.name}`);
+    if (!(await segments(d.name)).length && ![...pages.keys()].some((id) => clean(id) === d.name)) await files().remove(`${RING}/${d.name}`);
   }
   // A stylesheet no page lists any more goes too.
   const used = new Set<string>();
-  for (const d of (await abyme.fs.list(RING)) ?? []) for (const h of ((await abyme.fs.read(`${RING}/${d.name}/css`)) ?? "").split("\n")) if (h) used.add(h);
+  for (const d of (await files().list(RING)) ?? []) for (const h of ((await files().read(`${RING}/${d.name}/css`)) ?? "").split("\n")) if (h) used.add(h);
   for (const p of pages.values()) for (const h of p.css) used.add(h);
-  for (const f of (await abyme.fs.list(CSS)) ?? []) {
+  for (const f of (await files().list(CSS)) ?? []) {
     const h = f.name.replace(/\.css$/, "");
     if (!used.has(h)) {
-      await abyme.fs.remove(`${CSS}/${f.name}`);
+      await files().remove(`${CSS}/${f.name}`);
       stored.delete(h);
     }
   }
 }
-// The half's engine stops with the plugin, and its timers with it.
-setInterval(() => void sweep().catch((e: unknown) => abyme.log.warn(`replay sweep: ${e instanceof Error ? e.message : e}`)), 60_000);
-void sweep().catch(() => {});
+// The half's engine stops with the plugin, and its timers with it. Only with a machine to sweep.
+if (fs && process) {
+  setInterval(() => void sweep().catch((e: unknown) => abyme.log.warn(`replay sweep: ${e instanceof Error ? e.message : e}`)), 60_000);
+  void sweep().catch(() => {});
+}
 
 async function list(): Promise<Save[]> {
   const saves: Save[] = [];
-  for (const e of (await abyme.fs.list(DIR)) ?? []) {
+  for (const e of (await files().list(DIR)) ?? []) {
     if (!SAVE.test(e.name)) continue;
     const path = `${DIR}/${e.name}`;
-    const s = await abyme.fs.stat(path);
+    const s = await files().stat(path);
     if (s) saves.push({ name: e.name, path, at: s.mtime ?? 0, size: s.size });
   }
   return saves.sort((a, b) => b.name.localeCompare(a.name));
@@ -163,13 +178,13 @@ const api = {
     for (const s of sheets) p.css.add(s.hash);
     return queued(p, async () => {
       for (const s of sheets) {
-        if (!stored.has(s.hash) && !(await abyme.fs.stat(`${CSS}/${s.hash}.css`))) {
-          await abyme.fs.mkdir(CSS);
-          await abyme.fs.write(`${CSS}/${s.hash}.css`, s.text);
+        if (!stored.has(s.hash) && !(await files().stat(`${CSS}/${s.hash}.css`))) {
+          await files().mkdir(CSS);
+          await files().write(`${CSS}/${s.hash}.css`, s.text);
         }
         stored.add(s.hash);
-        await abyme.fs.mkdir(`${RING}/${clean(page)}`);
-        await abyme.fs.append(`${RING}/${clean(page)}/css`, `${s.hash}\n`);
+        await files().mkdir(`${RING}/${clean(page)}`);
+        await files().append(`${RING}/${clean(page)}/css`, `${s.hash}\n`);
       }
       if (checkout && p.open) {
         await close(p.open.path, p.last);
@@ -177,14 +192,14 @@ const api = {
       }
       if (!p.open) {
         const dir = `${RING}/${clean(page)}`;
-        await abyme.fs.mkdir(dir);
+        await files().mkdir(dir);
         const start = (events[0] as { timestamp?: number }).timestamp ?? Date.now();
         p.open = { path: `${dir}/${start}.jsonl`, start };
       }
-      await abyme.fs.append(p.open.path, lines);
+      await files().append(p.open.path, lines);
       // Its label beside its segments, for a save after abymed restarts.
       if (p.written !== p.label) {
-        await abyme.fs.write(`${RING}/${clean(page)}/label`, p.label);
+        await files().write(`${RING}/${clean(page)}/label`, p.label);
         p.written = p.label;
       }
     });
@@ -202,49 +217,49 @@ const api = {
       const cut = now - span * 60_000;
       const segs = (await segments(page)).filter((s) => s.end === null || s.end >= cut);
       if (!segs.length) return null;
-      if (!p.label) p.label = p.written = ((await abyme.fs.read(`${RING}/${clean(page)}/label`)) ?? "").trim();
+      if (!p.label) p.label = p.written = ((await files().read(`${RING}/${clean(page)}/label`)) ?? "").trim();
       // The name says when, where and why, so a list of saves needs no file opened.
       const why = reason.startsWith("error") ? "error" : "key";
       const base = `${stamp(now)}_${clean(p.label)}_${why}_${clean(page).slice(0, 8)}`;
       const tmp = `${DIR}/.${base}`;
-      await abyme.fs.mkdir(tmp);
+      await files().mkdir(tmp);
       try {
         // The stylesheets the page used, which its events name by hash.
-        const used = new Set(((await abyme.fs.read(`${RING}/${clean(page)}/css`)) ?? "").split("\n").filter(Boolean));
+        const used = new Set(((await files().read(`${RING}/${clean(page)}/css`)) ?? "").split("\n").filter(Boolean));
         const css: Record<string, string> = {};
         for (const h of used) {
-          const text = await abyme.fs.read(`${CSS}/${h}.css`);
+          const text = await files().read(`${CSS}/${h}.css`);
           if (typeof text === "string") css[h] = text;
         }
         const head: Head = { replay: 1, page, label: p.label, reason, saved: now, minutes: span, css };
-        await abyme.fs.write(`${tmp}/0.jsonl`, `${JSON.stringify(head)}\n`);
+        await files().write(`${tmp}/0.jsonl`, `${JSON.stringify(head)}\n`);
         await gzip(["-f", `${tmp}/0.jsonl`]);
         const parts = [`${tmp}/0.jsonl.gz`];
         for (const s of segs) {
           if (s.end !== null) parts.push(s.path);
           else {
             // The open segment as it is now: a copy, gzipped.
-            await abyme.fs.copy(s.path, `${tmp}/open.jsonl`);
+            await files().copy(s.path, `${tmp}/open.jsonl`);
             await gzip(["-f", `${tmp}/open.jsonl`]);
             parts.push(`${tmp}/open.jsonl.gz`);
           }
         }
-        const bytes = await Promise.all(parts.map(async (f) => ((await abyme.fs.read(f, { bytes: true })) as Uint8Array | undefined) ?? new Uint8Array()));
+        const bytes = await Promise.all(parts.map(async (f) => ((await files().read(f, { bytes: true })) as Uint8Array | undefined) ?? new Uint8Array()));
         const all = new Uint8Array(bytes.reduce((n, b) => n + b.length, 0));
         let at = 0;
         for (const b of bytes) all.set(b, (at += b.length) - b.length);
         // Joined, they are gzip members end to end, which gunzip reads as one but a browser's
         // DecompressionStream does not: the save is zipped again as one member, once, here.
         const path = `${DIR}/${base}.jsonl.gz`;
-        await abyme.fs.write(`${tmp}/joined.gz`, all);
-        const r = await abyme.process.run("/bin/sh", { args: ["-c", 'gzip -dc "$0" | gzip -c > "$1"', `${tmp}/joined.gz`, path], timeoutMs: 300_000 });
+        await files().write(`${tmp}/joined.gz`, all);
+        const r = await processes().run("/bin/sh", { args: ["-c", 'gzip -dc "$0" | gzip -c > "$1"', `${tmp}/joined.gz`, path], timeoutMs: 300_000 });
         if (r.code !== 0) throw new Error(`the save was not zipped: ${r.stderr.trim()}`);
-        const size = (await abyme.fs.stat(path))?.size ?? 0;
-        for (const old of (await list()).slice(SAVES)) await abyme.fs.remove(old.path);
+        const size = (await files().stat(path))?.size ?? 0;
+        for (const old of (await list()).slice(SAVES)) await files().remove(old.path);
         abyme.log.info(`saved ${path} (${span} min, ${reason})`);
         return { name: `${base}.jsonl.gz`, path, at: now, size };
       } finally {
-        await abyme.fs.remove(tmp);
+        await files().remove(tmp);
       }
     });
   },
@@ -254,7 +269,7 @@ const api = {
   async read({ name, from = 0, limit = 500, types }: { name: string; from?: number; limit?: number; types?: number[] }): Promise<Read> {
     if (!SAVE.test(name)) throw new Error(`no save named ${name}`);
     const path = `${DIR}/${name}`;
-    if (!(await abyme.fs.stat(path))) throw new Error(`no save named ${name}`);
+    if (!(await files().stat(path))) throw new Error(`no save named ${name}`);
     const all = parseSave(await gzip(["-dc", path]));
     const events = types?.length ? all.events.filter((e) => types.includes(e.type)) : all.events;
     return {
@@ -274,7 +289,7 @@ const api = {
 // The player fetches a save as it is on disk and unzips it itself.
 abyme.http.route("GET", "/api/replay/saves/:name", async (request) => {
   const name = request.params.name ?? "";
-  const bytes = SAVE.test(name) ? await abyme.fs.read(`${DIR}/${name}`, { bytes: true }) : undefined;
+  const bytes = SAVE.test(name) ? await files().read(`${DIR}/${name}`, { bytes: true }) : undefined;
   if (!bytes) throw new HttpError(404, "no such save");
   return respond(bytes as Uint8Array, { type: "application/gzip" });
 });

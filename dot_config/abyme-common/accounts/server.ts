@@ -7,11 +7,24 @@
 import abyme from "@abyme/plugin";
 import agents from "@abyme/agents";
 import terminal from "@abyme/terminal";
+import fs from "@abyme/fs/optional";
+import process from "@abyme/process/optional";
 import options from "./options";
 import { best, capped, errorWins, expirePast, family, parse, parseModels, type ModelWindow, type Row, type Usage } from "./pick";
 
 const o = abyme.with(options).plugin.options;
-const HOME = o.home || abyme.env.HOME!;
+const HOME = o.home || fs?.home || "";
+
+/** The control plane's files, where the account folders are; refused where there are none. */
+function files() {
+  if (!fs) throw new Error("no machine provides fs here, to read the Claude accounts");
+  return fs;
+}
+/** The control plane's processes: the keychain, ps, git and cp. */
+function processes() {
+  if (!process) throw new Error("no machine provides process here, to read the keychain");
+  return process;
+}
 const USER = abyme.env.USER ?? "user";
 const FRESH_MS = 60_000;
 const STALE_OK_MS = 30 * 60_000;
@@ -23,7 +36,7 @@ type Account = { slug: string; dir: string; main: boolean; key: string; service:
 
 async function identity(file: string): Promise<{ email: string; uuid?: string } | null> {
   try {
-    const a = (JSON.parse((await abyme.fs.read(file)) ?? "{}") as { oauthAccount?: { emailAddress?: string; accountUuid?: string } }).oauthAccount;
+    const a = (JSON.parse((await files().read(file)) ?? "{}") as { oauthAccount?: { emailAddress?: string; accountUuid?: string } }).oauthAccount;
     return a?.emailAddress ? { email: a.emailAddress, uuid: a.accountUuid } : null;
   } catch {
     return null;
@@ -32,13 +45,13 @@ async function identity(file: string): Promise<{ email: string; uuid?: string } 
 
 async function discover(): Promise<Account[]> {
   const out: Account[] = [];
-  const main = (await abyme.fs.stat(`${HOME}/.claude`))?.kind === "dir" ? await identity(`${HOME}/.claude.json`) : null;
+  const main = (await files().stat(`${HOME}/.claude`))?.kind === "dir" ? await identity(`${HOME}/.claude.json`) : null;
   if (main) out.push({ slug: "main", dir: `${HOME}/.claude`, main: true, key: main.uuid ?? `email:${main.email}`, service: "Claude Code-credentials" });
   const rest: Account[] = [];
-  for (const f of (await abyme.fs.list(HOME)) ?? []) {
+  for (const f of (await files().list(HOME)) ?? []) {
     if (f.kind !== "dir" || !f.name.startsWith(".claude-")) continue;
     const dir = `${HOME}/${f.name}`;
-    if (await abyme.fs.stat(`${dir}/.clodcurrent-disabled`)) continue;
+    if (await files().stat(`${dir}/.clodcurrent-disabled`)) continue;
     const id = await identity(`${dir}/.claude.json`);
     if (!id) continue;
     const service = `Claude Code-credentials-${abyme.crypto.hash("sha256", dir).slice(0, 8)}`;
@@ -71,7 +84,7 @@ function signedOut(a: Account, c: Credentials | null): boolean {
 }
 
 async function credentials(a: Account): Promise<Credentials | null> {
-  const r = await abyme.process.run(o.security, { args: ["find-generic-password", "-s", a.service, "-a", USER, "-w"] });
+  const r = await processes().run(o.security, { args: ["find-generic-password", "-s", a.service, "-a", USER, "-w"] });
   if (r.code !== 0 || !r.stdout.trim()) return null;
   try {
     return JSON.parse(r.stdout.trim()) as Credentials;
@@ -83,7 +96,7 @@ async function credentials(a: Account): Promise<Credentials | null> {
 async function writeCredentials(a: Account, c: Credentials) {
   // `security -i` reads its command from stdin: the secret is never in a process's arguments.
   const secret = JSON.stringify(c).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const r = await abyme.process.run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${a.service}" -a "${USER}" -w "${secret}"\n` });
+  const r = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${a.service}" -a "${USER}" -w "${secret}"\n` });
   // Never r.stderr: it could echo the line.
   if (r.code !== 0) throw new Error(`${a.slug}: the keychain refused the renewed token`);
 }
@@ -153,7 +166,7 @@ const SHARED = `${HOME}/.local/state/abyme-accounts-usage.json`;
 type Shared = Record<string, { at: number; data: Record<string, unknown> }>;
 async function readShared(): Promise<Shared> {
   try {
-    return (JSON.parse((await abyme.fs.read(SHARED)) ?? "{}") as Shared) ?? {};
+    return (JSON.parse((await files().read(SHARED)) ?? "{}") as Shared) ?? {};
   } catch {
     return {};
   }
@@ -168,14 +181,14 @@ function writeShared(key: string, entry: Shared[string]): Promise<void> {
 }
 async function writeOne(key: string, entry: Shared[string]) {
   for (let i = 0; i < 3; i++) {
-    const now = await abyme.fs.read(SHARED, { version: true });
+    const now = await files().read(SHARED, { version: true });
     let all: Shared = {};
     try {
       all = now?.text ? (JSON.parse(now.text) as Shared) : {};
     } catch {}
     if ((all[key]?.at ?? 0) >= entry.at) return;
     all[key] = entry;
-    if ((await abyme.fs.write(SHARED, JSON.stringify(all), { ifVersion: now?.version ?? null })).written) return;
+    if ((await files().write(SHARED, JSON.stringify(all), { ifVersion: now?.version ?? null })).written) return;
   }
 }
 /** What each identity's last read said, an error included, for the status bar between reads. */
@@ -245,13 +258,13 @@ let picked: { key: string; at: number }[] = [];
 async function terminalSlugs(): Promise<string[]> {
   let list: { slug: string; pid: number }[] = [];
   try {
-    list = JSON.parse((await abyme.fs.read(`${HOME}/.local/state/clodcurrent/sessions.json`)) ?? "[]") as typeof list;
+    list = JSON.parse((await files().read(`${HOME}/.local/state/clodcurrent/sessions.json`)) ?? "[]") as typeof list;
   } catch {
     return [];
   }
   if (!list.length) return [];
   // Every pid, not `-p`: one pid ps rejects makes it print none.
-  const r = await abyme.process.run("ps", { args: ["-A", "-o", "pid="] });
+  const r = await processes().run("ps", { args: ["-A", "-o", "pid="] });
   const alive = new Set(r.stdout.split("\n").map((l) => Number(l.trim())).filter(Boolean));
   return list.filter((s) => alive.has(s.pid)).map((s) => s.slug);
 }
@@ -406,7 +419,7 @@ async function modelOf(l: { config: Record<string, { value: string; category?: s
   if (env) return env;
   for (const file of [`${l.cwd}/.claude/settings.local.json`, `${l.cwd}/.claude/settings.json`, `${HOME}/.claude/settings.json`]) {
     try {
-      const m = (JSON.parse((await abyme.fs.read(file)) ?? "{}") as { model?: unknown }).model;
+      const m = (JSON.parse((await files().read(file)) ?? "{}") as { model?: unknown }).model;
       if (typeof m === "string" && m) return m;
     } catch {}
   }
@@ -416,19 +429,19 @@ async function modelOf(l: { config: Record<string, { value: string; category?: s
 // ---- trust: the folder's repository root, in the account's .claude.json ----
 
 async function trust(a: Account, cwd: string) {
-  const top = await abyme.process.run("git", { args: ["-C", cwd, "rev-parse", "--show-toplevel"] });
-  const path = (await abyme.fs.realpath(top.code === 0 && top.stdout.trim() ? top.stdout.trim() : cwd)) ?? cwd;
+  const top = await processes().run("git", { args: ["-C", cwd, "rev-parse", "--show-toplevel"] });
+  const path = (await files().realpath(top.code === 0 && top.stdout.trim() ? top.stdout.trim() : cwd)) ?? cwd;
   if (!path.startsWith(`${HOME}/`)) return;
   const file = a.main ? `${HOME}/.claude.json` : `${a.dir}/.claude.json`;
   for (let tries = 0; tries < 3; tries++) {
-    const now = await abyme.fs.read(file, { version: true });
+    const now = await files().read(file, { version: true });
     if (!now?.text) return;
     const c = JSON.parse(now.text) as { projects?: Record<string, Record<string, unknown>> };
     const p = ((c.projects ??= {})[path] ??= {});
     if (p.hasTrustDialogAccepted === true && p.hasCompletedProjectOnboarding === true) return;
     Object.assign(p, { hasTrustDialogAccepted: true, hasCompletedProjectOnboarding: true });
     // Only over the version read: never over a running Claude's own write.
-    if ((await abyme.fs.write(file, JSON.stringify(c, null, 2), { ifVersion: now.version })).written) return;
+    if ((await files().write(file, JSON.stringify(c, null, 2), { ifVersion: now.version })).written) return;
   }
 }
 
@@ -446,9 +459,9 @@ async function syncOnce(): Promise<number> {
   const newest = new Map<string, { from: string; mtime: number }>();
   await Promise.all(
     all.map(async (a, i) => {
-      for (const p of (await abyme.fs.list(`${a.dir}/projects`)) ?? []) {
+      for (const p of (await files().list(`${a.dir}/projects`)) ?? []) {
         if (p.kind !== "dir") continue;
-        for (const f of (await abyme.fs.list(`${a.dir}/projects/${p.name}`)) ?? []) {
+        for (const f of (await files().list(`${a.dir}/projects/${p.name}`)) ?? []) {
           if (f.kind !== "file" || !f.name.endsWith(".jsonl") || f.mtime === null) continue;
           const rel = `${p.name}/${f.name}`;
           have[i]!.set(rel, f.mtime);
@@ -462,9 +475,9 @@ async function syncOnce(): Promise<number> {
     for (const [i, a] of all.entries()) {
       const to = `${a.dir}/projects/${rel}`;
       if (to === from || (have[i]!.get(rel) ?? -1) >= mtime) continue;
-      await abyme.fs.mkdir(to.slice(0, to.lastIndexOf("/")));
+      await files().mkdir(to.slice(0, to.lastIndexOf("/")));
       // -p keeps the time the comparison rests on.
-      if ((await abyme.process.run("cp", { args: ["-p", from, to] })).code === 0) copies++;
+      if ((await processes().run("cp", { args: ["-p", from, to] })).code === 0) copies++;
     }
   return copies;
 }
@@ -485,7 +498,7 @@ function sync(wait: boolean): Promise<number> {
 
 // ---- the hook every abyme launch passes through ----
 
-agents.prepare.add({
+const prepare: Parameters<typeof agents.prepare.add>[0] = {
   async prepare(l) {
     if (l.kind !== "claude") return {};
     const model = await modelOf(l);
@@ -505,12 +518,17 @@ agents.prepare.add({
       if (!l.resume) void sync(false).catch((e) => abyme.log.warn("sync:", (e as Error).message));
     }
     abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
-    return { env: account.main ? {} : { CLAUDE_CONFIG_DIR: account.dir }, configDir: account.dir };
+    const env: Record<string, string> = account.main ? {} : { CLAUDE_CONFIG_DIR: account.dir };
+    return { env, configDir: account.dir };
   },
-});
+};
 
-void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
-setInterval(() => void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message)), 5 * 60_000);
+// Only with a machine: without its files and keychain there is no account to pick or show.
+if (fs && process) {
+  agents.prepare.add(prepare);
+  void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
+  setInterval(() => void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message)), 5 * 60_000);
+}
 /** The quota as last read, with the agents as they are now. */
 async function showCached() {
   const all = await discover();
@@ -525,12 +543,13 @@ async function showCached() {
 // An agent's list changes many times a second while agents work, and each show lists the home
 // folder and reads every account's identity: once a moment at most.
 let showing: ReturnType<typeof setTimeout> | null = null;
-agents.items.on("change", () => {
-  showing ??= setTimeout(() => {
-    showing = null;
-    void showCached();
-  }, 2_000);
-});
+if (fs && process)
+  agents.items.on("change", () => {
+    showing ??= setTimeout(() => {
+      showing = null;
+      void showCached();
+    }, 2_000);
+  });
 
 export default {
   /** `abyme call accounts pick model=…`: the account a launch would get now, and why. Counts nothing. */
@@ -573,16 +592,16 @@ export default {
    * clodcurrent's own marker (`clodcurrent disable`), so a terminal's `cl` skips it too. */
   async ignore(a: { slug: string; on?: boolean }) {
     const marker = `${await folderOf(a.slug)}/.clodcurrent-disabled`;
-    if (a.on === false) await abyme.fs.remove(marker);
-    else await abyme.fs.write(marker, "");
+    if (a.on === false) await files().remove(marker);
+    else await files().write(marker, "");
     await refresh();
     return { slug: a.slug, ignored: a.on !== false };
   },
   /** The accounts ignored: a folder with an identity and the marker. */
   async ignored() {
     const out: string[] = [];
-    for (const f of (await abyme.fs.list(HOME)) ?? [])
-      if (f.kind === "dir" && f.name.startsWith(".claude-") && (await abyme.fs.stat(`${HOME}/${f.name}/.clodcurrent-disabled`))) out.push(f.name.slice(8));
+    for (const f of (await files().list(HOME)) ?? [])
+      if (f.kind === "dir" && f.name.startsWith(".claude-") && (await files().stat(`${HOME}/${f.name}/.clodcurrent-disabled`))) out.push(f.name.slice(8));
     return out.sort();
   },
 };
@@ -590,15 +609,16 @@ export default {
 /** The folder of an account by slug, its marker left aside: `main` is ~/.claude. */
 async function folderOf(slug: string): Promise<string> {
   const dir = slug === "main" ? `${HOME}/.claude` : `${HOME}/.claude-${slug}`;
-  if (!/^[a-z0-9._-]+$/.test(slug) || (await abyme.fs.stat(dir))?.kind !== "dir") throw new Error(`no account ${slug}`);
+  if (!/^[a-z0-9._-]+$/.test(slug) || (await files().stat(dir))?.kind !== "dir") throw new Error(`no account ${slug}`);
   return dir;
 }
 
 // A login that ended: read every account again, so the status bar and the next pick see it.
-terminal.followers.add({
-  async exited(shell) {
-    if (!shell.key?.startsWith("accounts.login.")) return;
-    quota.clear();
-    await refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
-  },
-});
+if (fs && process)
+  terminal.followers.add({
+    async exited(shell) {
+      if (!shell.key?.startsWith("accounts.login.")) return;
+      quota.clear();
+      await refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
+    },
+  });
