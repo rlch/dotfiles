@@ -26,7 +26,8 @@ export function common({ lead }: { lead: boolean }) {
   // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
   // used, and files open read-only in normal mode. A member of every app, so this line stands
   // in place of the app's and is no second setup. An iPad is a tablet with or without its keyboard.
-  vim.setup({ composer: true }, { when: { device: ["desktop", "tablet"] } });
+  // The composer starts in normal mode on both (operator, 2026-10-22): one setup stands per plugin.
+  vim.setup({ composer: true, start: "normal" }, { when: { device: ["desktop", "tablet"] } });
   // Which Claude account an agent abyme launches runs on, as clodcurrent picks for `cl` (accounts/design.md).
   accounts.setup({ renew: lead });
   // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
