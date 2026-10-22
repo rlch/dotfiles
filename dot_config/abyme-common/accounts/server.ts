@@ -328,15 +328,20 @@ type Seen = {
   error: string | null;
   agents: number;
 };
-/** Each account, and each live agent with the account it runs on. */
-const view = abyme.value<{ accounts: Seen[]; agents: { agent: string; slug: string; pinned: boolean }[]; at: number }>({ accounts: [], agents: [], at: 0 });
+/** Each account's quota and how many agents run on it. Who runs where is `agents()`. */
+const view = abyme.value<{ accounts: Seen[] }>({ accounts: [] });
 
+/** A reset time to the minute: abymeds sharing a read answer it a second apart. */
+const minute = (t: string | null): string | null => {
+  const at = t ? Date.parse(t) : NaN;
+  return Number.isNaN(at) ? t : new Date(Math.round(at / 60_000) * 60_000).toISOString();
+};
+
+/** The last value set, as JSON: a set that changes nothing sends nothing. */
+let shown = "";
 function show(all: Account[], q: Map<string, Quota>) {
   const dirs = agentsByDir();
-  const pinned = pins();
-  view.set({
-    at: Date.now(),
-    agents: all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, slug: a.slug, pinned: pinned[x.id] === a.slug }))),
+  const next = {
     accounts: all.map((a) => {
       const x = q.get(a.key);
       const u = x && "usage" in x ? x : null;
@@ -344,15 +349,19 @@ function show(all: Account[], q: Map<string, Quota>) {
         slug: a.slug,
         five: u ? u.usage.five : null,
         seven: u ? u.usage.seven : null,
-        fiveResets: u?.usage.fiveResets ?? null,
-        sevenResets: u?.usage.sevenResets ?? null,
-        windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: w.resetsAt })),
+        fiveResets: minute(u?.usage.fiveResets ?? null),
+        sevenResets: minute(u?.usage.sevenResets ?? null),
+        windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: minute(w.resetsAt) })),
         capped: isSpent(a.key) || (u ? capped(u.usage) : false),
         error: x && "error" in x ? x.error : null,
         agents: dirs.get(a.dir)?.length ?? 0,
       };
     }),
-  });
+  };
+  const json = JSON.stringify(next);
+  if (json === shown) return;
+  shown = json;
+  view.set(next);
 }
 
 async function refresh() {

@@ -18,7 +18,7 @@ import { Quota } from "./segment.tsx";
 /** The value of "pick by quota", in the field and the picker; the server half's too. */
 const BY_QUOTA = "auto";
 
-type View = { accounts: { slug: string; five: number | null; seven: number | null; capped: boolean; error: string | null }[]; agents: { agent: string; slug: string; pinned: boolean }[] };
+type View = { accounts: { slug: string; five: number | null; seven: number | null; capped: boolean; error: string | null }[] };
 const seen = accounts.server.view();
 const view = (): View | undefined => seen.getState() as View | undefined;
 const label = (a: View["accounts"][number]) => (a.five === null ? a.slug : `${a.slug}  5h ${Math.round(a.five)}%  7d ${Math.round(a.seven ?? 0)}%`);
