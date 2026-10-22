@@ -21,6 +21,7 @@ import titlebar from "@abyme/titlebar";
 import desktop from "@abyme/desktop";
 import status from "@abyme/status";
 import spaces from "@abyme/spaces";
+import spacesView from "@abyme/spaces-view";
 import loading from "@abyme/loading";
 import commands from "@abyme/commands";
 import keys from "@abyme/keys";
@@ -111,6 +112,7 @@ titlebar.setup();
 desktop.setup();
 status.setup();
 spaces.setup();
+spacesView.setup();
 loading.setup();
 // Driving it: commands, keys, quick open, menus, gestures (vim is common's).
 commands.setup();
