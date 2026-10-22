@@ -34,8 +34,17 @@ code.setup({ titlebar: false });
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
-// views open in main as tabs.
-layoutPanes.setup({ docks: { left: "rail" } });
+// views open in main as tabs. This line stands whole over the code app's placement, so it names
+// the views kept in the left dock: off the rail, Search to Tasks stay there for their keys.
+layoutPanes.setup({
+  docks: { left: "rail" },
+  placement: {
+    spaces: { dock: "left", order: 5 }, agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
+    search: { dock: "left", order: 25 }, git: { dock: "left", order: 30 }, "github.prs": { dock: "left", order: 32 },
+    ports: { dock: "left", order: 36 }, tasks: { dock: "left", order: 38 }, tart: { dock: "left", order: 45 },
+    "settings.list": { dock: "left", order: 90 },
+  },
+});
 // The speech engine (about 1.4 GB) loads on the first dictation, not at start (operator, 2026-10-22).
 voice.setup({ preload: false });
 // tart VMs: the VMs view and each VM's screen live (change vm-view).

@@ -99,7 +99,13 @@ state.setup();
 storage.setup();
 // The frame: the layout, the rail, the title bar and status bar, and the app's window.
 shell.setup();
-layoutPanes.setup();
+// No app gives this profile a placement: the views it keeps in the left dock.
+layoutPanes.setup({
+  placement: {
+    spaces: { dock: "left", order: 5 }, agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
+    search: { dock: "left", order: 25 }, "settings.list": { dock: "left", order: 90 },
+  },
+});
 rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "triggers.triggers", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
