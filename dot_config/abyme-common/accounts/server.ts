@@ -656,7 +656,7 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
   await files().write(`${scratch}/browser`, `#!/bin/sh\nprintf '%s\\n' "$1" > '${scratch}/url'\n`);
   await processes().run("chmod", { args: ["700", `${scratch}/browser`] });
   const claude = await claudePath();
-  const run = processes().run("/bin/sh", { args: ["-c", MINT], env: { BROWSER: `${scratch}/browser`, CLAUDE: claude }, timeoutMs: 15 * 60_000 });
+  const run = processes().run("/bin/sh", { args: ["-c", MINT], env: { BROWSER: `${scratch}/browser`, CLAUDE: claude }, timeoutMs: 2 * 60 * 60_000 });
   void run
     .then(async (r) => {
       // The output holds the token: read here, and never logged, kept or answered.
