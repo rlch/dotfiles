@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
+import { loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -255,3 +255,18 @@ for (const [name, f] of cases)
   }
 console.log(`${cases.length - failed}/${cases.length} passed`);
 process.exit(failed ? 1 : 0);
+
+// load's accounts: one per login, null kept null, capped on the binding window.
+{
+  const seen = [
+    { slugs: ["hsone", "tuteroai"], five: 0, seven: 100, fiveResets: null, sevenResets: "2026-10-25T11:00:00.000Z", windows: [], capped: true, binding: "seven" as const, back: null, read: null, error: null, agents: 0 },
+    { slugs: ["main"], five: null, seven: 74, fiveResets: "2026-10-23T17:30:00.000Z", sevenResets: null, windows: [], capped: false, binding: null, back: null, read: null, error: null, agents: 2 },
+  ];
+  const [h, m] = loadAccounts(seen);
+  assert.equal(h!.id, "hsone,tuteroai");
+  assert.deepEqual(h!.folders, ["hsone", "tuteroai"]);
+  assert.deepEqual(h!.windows.map((w) => [w.name, w.used, w.capped]), [["5h", 0, false], ["week", 1, true]]);
+  assert.equal(h!.windows[1]!.resets, Date.parse("2026-10-25T11:00:00.000Z"));
+  assert.equal(m!.windows[0]!.used, null);
+  assert.equal(m!.windows[1]!.resets, null);
+}

@@ -9,8 +9,9 @@ import agents from "@abyme/agents";
 import terminal from "@abyme/terminal";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
+import load from "@abyme/load/optional";
 import options from "./options";
-import { best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -344,6 +345,11 @@ async function markSpent(dir: string, why: string, said?: { window: "five" | "se
 /** Each login's quota and how many agents run on it. Who runs where is `agents()`. */
 const view = abyme.value<{ accounts: AccountSeen[] }>({ accounts: [] });
 
+/** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on,
+ * which load asks for once a minute. */
+let forLoad: ReturnType<typeof loadAccounts> = [];
+load?.readers.add({ id: "accounts", accounts: () => forLoad });
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
 async function show(all: Account[], q: Map<string, Quota>) {
@@ -354,6 +360,7 @@ async function show(all: Account[], q: Map<string, Quota>) {
   if (json === shown) return;
   shown = json;
   view.set(next);
+  forLoad = loadAccounts(next.accounts);
 }
 
 async function refresh() {

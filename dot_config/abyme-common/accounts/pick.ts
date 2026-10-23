@@ -244,6 +244,27 @@ export type AccountSeen = {
   agents: number;
 };
 
+/** A login's row as load's `Account` (resource-budgets): its id the folders' slugs, its 5-hour and
+ * weekly windows a share of 1 (null when unknown, never 0), when each resets, and capped on the
+ * window that binds. What load shows in Resources and admits turns by. */
+export type LoadWindow = { name: "5h" | "week"; used: number | null; tokens: null; resets: number | null; capped: boolean };
+export type LoadAccount = { id: string; label: string; folders: string[]; windows: LoadWindow[]; estimate: false; error: string | null };
+export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
+  const at = (t: string | null) => (t === null || Number.isNaN(Date.parse(t)) ? null : Date.parse(t));
+  const share = (n: number | null) => (n === null ? null : n / 100);
+  return rows.map((r) => ({
+    id: r.slugs.join(","),
+    label: r.slugs[0] ?? "?",
+    folders: r.slugs,
+    windows: [
+      { name: "5h", used: share(r.five), tokens: null, resets: at(r.fiveResets), capped: r.capped && r.binding === "five" },
+      { name: "week", used: share(r.seven), tokens: null, resets: at(r.sevenResets), capped: r.capped && r.binding === "seven" },
+    ],
+    estimate: false,
+    error: r.error,
+  }));
+}
+
 /** A reset time to the minute: abymeds sharing a read answer it a second apart. */
 export const minute = (t: string | null): string | null => {
   const at = t ? Date.parse(t) : NaN;
