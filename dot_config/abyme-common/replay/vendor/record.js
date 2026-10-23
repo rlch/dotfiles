@@ -1,3 +1,6 @@
+// Patched for the replay plugin: mutations serialised in slices after paint (vendor/README.md).
+const __BUDGET = 4;
+const __post = typeof scheduler !== "undefined" && scheduler.postTask ? (f) => scheduler.postTask(f, { priority: "user-visible" }) : (() => { const c = new MessageChannel(), q = []; c.port1.onmessage = () => q.shift()(); return (f) => { q.push(f); c.port2.postMessage(0); }; })();
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
@@ -1918,9 +1921,62 @@ class MutationBuffer {
     __publicField(this, "canvasManager");
     __publicField(this, "processedNodeManager");
     __publicField(this, "unattachedDoc");
+    __publicField(this, "queue", []);
+    __publicField(this, "gen", null);
+    __publicField(this, "scheduled", false);
+    // The observer's callback only keeps the records: what they added is serialised later, in
+    // slices of __BUDGET ms after the frame has painted, never in the task that changed the DOM.
     __publicField(this, "processMutations", (mutations) => {
-      mutations.forEach(this.processMutation);
-      this.emit();
+      for (const m of mutations) this.queue.push(m);
+      this.schedule(true);
+    });
+    __publicField(this, "schedule", (afterPaint) => {
+      if (this.scheduled) return;
+      this.scheduled = true;
+      const go = () => {
+        this.scheduled = false;
+        this.slice();
+      };
+      if (afterPaint) requestAnimationFrame(() => __post(go));
+      else __post(go);
+    });
+    __publicField(this, "slice", () => {
+      if (this.frozen || this.locked) return;
+      const end = performance.now() + __BUDGET;
+      let done = false;
+      while (performance.now() < end) {
+        if (this.gen) {
+          if (this.gen.next(end).done) this.gen = null;
+          continue;
+        }
+        if (this.queue.length) {
+          // Records are taken whole up to the budget; their adds are serialised by the next emit.
+          while (this.queue.length && performance.now() < end) this.processMutation(this.queue.shift());
+          if (!this.queue.length) {
+            this.gen = this.emitSliced();
+            this.gen.next();
+          }
+          continue;
+        }
+        done = true;
+        break;
+      }
+      if (!done) this.schedule(false);
+    });
+    // A checkout snapshots the page as it is: what was queued is in it.
+    __publicField(this, "drop", () => {
+      this.queue = [];
+      this.gen = null;
+      this.texts = [];
+      this.attributes = [];
+      this.attributeMap = new WeakMap();
+      this.removes = [];
+      this.addedSet = new Set();
+      this.movedSet = new Set();
+      this.droppedSet = new Set();
+      this.removesSubTreeCache = new Set();
+      this.movedMap = {};
+      this.mapRemoves = [];
     });
     __publicField(this, "emit", () => {
       if (this.frozen || this.locked) {
@@ -2120,6 +2176,206 @@ class MutationBuffer {
       this.movedMap = {};
       this.mutationCb(payload);
     });
+    __publicField(this, "emitSliced", function* () {
+      if (this.frozen || this.locked) {
+        return;
+      }
+      const adds = [];
+      const addedIds = /* @__PURE__ */ new Set();
+      while (this.mapRemoves.length) {
+        this.mirror.removeNodeFromMap(this.mapRemoves.shift());
+      }
+      for (const n2 of this.movedSet) {
+        const parentNode22 = index.parentNode(n2);
+        if (this.removesSubTreeCache.has(parentNode22) && !this.movedSet.has(parentNode22)) {
+          continue;
+        }
+        this.addedSet.add(n2);
+      }
+      let n = null;
+      let parentNode2 = null;
+      let parentId = -1;
+      let nextSibling2 = null;
+      let ancestorBad = false;
+      const missingParents = /* @__PURE__ */ new Set();
+      const iter = this.addedSet.values();
+      let curr = iter.next();
+      let __end = yield;
+      while (this.addedSet.size) {
+        if (performance.now() > __end) __end = yield;
+        if (n !== null && this.addedSet.has(index.previousSibling(n))) {
+          nextSibling2 = n;
+          n = index.previousSibling(n);
+        } else {
+          if (!this.addedSet.has(curr.value)) {
+            curr = iter.next();
+          }
+          n = curr.value;
+          while (true) {
+            parentNode2 = index.parentNode(n);
+            if (this.addedSet.has(parentNode2)) {
+              n = parentNode2;
+              continue;
+            }
+            break;
+          }
+          if (missingParents.has(parentNode2)) {
+            parentNode2 = null;
+          } else if (parentNode2) {
+            if (!inDom(parentNode2)) {
+              ancestorBad = true;
+            } else {
+              ancestorBad = isSelfOrAncestorInSet(this.droppedSet, parentNode2) || this.removesSubTreeCache.has(parentNode2);
+              if (ancestorBad && isSelfOrAncestorInSet(this.movedSet, n)) {
+                ancestorBad = false;
+              }
+            }
+            if (this.addedSet.has(index.lastChild(parentNode2))) {
+              n = index.lastChild(parentNode2);
+              nextSibling2 = null;
+            } else {
+              while (true) {
+                nextSibling2 = index.nextSibling(n);
+                if (this.addedSet.has(nextSibling2)) {
+                  n = nextSibling2;
+                  continue;
+                }
+                break;
+              }
+            }
+            parentId = isShadowRoot(parentNode2) ? this.mirror.getId(getShadowHost(n)) : this.mirror.getId(parentNode2);
+            if (parentId === -1 && parentNode2.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+              const shadowHost = index.host(parentNode2);
+              parentId = this.mirror.getId(shadowHost);
+            }
+          }
+        }
+        this.addedSet.delete(n);
+        if (!parentNode2 || parentId === -1) {
+          missingParents.add(n);
+          continue;
+        } else if (ancestorBad) {
+          this.droppedSet.add(n);
+          continue;
+        }
+        let cssCaptured = false;
+        if (n.nodeType === Node.TEXT_NODE) {
+          const parentTag = parentNode2.tagName;
+          if (parentTag === "TEXTAREA") {
+            continue;
+          } else if (parentTag === "STYLE" && addedIds.has(parentId)) {
+            cssCaptured = true;
+          }
+        }
+        let nextId = nextSibling2 ? this.mirror.getId(nextSibling2) : null;
+        while (nextId === IGNORED_NODE || (nextId === -1 && nextSibling2 && !this.addedSet.has(nextSibling2))) {
+          nextSibling2 = nextSibling2 && index.nextSibling(nextSibling2);
+          nextId = nextSibling2 && this.mirror.getId(nextSibling2);
+        }
+        if (nextId === -1) {
+          console.warn(
+            "Couldn't record new node. Couldn't find mirror id for nextSibling:",
+            nextSibling2
+          );
+          n = null;
+          continue;
+        }
+        const sn = serializeNodeWithId(n, {
+          doc: this.doc,
+          mirror: this.mirror,
+          blockClass: this.blockClass,
+          blockSelector: this.blockSelector,
+          maskTextClass: this.maskTextClass,
+          maskTextSelector: this.maskTextSelector,
+          skipChild: true,
+          newlyAddedElement: true,
+          inlineStylesheet: this.inlineStylesheet,
+          maskInputOptions: this.maskInputOptions,
+          maskTextFn: this.maskTextFn,
+          maskInputFn: this.maskInputFn,
+          slimDOMOptions: this.slimDOMOptions,
+          dataURLOptions: this.dataURLOptions,
+          recordCanvas: this.recordCanvas,
+          inlineImages: this.inlineImages,
+          onSerialize: (currentN) => {
+            if (isSerializedIframe(currentN, this.mirror)) {
+              this.iframeManager.addIframe(currentN);
+            }
+            if (isSerializedStylesheet(currentN, this.mirror)) {
+              this.stylesheetManager.trackLinkElement(
+                currentN
+              );
+            }
+            if (hasShadowRoot(n)) {
+              this.shadowDomManager.addShadowRoot(
+                index.shadowRoot(n),
+                this.doc
+              );
+            }
+          },
+          onIframeLoad: (iframe, childSn) => {
+            this.iframeManager.attachIframe(iframe, childSn);
+            this.shadowDomManager.observeAttachShadow(iframe);
+          },
+          onStylesheetLoad: (link, childSn) => {
+            this.stylesheetManager.attachLinkElement(link, childSn);
+          },
+          cssCaptured
+        });
+        if (sn) {
+          adds.push({
+            parentId,
+            nextId,
+            node: sn
+          });
+          addedIds.add(sn.id);
+        }
+      }
+      const payload = {
+        texts: this.texts.map((text) => {
+          const n2 = text.node;
+          const parent = index.parentNode(n2);
+          if (parent && parent.tagName === "TEXTAREA") {
+            this.genTextAreaValueMutation(parent);
+          }
+          return {
+            id: this.mirror.getId(n2),
+            value: text.value
+          };
+        }).filter((text) => !addedIds.has(text.id)).filter((text) => this.mirror.has(text.id)),
+        attributes: this.attributes.map((attribute) => {
+          const { attributes } = attribute;
+          if (typeof attributes.style === "string") {
+            const diffAsStr = JSON.stringify(attribute.styleDiff);
+            const unchangedAsStr = JSON.stringify(attribute._unchangedStyles);
+            if (diffAsStr.length < attributes.style.length) {
+              if ((diffAsStr + unchangedAsStr).split("var(").length === attributes.style.split("var(").length) {
+                attributes.style = attribute.styleDiff;
+              }
+            }
+          }
+          return {
+            id: this.mirror.getId(attribute.node),
+            attributes
+          };
+        }).filter((attribute) => !addedIds.has(attribute.id)).filter((attribute) => this.mirror.has(attribute.id)),
+        removes: this.removes,
+        adds
+      };
+      if (!payload.texts.length && !payload.attributes.length && !payload.removes.length && !payload.adds.length) {
+        return;
+      }
+      this.texts = [];
+      this.attributes = [];
+      this.attributeMap = /* @__PURE__ */ new WeakMap();
+      this.removes = [];
+      this.addedSet = /* @__PURE__ */ new Set();
+      this.movedSet = /* @__PURE__ */ new Set();
+      this.droppedSet = /* @__PURE__ */ new Set();
+      this.removesSubTreeCache = /* @__PURE__ */ new Set();
+      this.movedMap = {};
+      this.mutationCb(payload);
+    }.bind(this));
     __publicField(this, "genTextAreaValueMutation", (textarea) => {
       let item = this.attributeMap.get(textarea);
       if (!item) {
@@ -2355,19 +2611,20 @@ class MutationBuffer {
   unfreeze() {
     this.frozen = false;
     this.canvasManager.unfreeze();
-    this.emit();
+    this.schedule(true);
   }
   isFrozen() {
     return this.frozen;
   }
   lock() {
+    this.drop();
     this.locked = true;
     this.canvasManager.lock();
   }
   unlock() {
     this.locked = false;
     this.canvasManager.unlock();
-    this.emit();
+    this.schedule(true);
   }
   reset() {
     this.shadowDomManager.reset();

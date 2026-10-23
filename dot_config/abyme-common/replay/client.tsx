@@ -1,7 +1,9 @@
-// replay, in every page it loads on: rrweb records the page, unmasked but for passwords, and abymed
-// keeps the last `keep` minutes on disk; nothing leaves the machine. "Save replay" (leader shift+r,
-// the last `clip` minutes), "Save replay of the last hour" and any uncaught error, rejection or
-// fault write a save, which agents read with replay_read and the view Replays plays.
+// replay, in every page it loads on: rrweb records the page, unmasked but for passwords, off the
+// interaction path (its work in slices after paint, checkouts and sends at idle), and abymed keeps
+// the last `keep` minutes in its memory; nothing leaves the machine, and nothing is written to disk
+// but a save. "Save replay" (leader shift+r, the last `clip` minutes), "Save replay of the last
+// <keep> minutes", any uncaught error, rejection or fault, a stall, and an agent's
+// `abyme call replay save` write one, which agents read with replay_read and the view Replays plays.
 import abyme from "@abyme/plugin";
 import replay from "@abyme/replay";
 import { restParam } from "@abyme/client";
@@ -19,7 +21,14 @@ let rec: ReturnType<typeof recording> | null = null;
 let stopped = false;
 // After the page has drawn, so it costs the load nothing.
 abyme.on("ready", () => {
-  if (!stopped) rec = recording({ checkout: Math.max(5_000, o.checkout), terminals: o.terminals });
+  if (!stopped)
+    rec = recording({
+      checkout: Math.max(5_000, o.checkout),
+      terminals: o.terminals,
+      stall: Math.max(100, o.stall),
+      // What follows a stall is part of it, as for an error.
+      onStall: (ms) => void setTimeout(() => void save(`stall: ${ms} ms`).catch(() => {}), 1500),
+    });
 });
 abyme.effect(() => () => {
   stopped = true;
@@ -29,8 +38,12 @@ abyme.effect(() => () => {
 async function save(reason: string, minutes?: number) {
   mark("replay.save", { reason });
   rec?.flush();
-  return replay.server.save({ page: PAGE, reason, ...(minutes !== undefined && { minutes }) });
+  const s = await replay.server.save({ page: PAGE, reason, ...(minutes !== undefined && { minutes }) });
+  return Array.isArray(s) ? null : s;
 }
+// A save of every page (an agent's) asks each to send what it holds first.
+const offAsked = replay.server.asked().on("change", () => rec?.flush());
+abyme.effect(() => () => offAsked.dispose());
 
 if (o.onError) {
   // What follows an error is part of it: the save waits a moment for it.
@@ -76,6 +89,7 @@ async function saveNow(minutes: number | undefined, event?: unknown) {
     if (!s) return void notifications?.notify({ level: "info", title: "Nothing recorded yet", body: "The first checkout has not reached abymed." });
     notifications?.notify({
       level: "success",
+      toast: true,
       title: "Replay saved",
       body: s.name,
       detail: s.path,

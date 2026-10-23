@@ -8,7 +8,8 @@ import replay from "@abyme/replay";
 import agents from "@abyme/agents/optional";
 import chat from "@abyme/chat/optional";
 import layout from "@abyme/layout";
-import { agentTitle, useStore, type Agent, type ViewProps } from "@abyme/client";
+import { useStore, type ViewProps } from "@abyme/client";
+import type { Agent } from "@abyme/agents";
 import { Badge } from "@abyme/ui/components/ui/badge";
 import { Button } from "@abyme/ui/components/ui/button";
 import {
@@ -481,7 +482,7 @@ function Moments({
   );
 }
 
-const recent = (a: Agent, b: Agent) => (b.updated_at ?? "").localeCompare(a.updated_at ?? "") || agentTitle(a).localeCompare(agentTitle(b));
+const recent = (a: Agent, b: Agent) => (b.updated_at ?? "").localeCompare(a.updated_at ?? "") || a.label.localeCompare(b.label);
 
 /** A moment's detail in one line: an error's top frame (its stack's first line is its message). */
 const line = (m: Moment) => (m.kind === "error" ? m.detail?.split("\n")[1]?.trim() : m.detail?.split("\n")[0]);
@@ -492,7 +493,7 @@ function brief(data: Loaded, save: Save | undefined, moment: Moment | null, now:
   const detail = moment && line(moment);
   return [
     `Look at this UI recording of abyme (rrweb): ${data.name}${save ? ` (${save.path})` : ""}.`,
-    `It was ${data.reason === "asked" ? "saved with the key" : `saved for an error: ${data.reason.replace(/^error:\s*/, "")}`}, page ${data.label}.`,
+    `It was ${data.reason === "asked" ? "saved with the key" : `saved for ${data.reason}`}, page ${data.label}.`,
     moment
       ? `The moment: ${clock(at)} in (${time(t0 + at)}), event #${moment.index}: ${moment.title}${detail ? `, ${detail}` : ""}.`
       : `The moment: ${clock(at)} in (${time(t0 + at)}, timestamp ${t0 + at}).`,
@@ -539,7 +540,7 @@ function Agents({ store, onPick }: { store: NonNullable<typeof agents>["store"];
       {all.map((a) => (
         <DropdownMenuItem key={a.id} onSelect={() => onPick(a.id)} className="gap-2 text-xs" data-replay-send-agent={a.id}>
           <I.Bot className="size-3.5 text-muted-foreground" />
-          <span className="truncate">{agentTitle(a)}</span>
+          <span className="truncate">{a.label}</span>
         </DropdownMenuItem>
       ))}
     </>
