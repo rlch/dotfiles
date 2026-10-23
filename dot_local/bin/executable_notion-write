@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""Apply Notion operations AS RICHARD, through his web session (token_v2 in ~/.config/notion/token_v2, never printed),
+the way the web client does: POST /api/v3/saveTransactions. Unofficial internal API, like notion-page.
+Usage: notion-write <ops.json>   (or - for stdin)
+ops.json is a list of operations, each {"pointer": {"table", "id", "spaceId"}, "path": [...], "command": "set"|"update", "args": ...}:
+  set replaces the value at path (path [] = the whole record), update merges a dict into it.
+  An EXISTING block's properties refuse set/update ("must use high-level property operations"); use what the web client sends:
+    {"command": "updateBlockPropertyValue", "pointer": P, "path": ["properties"], "args": {"primitiveOp": {"command": "update", "args": {"<prop id>": [["text"]]}}}}
+    and for a title (CRDT-backed): {"command": "replaceTextInBlock", "pointer": P, "path": [], "opVersion": 2, "args": {"textValue": [["text"]]}}
+  A database row is a "page" block whose parent_id is the collection and parent_table "collection"; set the whole record.
+  A view's filters live at ["format", "property_filters"] on its collection_view; the client, not the server, applies them.
+  Archive a row (the undo for adding one) with update {"alive": false}.
+Read back with notion-page, or queryCollection, after every write."""
+import json, os, sys, time, urllib.request, uuid
+src = sys.argv[1] if len(sys.argv) > 1 else sys.exit(__doc__)
+ops = json.load(sys.stdin if src == "-" else open(src))
+tok = open(os.path.expanduser("~/.config/notion/token_v2")).read().strip()
+uid = open(os.path.expanduser("~/.config/notion/user-id")).read().strip()
+now = int(time.time() * 1000)
+for op in ops:
+    a = op.get("args")
+    if op["pointer"]["table"] == "block" and isinstance(a, dict) and op.get("path") == [] and op["command"] == "set":
+        a.setdefault("created_time", now); a.setdefault("created_by_table", "notion_user"); a.setdefault("created_by_id", uid)
+    if op["pointer"]["table"] == "block" and isinstance(a, dict) and op.get("path") == []:
+        a.setdefault("last_edited_time", now); a.setdefault("last_edited_by_table", "notion_user"); a.setdefault("last_edited_by_id", uid)
+space = ops[0]["pointer"]["spaceId"]
+body = {"requestId": str(uuid.uuid4()), "transactions": [{"id": str(uuid.uuid4()), "spaceId": space, "debug": {"userAction": "notion-write"}, "operations": ops}]}
+r = urllib.request.Request("https://www.notion.so/api/v3/saveTransactions", data=json.dumps(body).encode(),
+    headers={"Content-Type": "application/json", "Cookie": f"token_v2={tok}; notion_user_id={uid}", "x-notion-active-user-header": uid})
+try: print(urllib.request.urlopen(r).read().decode() or "{}")
+except urllib.error.HTTPError as e: sys.exit(f"{e.code} {e.read().decode()[:800]}")
