@@ -15,13 +15,24 @@ def call(path, body):
     r = urllib.request.Request("https://www.notion.so/api/v3/" + path, data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json", "Cookie": f"token_v2={tok}; notion_user_id={uid}", "x-notion-active-user-header": uid})
     return json.load(urllib.request.urlopen(r))
+def unwrap(v):
+    while isinstance(v, dict) and isinstance(v.get("value"), dict): v = v["value"]
+    return v
 blocks, cursor = {}, {"stack": []}
 for _ in range(20):
     d = call("loadPageChunk", {"pageId": pid, "limit": 100, "cursor": cursor, "chunkNumber": 0, "verticalColumns": False})
     for k, v in d["recordMap"].get("block", {}).items():
-        v = v.get("value", v); blocks[k] = v.get("value", v) if isinstance(v.get("value"), dict) else v
+        blocks[k] = unwrap(v)
     cursor = d.get("cursor", {})
     if not cursor.get("stack"): break
+# loadPageChunk leaves out the children of toggles and headers: fetch every missing id, level by level.
+for _ in range(50):
+    want = [c for b in list(blocks.values()) if b.get("type") != "page" or b["id"] == pid for c in b.get("content", []) if c not in blocks]
+    if not want: break
+    for i in range(0, len(want), 100):
+        d = call("syncRecordValues", {"requests": [{"pointer": {"table": "block", "id": c}, "version": -1} for c in want[i:i + 100]]})
+        for k, v in d["recordMap"].get("block", {}).items(): blocks[k] = unwrap(v)
+    for c in want: blocks.setdefault(c, {"id": c})
 if "--json" in sys.argv: print(json.dumps(blocks)); sys.exit()
 def text(b):
     t = b.get("properties", {}).get("title", [])
@@ -32,7 +43,11 @@ def walk(bid, depth):
     ty = b.get("type", "")
     pre = {"header": "# ", "sub_header": "## ", "sub_sub_header": "### ", "bulleted_list": "- ", "numbered_list": "1. ",
            "to_do": "[ ] ", "quote": "> ", "callout": "> ", "code": "```\n"}.get(ty, "")
-    if ty == "image": print("  " * depth + "[image] " + b.get("format", {}).get("display_source", ""))
+    if ty == "table_row":
+        cols = blocks.get(b.get("parent_id"), {}).get("format", {}).get("table_block_column_order", [])
+        cells = b.get("properties", {})
+        print("  " * max(depth - 1, 0) + "| " + " | ".join("".join(x[0] for x in cells.get(c, []) if x) for c in cols) + " |")
+    elif ty == "image": print("  " * depth + "[image] " + b.get("format", {}).get("display_source", ""))
     elif ty not in ("page",) or depth == 0:
         s = text(b)
         if ty == "page" and depth == 0:
