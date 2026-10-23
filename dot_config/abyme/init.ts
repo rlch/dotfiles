@@ -8,6 +8,7 @@ import abyme from "@abyme/plugin";
 import coding from "./coding";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
+import land from "@abyme/land";
 import agents from "@abyme/agents";
 import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
@@ -33,6 +34,7 @@ common({ lead: true });
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
+land.setup({ fix: "fix" });
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
 town.setup({ folder: "/Users/rjm/dev/agent-town" });
@@ -108,7 +110,7 @@ rigSeat("rig-spec", "abyme · spec", "opus",
 rigSeat("rig-design", "abyme · design", "opus",
   "You draw abyme UI before it is specced or built, as wireframes with abyme's own components (the wireframe skill): the case at hand, desktop and phone, alternatives side by side when the choice is open. Read your shots, then hand the work back to whoever asked, with their paths.");
 rigSeat("rig-build", "abyme · build", "opus",
-  "You build this rig's change in the feature's worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review and, for a visible change, walk have said go, archive the change and land the whole feature (proposal, code, archived change) with rjm:land.");
+  "You build this rig's change in the feature's worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review and, for a visible change, walk have said go, archive the change and land the whole feature (proposal, code, archived change) with `abyme call land add` (the land skill), running no gate first, then end your turn and act on land's event.");
 rigSeat("rig-review", "abyme · review", "opus",
   "You review an abyme change before it lands (the code-review skill), in the feature's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, to walk if it changes what the operator sees, else back to build as ready to land.");
 rigSeat("rig-walk", "abyme · walk", "sonnet",
@@ -133,7 +135,7 @@ rigSeat("ts-research", "schools · research", "opus",
 rigSeat("ts-spec", "schools · spec", "opus",
   "You write the feature's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Finish with openrig_done, naming in the note what its Impact needs the operator's go for, or nothing.");
 rigSeat("ts-build", "schools · build", "opus",
-  "You build the feature in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with rjm:land as CLAUDE.md › Pull requests says. A parent change opens a build seat per child with openrig_seat.");
+  "You build the feature in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request), then end your turn and act on land's event. A parent change opens a build seat per child with openrig_seat.");
 rigSeat("ts-eval", "schools · eval", "opus",
   "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
 rigSeat("ts-review", "schools · review", "opus",
@@ -153,6 +155,9 @@ const role = (id: string, title: string, model: string, instructions: string) =>
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
 // reaches it, from no instructions of its own (its role line and the work skill say enough).
 agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus" });
+// land's fix agents (land.setup below): one started when a full run finds a repository's base red
+// and nobody else is on it, its brief saying what. Opus, no repository's role (operator, 2026-10-23).
+agents.presets.add({ id: "fix", title: "Fix", provider: "acp", harness: "claude", model: "opus" });
 role("abyme-lead", "abyme · lead", "opus",
   "You dispatch abyme's work, in ~/dev/abyme, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next.");
 role("abyme-team-lead", "abyme · team lead", "sonnet",
@@ -162,9 +167,9 @@ role("abyme-spec", "abyme · spec", "opus",
 role("abyme-design", "abyme · design", "opus",
   "You draw abyme UI before it is specced or built, as wireframes with abyme's own components (the wireframe skill): the case at hand, desktop and phone, alternatives side by side when the choice is open. Read your shots, then finish your item with their paths: whoever gave it is told.");
 role("abyme-build", "abyme · build", "opus",
-  "You build your team's change in its worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review and, for a visible change, walk have said go, archive the change and land the whole branch (proposal, code, archived change) with rjm:land, then finish your item: whoever gave it, your lead, is told.");
+  "You build your team's change in its worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review and, for a visible change, walk have said go, archive the change and land the whole branch (proposal, code, archived change) with `abyme call land add` (the land skill), running no gate first; end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told. A conflict or red comes back to you to fix and add again.");
 role("abyme-fix", "abyme · fix", "sonnet",
-  "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, add or change the one test that proves it, and run only the tests of what you touched, never a full suite. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, hand it to review. Once review has said go, land the whole branch with rjm:land, then finish your item: whoever gave it, your lead, is told.");
+  "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, add or change the one test that proves it, and run only the tests of what you touched, never a full suite. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, hand it to review. Once review has said go, land the whole branch with `abyme call land add` (the land skill), running no gate first; end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told.");
 role("abyme-review", "abyme · review", "opus",
   "You review an abyme change before it lands (the code-review skill), in the team's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, to walk if it changes what the operator sees, else back to build as ready to land.");
 role("abyme-walk", "abyme · walk", "sonnet",
@@ -200,9 +205,9 @@ role("schools-research", "schools · research", "opus",
 role("schools-spec", "schools · spec", "opus",
   "You write the team's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Then finish the work, naming in the note what its Impact needs the operator's go for, or nothing.");
 role("schools-build", "schools · build", "opus",
-  "You build the team's change in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with rjm:land as CLAUDE.md › Pull requests says, then finish your item: whoever gave it, your lead, is told. A parent change grows a build role per child change, on a branch of its own (teams_grow).");
+  "You build the team's change in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told. A parent change grows a build role per child change, on a branch of its own (teams_grow).");
 role("schools-fix", "schools · fix", "sonnet",
-  "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, add or change the one test that proves it, and run only the tests of what you touched, never a full suite. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, hand it to review. Once review has said go, land the whole branch with rjm:land, then finish your item: whoever gave it, your lead, is told.");
+  "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, add or change the one test that proves it, and run only the tests of what you touched, never a full suite. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, hand it to review. Once review has said go, land the whole branch with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told.");
 role("schools-eval", "schools · eval", "opus",
   "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
 role("schools-review", "schools · review", "opus",
