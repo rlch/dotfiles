@@ -10,7 +10,7 @@ import terminal from "@abyme/terminal";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import options from "./options";
-import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -563,18 +563,15 @@ async function takeUsage() {
   for (const k of taken.keys()) if (!all.some((a) => a.key === k)) taken.delete(k);
   const shared = said.size ? await readShared() : {};
   for (const [key, { a, pushes }] of said) {
-    // A refusal is believed only when this login's own endpoint read does not show that window
-    // clearly open: abyme kept an agent's pushes when it moved to another login (2026-10-23), and a
-    // harness's word might still reach the wrong one.
+    // A refusal an own read newer than it contradicts is not believed (`disbelieved`).
     const own = shared[key] ? answer(shared[key].at, shared[key].data) : null;
-    const read = own && "usage" in own ? own.usage : null;
+    const read = own && "usage" in own ? own : null;
     const believed = pushes.filter((p) => {
-      const w = p.window === "seven_day" ? "seven" : p.window === "five_hour" ? "five" : null;
-      if (p.state !== "rejected" || !w || !read || read[w] >= 95) return true;
+      if (!disbelieved(p, read)) return true;
       const id = `${key} ${p.window} ${p.at}`;
       if (!ignored.has(id)) {
         ignored.add(id);
-        abyme.log.warn(`${a.slug}: ignored a harness's ${w === "seven" ? "weekly" : "5-hour"} limit: its own read shows ${read[w]}%`);
+        abyme.log.warn(`${a.slug}: ignored a harness's ${p.window === "seven_day" ? "weekly" : "5-hour"} limit: its own newer read shows ${p.window === "seven_day" ? read!.usage.seven : read!.usage.five}%`);
       }
       return false;
     });

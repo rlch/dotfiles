@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
+import { best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -175,6 +175,20 @@ test("a push newer than the read wins, an older one does not, a rejected one say
   assert.equal(takePushes({ at: NOW, data: {} }, [{ window: "five_hour", state: "allowed", utilization: null, resets_at: null, at: at(NOW + 1) }], 0)!.data!.five_hour, undefined);
   // Heard again after it was taken: nothing.
   assert.equal(takePushes({ at: next.at, data: next.data! }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
+});
+
+test("a refusal is not believed only behind a newer own read under 95", () => {
+  const at = (ms: number) => new Date(ms).toISOString();
+  const refusal = { window: "five_hour", state: "rejected" as const, utilization: 100, resets_at: inDays(0.1), at: at(NOW) };
+  // Reads failing: the last one, 20 min older than the refusal, at 80. The refusal stands.
+  assert.equal(disbelieved(refusal, { at: NOW - 20 * 60_000, usage: usage(80, 10) }), false);
+  // A push carried from another login: the own read is newer and shows the window open.
+  assert.equal(disbelieved(refusal, { at: NOW + 60_000, usage: usage(5, 10) }), true);
+  // Newer but full, no read, or not a refusal: believed.
+  assert.equal(disbelieved(refusal, { at: NOW + 60_000, usage: usage(97, 10) }), false);
+  assert.equal(disbelieved(refusal, null), false);
+  assert.equal(disbelieved({ ...refusal, state: "warning" }, { at: NOW + 60_000, usage: usage(5, 10) }), false);
+  assert.equal(disbelieved({ ...refusal, window: "seven_day" }, { at: NOW + 60_000, usage: usage(99, 20) }), true);
 });
 
 // model.rs

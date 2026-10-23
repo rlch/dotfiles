@@ -287,6 +287,16 @@ export type Pushed = { window: string | null; state: "allowed" | "warning" | "re
 export type Kept = { at: number; data: Raw };
 export const newest = (mine: Kept | undefined, theirs: Kept | undefined): Kept | undefined => (theirs && (!mine || theirs.at > mine.at) ? theirs : mine);
 
+/** Whether a harness's refusal is not believed: the login's own endpoint read (`own`, its past
+ * windows zeroed) is newer than the refusal and shows that window under 95. The newer word wins, as
+ * in `takePushes`: an older read never hides a refusal. abyme kept an agent's pushes when it moved to
+ * another login (2026-10-23), and such a push keeps its old time while a login in use reads every
+ * 60 s. */
+export function disbelieved(p: Pushed, own: { at: number; usage: Usage } | null): boolean {
+  const w = p.window === "seven_day" ? "seven" : p.window === "five_hour" ? "five" : null;
+  return p.state === "rejected" && w !== null && own !== null && own.at > Date.parse(p.at) && own.usage[w] < 95;
+}
+
 /** A login's read after what its agents' harnesses said: each `five_hour` or `seven_day` entry newer
  * than both the read (`base`, the newest of `newest`) and the last taken overwrites that window,
  * the others and the model windows kept. Answers the read, its new time, and each window said
