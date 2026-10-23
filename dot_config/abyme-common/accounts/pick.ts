@@ -244,6 +244,22 @@ export type AccountSeen = {
   agents: number;
 };
 
+/** The setup-token `claude setup-token` printed, out of its whole output; null when it printed none. */
+export const tokenFrom = (out: string): string | null => /sk-ant-oat01-[A-Za-z0-9_-]{20,}/.exec(out)?.[0] ?? null;
+
+/** A setup-token is good for a year: when one made at `made` (ms) ends. */
+export const YEAR_MS = 365 * 86_400_000;
+export const tokenEnds = (made: number) => made + YEAR_MS;
+
+/** Whether a token ending at `ends` (ms) is within the 30 days the status bar warns of it. */
+export const tokenWarns = (ends: number, now: number) => ends - now < 30 * 86_400_000;
+
+/** When `security find-generic-password` says an item was made (`"cdat"<timedate>=… "20261024013000Z…"`), in ms. */
+export function keychainMade(out: string): number | null {
+  const m = /"cdat"<timedate>=[^"]*"(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)Z/.exec(out);
+  return m ? Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +m[4]!, +m[5]!, +m[6]!) : null;
+}
+
 /** A login's row as load's `Account` (resource-budgets): its id the folders' slugs, its 5-hour and
  * weekly windows a share of 1 (null when unknown, never 0), when each resets, and capped on the
  * window that binds. What load shows in Resources and admits turns by. */

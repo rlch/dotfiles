@@ -11,7 +11,7 @@ import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import options from "./options";
-import { loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { keychainMade, tokenEnds, tokenFrom, loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -342,8 +342,9 @@ async function markSpent(dir: string, why: string, said?: { window: "five" | "se
 
 // ---- what pages see: no token, no email, no uuid ----
 
-/** Each login's quota and how many agents run on it. Who runs where is `agents()`. */
-const view = abyme.value<{ accounts: AccountSeen[] }>({ accounts: [] });
+/** Each login's quota and how many agents run on it, and when each account's setup-token ends.
+ * Who runs where is `agents()`. */
+const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string> }>({ accounts: [], tokens: {} });
 
 /** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on,
  * which load asks for once a minute. */
@@ -355,7 +356,7 @@ let shown = "";
 async function show(all: Account[], q: Map<string, Quota>) {
   const dirs = await agentsByDir();
   const counts = new Map([...dirs].map(([dir, xs]) => [dir, xs.length]));
-  const next = { accounts: rowsSeen(all, q, counts) };
+  const next = { accounts: rowsSeen(all, q, counts), tokens: tokensEnding() };
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;
@@ -605,7 +606,92 @@ if (fs && process)
     }, 2_000);
   });
 
+// ---- setup-tokens (resource-budgets 5.4): one per account, in the keychain ----
+//
+// `token({ slug })` runs `claude setup-token` under the plugin, never in a terminal, so the token is
+// in no scrollback: its authorize URL comes back to the caller (an agent opens it on that account's
+// browser profile and hands it to the operator), and the token it prints goes straight to the
+// keychain as `abyme-accounts-<slug>`, with when it was made in the store. Launches do not use them
+// yet: they move once every account has one.
+
+const tokenService = (slug: string) => `abyme-accounts-${slug}`;
+/** When each account's token was made (ms), by slug. */
+const tokensMade = () => (abyme.store.get("tokens") ?? {}) as Record<string, number>;
+const tokensEnding = () => Object.fromEntries(Object.entries(tokensMade()).map(([slug, made]) => [slug, new Date(tokenEnds(made)).toISOString()]));
+/** Mints under way, by slug: one at a time an account. */
+const minting = new Map<string, string>();
+
+/** `claude setup-token` with a stdin held open (with stdin closed it never opens the browser) and
+ * `BROWSER` set to a script that writes the authorize URL to a file. */
+const MINT = 'f=$(mktemp -u); mkfifo -m 600 "$f"; exec 3<>"$f"; rm -f "$f"; exec "$CLAUDE" setup-token <&3';
+
+async function claudePath(): Promise<string> {
+  const r = await processes().run("/bin/sh", { args: ["-lc", "command -v claude"] });
+  const path = r.stdout.trim();
+  if (r.code !== 0 || !path) throw new Error("no claude on PATH, to make a setup-token");
+  return path;
+}
+
+/** A token made before this store kept them (by hand): when the keychain says it was made. */
+async function adoptTokens() {
+  const made = { ...tokensMade() };
+  for (const a of await discover()) {
+    if (made[a.slug] !== undefined) continue;
+    const r = await processes().run(o.security, { args: ["find-generic-password", "-s", tokenService(a.slug), "-a", USER] }).catch(() => null);
+    const at = r && r.code === 0 ? keychainMade(r.stdout + r.stderr) : null;
+    if (at !== null) made[a.slug] = at;
+  }
+  abyme.store.set("tokens", made);
+}
+if (fs && process) void adoptTokens().catch((e) => abyme.log.warn("setup-tokens:", (e as Error).message));
+
+async function token(slug: string): Promise<{ slug: string; url: string; text: string }> {
+  const account = (await discover()).find((x) => x.slug === slug);
+  if (!account) throw new Error(`no account ${slug}`);
+  const had = minting.get(slug);
+  if (had) return { slug, url: had, text: `a token for ${slug} is waiting for its Authorize: ${had}` };
+  const scratch = `${files().scratch}/mint-${slug}`;
+  await files().mkdir(scratch);
+  await files().remove(`${scratch}/url`).catch(() => {});
+  await files().write(`${scratch}/browser`, `#!/bin/sh\nprintf '%s\\n' "$1" > '${scratch}/url'\n`);
+  await processes().run("chmod", { args: ["700", `${scratch}/browser`] });
+  const claude = await claudePath();
+  const run = processes().run("/bin/sh", { args: ["-c", MINT], env: { BROWSER: `${scratch}/browser`, CLAUDE: claude }, timeoutMs: 15 * 60_000 });
+  void run
+    .then(async (r) => {
+      // The output holds the token: read here, and never logged, kept or answered.
+      const secret = tokenFrom(r.stdout);
+      if (!secret) return void abyme.log.warn(`${slug}: setup-token ended with no token (exit ${r.code})`);
+      const w = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
+      if (w.code !== 0) return void abyme.log.warn(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
+      abyme.store.set("tokens", { ...tokensMade(), [slug]: Date.now() });
+      abyme.log.info(`${slug}: setup-token made and kept in the keychain`);
+      shown = "";
+      await refresh();
+    })
+    .catch((e) => abyme.log.warn(`${slug}: setup-token:`, (e as Error).message))
+    .finally(() => {
+      minting.delete(slug);
+      void files().remove(scratch).catch(() => {});
+    });
+  for (let i = 0; i < 60; i++) {
+    const url = ((await files().read(`${scratch}/url`).catch(() => undefined)) ?? "").trim();
+    if (url) {
+      minting.set(slug, url);
+      return { slug, url, text: `open ${url} on browser profile claude-${slug} and have the operator Authorize: the token goes to the keychain once they do` };
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`${slug}: setup-token gave no authorize URL in 30 s`);
+}
+
 export default {
+  /** `abyme call accounts token slug=…`: a setup-token for that account (resource-budgets 5.4):
+   * answers the authorize URL to open on browser profile `claude-<slug>` for the operator; the
+   * token goes to the keychain once they Authorize. Launches do not use it yet. */
+  token: (a: { slug: string }) => token(a.slug),
+  /** When each account's setup-token ends, by slug: a year after it was made. */
+  tokens: () => tokensEnding(),
   /** `abyme call accounts pick model=…`: the account a launch would get now, and why. Counts nothing. */
   async pick(a: { model?: string } = {}) {
     const { account, why } = await pick(a.model ?? null);

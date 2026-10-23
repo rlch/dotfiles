@@ -82,6 +82,9 @@ function Pip({ a }: { a: Seen }) {
 
 export function Quota() {
   const seen = useStore(accounts.server.view(), (s) => (s as { accounts: Seen[] } | undefined)?.accounts ?? null);
+  const tokens = useStore(accounts.server.view(), (s) => (s as { tokens?: Record<string, string> } | undefined)?.tokens ?? {});
+  // A setup-token ends a year after it was made: 30 days before, the bar says so, naming the account.
+  const ending = Object.entries(tokens).filter(([, ends]) => Date.parse(ends) - Date.now() < 30 * 86_400_000);
   if (!seen?.length) return null;
   const rows = ordered(seen);
   const free = rows.filter((a) => !a.capped && !a.error).length;
@@ -99,6 +102,7 @@ export function Quota() {
           <span style={free ? undefined : { color: "var(--warning)" }}>
             {free ? `${free}` : back ? `back in ${until(back)}` : "none free"}
           </span>
+          {ending.length > 0 && <span data-accounts-token-ending style={{ color: "var(--warning)" }}>sign in: {ending.map(([slug]) => slug).join(", ")}</span>}
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" align="end" className="tabular-nums" style={{ padding: "8px 10px", maxWidth: "none" }}>
@@ -129,6 +133,11 @@ export function Quota() {
             </div>
           ))}
         </div>
+        {ending.map(([slug, ends]) => (
+          <div key={slug} style={{ marginTop: 6, color: "var(--warning)" }}>
+            {slug}'s setup-token ends {new Date(ends).toLocaleDateString()}: sign in again (abyme call accounts token slug={slug})
+          </div>
+        ))}
         </div>
       </TooltipContent>
     </Tooltip>

@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
+import { keychainMade, tokenEnds, tokenFrom, tokenWarns, YEAR_MS, loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -269,4 +269,17 @@ process.exit(failed ? 1 : 0);
   assert.equal(h!.windows[1]!.resets, Date.parse("2026-10-25T11:00:00.000Z"));
   assert.equal(m!.windows[0]!.used, null);
   assert.equal(m!.windows[1]!.resets, null);
+}
+
+// setup-tokens: read out of setup-token's output, a year long, warned of 30 days before.
+{
+  const t = "sk-ant-oat01-" + "a".repeat(40) + "_-b";
+  assert.equal(tokenFrom(`Your OAuth token (valid for 1 year):\n\n${t}\n\nStore this token securely.`), t);
+  assert.equal(tokenFrom("Login cancelled"), null);
+  const made = Date.parse("2026-10-24T01:30:00Z");
+  assert.equal(tokenEnds(made), made + YEAR_MS);
+  assert.equal(tokenWarns(tokenEnds(made), made + 300 * 86_400_000), false);
+  assert.equal(tokenWarns(tokenEnds(made), made + 340 * 86_400_000), true);
+  assert.equal(keychainMade('    "cdat"<timedate>=0x32303236313032343031333030305A00  "20261024013000Z\\000"'), made);
+  assert.equal(keychainMade("no such item"), null);
 }
