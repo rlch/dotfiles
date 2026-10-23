@@ -28,8 +28,8 @@
 #                         (2026-10-15, after two removers each left folders
 #                         half gone).
 #
-# Land's warm checkouts (~/.local/share/abyme/land, worktrees of the repos it
-# lands) are exempt from all of it: they keep target/ and node_modules between
+# Land's warm checkouts (~/.local/state/abyme/land, and the old ~/.local/share/abyme/land
+# until they are removed; worktrees of the repos it lands) are exempt from all of it: they keep target/ and node_modules between
 # runs on purpose (2026-10-23: pruned and cleaned from under a running land).
 #
 # Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
@@ -81,8 +81,11 @@ GOAL_GB=${JANITOR_GOAL_GB:-400}
 # ~/.herdr/worktrees: herdr's worktrees, for their build output until the last is gone.
 # ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
 ABYME_WORKTREES="$HOME/.local/share/abyme/worktrees"
-# ~/.local/share/abyme/land: land's warm checkouts; never pruned, cleaned or removed.
-LAND_CHECKOUTS=${JANITOR_LAND_CHECKOUTS:-$HOME/.local/share/abyme/land}
+# ~/.local/state/abyme/land: land's warm checkouts; never pruned, cleaned or removed.
+# ~/.local/share/abyme/land is its old folder: exempt until its checkouts are removed.
+# JANITOR_LAND_CHECKOUTS is a colon-separated list (the test's).
+IFS=: read -ra LAND_CHECKOUTS <<<"${JANITOR_LAND_CHECKOUTS:-$HOME/.local/state/abyme/land:$HOME/.local/share/abyme/land}"
+is_land() { local r; for r in "${LAND_CHECKOUTS[@]}"; do [[ "$1" == "$r"/* ]] && return 0; done; return 1; }
 ROOTS=("$ABYME_WORKTREES" "$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
 
 free_gb() { df -g /System/Volumes/Data | awk 'NR == 2 { print $4 }'; }
@@ -275,7 +278,7 @@ targets() {
   done
   } | sort -u | while IFS= read -r tag; do
     t=$(dirname "$tag")
-    [[ "$t" == "$LAND_CHECKOUTS"/* ]] && continue
+    is_land "$t" && continue
     [[ -f "$t/.rustc_info.json" ]] && echo "$(idle_hours "$t") $t"
   done | sort -rn # oldest first
 }
@@ -331,7 +334,7 @@ remove_landed_worktrees() {
     # abyme removes its own: landed, half removed, or asked of the operator.
     [[ "$wt" == "$ABYME_WORKTREES"/* ]] && continue
     # land keeps its checkouts warm between runs.
-    [[ "$wt" == "$LAND_CHECKOUTS"/* ]] && continue
+    is_land "$wt" && continue
     [[ -z "$(git -C "$wt" status --porcelain 2>/dev/null)" ]] || continue
     # A worktree holding the trunk itself is always "on origin/main"; never remove it or its branch.
     [[ "$branch" == main || "$branch" == master ]] && continue
