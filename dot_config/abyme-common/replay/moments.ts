@@ -31,9 +31,11 @@ export function parseName(name: string): { time: number; device: string; view: s
   return { time, device: cut < 0 ? label : label.slice(0, cut), view: cut < 0 ? "" : label.slice(cut + 1), why };
 }
 
-/** A save point's title, by its reason. */
-const savedFor = (reason: string) =>
-  reason === "asked" ? "Saved with the key" : reason.startsWith("error") ? "Saved for an error" : reason.startsWith("stall") ? "Saved for a stall" : reason.startsWith("agent") ? "Saved for an agent" : "Saved";
+/** A save point's title, by why it was written (its name's why; an agent's reason is its own words). */
+const savedFor = (why: Why | null) =>
+  why === "key" ? "Saved with the key" : why === "error" ? "Saved for an error" : why === "stall" ? "Saved for a stall" : why === "agent" ? "Saved for an agent" : "Saved";
+/** Why the page's own save mark was written: a page saves with the key, or for an error or a stall. */
+const pageWhy = (reason: string): Why | null => (reason === "asked" ? "key" : reason.startsWith("error") ? "error" : reason.startsWith("stall") ? "stall" : null);
 
 export const clock = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -59,7 +61,7 @@ function printed(base64: string): { bytes: number; text: string } {
 const GAP = 300;
 const LONGEST = 1500;
 
-export function moments(events: readonly Event[], saved?: { at: number; reason: string }): Moment[] {
+export function moments(events: readonly Event[], saved?: { at: number; reason: string; why: Why | null }): Moment[] {
   const t0 = events[0]?.timestamp ?? 0;
   const out: Moment[] = [];
   let burst: (Moment & { last: number; n: number; adds: number; removes: number; attrs: number; texts: number }) | null = null;
@@ -90,7 +92,7 @@ export function moments(events: readonly Event[], saved?: { at: number; reason: 
       const tag = e.data?.tag;
       const p = e.data?.payload ?? {};
       if (tag === "replay.error") out.push({ kind: "error", at, index, title: String(p.message ?? "Error"), detail: p.stack });
-      else if (tag === "replay.save") out.push({ kind: "save", at, index, title: savedFor(String(p.reason ?? "")), detail: p.reason === "asked" ? undefined : String(p.reason ?? "") });
+      else if (tag === "replay.save") out.push({ kind: "save", at, index, title: savedFor(pageWhy(String(p.reason ?? ""))), detail: p.reason === "asked" ? undefined : String(p.reason ?? "") });
       else if (tag === "replay.terminal" && (p.data || p.at)) {
         const id = String(p.id ?? "?");
         let t = terminals.get(id);
@@ -138,6 +140,6 @@ export function moments(events: readonly Event[], saved?: { at: number; reason: 
   for (const id of [...terminals.keys()]) endTerminal(id);
   // A save from before saves marked themselves: its moment is the file's.
   if (saved && !out.some((m) => m.kind === "save"))
-    out.push({ kind: "save", at: saved.at - t0, index: events.length - 1, title: savedFor(saved.reason), detail: saved.reason === "asked" ? undefined : saved.reason });
+    out.push({ kind: "save", at: saved.at - t0, index: events.length - 1, title: savedFor(saved.why ?? pageWhy(saved.reason)), detail: saved.reason === "asked" ? undefined : saved.reason });
   return out.map(({ kind, at, index, title, detail }) => ({ kind, at, index, title, detail }));
 }

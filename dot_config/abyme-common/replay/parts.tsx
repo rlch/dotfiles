@@ -98,21 +98,26 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
   window.addEventListener("pointerdown", touched, { capture: true, passive: true });
   window.addEventListener("keydown", touched, { capture: true, passive: true });
   let checkingOut = false;
+  /** The last checkout's span: its own long task is replay's, not the page's stall. */
+  let snap = { start: 0, end: 0 };
   const checkout = () => {
     checkingOut = false;
     if (!recordingNow || performance.now() - input < QUIET_MS) return;
     const t0 = performance.now();
     record.takeFullSnapshot(true);
-    const ms = Math.round((performance.now() - t0) * 10) / 10;
-    checked = performance.now();
+    snap = { start: t0, end: performance.now() };
+    const ms = Math.round((snap.end - t0) * 10) / 10;
+    checked = snap.end;
     mark("replay.checkout", { ms });
     send();
   };
 
   // Stalls: the timer's lateness while the page was visible throughout, and long animation frames.
   let lastStall = -Infinity;
+  /** What of the span from `start` to `end` was not replay's own checkout. */
+  const theirs = (start: number, end: number) => end - start - Math.max(0, Math.min(end, snap.end) - Math.max(start, snap.start));
   const stalled = (ms: number, via: "timer" | "frame") => {
-    if (performance.now() - lastStall < STALL_GAP_MS) return;
+    if (ms < o.stall || performance.now() - lastStall < STALL_GAP_MS) return;
     lastStall = performance.now();
     mark("replay.stall", { ms: Math.round(ms), via });
     o.onStall(Math.round(ms));
@@ -123,16 +128,16 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
   let loaf: PerformanceObserver | null = null;
   if (PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")) {
     loaf = new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) if (e.duration >= o.stall) stalled(e.duration, "frame");
+      for (const e of list.getEntries()) if (e.duration >= o.stall) stalled(theirs(e.startTime, e.startTime + e.duration), "frame");
     });
     loaf.observe({ type: "long-animation-frame", buffered: false });
   }
   let tick = performance.now();
   const timer = setInterval(() => {
     const now = performance.now();
-    const late = now - tick - SEND_MS;
+    const late = theirs(tick, now) - SEND_MS;
     tick = now;
-    if (!hidden && late >= o.stall) stalled(late, "timer");
+    if (!hidden) stalled(late, "timer");
     hidden = document.visibilityState !== "visible";
     send();
     if (!checkingOut && now - checked >= o.checkout && now - input >= QUIET_MS) {

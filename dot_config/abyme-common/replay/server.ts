@@ -148,7 +148,11 @@ const api = {
     await new Promise((r) => setTimeout(r, FLUSH_MS));
     const out: Save[] = [];
     for (const id of [...ring.pages.keys()]) {
-      const s = await saveOne(id, reason, minutes, "agent");
+      // One page's save failing (gzip) costs that page alone.
+      const s = await saveOne(id, reason, minutes, "agent").catch((e: unknown) => {
+        abyme.log.warn(`replay: page ${id} not saved: ${e instanceof Error ? e.message : e}`);
+        return null;
+      });
       if (s) out.push(s);
     }
     return out;

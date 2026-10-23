@@ -178,7 +178,7 @@ function Header({ saves, name, save, data, onPick }: { saves: Save[]; name: stri
 function Replay({ data, save }: { data: Loaded; save?: Save }) {
   const t0 = data.events[0]?.timestamp ?? 0;
   const total = data.events.length ? data.events.at(-1)!.timestamp - t0 : 0;
-  const list = useMemo(() => moments(data.events, { at: data.saved, reason: data.reason }), [data]);
+  const list = useMemo(() => moments(data.events, { at: data.saved, reason: data.reason, why: parseName(data.name).why }), [data]);
   // Where it opens: just before the first error, else a second in (a fresh page's first moments
   // are its loading screen).
   const start = useMemo(() => {
