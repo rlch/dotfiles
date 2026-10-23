@@ -3,7 +3,7 @@
 # Squash-merge someone's pull request at the head you looked at. Refuses a draft,
 # a conflict, and a red or pending check. --main-red merges when the only red
 # checks are main's own (the caller has checked that). Uses --admin for repos
-# marked admin = true in ~/.config/land/config.toml.
+# whose entry in ~/.config/abyme/land.ts says pr: { admin: true }.
 set -euo pipefail
 REPO=${1:?owner/repo}; N=${2:?pr number}; shift 2
 MAINRED=; DRY=
@@ -17,13 +17,9 @@ read -r STATE DRAFT MERGEABLE SHA < <(gh pr view "$N" --repo "$REPO" --json stat
 BAD=$(gh pr checks "$N" --repo "$REPO" --json name,bucket \
   --jq '[.[]|select(.bucket=="fail" or .bucket=="pending" or .bucket=="cancel")|"\(.name)=\(.bucket)"]|join(", ")' 2>/dev/null || true)
 if [ -n "$BAD" ] && [ -z "$MAINRED" ]; then stop "#$N checks not green: $BAD"; fi
-ADMIN=$(python3 - "$REPO" <<'PY'
-import os, sys, tomllib
-p = os.path.expanduser("~/.config/land/config.toml")
-cfg = tomllib.load(open(p, "rb")) if os.path.exists(p) else {}
-print("--admin" if cfg.get("repo", {}).get(sys.argv[1], {}).get("admin") else "")
-PY
-)
+# node reads land.ts as it is: TypeScript's types are stripped, nothing else runs.
+LAND_TS=~/.config/abyme/land.ts
+ADMIN=$([ -f "$LAND_TS" ] && node -e 'import("file://" + process.argv[1]).then((m) => { const f = m.default ?? {}; const k = Object.keys(f).find((k) => k.toLowerCase() === process.argv[2].toLowerCase()); console.log(k && f[k].pr?.admin ? "--admin" : ""); })' "$LAND_TS" "$REPO" || true)
 if [ -n "$DRY" ]; then echo "would merge #$N of $REPO at ${SHA:0:10} (squash $ADMIN)${BAD:+, over: $BAD}"; exit 0; fi
 if [ -t 0 ]; then
   printf 'squash-merge %s#%s at %s%s? [y/N] ' "$REPO" "$N" "${SHA:0:10}" "${BAD:+ over $BAD}"
