@@ -278,19 +278,28 @@ export function rowsSeen(folders: Folder[], reads: Map<string, Read>, spent: Map
 /** One window as a harness said it: abyme's `UsageLimit` (`@abyme/agents`). */
 export type Pushed = { window: string | null; state: "allowed" | "warning" | "rejected"; utilization: number | null; resets_at: string | null; at: string };
 
-/** A login's kept read after what its agents' harnesses said: each `five_hour` or `seven_day`
- * entry newer than both the read and the last taken overwrites that window. Answers the read, its
- * new time, and each window said `rejected` with its reset; null when nothing is newer. */
-export function takePushes(kept: { at: number; data: Raw } | undefined, pushes: Pushed[], taken: number): { at: number; data: Raw; rejected: { window: Window; resets: string | null }[] } | null {
-  const since = Math.max(kept?.at ?? 0, taken);
+/** A login's endpoint read: the newer of this abymed's and the shared file's. */
+export type Kept = { at: number; data: Raw };
+export const newest = (mine: Kept | undefined, theirs: Kept | undefined): Kept | undefined => (theirs && (!mine || theirs.at > mine.at) ? theirs : mine);
+
+/** A login's read after what its agents' harnesses said: each `five_hour` or `seven_day` entry newer
+ * than both the read (`base`, the newest of `newest`) and the last taken overwrites that window,
+ * the others and the model windows kept. Answers the read, its new time, and each window said
+ * `rejected` with its reset; null when nothing is newer. With no base, no read (`data` null): one
+ * window alone would read the other as 0. */
+export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: number): { at: number; data: Raw | null; rejected: { window: Window; resets: string | null }[] } | null {
+  const since = Math.max(base?.at ?? 0, taken);
   const fresh = pushes.filter((p) => (p.window === "five_hour" || p.window === "seven_day") && Date.parse(p.at) > since).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   if (!fresh.length) return null;
-  const data: Raw = { ...(kept?.data ?? {}) };
+  const data: Raw | null = base ? { ...base.data } : null;
   const rejected: { window: Window; resets: string | null }[] = [];
   for (const p of fresh) {
-    const was = obj(data[p.window!]) ?? {};
-    data[p.window!] = { ...was, utilization: p.utilization ?? num(was.utilization), resets_at: p.resets_at ?? str(was.resets_at) };
     if (p.state === "rejected") rejected.push({ window: p.window === "five_hour" ? "five" : "seven", resets: p.resets_at });
+    if (!data) continue;
+    const was = obj(data[p.window!]) ?? {};
+    // A window said with no number keeps the one read; with neither it stays as it was.
+    const utilization = p.utilization ?? num(was.utilization);
+    if (utilization !== null) data[p.window!] = { ...was, utilization, resets_at: p.resets_at ?? str(was.resets_at) };
   }
   return { at: Date.parse(fresh[fresh.length - 1]!.at), data, rejected };
 }

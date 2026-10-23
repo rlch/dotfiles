@@ -10,7 +10,7 @@ import terminal from "@abyme/terminal";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import options from "./options";
-import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -201,9 +201,7 @@ async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
   const c = await credentials(a);
   if (!c?.claudeAiOauth?.accessToken) return { at: Date.now(), error: "no credentials" };
   if (signedOut(a, c)) return { at: Date.now(), error: "signed out" };
-  const mine = quota.get(a.key);
-  const theirs = (await readShared())[a.key];
-  const had = theirs && (!mine || theirs.at > mine.at) ? theirs : mine;
+  const had = newest(quota.get(a.key), (await readShared())[a.key]);
   if (had && Date.now() - had.at < FRESH_MS) return answer(had.at, had.data);
   const t = await token(a, busy);
   if (!t) return { at: Date.now(), error: "no credentials" };
@@ -561,12 +559,15 @@ async function takeUsage() {
     said.set(a.key, s);
   }
   for (const k of taken.keys()) if (!all.some((a) => a.key === k)) taken.delete(k);
+  const shared = said.size ? await readShared() : {};
   for (const [key, { a, pushes }] of said) {
-    const next = takePushes(quota.get(key), pushes, taken.get(key) ?? 0);
+    const next = takePushes(newest(quota.get(key), shared[key]), pushes, taken.get(key) ?? 0);
     if (!next) continue;
     taken.set(key, next.at);
-    quota.set(key, { at: next.at, data: next.data });
-    last.set(key, answer(next.at, next.data));
+    if (next.data) {
+      quota.set(key, { at: next.at, data: next.data });
+      last.set(key, answer(next.at, next.data));
+    }
     for (const r of next.rejected) await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }

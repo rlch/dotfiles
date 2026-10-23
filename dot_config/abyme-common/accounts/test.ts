@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
+import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -137,10 +137,21 @@ test("a push newer than the read wins, an older one does not, a rejected one say
     { window: "five_hour", state: "allowed", utilization: 12, resets_at: null, at: at(NOW + 1000) },
   ], 0)!;
   assert.equal(next.at, NOW + 2000);
-  assert.deepEqual(parse(next.data), { five: 12, seven: 100, fiveResets: inDays(0.1), sevenResets: inDays(2) });
+  assert.deepEqual(parse(next.data!), { five: 12, seven: 100, fiveResets: inDays(0.1), sevenResets: inDays(2) });
   assert.deepEqual(next.rejected, [{ window: "seven", resets: inDays(2) }]);
+  // No read to put it on: no numbers, only the refusal.
+  const bare = takePushes(undefined, [{ window: "five_hour", state: "rejected", utilization: 100, resets_at: inDays(0.1), at: at(NOW) }], 0)!;
+  assert.deepEqual([bare.data, bare.rejected], [null, [{ window: "five", resets: inDays(0.1) }]]);
+  // Onto a shared read newer than this abymed's: the other window and the model windows are kept.
+  const mine = { at: NOW - 60_000, data: { five_hour: { utilization: 1 }, seven_day: { utilization: 1 } } };
+  const theirs = { at: NOW, data: { five_hour: { utilization: 80, resets_at: inDays(0.1) }, seven_day: { utilization: 40, resets_at: inDays(2) }, seven_day_opus: { utilization: 70, resets_at: inDays(2) } } };
+  const onto = takePushes(newest(mine, theirs), [{ window: "seven_day", state: "allowed", utilization: 45, resets_at: null, at: at(NOW + 1000) }], 0)!;
+  assert.deepEqual(parse(onto.data!), { five: 80, seven: 45, fiveResets: inDays(0.1), sevenResets: inDays(2) });
+  assert.equal(parseModels(onto.data!)[0]!.utilization, 70);
+  // A window said with no number, and none read: it stays unread.
+  assert.equal(takePushes({ at: NOW, data: {} }, [{ window: "five_hour", state: "allowed", utilization: null, resets_at: null, at: at(NOW + 1) }], 0)!.data!.five_hour, undefined);
   // Heard again after it was taken: nothing.
-  assert.equal(takePushes({ at: next.at, data: next.data }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
+  assert.equal(takePushes({ at: next.at, data: next.data! }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
 });
 
 // model.rs
