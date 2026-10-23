@@ -349,7 +349,7 @@ let shown = "";
 async function show(all: Account[], q: Map<string, Quota>) {
   const dirs = await agentsByDir();
   const counts = new Map([...dirs].map(([dir, xs]) => [dir, xs.length]));
-  const next = { accounts: rowsSeen(all, q, spent, counts, Date.now()) };
+  const next = { accounts: rowsSeen(all, q, counts) };
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;
@@ -544,6 +544,8 @@ async function showCached() {
 
 /** The last push taken of each login (ms), by identity: one heard again changes nothing. */
 const taken = new Map<string, number>();
+/** Refusals not believed, by login, window and time: each logged once. */
+const ignored = new Set<string>();
 /** What agents' harnesses said of their accounts (`usage_limits`), into each login's kept read:
  * newer than the read, it wins; `rejected` marks the login spent until that window resets. Never
  * into the shared file, which holds endpoint reads only. */
@@ -561,24 +563,29 @@ async function takeUsage() {
   for (const k of taken.keys()) if (!all.some((a) => a.key === k)) taken.delete(k);
   const shared = said.size ? await readShared() : {};
   for (const [key, { a, pushes }] of said) {
-    const next = takePushes(newest(quota.get(key), shared[key]), pushes, taken.get(key) ?? 0);
+    // A refusal is believed only when this login's own endpoint read does not show that window
+    // clearly open: abyme kept an agent's pushes when it moved to another login (2026-10-23), and a
+    // harness's word might still reach the wrong one.
+    const own = shared[key] ? answer(shared[key].at, shared[key].data) : null;
+    const read = own && "usage" in own ? own.usage : null;
+    const believed = pushes.filter((p) => {
+      const w = p.window === "seven_day" ? "seven" : p.window === "five_hour" ? "five" : null;
+      if (p.state !== "rejected" || !w || !read || read[w] >= 95) return true;
+      const id = `${key} ${p.window} ${p.at}`;
+      if (!ignored.has(id)) {
+        ignored.add(id);
+        abyme.log.warn(`${a.slug}: ignored a harness's ${w === "seven" ? "weekly" : "5-hour"} limit: its own read shows ${read[w]}%`);
+      }
+      return false;
+    });
+    const next = takePushes(newest(quota.get(key), shared[key]), believed, taken.get(key) ?? 0);
     if (!next) continue;
     taken.set(key, next.at);
     if (next.data) {
       quota.set(key, { at: next.at, data: next.data });
       last.set(key, answer(next.at, next.data));
     }
-    // A push can come from a harness that ran on another login (an agent moved after a limit), so
-    // it is believed only when this login's own endpoint read does not show that window clearly open.
-    const own = shared[key] ? answer(shared[key].at, shared[key].data) : null;
-    const read = own && "usage" in own ? own.usage : null;
-    for (const r of next.rejected) {
-      if (read && (r.window === "seven" ? read.seven : read.five) < 95) {
-        abyme.log.warn(`${a.slug}: ignored a harness's ${r.window === "seven" ? "weekly" : "5-hour"} limit: its own read shows ${r.window === "seven" ? read.seven : read.five}%`);
-        continue;
-      }
-      await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
-    }
+    for (const r of next.rejected) await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }
 // An agent's list changes many times a second while agents work, and each show lists the home

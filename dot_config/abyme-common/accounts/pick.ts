@@ -142,10 +142,16 @@ export function windowSaid(why: string): Window | null {
 /** How old a kept read may be and still stand for a failed one. */
 export const STALE_OK_MS = 30 * 60_000;
 
-/** Whether a kept read may stand for a read that failed: under STALE_OK_MS old and not near a cap
- * (5h under 90, 7d under 85). Near a cap an old read hides the cap: tuteroai read "7d 93%" for 50
- * picks while it ran into its week (2026-10-23). */
-export const staleOk = (u: Usage, age: number): boolean => age < STALE_OK_MS && u.five < 90 && u.seven < 85;
+/** Whether a kept read may stand for a read that failed: one with a window at 100 and its reset
+ * still ahead stands at any age, as a cap does not lift before its reset (hsone, 7d at 100 until
+ * 2026-10-25, showed no numbers while its reads failed, 2026-10-23); else under STALE_OK_MS old and
+ * not near a cap (5h under 90, 7d under 85). Near a cap an old read hides the cap: tuteroai read
+ * "7d 93%" for 50 picks while it ran into its week (2026-10-23). `u` has its past windows zeroed. */
+export const staleOk = (u: Usage, age: number): boolean => {
+  const b = binding(u);
+  if (b && Number.isFinite(Date.parse(b.resets ?? ""))) return true;
+  return age < STALE_OK_MS && u.five < 90 && u.seven < 85;
+};
 
 /** The usage with the model's window as the binding week, when it is the more used. */
 function withWindow(u: Usage, w: ModelWindow): Usage {
@@ -245,17 +251,16 @@ export const minute = (t: string | null): string | null => {
 };
 
 /** The rows: one per login, in the folders' order (main first, then by name), each with every
- * folder of it. A spent mark past `now` is no longer one. */
-export function rowsSeen(folders: Folder[], reads: Map<string, Read>, spent: Map<string, Spent>, agentsIn: Map<string, number>, now: number): AccountSeen[] {
+ * folder of it. `capped` is a window its read has at 100, until that window resets, and nothing
+ * else: a spent mark keeps a login out of picks but is not shown as a cap (main, 5h 1%, showed
+ * capped by another login's limit, 2026-10-23). */
+export function rowsSeen(folders: Folder[], reads: Map<string, Read>, agentsIn: Map<string, number>): AccountSeen[] {
   const groups = new Map<string, Folder[]>();
   for (const f of folders) groups.set(f.key, [...(groups.get(f.key) ?? []), f]);
   return [...groups].map(([key, members]) => {
     const x = reads.get(key);
     const u = x && "usage" in x ? x : null;
-    const mark = spent.get(key);
-    const out = mark && mark.until > now ? mark : null;
     const bound = u ? binding(u.usage) : null;
-    const isCapped = !!out || !!bound;
     return {
       slugs: members.map((m) => m.slug),
       five: u ? u.usage.five : null,
@@ -263,9 +268,9 @@ export function rowsSeen(folders: Folder[], reads: Map<string, Read>, spent: Map
       fiveResets: minute(u?.usage.fiveResets ?? null),
       sevenResets: minute(u?.usage.sevenResets ?? null),
       windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: minute(w.resetsAt) })),
-      capped: isCapped,
-      binding: isCapped ? (bound?.window ?? out?.window ?? null) : null,
-      back: isCapped ? minute(later(out ? new Date(out.until).toISOString() : null, bound?.resets ?? null)) : null,
+      capped: !!bound,
+      binding: bound?.window ?? null,
+      back: minute(bound?.resets ?? null),
       read: u ? new Date(u.at).toISOString() : null,
       error: x && "error" in x ? x.error : null,
       agents: members.reduce((n, m) => n + (agentsIn.get(m.dir) ?? 0), 0),
@@ -297,8 +302,10 @@ export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: numb
     if (p.state === "rejected") rejected.push({ window: p.window === "five_hour" ? "five" : "seven", resets: p.resets_at });
     if (!data) continue;
     const was = obj(data[p.window!]) ?? {};
-    // A window said with no number keeps the one read; with neither it stays as it was.
-    const utilization = p.utilization ?? num(was.utilization);
+    // A window said with no number keeps the one read; with neither it stays as it was. A refused
+    // window is full, whatever number came with it.
+    const said = p.utilization ?? num(was.utilization);
+    const utilization = p.state === "rejected" ? Math.max(100, said ?? 0) : said;
     if (utilization !== null) data[p.window!] = { ...was, utilization, resets_at: p.resets_at ?? str(was.resets_at) };
   }
   return { at: Date.parse(fresh[fresh.length - 1]!.at), data, rejected };

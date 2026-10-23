@@ -77,7 +77,7 @@ test("a week-capped login with 5h at 0 is never picked before its 7d reset", () 
   assert.deepEqual(binding(hsone), { window: "seven", resets: HSONE_BACK });
   assert.equal(picks([row("hsone", hsone), row("b", [95, 99], { busy: true })]), "b");
   assert.match(best([row("hsone", hsone)], null, NOW).why, /first back is hsone at 2026-10-25T11:00/);
-  const seen = rowsSeen([{ slug: "hsone", dir: "/h/.claude-hsone", key: "u1" }], new Map([["u1", { at: NOW, usage: hsone, windows: [] }]]), new Map(), new Map(), NOW)[0]!;
+  const seen = rowsSeen([{ slug: "hsone", dir: "/h/.claude-hsone", key: "u1" }], new Map([["u1", { at: NOW, usage: hsone, windows: [] }]]), new Map())[0]!;
   assert.deepEqual([seen.capped, seen.binding, seen.back], [true, "seven", HSONE_BACK]);
 });
 test("the binding window", () => {
@@ -93,6 +93,26 @@ test("a stale read near its cap is unknown", () => {
   assert.equal(staleOk(usage(50, 50), 31 * 60_000), false);
   assert.equal(staleOk(usage(90, 10), 60_000), false);
   assert.equal(staleOk(usage(10, 93), 60_000), false);
+  // A cap stands until its reset, however old the read: hsone kept its numbers (2026-10-23).
+  assert.equal(staleOk({ five: 0, seven: 100, fiveResets: null, sevenResets: HSONE_BACK }, 6 * 3600_000), true);
+  assert.equal(staleOk({ five: 0, seven: 100, fiveResets: null, sevenResets: null }, 31 * 60_000), false);
+});
+test("capped is a window at 100 until its reset, never a spent mark alone", () => {
+  const folders: Folder[] = [{ slug: "main", dir: "/h/.claude", key: "u-main" }, { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: "u2" }];
+  const reads = new Map<string, Read>([
+    ["u-main", { at: NOW, usage: { five: 1, seven: 60, fiveResets: inDays(0.1), sevenResets: inDays(5) }, windows: [] }],
+    ["u2", { at: NOW, usage: { five: 100, seven: 16, fiveResets: inDays(0.1), sevenResets: inDays(5) }, windows: [] }],
+  ]);
+  assert.deepEqual(rowsSeen(folders, reads, new Map()).map((r) => [r.slugs[0], r.capped, r.binding, r.back]), [
+    ["main", false, null, null],
+    ["tuteroai", true, "five", inDays(0.1)],
+  ]);
+  // Past its reset the window reads 0, and the row is no longer capped.
+  const past = { at: NOW, data: { five_hour: { utilization: 100, resets_at: inDays(-0.01) }, seven_day: { utilization: 16, resets_at: inDays(5) } } };
+  const u = parse(expirePast(past.data, NOW));
+  assert.equal(rowsSeen([folders[1]!], new Map([["u2", { at: NOW, usage: u, windows: [] }]]), new Map())[0]!.capped, false);
+  // A spent mark still keeps the login out of picks.
+  assert.equal(picks([row("main", [1, 60], { spent: inDays(0.04) }), row("b", [50, 50], { busy: true })]), "b");
 });
 test("one row per login, every folder of it, main first", () => {
   const folders: Folder[] = [
@@ -100,7 +120,7 @@ test("one row per login, every folder of it, main first", () => {
     { slug: "hsone", dir: "/h/.claude-hsone", key: "u1" },
     { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: "u1" },
   ];
-  const rows = rowsSeen(folders, new Map(), new Map(), new Map([["/h/.claude-hsone", 1], ["/h/.claude-tuteroai", 2]]), NOW);
+  const rows = rowsSeen(folders, new Map(), new Map([["/h/.claude-hsone", 1], ["/h/.claude-tuteroai", 2]]));
   assert.deepEqual(rows.map((r) => [r.slugs, r.agents, r.error, r.read]), [
     [["main"], 0, null, null],
     [["hsone", "tuteroai"], 3, null, null],
@@ -117,8 +137,8 @@ test("a folder signed in again as another login: its row, quota, spent mark and 
   const spent = new Map<string, Spent>([["u1", { until: Date.parse(HSONE_BACK), window: "seven" }]]);
   const before: Folder[] = [{ slug: "hsone", dir: "/h/.claude-hsone", key: was.key }, { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: was.key }];
   const after: Folder[] = [before[0]!, { ...before[1]!, key: now.key }];
-  assert.deepEqual(rowsSeen(before, reads, spent, new Map(), NOW).map((r) => [r.slugs, r.capped]), [[["hsone", "tuteroai"], true]]);
-  const rows = rowsSeen(after, reads, spent, new Map([["/h/.claude-tuteroai", 1]]), NOW);
+  assert.deepEqual(rowsSeen(before, reads, new Map()).map((r) => [r.slugs, r.capped]), [[["hsone", "tuteroai"], true]]);
+  const rows = rowsSeen(after, reads, new Map([["/h/.claude-tuteroai", 1]]));
   assert.deepEqual(rows.map((r) => [r.slugs, r.five, r.capped, r.agents]), [
     [["hsone"], 0, true, 0],
     [["tuteroai"], 20, false, 1],
@@ -139,6 +159,9 @@ test("a push newer than the read wins, an older one does not, a rejected one say
   assert.equal(next.at, NOW + 2000);
   assert.deepEqual(parse(next.data!), { five: 12, seven: 100, fiveResets: inDays(0.1), sevenResets: inDays(2) });
   assert.deepEqual(next.rejected, [{ window: "seven", resets: inDays(2) }]);
+  // A refusal is a full window, whatever number came with it.
+  const refused = takePushes(kept, [{ window: "five_hour", state: "rejected", utilization: null, resets_at: inDays(0.1), at: at(NOW + 1) }], 0)!;
+  assert.equal(parse(refused.data!).five, 100);
   // No read to put it on: no numbers, only the refusal.
   const bare = takePushes(undefined, [{ window: "five_hour", state: "rejected", utilization: 100, resets_at: inDays(0.1), at: at(NOW) }], 0)!;
   assert.deepEqual([bare.data, bare.rejected], [null, [{ window: "five", resets: inDays(0.1) }]]);
