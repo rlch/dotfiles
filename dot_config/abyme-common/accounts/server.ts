@@ -645,7 +645,7 @@ async function adoptTokens() {
 }
 if (fs && process) void adoptTokens().catch((e) => abyme.log.warn("setup-tokens:", (e as Error).message));
 
-async function token(slug: string): Promise<{ slug: string; url: string; text: string }> {
+async function mintToken(slug: string): Promise<{ slug: string; url: string; text: string }> {
   const account = (await discover()).find((x) => x.slug === slug);
   if (!account) throw new Error(`no account ${slug}`);
   const had = minting.get(slug);
@@ -689,7 +689,7 @@ export default {
   /** `abyme call accounts token slug=…`: a setup-token for that account (resource-budgets 5.4):
    * answers the authorize URL to open on browser profile `claude-<slug>` for the operator; the
    * token goes to the keychain once they Authorize. Launches do not use it yet. */
-  token: (a: { slug: string }) => token(a.slug),
+  token: (a: { slug: string }) => mintToken(a.slug),
   /** When each account's setup-token ends, by slug: a year after it was made. */
   tokens: () => tokensEnding(),
   /** `abyme call accounts pick model=…`: the account a launch would get now, and why. Counts nothing. */
