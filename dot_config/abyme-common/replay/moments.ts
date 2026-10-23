@@ -32,10 +32,10 @@ export function parseName(name: string): { time: number; device: string; view: s
 }
 
 /** A save point's title, by why it was written (its name's why; an agent's reason is its own words). */
-const savedFor = (why: Why | null) =>
+export const savedFor = (why: Why | null) =>
   why === "key" ? "Saved with the key" : why === "error" ? "Saved for an error" : why === "stall" ? "Saved for a stall" : why === "agent" ? "Saved for an agent" : "Saved";
 /** Why the page's own save mark was written: a page saves with the key, or for an error or a stall. */
-const pageWhy = (reason: string): Why | null => (reason === "asked" ? "key" : reason.startsWith("error") ? "error" : reason.startsWith("stall") ? "stall" : null);
+export const pageWhy = (reason: string): Why | null => (reason === "asked" ? "key" : reason.startsWith("error") ? "error" : reason.startsWith("stall") ? "stall" : null);
 
 export const clock = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000));

@@ -28,7 +28,7 @@ import { sideRow, ViewState } from "@abyme/ui";
 import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { Replayer } from "./vendor/replay.js";
 import type { Read, Save } from "./api.server.ts";
-import { clock, kb, moments, parseName, type Event, type Kind, type Moment } from "./moments.ts";
+import { clock, kb, moments, pageWhy, parseName, savedFor, type Event, type Kind, type Moment } from "./moments.ts";
 import { parseSave } from "./format.ts";
 import * as I from "./icons.tsx";
 
@@ -128,7 +128,8 @@ export function ReplayView({ params, api }: ViewProps) {
 function Header({ saves, name, save, data, onPick }: { saves: Save[]; name: string; save?: Save; data: Loaded | null; onPick(name: string): void }) {
   const meta = parseName(name);
   const length = data?.events.length ? data.events.at(-1)!.timestamp - data.events[0]!.timestamp : null;
-  const error = data ? data.reason.startsWith("error") : meta.why === "error";
+  const why = meta.why ?? (data ? pageWhy(data.reason) : null);
+  const error = why === "error";
   return (
     <div className="flex shrink-0 items-center gap-3 border-b px-3" style={{ height: 48 }} data-replay-header>
       <DropdownMenu>
@@ -160,15 +161,15 @@ function Header({ saves, name, save, data, onPick }: { saves: Save[]; name: stri
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="flex min-w-0 flex-1 items-center gap-2 text-xs text-muted-foreground">
-        <span className="truncate">{[meta.view || "page", meta.device, length !== null && clock(length), save && kb(save.size)].filter(Boolean).join(" · ")}</span>
         <Badge variant={error ? "destructive" : "muted"} className="shrink-0 rounded-full" title={data?.reason}>
-          {error ? "Saved for an error" : "Saved with the key"}
+          {savedFor(why)}
         </Badge>
-        {error && data && (
-          <span className="min-w-0 truncate" style={{ color: "var(--destructive)" }} title={data.reason}>
-            {data.reason.replace(/^error:\s*/, "")}
+        {why !== "key" && data && (
+          <span className="min-w-0 truncate" style={{ flexShrink: 0, maxWidth: "50%", ...(error ? { color: "var(--destructive)" } : {}) }} title={data.reason}>
+            {data.reason.replace(/^(error|stall):\s*/, "")}
           </span>
         )}
+        <span className="min-w-0 truncate">{[meta.view || "page", meta.device, length !== null && clock(length), save && kb(save.size)].filter(Boolean).join(" · ")}</span>
       </div>
     </div>
   );
@@ -237,9 +238,19 @@ function Replay({ data, save }: { data: Loaded; save?: Save }) {
     return i;
   }, [list, now]);
 
+  // Narrow (a phone): the moments go under the replay, not beside it.
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    if (!root) return;
+    const seen = new ResizeObserver(() => setNarrow(root.clientWidth < 640));
+    seen.observe(root);
+    return () => seen.disconnect();
+  }, [root]);
+
   return (
-    <div className="flex min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div ref={setRoot} className={cn("flex min-h-0 flex-1", narrow && "flex-col")}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Stage
           events={data.events}
           speed={Number(speed)}
@@ -253,7 +264,7 @@ function Replay({ data, save }: { data: Loaded; save?: Save }) {
         />
         <Timeline total={total} now={now} playing={playing} speed={speed} list={list} onToggle={toggle} onSeek={seek} onSpeed={setSpeed} />
       </div>
-      <Moments list={list} at={at} picked={picked} follow={playing} onPick={(m) => seek(m.at, m)} data={data} save={save} now={now} t0={t0} />
+      <Moments narrow={narrow} list={list} at={at} picked={picked} follow={playing} onPick={(m) => seek(m.at, m)} data={data} save={save} now={now} t0={t0} />
     </div>
   );
 }
@@ -417,6 +428,7 @@ function Timeline({
 
 /** Every moment, in time, the one playback is at lit; a click seeks to it. */
 function Moments({
+  narrow,
   list,
   at,
   picked,
@@ -427,6 +439,7 @@ function Moments({
   now,
   t0,
 }: {
+  narrow: boolean;
   list: Moment[];
   at: number;
   picked: Moment | null;
@@ -443,7 +456,7 @@ function Moments({
     scroller.current?.querySelector(`[data-moment="${at}"]`)?.scrollIntoView({ block: "nearest" });
   }, [at, follow]);
   return (
-    <div className="flex min-h-0 shrink-0 flex-col border-l bg-sidebar text-sidebar-foreground" style={{ width: 320 }} data-replay-moments>
+    <div className={cn("flex min-h-0 shrink-0 flex-col bg-sidebar text-sidebar-foreground", narrow ? "border-t" : "border-l")} style={narrow ? { height: "40%" } : { width: 320 }} data-replay-moments>
       <div className="flex shrink-0 items-center gap-2 border-b px-3" style={{ height: 40 }}>
         <span className="text-xs font-medium text-muted-foreground">{list.length} moments</span>
         <span className="ml-auto" />
