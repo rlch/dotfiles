@@ -13,21 +13,26 @@ import notifications from "@abyme/notifications";
 import palette from "@abyme/palette";
 import status from "@abyme/status/inventory";
 import terminal from "@abyme/terminal";
+import type { AccountSeen } from "./pick.ts";
 import { Quota } from "./segment.tsx";
 
 /** The value of "pick by quota", in the field and the picker; the server half's too. */
 const BY_QUOTA = "auto";
 
-type View = { accounts: { slug: string; five: number | null; seven: number | null; capped: boolean; error: string | null }[] };
+type View = { accounts: AccountSeen[] };
+/** A folder of a login: what a pin, a login and an ignore name. */
+type Folder = AccountSeen & { slug: string };
 const seen = accounts.server.view();
 const view = (): View | undefined => seen.getState() as View | undefined;
-const label = (a: View["accounts"][number]) => (a.five === null ? a.slug : `${a.slug}  5h ${Math.round(a.five)}%  7d ${Math.round(a.seven ?? 0)}%`);
+/** Every account folder, each with its login's row. */
+const folders = (v: View | undefined): Folder[] => (v?.accounts ?? []).flatMap((a) => a.slugs.map((slug) => ({ ...a, slug })));
+const label = (a: Folder) => (a.five === null ? a.slug : `${a.slug}  5h ${Math.round(a.five)}%  7d ${Math.round(a.seven ?? 0)}%`);
 
 const options = createStore<readonly { value: string; name: string; description?: string }[]>([]);
 function follow() {
   const v = view();
   if (!v) return;
-  options.set(() => (v.accounts.length < 2 ? [] : [{ value: BY_QUOTA, name: "By quota" }, ...v.accounts.map((a) => ({ value: a.slug, name: a.slug, description: label(a) }))]));
+  options.set(() => (folders(v).length < 2 ? [] : [{ value: BY_QUOTA, name: "By quota" }, ...folders(v).map((a) => ({ value: a.slug, name: a.slug, description: label(a) }))]));
 }
 abyme.effect(() => seen.on("change", follow));
 follow();
@@ -44,7 +49,7 @@ async function choose(agent: string) {
   const [v, pins] = await Promise.all([accounts.server.view(), accounts.server.pins()]);
   palette.pick({
     placeholder: "The account this agent's resumes run on",
-    items: [{ id: BY_QUOTA, title: "By quota, as any launch" }, ...(v as View).accounts.map((a) => ({ id: a.slug, title: label(a), keywords: [a.slug] }))],
+    items: [{ id: BY_QUOTA, title: "By quota, as any launch" }, ...folders(v as View).map((a) => ({ id: a.slug, title: label(a), keywords: [a.slug] }))],
     active: (pins as Record<string, string>)[agent] ?? BY_QUOTA,
     onPick: (id) =>
       void accounts.server.pin({ agent, slug: id === BY_QUOTA ? null : id }).catch((e: Error) => notifications.notify({ level: "error", title: "Not pinned", body: e.message })),
@@ -102,7 +107,7 @@ commands.add({
   group: "Agents",
   run: async () => {
     const v = (await accounts.server.view()) as View;
-    const first = [...v.accounts].sort((a, b) => Number(OUT.has(b.error ?? "")) - Number(OUT.has(a.error ?? "")));
+    const first = folders(v).sort((a, b) => Number(OUT.has(b.error ?? "")) - Number(OUT.has(a.error ?? "")));
     palette.pick({
       placeholder: "The account to sign in to again",
       items: first.map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
@@ -114,7 +119,8 @@ commands.add({
 /** Each account found signed out or with no login, a notice that stays until it is back. */
 const told = new Map<string, { dispose(): void }>();
 function tell() {
-  for (const a of view()?.accounts ?? []) {
+  // One notice per login, named by its first folder.
+  for (const a of (view()?.accounts ?? []).map((r) => ({ ...r, slug: r.slugs[0]! }))) {
     const had = told.get(a.slug);
     if (!OUT.has(a.error ?? "")) {
       had?.dispose();
@@ -135,6 +141,9 @@ function tell() {
       }),
     );
   }
+  // A folder no longer first of a login (signed in as another): its notice goes.
+  const firsts = new Set((view()?.accounts ?? []).map((r) => r.slugs[0]));
+  for (const [slug, had] of told) if (!firsts.has(slug)) (had.dispose(), told.delete(slug));
 }
 abyme.effect(() => seen.on("change", tell));
 tell();
@@ -147,7 +156,7 @@ commands.add({
     const v = (await accounts.server.view()) as View;
     palette.pick({
       placeholder: "The account no agent runs on",
-      items: v.accounts.filter((a) => a.slug !== "main").map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
+      items: folders(v).filter((a) => a.slug !== "main").map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
       onPick: (slug) => void ignore(slug),
     });
   },

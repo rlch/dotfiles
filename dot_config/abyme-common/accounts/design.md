@@ -41,15 +41,18 @@ starting point; this says where it changes.
 | | the plugin |
 | --- | --- |
 | Accounts | as clodcurrent, through `@abyme/fs` |
-| Quota | as clodcurrent, kept in an `abyme.value` (60 s fresh, 30 min stale on failure) |
-| Score, tiers, model windows | as clodcurrent; the model is the launch's value of category `model` |
-| Busy | as clodcurrent, per identity: `sessions.json` read only (terminal sessions), plus abyme's live agents by `config_dir` (status not `done`), plus a pick counted from the moment it is made, as clodcurrent registers at launch (operator, 2026-10-10: same logic as clodcurrent) |
+| Quota | as clodcurrent, kept in an `abyme.value`, 60 s fresh. A failed read (unreachable, 429, not 200, not JSON) is logged once per login per distinct error, and a recovery once. A kept read stands for a failed one only while under 30 min old and not near a cap (5h < 90, 7d < 85); else the login is unknown, `stale near its cap (<error>)`, and no pick takes it (2026-10-23: tuteroai read "7d 93%" for 50 picks into its weekly cap) |
+| Push | each turn, Claude's adapter says how full its account is, and abyme keeps it on the agent (`usage_limits` in `agents.all`). On the debounced agents change, each login takes the `five_hour` and `seven_day` entries newer than its read and its last push taken: they overwrite those windows in the kept read. `rejected` marks it spent until that window resets. A push never goes into the shared file, which holds endpoint reads only |
+| Score, model windows | as clodcurrent; the model is the launch's value of category `model` |
+| Tiers | clodcurrent's first two: free and not capped, then not capped. A capped account (a window at 100, or spent) is never picked: with only those left, the launch fails with `every account is capped; the first back is <slug> at <ISO>`. A pinned account stays pinned. hsone, capped by its week on 2026-10-23, is not picked before 2026-10-25T11:00Z, whatever its 5h says |
+| Busy | per identity: `sessions.json` read only (terminal sessions), plus abyme's agents whose `agents.all` record is `busy` (the agents plugin's one rule), by `config_dir`, plus a pick counted from the moment it is made, as clodcurrent registers at launch |
+| Logins | a folder's login (`oauthAccount.accountUuid`, else the email) is read from its `.claude.json` at every look, never kept. A folder signed in again as another login (tuteroai as tutero.ai@gmail.com, 2026-10-23) leaves its old row and joins, or makes, the new one's at once; its quota, spent mark and busy follow the new uuid, and the old login's stay with the old (`test.ts` pins it) |
 | Sync | as clodcurrent: the newest copy of each conversation touched in 14 days into every account folder, mtime kept; in the background on each launch, and finished before a resume starts (operator, 2026-10-10) |
 | Trust | as clodcurrent, written only at the version read (`ifVersion`) |
 | Renewal | only an idle, non-main account whose token has expired; written through `security -i` on stdin (operator, 2026-10-10: renew) |
 | Probe | picks as for a launch (the harness opens a session to say its choices); no trust write |
 | Signed out | an expired access token whose refresh token is past its end or was refused (400, 401) reads "signed out" and is never picked: Claude Code fails such an agent at its first message (2026-10-19) |
-| Limit hit | a launch with `limited` (abyme: the agent's turn hit a usage limit under that folder) marks that account spent until the window its last read says is fullest resets, else an hour, whatever a quota read says meanwhile; the pick then moves the agent, and abyme sends the prompt again there. A pinned agent stays, and abyme shows the limit (2026-10-20) |
+| Limit hit | a launch with `limited` (abyme: the agent's turn hit a usage limit under that folder) marks that account spent until the window that caps it resets (`binding`: the one its last read has at 100, the later when both; else the one the message names, "weekly"/"7-day" or "5-hour"/"session"), else an hour, whatever a quota read says meanwhile; the pick then moves the agent, and abyme sends the prompt again there. A pinned agent stays, and abyme shows the limit (2026-10-20) |
 | Login | "Sign in to Claude account…", or a signed-out notice's Sign in, runs `clodcurrent renew --login <slug>` in a terminal (`accounts.login`); its end reads every account again |
 | Ignore | "Ignore Claude account…", or a signed-out notice's, writes clodcurrent's `.clodcurrent-disabled` (`clodcurrent disable`), so `cl` skips it too; "Use Claude account again…" removes it |
 | Left out | `history.jsonl`, shared-config symlinks, `add` |
@@ -68,8 +71,13 @@ config file instead, live since f66d5564.
 
 ## What the operator sees
 
-- **Status segment** (right): how many accounts have quota left ("4/8 accounts"), each account's
-  windows in its tooltip (operator, 2026-10-10: one item, not one per account).
+- **Status segment** (right): how many logins have quota left, each login's windows in its tooltip,
+  one row per login naming every folder of it (operator, 2026-10-10: one item, not one per
+  account). "Back in" is the row's `back`, the reset of the window that caps it.
+- **`abyme call accounts view`**: `{ accounts: AccountSeen[] }` (`pick.ts`), one per login:
+  `slugs`, `five`/`seven` in percent (null: unknown, never 0), their resets, per-model `windows`,
+  `capped`, `binding` (`five` or `seven`), `back`, `read` (when the numbers were read or pushed),
+  `error`, `agents` (busy on it). The status bar and `resource-budgets-build` read it.
 - **Which account an agent is on**: its `config_dir` is kept on the agent, but nothing a plugin can
   add shows on an agent's row or chat header. A gap; meanwhile `abyme call accounts agents`.
 - **A pin**: the agent menu's "Run on account…" sets the account for that agent's next resume (by its
@@ -91,7 +99,8 @@ config file instead, live since f66d5564.
   segment, "Run on account…"), `options.ts`. `test.ts`, in the source only, is clodcurrent's
   selection and scoring tests against `pick.ts`: `node dot_config/abyme/accounts/test.ts`.
 - The service: `abyme call accounts pick [model=…]` (what a launch would get, counting nothing),
-  `agents`, `pin session=… slug=…` (`slug:=null` takes it off), `pins`, `sync`, `view`.
+  `agents` (every agent not closed), `pin agent=… slug=…` (`slug:=null` takes it off), `pins`,
+  `sync`, `view`.
 - "Run on account…" shows on an agent whose `kind` is `claude` or unsaid. Pins are by agent id.
 - Checked on a scratch abymed with a fake home, keychain and API: picks in order b, a, main, then b
   in use; a Fable launch skips the account whose Fable week is spent; codex untouched; trust written;

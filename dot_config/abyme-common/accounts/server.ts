@@ -10,7 +10,7 @@ import terminal from "@abyme/terminal";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import options from "./options";
-import { best, capped, errorWins, expirePast, family, parse, parseModels, type ModelWindow, type Row, type Usage } from "./pick";
+import { best, binding, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -27,26 +27,23 @@ function processes() {
 }
 const USER = abyme.env.USER ?? "user";
 const FRESH_MS = 60_000;
-const STALE_OK_MS = 30 * 60_000;
 const PICKED_MS = 60_000;
 
 type Account = { slug: string; dir: string; main: boolean; key: string; service: string };
 
 // ---- accounts: ~/.claude (main) and every ~/.claude-<slug> with an identity ----
 
-async function identity(file: string): Promise<{ email: string; uuid?: string } | null> {
-  try {
-    const a = (JSON.parse((await files().read(file)) ?? "{}") as { oauthAccount?: { emailAddress?: string; accountUuid?: string } }).oauthAccount;
-    return a?.emailAddress ? { email: a.emailAddress, uuid: a.accountUuid } : null;
-  } catch {
-    return null;
-  }
+/** A folder's login, read from its `.claude.json` at every look and never kept: a folder signed in
+ * again as another login (tuteroai as tutero.ai@gmail.com, 2026-10-23) moves to that login's row,
+ * quota, spent mark and busy at once. */
+async function identity(file: string) {
+  return loginOf((await files().read(file).catch(() => null)) ?? null);
 }
 
 async function discover(): Promise<Account[]> {
   const out: Account[] = [];
   const main = (await files().stat(`${HOME}/.claude`))?.kind === "dir" ? await identity(`${HOME}/.claude.json`) : null;
-  if (main) out.push({ slug: "main", dir: `${HOME}/.claude`, main: true, key: main.uuid ?? `email:${main.email}`, service: "Claude Code-credentials" });
+  if (main) out.push({ slug: "main", dir: `${HOME}/.claude`, main: true, key: main.key, service: "Claude Code-credentials" });
   const rest: Account[] = [];
   for (const f of (await files().list(HOME)) ?? []) {
     if (f.kind !== "dir" || !f.name.startsWith(".claude-")) continue;
@@ -55,7 +52,7 @@ async function discover(): Promise<Account[]> {
     const id = await identity(`${dir}/.claude.json`);
     if (!id) continue;
     const service = `Claude Code-credentials-${abyme.crypto.hash("sha256", dir).slice(0, 8)}`;
-    rest.push({ slug: f.name.slice(8), dir, main: false, key: id.uuid ?? `email:${id.email}`, service });
+    rest.push({ slug: f.name.slice(8), dir, main: false, key: id.key, service });
   }
   rest.sort((a, b) => a.slug.localeCompare(b.slug));
   return [...out, ...rest];
@@ -156,7 +153,7 @@ async function token(a: Account, busy: boolean): Promise<string | null> {
 
 // ---- quota: one fetch per identity, 60 s fresh, a 30-minute-old answer when the API fails ----
 
-type Quota = { at: number; usage: Usage; windows: ModelWindow[] } | { at: number; error: string };
+type Quota = Read;
 const quota = new Map<string, { at: number; data: Record<string, unknown> }>();
 
 /** The last answer of each identity, shared by every profile's abymed on this Mac (coding,
@@ -210,23 +207,40 @@ async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
   if (had && Date.now() - had.at < FRESH_MS) return answer(had.at, had.data);
   const t = await token(a, busy);
   if (!t) return { at: Date.now(), error: "no credentials" };
-  const fallback = (error: string): Quota => (had && Date.now() - had.at < STALE_OK_MS ? answer(had.at, had.data) : { at: Date.now(), error });
+  // A failed read: the kept one stands for it only while it is young and not near a cap.
+  const fallback = (error: string): Quota => {
+    const kept = had ? answer(had.at, had.data) : null;
+    const age = had ? Date.now() - had.at : Infinity;
+    failedRead(a, error, age);
+    return kept && "usage" in kept && staleOk(kept.usage, age) ? kept : { at: Date.now(), error: kept ? `stale near its cap (${error})` : error };
+  };
   let r: { status: number; body: string };
   try {
     r = await abyme.net.fetch(o.usageUrl, { headers: { authorization: `Bearer ${t}`, "anthropic-beta": "oauth-2025-04-20" }, timeoutMs: 5_000 });
   } catch {
     return fallback("unreachable");
   }
-  if (r.status === 401) return { at: Date.now(), error: "unauthorized" };
+  if (r.status === 401) return (failedRead(a, "unauthorized", Infinity), { at: Date.now(), error: "unauthorized" });
   if (r.status !== 200) return fallback(r.status === 429 ? "usage API rate-limited (HTTP 429)" : `HTTP ${r.status}`);
+  let data: Record<string, unknown>;
   try {
-    const data = JSON.parse(r.body) as Record<string, unknown>;
-    quota.set(a.key, { at: Date.now(), data });
-    await writeShared(a.key, { at: Date.now(), data });
-    return answer(Date.now(), data);
+    data = JSON.parse(r.body) as Record<string, unknown>;
   } catch {
     return fallback("an answer that is not JSON");
   }
+  if (failed.delete(a.key)) abyme.log.info(`${a.slug}: usage read again`);
+  quota.set(a.key, { at: Date.now(), data });
+  await writeShared(a.key, { at: Date.now(), data });
+  return answer(Date.now(), data);
+}
+
+/** The last failed read of each login, by identity, to log each distinct one once. */
+const failed = new Map<string, string>();
+function failedRead(a: Account, error: string, age: number) {
+  if (failed.get(a.key) === error) return;
+  failed.set(a.key, error);
+  const kept = Number.isFinite(age) ? `kept read ${Math.round(age / 60_000)} min old` : "no read kept";
+  abyme.log.warn(`${a.slug}: usage read failed (${error}); ${kept}`);
 }
 
 /** Each account's quota: one fetch per identity, each folder's token tried until one answers. */
@@ -269,19 +283,25 @@ async function terminalSlugs(): Promise<string[]> {
   return list.filter((s) => alive.has(s.pid)).map((s) => s.slug);
 }
 
-/** Live abyme agents per account folder. */
-function agentsByDir(): Map<string, { id: string; name: string }[]> {
+/** abyme's agents as `agents.all` joins them: what each is on and what its harness last said of
+ * its account's usage. */
+type Joined = { id: string; name: string; busy: boolean; closed: unknown; config_dir: string | null; usage_limits?: Pushed[] | null };
+const joined = async (): Promise<Joined[]> => Object.values((await agents.all()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
+
+/** Busy abyme agents per account folder: busy as agents says it, the one rule; with `open`, every
+ * agent not closed. */
+async function agentsByDir(open = false): Promise<Map<string, { id: string; name: string }[]>> {
   const out = new Map<string, { id: string; name: string }[]>();
-  for (const x of agents.items.items()) {
-    if (!x.config_dir || x.status === "done") continue;
-    out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: `${x.plugin}:${x.id}`, name: x.name ?? x.id }]);
+  for (const x of await joined()) {
+    if (!x.config_dir || !(open ? !x.closed : x.busy)) continue;
+    out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: x.id, name: x.name ?? x.id }]);
   }
   return out;
 }
 
 async function busyKeys(all: Account[]): Promise<Set<string>> {
   const slugs = new Set(await terminalSlugs());
-  const dirs = agentsByDir();
+  const dirs = await agentsByDir();
   picked = picked.filter((p) => Date.now() - p.at < PICKED_MS);
   const out = new Set(picked.map((p) => p.key));
   for (const a of all) if (slugs.has(a.slug) || dirs.has(a.dir)) out.add(a.key);
@@ -292,72 +312,46 @@ async function busyKeys(all: Account[]): Promise<Set<string>> {
 
 /** Accounts a turn hit a usage limit on, by identity, and until when: out of every pick until
  * then, whatever a quota read says, as the read can lag the limit. */
-const spent = new Map<string, number>();
-/** How long an account is spent when its last read gives no reset still ahead. */
+const spent = new Map<string, Spent>();
+/** How long an account is spent when nothing gives a reset still ahead. */
 const SPENT_MS = 60 * 60_000;
-function isSpent(key: string): boolean {
-  const until = spent.get(key);
-  if (until === undefined) return false;
-  if (Date.now() < until) return true;
+/** Until when an account is spent (ISO), or null when it is not. */
+function spentUntil(key: string): string | null {
+  const mark = spent.get(key);
+  if (mark === undefined) return null;
+  if (Date.now() < mark.until) return new Date(mark.until).toISOString();
   spent.delete(key);
-  return false;
+  return null;
 }
-/** The account of config folder `dir` is spent until the window its last read says is fullest
- * resets, else for SPENT_MS. */
-async function markSpent(dir: string, why: string) {
+/** The account of config folder `dir` is spent until the window that caps it resets: the one `said`
+ * (a harness's push), else the one its last read has at 100, else the one `why` names with the reset
+ * its last read gives; else for SPENT_MS. */
+async function markSpent(dir: string, why: string, said?: { window: "five" | "seven"; resets: string | null }) {
   const a = (await discover()).find((x) => x.dir === dir);
   if (!a) return;
   const q = last.get(a.key);
   const u = q && "usage" in q ? q.usage : null;
-  const reset = u ? Date.parse((u.seven >= 100 ? u.sevenResets : u.fiveResets) ?? "") : NaN;
+  const named = windowSaid(why);
+  const bound = said ?? (u && binding(u)) ?? (named && { window: named, resets: u ? (named === "seven" ? u.sevenResets : u.fiveResets) : null });
+  const reset = Date.parse(bound?.resets ?? "");
   const until = Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + SPENT_MS;
-  spent.set(a.key, until);
-  abyme.log.warn(`${a.slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}`);
+  const was = spent.get(a.key);
+  if (was && was.until >= until) return;
+  spent.set(a.key, { until, window: bound ? bound.window : null });
+  abyme.log.warn(`${a.slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
 }
 
 // ---- what pages see: no token, no email, no uuid ----
 
-type Seen = {
-  slug: string;
-  five: number | null;
-  seven: number | null;
-  fiveResets: string | null;
-  sevenResets: string | null;
-  windows: { name: string; utilization: number | null; resetsAt: string | null }[];
-  capped: boolean;
-  error: string | null;
-  agents: number;
-};
-/** Each account's quota and how many agents run on it. Who runs where is `agents()`. */
-const view = abyme.value<{ accounts: Seen[] }>({ accounts: [] });
-
-/** A reset time to the minute: abymeds sharing a read answer it a second apart. */
-const minute = (t: string | null): string | null => {
-  const at = t ? Date.parse(t) : NaN;
-  return Number.isNaN(at) ? t : new Date(Math.round(at / 60_000) * 60_000).toISOString();
-};
+/** Each login's quota and how many agents run on it. Who runs where is `agents()`. */
+const view = abyme.value<{ accounts: AccountSeen[] }>({ accounts: [] });
 
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
-function show(all: Account[], q: Map<string, Quota>) {
-  const dirs = agentsByDir();
-  const next = {
-    accounts: all.map((a) => {
-      const x = q.get(a.key);
-      const u = x && "usage" in x ? x : null;
-      return {
-        slug: a.slug,
-        five: u ? u.usage.five : null,
-        seven: u ? u.usage.seven : null,
-        fiveResets: minute(u?.usage.fiveResets ?? null),
-        sevenResets: minute(u?.usage.sevenResets ?? null),
-        windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: minute(w.resetsAt) })),
-        capped: isSpent(a.key) || (u ? capped(u.usage) : false),
-        error: x && "error" in x ? x.error : null,
-        agents: dirs.get(a.dir)?.length ?? 0,
-      };
-    }),
-  };
+async function show(all: Account[], q: Map<string, Quota>) {
+  const dirs = await agentsByDir();
+  const counts = new Map([...dirs].map(([dir, xs]) => [dir, xs.length]));
+  const next = { accounts: rowsSeen(all, q, spent, counts, Date.now()) };
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;
@@ -366,7 +360,7 @@ function show(all: Account[], q: Map<string, Quota>) {
 
 async function refresh() {
   const all = await discover();
-  show(all, await quotas(all, await busyKeys(all)));
+  await show(all, await quotas(all, await busyKeys(all)));
 }
 
 // ---- picking ----
@@ -392,7 +386,7 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean } = 
     const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
     const busy = await busyKeys(all);
     const q = await quotas(all, busy);
-    show(all, q);
+    await show(all, q);
     let account: Account | undefined;
     let why: string;
     if (pinned && (account = all.find((a) => a.slug === pinned))) why = "pinned";
@@ -401,13 +395,13 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean } = 
       const f = family(model);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
-        return { slug: a.slug, key: a.key, usage: x && "usage" in x && !isSpent(a.key) ? x.usage : null, windows: x && "usage" in x ? x.windows : [], busy: busy.has(a.key) };
+        return { slug: a.slug, key: a.key, usage: x && "usage" in x ? x.usage : null, windows: x && "usage" in x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key) };
       });
       const out = best(rows, f, Date.now());
       if (out.pick === null) {
         const errors = all.map((a) => {
           const x = q.get(a.key);
-          return `${a.slug}: ${isSpent(a.key) ? "hit its limit" : x && "error" in x ? x.error : "spent"}`;
+          return `${a.slug}: ${spentUntil(a.key) ? "hit its limit" : x && "error" in x ? x.error : "spent"}`;
         });
         throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why}; ${errors.join(", ")})`);
       }
@@ -547,7 +541,34 @@ async function showCached() {
     const read = last.get(a.key);
     q.set(a.key, had && !errorWins(had, read) ? answer(had.at, had.data) : (read ?? { at: 0, error: "not read yet" }));
   }
-  show(all, q);
+  await show(all, q);
+}
+
+/** The last push taken of each login (ms), by identity: one heard again changes nothing. */
+const taken = new Map<string, number>();
+/** What agents' harnesses said of their accounts (`usage_limits`), into each login's kept read:
+ * newer than the read, it wins; `rejected` marks the login spent until that window resets. Never
+ * into the shared file, which holds endpoint reads only. */
+async function takeUsage() {
+  const all = await discover();
+  const byDir = new Map(all.map((a) => [a.dir, a]));
+  const said = new Map<string, { a: Account; pushes: Pushed[] }>();
+  for (const x of await joined()) {
+    const a = x.config_dir ? byDir.get(x.config_dir) : undefined;
+    if (!a || !x.usage_limits?.length) continue;
+    const s = said.get(a.key) ?? { a, pushes: [] };
+    s.pushes.push(...x.usage_limits);
+    said.set(a.key, s);
+  }
+  for (const k of taken.keys()) if (!all.some((a) => a.key === k)) taken.delete(k);
+  for (const [key, { a, pushes }] of said) {
+    const next = takePushes(quota.get(key), pushes, taken.get(key) ?? 0);
+    if (!next) continue;
+    taken.set(key, next.at);
+    quota.set(key, { at: next.at, data: next.data });
+    last.set(key, answer(next.at, next.data));
+    for (const r of next.rejected) await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
+  }
 }
 // An agent's list changes many times a second while agents work, and each show lists the home
 // folder and reads every account's identity: once a moment at most.
@@ -556,7 +577,9 @@ if (fs && process)
   agents.items.on("change", () => {
     showing ??= setTimeout(() => {
       showing = null;
-      void showCached();
+      void takeUsage()
+        .then(showCached)
+        .catch((e) => abyme.log.warn("usage push:", (e as Error).message));
     }, 2_000);
   });
 
@@ -566,12 +589,13 @@ export default {
     const { account, why } = await pick(a.model ?? null);
     return { slug: account.slug, why };
   },
-  /** Each account's quota and how many agents run on it, for the status bar. */
+  /** `abyme call accounts view`: one row per login, its windows, cap and busy agents (design.md),
+   * for the status bar and any reader of each account's usage. */
   view: () => view,
-  /** `abyme call accounts agents`: each live abyme agent and the account it runs on. */
+  /** `abyme call accounts agents`: each abyme agent not closed and the account it runs on. */
   async agents() {
     const all = await discover();
-    const dirs = agentsByDir();
+    const dirs = await agentsByDir(true);
     return all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, name: x.name, account: a.slug, pinned: pins()[x.id] ?? null })));
   },
   /** The account an agent's resumes run on; null picks by quota again. */
