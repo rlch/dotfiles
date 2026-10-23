@@ -568,7 +568,17 @@ async function takeUsage() {
       quota.set(key, { at: next.at, data: next.data });
       last.set(key, answer(next.at, next.data));
     }
-    for (const r of next.rejected) await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
+    // A push can come from a harness that ran on another login (an agent moved after a limit), so
+    // it is believed only when this login's own endpoint read does not show that window clearly open.
+    const own = shared[key] ? answer(shared[key].at, shared[key].data) : null;
+    const read = own && "usage" in own ? own.usage : null;
+    for (const r of next.rejected) {
+      if (read && (r.window === "seven" ? read.seven : read.five) < 95) {
+        abyme.log.warn(`${a.slug}: ignored a harness's ${r.window === "seven" ? "weekly" : "5-hour"} limit: its own read shows ${r.window === "seven" ? read.seven : read.five}%`);
+        continue;
+      }
+      await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
+    }
   }
 }
 // An agent's list changes many times a second while agents work, and each show lists the home
