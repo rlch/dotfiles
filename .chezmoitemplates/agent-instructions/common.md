@@ -148,7 +148,9 @@ abyme is not running.
     whom and whether each was answered.
   - `abyme call agents remove ids:='["<id>"]'` closes an agent and the worktree its
     start made, once it is idle and its branch landed. Never remove your own
-    while the user has yet to read your report.
+    while the user has yet to read your report. `abyme call agents close
+    ids:='["<id>"]'` closes an agent and keeps its folder: for one that shares a
+    worktree others still work in.
 - Nothing here opens anything on the user's screen. Report an agent or a process
   by name and let them look; never drive their screen with `remote_run` unless
   they asked for it in this request.
