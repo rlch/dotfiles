@@ -11,7 +11,6 @@ function docsdev --description "Run this repo's Fumadocs docs-site dev server (.
     end
     if test -z "$dir"
         echo "docsdev: no docs/ Fumadocs app here (looked in ./docs and the git root)." >&2
-        echo "         scaffold one with the docs-scaffold skill." >&2
         return 1
     end
 
