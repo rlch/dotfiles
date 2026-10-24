@@ -28,7 +28,9 @@ npm_root=$(npm root -g)
 #   the forked artifacts silently rot against a newer package.
 # @inbox-zero/cli — self-hosted Inbox Zero manager; wraps setup/start/stop/logs
 #   for the Dockerized AI email assistant (requires Docker + Node 24+).
-need=(@fission-ai/openspec@1.4.1 @inbox-zero/cli)
+# openspec is installed by Homebrew (1.13.x, installed on request), which owns /opt/homebrew/bin/openspec;
+# the npm pin to 1.4.1 collided with it (EEXIST) and stopped every apply (2026-10-24).
+need=(@inbox-zero/cli)
 
 for spec in "${need[@]}"; do
   # Split into name + version. The version is the segment after the LAST '@', but
