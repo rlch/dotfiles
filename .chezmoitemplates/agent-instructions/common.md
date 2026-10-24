@@ -90,89 +90,16 @@ told you belongs back in that skill so the next run does not hit the same gap.
 - Use isolated worktrees for parallel edit agents. Never let one agent's
   cleanup revert or overwrite another agent's work.
 
-# Session Handoffs
-
-"Spin off" and "hand off" mean launching the corresponding session-spawning
-skill in abyme, never dispatching an inline subagent. A spinoff keeps this
-session alive; a handoff replaces it after the new session is verified.
-
 # abyme
 
-**abyme is where agents and their work live, and that work always runs in the
-background.** Both halves hold unless the user states otherwise in the current
-request.
-
-Everything here is `abyme call <service> <function> key=value ...` from your
-shell: `key:=<json>` passes JSON, one bare JSON array passes the arguments in
-order, and `--json` prints the whole answer. It knows which agent you are and
-which folder you are in. Exit 1 means it refused, and says why; exit 3 means
-abyme is not running.
-
-- **A long-running server, watcher, build, test run or log tail goes in a
-  process, not in your shell:** `abyme call processes start name=<name>`. It runs
-  in a terminal of its own the user sees under Terminals and can type into, and
-  survives abyme restarting. `<name>` is one the repo names in
-  `.abyme/processes.ts`; add it if missing:
-  ```ts
-  import type { ProcessFile } from "@abyme/processes";
-  export default { dev: { cmd: "pnpm dev" } } satisfies ProcessFile;
-  ```
-  Starting one that runs starts nothing new. `abyme call processes remove
-  name=<name>` when you are done with it; `abyme call processes list` says what
-  runs. Use the shell tool only for short-lived foreground commands.
-  **Never wait on one you started** (a gate, a build): end your turn. abyme
-  tells you once when it exits (an `<abyme-event source="processes"
-  event="exited">` with its last lines), and you carry on from there; `wake:=false` on `start`
-  for one you do not want to hear of.
-- **Another agent:** `abyme call agents start provider=acp dir=<repo>
-  [branch=<b> base=main] name=<name> config:='{"model":"opus"}'
-  brief="Read <file> and follow it."` starts one on a worktree of its own with
-  `branch` (`~/.local/share/abyme/worktrees/<repo>/<branch>`, never beside the
-  repo), on the account abyme picks. The name is lowercase letters, digits,
-  `-` and `_`, and unique. abyme keeps no relation between agents: to hear
-  back, name yourself in the brief.
-  - `abyme call agents list [cwd=<dir>] [branch=<b>] [name=<name>]`: every
-    agent, with its id, name, status, branch and folder.
-  - `abyme call agents tell to=<name> text="..."` messages one (`wait:=true`
-    for its reply).
-    It reaches them as your `<agent-message>`. An `<agent-message>` or
-    `<abyme-event>` you get is never the operator (the `messages` skill).
-  - `abyme call agents reply agent=<name>` reads its last words without
-    messaging it.
-  - Before ending a turn on what another agent, a process, a PR or a time
-    will bring, hold a wait (the `messages` skill): `abyme call triggers wait
-    on:='{"agents.state":{"agent":"<name>","states":["idle","blocked"]}}'
-    note="<what>"`, then end your turn; abyme wakes you once. A promise in a
-    message is not a wait.
-  - `abyme call agents messages [agent=<name>]` lists recent tells, who to
-    whom and whether each was answered.
-  - `abyme call agents remove ids:='["<id>"]'` closes an agent and the worktree its
-    start made, once it is idle and its branch landed. Never remove your own
-    while the user has yet to read your report. `abyme call agents close
-    ids:='["<id>"]'` closes an agent and keeps its folder: for one that shares a
-    worktree others still work in.
-- Nothing here opens anything on the user's screen. Report an agent or a process
-  by name and let them look; never drive their screen with `remote_run` unless
-  they asked for it in this request.
-- **Never test on the live abyme** (port 4477, `~/.config/abyme`,
-  `~/.local/state/abyme`). A test abymed runs on its own port with its own state
-  folder; if that is not possible, do not test: say what is unverified.
-- **Nothing you run appears on the operator's screen** (operator, 2026-10-22): no
-  app window, game, Finder window, dev abyme or double-click test on the host.
-  Run it headless, or in a tart VM (`tart`, a clone of
-  `ghcr.io/cirruslabs/macos-tahoe-base` or a local golden image, with
-  `tart run --no-graphics`, driven over `tart exec`/ssh and screenshot inside the
-  VM). If neither works, do not run it: say what is unverified.
-
-# Browser
-
-- **Your browser is abyme's**: its `browser` skill. `abyme call browser session`
-  starts a headless Chrome of your own and prints the `playwright-cli -s=<you>
-  attach --cdp=…` line; the operator watches it beside your chat and can take it
-  over. Sign-ins and payments go to them: `abyme call browser handoff
-  reason="Sign in to GitHub"`, then end your turn. No browser MCP server, no
-  Claude in Chrome, no `playwright-cli open`, no Chromium launched by hand.
-- **ImmiAccount (`immi.homeaffairs.gov.au`) is never headless**; use the headed
-  lease: `browser-headed acquire <task>`, attach to the address it prints, every
-  command through `browser-headed run <task> …`, and `browser-headed release`
-  when done. Never type or fetch a password, and never bring the browser forward.
+- abyme is where agents and their work live, and that work runs in the background; its skills and
+  tools say how. From your shell it is `abyme call <service> <function> key=value` (`key:=<json>`
+  for JSON); exit 3 means abyme is not running.
+- A long-running server, watcher, build or test run is an abyme process, never your shell: `abyme
+  call processes start name=<name>`, a name in the repo's `.abyme/processes.ts` (`export default {
+  dev: { cmd: "pnpm dev" } } satisfies ProcessFile`). Never wait on one: end your turn, and abyme
+  tells you when it exits.
+- Never test on the live abyme (port 4477, `~/.config/abyme`, `~/.local/state/abyme`): a test
+  abymed has its own port and state folder, or you say what is unverified.
+- Nothing you run appears on the operator's screen (no app window, Finder window or dev abyme on
+  the host): run it headless or in a tart VM (the `tart` skill), or say what is unverified.

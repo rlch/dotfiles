@@ -4,68 +4,11 @@
 
 # Claude Code
 
-- The Artifact tool is denied in settings (several Claude accounts are in play,
-  so its URLs are dead ends). "An artifact", or anything better read as a page
-  than in the terminal (a report, an explainer, a diagram, a review), is an abyme
-  document (the `abyme:documents` skill). One to be shared goes out with abyme's
-  "Publish document to the web". Never hand-write a standalone HTML file instead.
-
-## Worktrees
-
-- Claude Code worktree isolation (`EnterWorktree`, `--worktree`, and Agent
-  `isolation: "worktree"`) must branch from the parent session's `HEAD`.
-  `worktree.baseRef: "head"` is configured globally, but verify the worktree
-  `HEAD` matches the parent before making changes. If it does not, fetch the
-  parent checkout's `HEAD` and rebase onto `FETCH_HEAD`; stop on conflicts.
-- In an isolated worktree, resolve its top level first and use absolute paths
-  under that worktree for every Read/Edit/Write operation. Claude Code can
-  otherwise reroute relative paths to the parent checkout through the shared git
-  directory. Stop if isolation silently produced the parent path.
-- Before finishing isolated work, prove the parent checkout has no leaked edits
-  or commits and that the work is present on the worktree branch. The parent
-  session must verify this again before landing the branch.
-- Prefer sequential edits in the main tree for small or tightly coupled work.
-  Split parallel edit agents by disjoint file ownership.
-
-## OpenSpec
-
-- The main workspace is for chatting, speccing, brainstorming, and non-spec
-  implementation. A sizeable OpenSpec change is implemented by a fresh abyme
-  agent on a worktree of its own.
-- For a sizeable natural-language request to implement or apply an OpenSpec
-  change, use `rjm:opsx-worktree` by default. A literal `/opsx:apply`, an
-  explicit in-place request, abyme not running, or a non-git directory uses the
-  in-place flow instead.
-- The worktree implementer lands its own branch with `abyme call land add` (the
-  `land` skill) when it is clean and green (operator, 2026-10-07). A repo's own `CLAUDE.md` wins where it says
-  who lands.
-
-## Model selection
-
-Chosen by what the work is (operator, 2026-09-29). The rule applies wherever a model is
-picked: `cl --fable | --opus | --sonnet` when launching a session, `model:` on
-the Agent tool, and per-phase `opts.model` in a Workflow.
-
-- **Opus: the default for most work.** Implementation, fixes, reviews,
-  investigations, planning and speccing, research synthesis, orchestration.
-- **Sonnet (5.5; `--sonnet` / `model: sonnet` track the latest):** the other
-  everyday tier. Named one-file fixes, retrieval, scoping, adversarial
-  verification, and a workflow's high-volume fan-out phases.
-- **Fable: only the extremely hard.** Brainstorming a genuinely complex problem,
-  or a design no ruling shapes where Opus has already fallen short. Never a
-  default, never a fan-out, never a routine plan or review.
-- **Haiku: never,** for anything, until Haiku 5.5 ships (hook-enforced for subagents).
-- **A fix is picked by complexity** (operator, 2026-09-07): **Sonnet** for a
-  one-file or one-line change whose brief names the files and quotes the rule;
-  **Opus** for everything else. The dispatcher says which in the brief's first
-  line.
-- **The tier is not the effort.** `effortLevel: xhigh` is inherited by every
-  subagent. The `fix` agent (`subagent_type: fix`, `model:` overriding its
-  Sonnet default) sets `effort: high`: one loop, one verification line, never
-  `pnpm check`.
-- A Workflow chooses per phase, never one model for the whole script. The
-  bundled `deep-research` workflow is read-only; reproduce this tiering in a
-  custom script when needed.
-- When a skill launches or dispatches, it names which tier it chose and why in
-  one line; a launcher that cannot tell (a change whose Impact is unread) reads
-  first rather than defaulting.
+- The Artifact tool is denied (its URLs are dead ends across accounts): a page to read is an abyme
+  document (the `abyme:documents` skill), shared with abyme's "Publish document to the web", never
+  a hand-written HTML file.
+- Your browser is abyme's (the `abyme:browser` skill): never Claude in Chrome, a browser MCP server
+  or a Chromium of your own.
+- Models: Opus unless a preset or brief names one, Fable only for the extremely hard, Haiku never.
+- In an `isolation: "worktree"` agent, check its `HEAD` is the parent's and use absolute paths
+  under its top level: Claude Code can reroute relative ones to the parent checkout.
