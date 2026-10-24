@@ -105,17 +105,22 @@ async function busyKeys(all: Account[]): Promise<Set<string>> {
 // ---- spent: an account a turn hit its usage limit on ----
 
 /** Accounts a turn hit a usage limit on, by login, and until when: out of every pick until then,
- * whatever a push says meanwhile. */
-const spent = new Map<string, Spent>();
+ * whatever a push says meanwhile. Kept in the store, so a restart puts no spent account back in the
+ * rotation; one past its end is dropped. */
+const spentMarks = () => (abyme.store.get("spent") ?? {}) as Record<string, Spent>;
 /** How long an account is spent when nothing gives a reset still ahead. */
 const SPENT_MS = 60 * 60_000;
+/** The marks standing, by login: those past their end leave the store. */
+function spentNow(): Map<string, Spent> {
+  const all = Object.entries(spentMarks());
+  const standing = all.filter(([, m]) => Date.now() < m.until);
+  if (standing.length !== all.length) abyme.store.set("spent", Object.fromEntries(standing));
+  return new Map(standing);
+}
 /** Until when an account is spent (ISO), or null when it is not. */
 function spentUntil(key: string): string | null {
-  const mark = spent.get(key);
-  if (mark === undefined) return null;
-  if (Date.now() < mark.until) return new Date(mark.until).toISOString();
-  spent.delete(key);
-  return null;
+  const mark = spentNow().get(key);
+  return mark ? new Date(mark.until).toISOString() : null;
 }
 /** Account `slug` is spent until the window that caps it resets: the one `said` (a harness's push),
  * else the one its read has at 100, else the one `why` names with the reset its read gives; else
@@ -128,9 +133,9 @@ function markSpent(slug: string, why: string, said?: { window: "five" | "seven";
   const bound = said ?? (u && binding(u)) ?? (named && { window: named, resets: u ? (named === "seven" ? u.sevenResets : u.fiveResets) : null });
   const reset = Date.parse(bound?.resets ?? "");
   const until = Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + SPENT_MS;
-  const was = spent.get(slug);
+  const was = spentNow().get(slug);
   if (was && was.until >= until) return;
-  spent.set(slug, { until, window: bound ? bound.window : null });
+  abyme.store.set("spent", { ...spentMarks(), [slug]: { until, window: bound ? bound.window : null } });
   abyme.log.warn(`${slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
 }
 
@@ -156,7 +161,7 @@ async function show() {
   const all = await discover();
   const on = await agentsByAccount();
   const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
-  const next = { accounts: rowsSeen(all, readsNow(all), counts), tokens: await tokensEnding() };
+  const next = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding() };
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;

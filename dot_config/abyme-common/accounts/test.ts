@@ -199,8 +199,8 @@ test("a window whose reset has passed is zeroed", () => {
 // load's accounts: one per login, null kept null, capped on the binding window.
 test("load's accounts", () => {
   const seen = [
-    { slugs: ["hsone", "tuteroai"], five: 0, seven: 100, fiveResets: null, sevenResets: "2026-10-25T11:00:00.000Z", windows: [], capped: true, binding: "seven" as const, back: null, read: null, agents: 0 },
-    { slugs: ["main"], five: null, seven: 74, fiveResets: "2026-10-23T17:30:00.000Z", sevenResets: null, windows: [], capped: false, binding: null, back: null, read: null, agents: 2 },
+    { slugs: ["hsone", "tuteroai"], five: 0, seven: 100, fiveResets: null, sevenResets: "2026-10-25T11:00:00.000Z", windows: [], capped: true, binding: "seven" as const, back: null, spent: null, read: null, agents: 0 },
+    { slugs: ["main"], five: null, seven: 74, fiveResets: "2026-10-23T17:30:00.000Z", sevenResets: null, windows: [], capped: false, binding: null, back: null, spent: null, read: null, agents: 2 },
   ];
   const [h, m] = loadAccounts(seen);
   assert.equal(h!.id, "hsone,tuteroai");
@@ -209,6 +209,20 @@ test("load's accounts", () => {
   assert.equal(h!.windows[1]!.resets, Date.parse("2026-10-25T11:00:00.000Z"));
   assert.equal(m!.windows[0]!.used, null);
   assert.equal(m!.windows[1]!.resets, null);
+});
+
+// A spent mark: the row's `spent`, never its cap; load counts that window capped until the mark ends.
+test("a spent mark is the row's spent, and load's cap until it ends", () => {
+  const until = Date.parse("2026-10-25T11:00:00Z");
+  const reads = new Map<string, Read>([["hsone", { at: NOW, usage: { five: 0, seven: 88, fiveResets: null, sevenResets: "2026-10-29T02:00:00.000Z" }, windows: [] }]]);
+  const [week] = rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map(), new Map([["hsone", { until, window: "seven" as const }]]));
+  assert.deepEqual([week!.capped, week!.spent], [false, { until: "2026-10-25T11:00:00.000Z", window: "seven" }]);
+  const [w] = loadAccounts([week!]);
+  assert.deepEqual(w!.windows.map((x) => [x.name, x.capped, x.resets]), [["5h", false, null], ["week", true, until]]);
+  // A mark naming no window caps the five hours; with none, nothing is capped.
+  const [none] = rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map(), new Map([["hsone", { until, window: null }]]));
+  assert.deepEqual(loadAccounts([none!])[0]!.windows.map((x) => x.capped), [true, false]);
+  assert.deepEqual(loadAccounts(rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map()))[0]!.windows.map((x) => x.capped), [false, false]);
 });
 
 // setup-tokens: read out of setup-token's output, a year long, warned of 30 days before.

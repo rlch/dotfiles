@@ -33,7 +33,7 @@ in a terminal, which stay as they are, on their own account folders.
 | Score, model windows | clodcurrent's (`pick.ts`); the model is the launch's value of category `model` |
 | Tiers | clodcurrent's first two: free and not capped, then not capped. A capped account (a window at 100, or spent) is never picked: with only those left, the launch fails with `every account is capped; the first back is <slug> at <ISO>`. A pinned account stays pinned |
 | Busy | per account: abyme's agents whose `agents.all` record is `busy` (the agents plugin's one rule), by the `account` their launch said, plus a pick counted from the moment it is made |
-| Limit hit | a launch with `limited` (the agent's last turn hit a usage limit) marks the account it ran on spent until the window that caps it resets (`binding`: the one its read has at 100, the later when both; else the one the message names), else an hour; the pick then moves the agent, and abyme sends the prompt again there. A pinned agent stays, and abyme shows the limit |
+| Limit hit | a launch with `limited` (the agent's last turn hit a usage limit) marks the account it ran on spent until the window that caps it resets (`binding`: the one its read has at 100, the later when both; else the one the message names), else an hour; the pick then moves the agent, and abyme sends the prompt again there. A pinned agent stays, and abyme shows the limit. The marks are kept in the store, so a restart puts no spent account back in the rotation (hsone, every agent's pick after the 2026-10-24 restart); one past its end is dropped. load's accounts count a spent account's window capped until the mark ends, so a limited agent waits for an account a pick would give it, not one only its read says has room |
 | Probe | picks as for a launch (the harness opens a session to say its choices) |
 | Ignore | "Ignore Claude account…" takes one off the rotation (kept in the store); "Use Claude account again…" puts it back |
 
@@ -70,8 +70,9 @@ in a terminal, which stay as they are, on their own account folders.
 - **`abyme call accounts view`**: `{ accounts: AccountSeen[], tokens }` (`pick.ts`), one per
   account: `slugs`, `five`/`seven` in percent (null: unknown), their resets, per-model `windows`,
   `capped` (a window its read has at 100, until that window resets; a spent mark keeps an account
-  out of picks but is not shown), `binding` (`five` or `seven`), `back`, `read` (when the numbers
-  were pushed), `agents` (busy on it). The status bar and load's Resources read it (`load.readers`).
+  out of picks and is its `spent`, not a cap), `binding` (`five` or `seven`), `back`, `spent`
+  (`{ until, window }` while a turn's limit keeps it out of picks), `read` (when the numbers were
+  pushed), `agents` (busy on it). The status bar and load's Resources read it (`load.readers`).
 - **Which account an agent is on**: the agent's `account`; `abyme call accounts agents`.
 
 ## Pins and the agent's row

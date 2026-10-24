@@ -224,6 +224,8 @@ export type AccountSeen = {
   capped: boolean;
   binding: Window | null;
   back: string | null;
+  /** Until when a turn's limit keeps it out of picks, and by which window if known; null when none does. */
+  spent: { until: string; window: Window | null } | null;
   read: string | null;
   agents: number;
 };
@@ -247,20 +249,24 @@ export function keychainMade(out: string, field: "cdat" | "mdat" = "cdat"): numb
 
 /** A login's row as load's `Account` (resource-budgets): its id the folders' slugs, its 5-hour and
  * weekly windows a share of 1 (null when unknown, never 0), when each resets, and capped on the
- * window that binds. What load shows in Resources and admits turns by. */
+ * window that binds, or on the one a spent mark names (the five hours when it names none) until the
+ * mark ends: what a pick takes, so a limited agent waits for an account a pick would give it. What
+ * load shows in Resources and admits turns by. */
 export type LoadWindow = { name: "5h" | "week"; used: number | null; tokens: null; resets: number | null; capped: boolean };
 export type LoadAccount = { id: string; label: string; folders: string[]; windows: LoadWindow[]; estimate: false };
 export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
   const at = (t: string | null) => (t === null || Number.isNaN(Date.parse(t)) ? null : Date.parse(t));
   const share = (n: number | null) => (n === null ? null : n / 100);
+  const window = (r: AccountSeen, name: LoadWindow["name"], w: Window, used: number | null, resets: string | null): LoadWindow => {
+    const read = r.capped && r.binding === w;
+    const spent = !!r.spent && (r.spent.window ?? "five") === w;
+    return { name, used: share(used), tokens: null, resets: at(spent ? (read ? later(resets, r.spent!.until) : r.spent!.until) : resets), capped: read || spent };
+  };
   return rows.map((r) => ({
     id: r.slugs.join(","),
     label: r.slugs[0] ?? "?",
     folders: r.slugs,
-    windows: [
-      { name: "5h", used: share(r.five), tokens: null, resets: at(r.fiveResets), capped: r.capped && r.binding === "five" },
-      { name: "week", used: share(r.seven), tokens: null, resets: at(r.sevenResets), capped: r.capped && r.binding === "seven" },
-    ],
+    windows: [window(r, "5h", "five", r.five, r.fiveResets), window(r, "week", "seven", r.seven, r.sevenResets)],
     estimate: false,
   }));
 }
@@ -273,15 +279,16 @@ export const minute = (t: string | null): string | null => {
 
 /** The rows: one per login, in the accounts' order (main first, then by name). `capped` is a window
  * its read has at 100, until that window resets, and nothing else: a spent mark keeps a login out of
- * picks but is not shown as a cap (main, 5h 1%, showed capped by another login's limit,
- * 2026-10-23). `agentsIn` is the busy agents on each login. */
-export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn: Map<string, number>): AccountSeen[] {
+ * picks and is its `spent`, not a cap (main, 5h 1%, showed capped by another login's limit,
+ * 2026-10-23). `agentsIn` is the busy agents on each login, `spent` the marks standing. */
+export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn: Map<string, number>, spent: Map<string, Spent> = new Map()): AccountSeen[] {
   const groups = new Map<string, Account[]>();
   for (const a of accounts) groups.set(a.key, [...(groups.get(a.key) ?? []), a]);
   return [...groups].map(([key, members]) => {
     const x = reads.get(key);
     const u = x ?? null;
     const bound = u ? binding(u.usage) : null;
+    const mark = spent.get(key);
     return {
       slugs: members.map((m) => m.slug),
       five: u ? u.usage.five : null,
@@ -292,6 +299,7 @@ export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn
       capped: !!bound,
       binding: bound?.window ?? null,
       back: minute(bound?.resets ?? null),
+      spent: mark ? { until: minute(new Date(mark.until).toISOString())!, window: mark.window } : null,
       read: u ? new Date(u.at).toISOString() : null,
       agents: agentsIn.get(key) ?? 0,
     };
