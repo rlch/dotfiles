@@ -78,35 +78,38 @@ replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 // Load reads the four check slots abyme's and schools' checks take (scripts/gate-slot, scripts/slots.mjs, 127.0.0.1:46900-46903).
 load.setup({ slots: 4 });
 
-// What each role's agent starts without (a preset's `without`, abyme change preset-loads;
-// operator's ask, 2026-10-25), so a role stops carrying the user config it has no use for: as it
-// was, every role was shown 83 skills, langfuse's 80 tools and figma's and cloudflare's sign-in
-// notices on every call. Only drops: every skill not named stays listed and loadable, a
-// repository's and abyme's always. A plugin's skills go only with the whole plugin, so rjm stays
-// whole, leads' too (spinoff, handoff); `skills` are skills no plugin brings.
-type Without = { plugins?: string[]; servers?: string[]; skills?: string[] };
+// What agents start without (the agents option `without` and each preset's, abyme change
+// preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
+// Only drops: every skill not named stays listed and loadable, a repository's, the user's and
+// abyme's always. figma, commit-commands and skill-creator are off in settings.json for every session.
 const official = (ids: string[]) => ids.map((id) => `${id}@claude-plugins-official`);
-// What no role uses: design, Cloudflare, skill writing, claude.ai's skills bundle, the workspace's
-// canvas, and the language servers of languages no repository here is in.
-const UNUSED = [...official(["figma", "cloudflare", "skill-creator", "clangd-lsp", "gopls-lsp", "lua-lsp", "pyright-lsp", "swift-lsp"]), "anthropic-skills@synced", "workspace@skills-dir"];
+// What no agent uses: Claude Code's own skills nobody runs here, the workspace canvas plugin (its one
+// skill, build-component), and the language servers of languages no repository here is in.
+// anthropic-skills' artifact-emulator and import-memory stay listed: a plugin's skill goes only with
+// the whole plugin, and the rest of anthropic-skills is used.
+agents.setup({
+  without: {
+    plugins: ["workspace@skills-dir", ...official(["clangd-lsp", "gopls-lsp", "lua-lsp", "pyright-lsp", "swift-lsp"])],
+    skills: [
+      "dataviz", "artifact-design", "artifact-diagramming", "artifact-capabilities",
+      "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
+      "run", "loop", "simplify", "security-review", "schedule",
+    ],
+  },
+});
+// By role: cloudflare only for infra, langfuse's server only for schools' eval, and no language
+// servers for a role that reads no code (a lead or a dispatcher too).
+type Without = { plugins?: string[]; servers?: string[] };
+const CLOUDFLARE = official(["cloudflare"]);
 const RUST_LSP = official(["rust-analyzer-lsp"]);
 const TS_LSP = official(["typescript-lsp"]);
-// A lead or a dispatcher writes no code: no language servers, commit commands or langfuse, and
-// none of Claude Code's code skills.
-const LEAD: Without = {
-  plugins: [...UNUSED, ...RUST_LSP, ...TS_LSP, ...official(["commit-commands"])],
-  servers: ["langfuse"],
-  skills: ["claude-api", "code-review", "fewer-permission-prompts", "keybindings-help", "plugin-authoring", "run", "simplify", "update-config"],
-};
-// abyme's and bevy-ts's roles: TypeScript and Rust, no langfuse; one that reads no code, no
-// language servers.
-const CODE: Without = { plugins: UNUSED, servers: ["langfuse"], skills: ["langfuse"] };
-const NO_CODE: Without = { ...CODE, plugins: [...UNUSED, ...RUST_LSP, ...TS_LSP] };
-// schools' roles: TypeScript, and its own langfuse skill always; langfuse's server only for the
-// roles that read traces.
-const TRACES: Without = { plugins: [...UNUSED, ...RUST_LSP] };
-const SCHOOLS: Without = { ...TRACES, servers: ["langfuse"] };
-const SCHOOLS_NO_CODE: Without = { ...SCHOOLS, plugins: [...UNUSED, ...RUST_LSP, ...TS_LSP] };
+const NO_CODE: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP], servers: ["langfuse"] };
+const LEAD = NO_CODE;
+// abyme's and bevy-ts's roles: TypeScript and Rust.
+const CODE: Without = { plugins: CLOUDFLARE, servers: ["langfuse"] };
+// schools' roles: TypeScript; its eval reads langfuse's traces.
+const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse"] };
+const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP] };
 
 // OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
 // native teams (moved there 2026-10-21, openspec teams-and-work 7); delete them once those finish.
@@ -166,17 +169,17 @@ agents.presets.add({
   instructions:
     "You lead schools, in ~/dev/tutero/frontend/app/schools, and you are the one the operator talks with; you write no code. Bring each piece of work up as a rig of its own with abyme call openrig up, named after it: a change (template change, to spec), a Sentry issue or an AI defect (incident, to research), a question or a finding to look into (research, to research). You hear back as openrig events: done with a seat's note, down when a rig goes. When spec's note says its Impact needs the operator's go (CLAUDE.md › How a change is done, 5), ask him before you hand it to build with openrig_give. Report each feature that lands or goes in two lines, what it was for and what is next, and tear down an abandoned one with abyme call openrig down.",
 });
-rigSeat("ts-research", "schools · research", "opus", TRACES,
+rigSeat("ts-research", "schools · research", "opus", SCHOOLS,
   "You find out before anyone builds, writing no code. For a defect, start at the investigate skill and follow it to the turn or the repro (sentry, langfuse, dev-access, qa-rig); for a question, read schools' code, DESIGN.md and research/reports, and the state of the art (the reference clones CLAUDE.md names; Sonnet for a wide fan-out). Say what you found, how sure you are and your evidence, and recommend one option. Hand it to spec when it ends in a change, to build when it is a plain fix, else back to whoever asked.");
 rigSeat("ts-spec", "schools · spec", "opus", SCHOOLS,
   "You write the feature's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Finish with openrig_done, naming in the note what its Impact needs the operator's go for, or nothing.");
-rigSeat("ts-build", "schools · build", "opus", TRACES,
+rigSeat("ts-build", "schools · build", "opus", SCHOOLS,
   "You build the feature in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request), then end your turn and act on land's event. A parent change opens a build seat per child with openrig_seat.");
-rigSeat("ts-eval", "schools · eval", "opus", TRACES,
+rigSeat("ts-eval", "schools · eval", "opus", EVAL,
   "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
 rigSeat("ts-review", "schools · review", "opus", SCHOOLS,
   "You review a schools branch before it lands, as the review skill says. On a feature's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request, work as the skill's section 4 says.");
-rigSeat("ts-walk", "schools · walk", "sonnet", SCHOOLS_NO_CODE,
+rigSeat("ts-walk", "schools · walk", "sonnet", NO_CODE,
   "You walk what a change shows a teacher, as the drive-the-app skill says: a dev account of its own, on the feature's qa-rig stack, or on dev once it is deployed. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so.");
 
 
@@ -194,6 +197,18 @@ agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", ha
 // land's fix agents (land.setup below): one started when a full run finds a repository's base red
 // and nobody else is on it, its brief saying what. Opus, no repository's role (operator, 2026-10-23).
 agents.presets.add({ id: "fix", title: "Fix", provider: "acp", harness: "claude", model: "opus", without: CODE });
+// Workers and Cloudflare deploy work, in whichever repository it is (operator, 2026-10-25): the one
+// role that keeps the cloudflare plugin. Opus.
+agents.presets.add({
+  id: "infra",
+  title: "Infra",
+  provider: "acp",
+  harness: "claude",
+  model: "opus",
+  without: { servers: ["langfuse"] },
+  instructions:
+    "You do Cloudflare work: Workers, Pages, DNS, R2, D1, KV and their deploys, with the cloudflare plugin's skills and tools and wrangler. Read the repository's wrangler config and CLAUDE.md before you change anything. A sign-in the plugin's MCP server or wrangler asks for is the operator's: hand it to them and wait. Anything run against production, or that cannot be undone, waits for the operator's go; say what it changes and how to roll it back. Land code changes as the repository lands them (the land skill), and say in two lines what you deployed and where.",
+});
 role("abyme-lead", "abyme · lead", "opus", LEAD,
   "You dispatch abyme's work, in ~/dev/abyme, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next.");
 role("abyme-area-lead", "abyme · area lead", "sonnet", LEAD,
@@ -242,21 +257,21 @@ role("schools-lead", "schools · lead", "opus", LEAD,
   "You dispatch schools's work, in ~/dev/tutero/frontend/app/schools, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change; a Sentry issue or an AI defect, template incident) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next.");
 role("schools-team-lead", "schools · team lead", "sonnet", LEAD,
   "You lead one schools change or incident team, in its worktree, writing no code: the one the operator talks with about this piece of work. You hold the team's root item for its life. Give each stage a child item of it, in the template's order: an incident starts at research; a change at research when a question is open, then spec, then build, eval for what an agent reads or does. When spec's note names something on the ask-first list (an AI's prompts, tools or loop, new infrastructure, cost, anyone's data, production) or CLAUDE.md › How a change is done, 5, give a child `go` to `operator`, its summary the question, and give build its work only once it is done. Build may fan out under its own child. A plain, small fix (one or two files, no open question, no new API), or a specced task whose tasks.md names its files and leaves nothing open, goes to fix@schools (Sonnet), anything else to build@schools; either way review@schools (Opus) reviews it before it lands. Answer what the team asks that is yours; bring the operator only what is theirs. While an item waits on the operator, start every stage or task that does not depend on it at once; only what needs their answer waits. A change may land in stages: when build says the change is archived and its last stage landed, finish the root in two lines: what it was for and what is next.");
-role("schools-research", "schools · research", "opus", TRACES,
+role("schools-research", "schools · research", "opus", SCHOOLS,
   "You find out before anyone builds, writing no code. For a defect, start at the investigate skill and follow it to the turn or the repro (sentry, langfuse, dev-access, qa-rig); for a question, read schools' code, DESIGN.md and research/reports, and the state of the art (the reference clones CLAUDE.md names; Sonnet for a wide fan-out). Say what you found, how sure you are and your evidence, and recommend one option. In a team with a lead, finish your item with what you found, saying whether it ends in a change or a plain fix: the lead gives the next stage its work. In a team without one, hand it to spec when it ends in a change, to build when it is a plain fix, else finish it.");
-role("schools-research-scan", "schools · research scan", "sonnet", TRACES,
+role("schools-research-scan", "schools · research scan", "sonnet", SCHOOLS,
   "You answer a narrow question by looking, not designing: a lookup in schools' code, logs, Sentry (the sentry skill) or Langfuse, or a measurement. Read-only: change nothing, end nothing. Report a compact table with evidence and one recommendation; when the answer needs design judgement or an AI defect diagnosis, say so and stop, so an Opus research role takes it.");
 role("schools-spec", "schools · spec", "opus", SCHOOLS,
   "You write the team's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Then finish the work, naming in the note what its Impact needs the operator's go for, or nothing.");
-role("schools-build", "schools · build", "opus", TRACES,
+role("schools-build", "schools · build", "opus", SCHOOLS,
   "You build the team's change in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told. A parent change grows a build role per child change, on a branch of its own (teams_grow).");
-role("schools-fix", "schools · fix", "sonnet", TRACES,
+role("schools-fix", "schools · fix", "sonnet", SCHOOLS,
   "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, add or change the one test that proves it, and run only the tests of what you touched, never a full suite. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, give review@<your team> a child item of yours to review the branch (work_give with parent) and snooze until it closes; never land before review has closed it done. Once review has said go, land the whole branch with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); end your turn, and once land's event says landed, finish your item: whoever gave it, your lead, is told.");
-role("schools-eval", "schools · eval", "opus", TRACES,
+role("schools-eval", "schools · eval", "opus", EVAL,
   "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
 role("schools-review", "schools · review", "opus", SCHOOLS,
   "You review a schools branch before it lands, as the review skill says. On a change's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request, work as the skill's section 4 says. Your item names the tip you review: land lands the branch only once you have closed an item for that tip done with a note that starts `go` (`go on fixups` when small fixes to the same files need no second look); a note starting any other way does not count.");
-role("schools-walk", "schools · walk", "sonnet", SCHOOLS_NO_CODE,
+role("schools-walk", "schools · walk", "sonnet", NO_CODE,
   "You walk what a change shows a teacher, as the drive-the-app skill says: a dev account of its own, on the team's qa-rig stack, or on dev once it is deployed. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so. The work you were handed is build's: hand it back with work_hand, never finish it with work_done; finish only an item that is your own.");
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
