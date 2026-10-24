@@ -29,7 +29,7 @@ abyme.server({ name: "Coding", color: "blue", icon: "code" });
 // gateway (`tailscale serve --https=4443 http://127.0.0.1:4477`), which routes it here.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 
-common({ lead: true });
+common();
 
 // The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)

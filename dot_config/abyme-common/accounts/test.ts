@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { keychainMade, tokenEnds, tokenFrom, tokenWarns, YEAR_MS, loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, rowsSeen, score, staleOk, newest, takePushes, windowSaid, type Family, type Folder, type ModelWindow, type Read, type Row, type Spent, type Usage } from "./pick.ts";
+import { keychainMade, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, parse, parseModels, rowsSeen, score, takePushes, windowSaid, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -44,8 +44,9 @@ test("never a capped account: the refusal names the first back", () => {
   assert.equal(picks([row("a", [10, 10], { spent: inDays(1) }), row("b", [100, 0], { busy: true })]), null);
 });
 test("falls back to best when all busy", () => assert.equal(picks([row("a", [10, 10], { busy: true }), row("b", [40, 40], { busy: true })]), "a"));
-test("skips unavailable accounts", () => assert.equal(picks([row("a", null), row("b", [90, 90])]), "b"));
-test("none when all unavailable", () => assert.equal(picks([row("a", null), row("b", null)]), null));
+// No harness has said anything of an account yet: it counts as unused, and its first turn reads it.
+test("an account not read yet counts as unused", () => assert.equal(picks([row("a", null), row("b", [90, 90])]), "a"));
+test("none with no account", () => assert.equal(picks([]), null));
 test("weekly exhausted free account is not best", () => assert.equal(picks([row("weekly-dead", [0, 100]), row("busy-usable", [30, 30], { busy: true })]), "busy-usable"));
 test("duplicate dir is busy when its twin is in session", () =>
   assert.equal(picks([row("dup1", [10, 10], { key: "shared", busy: true }), row("dup2", [10, 10], { key: "shared" }), row("b", [40, 40])]), "b"));
@@ -58,10 +59,12 @@ test("generic headroom does not rescue an exhausted fable window", () => {
 });
 test("tighter fable window binds the score", () => assert.equal(picks([row("a", [10, 10], { windows: fable(90) }), row("b", [10, 10], { windows: fable(30) })], "fable"), "b"));
 test("every fable window exhausted is a refusal", () => {
-  const rows = [row("a", [0, 0], { windows: fable(100) }), row("b", [0, 0], { windows: fable(100) }), row("c", null)];
+  const rows = [row("a", [0, 0], { windows: fable(100) }), row("b", [0, 0], { windows: fable(100) })];
   assert.equal(picks(rows, "fable"), null);
   assert.match(best(rows, "fable", NOW).why, /fable window is spent/);
   assert.notEqual(picks(rows, null), null);
+  // An account not read yet may serve it: its windows are unknown, not spent.
+  assert.equal(picks([...rows, row("c", null)], "fable"), "c");
 });
 test("missing or null fable window falls back to generic limits", () => assert.equal(picks([row("no-window", [50, 50]), row("null-window", [10, 10], { windows: fable(null) })], "fable"), "null-window"));
 test("live-account rules still apply within the fable pool", () => {
@@ -88,17 +91,8 @@ test("the binding window", () => {
   assert.equal(windowSaid("5-hour limit reached"), "five");
   assert.equal(windowSaid("Claude AI usage limit reached"), null);
 });
-test("a stale read near its cap is unknown", () => {
-  assert.equal(staleOk(usage(50, 50), 10 * 60_000), true);
-  assert.equal(staleOk(usage(50, 50), 31 * 60_000), false);
-  assert.equal(staleOk(usage(90, 10), 60_000), false);
-  assert.equal(staleOk(usage(10, 93), 60_000), false);
-  // A cap stands until its reset, however old the read: hsone kept its numbers (2026-10-23).
-  assert.equal(staleOk({ five: 0, seven: 100, fiveResets: null, sevenResets: HSONE_BACK }, 6 * 3600_000), true);
-  assert.equal(staleOk({ five: 0, seven: 100, fiveResets: null, sevenResets: null }, 31 * 60_000), false);
-});
 test("capped is a window at 100 until its reset, never a spent mark alone", () => {
-  const folders: Folder[] = [{ slug: "main", dir: "/h/.claude", key: "u-main" }, { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: "u2" }];
+  const folders: Account[] = [{ slug: "main", key: "u-main" }, { slug: "tuteroai", key: "u2" }];
   const reads = new Map<string, Read>([
     ["u-main", { at: NOW, usage: { five: 1, seven: 60, fiveResets: inDays(0.1), sevenResets: inDays(5) }, windows: [] }],
     ["u2", { at: NOW, usage: { five: 100, seven: 16, fiveResets: inDays(0.1), sevenResets: inDays(5) }, windows: [] }],
@@ -114,38 +108,18 @@ test("capped is a window at 100 until its reset, never a spent mark alone", () =
   // A spent mark still keeps the login out of picks.
   assert.equal(picks([row("main", [1, 60], { spent: inDays(0.04) }), row("b", [50, 50], { busy: true })]), "b");
 });
-test("one row per login, every folder of it, main first", () => {
-  const folders: Folder[] = [
-    { slug: "main", dir: "/h/.claude", key: "u-main" },
-    { slug: "hsone", dir: "/h/.claude-hsone", key: "u1" },
-    { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: "u1" },
+test("one row per account, in order, with its busy agents", () => {
+  const accounts: Account[] = [
+    { slug: "main", key: "main" },
+    { slug: "hsone", key: "hsone" },
+    { slug: "tuteroai", key: "tuteroai" },
   ];
-  const rows = rowsSeen(folders, new Map(), new Map([["/h/.claude-hsone", 1], ["/h/.claude-tuteroai", 2]]));
-  assert.deepEqual(rows.map((r) => [r.slugs, r.agents, r.error, r.read]), [
-    [["main"], 0, null, null],
-    [["hsone", "tuteroai"], 3, null, null],
+  const rows = rowsSeen(accounts, new Map(), new Map([["hsone", 1], ["tuteroai", 2]]));
+  assert.deepEqual(rows.map((r) => [r.slugs, r.agents, r.read]), [
+    [["main"], 0, null],
+    [["hsone"], 1, null],
+    [["tuteroai"], 2, null],
   ]);
-});
-test("a folder signed in again as another login: its row, quota, spent mark and pick follow the new uuid", () => {
-  const was = loginOf(JSON.stringify({ oauthAccount: { emailAddress: "hs@one", accountUuid: "u1" } }))!;
-  const now = loginOf(JSON.stringify({ oauthAccount: { emailAddress: "tutero.ai@gmail.com", accountUuid: "u2" } }))!;
-  assert.deepEqual([was.key, now.key, loginOf("{}"), loginOf("not json")], ["u1", "u2", null, null]);
-  const reads = new Map<string, Read>([
-    ["u1", { at: NOW, usage: { five: 0, seven: 100, fiveResets: null, sevenResets: HSONE_BACK }, windows: [] }],
-    ["u2", { at: NOW, usage: usage(20, 30), windows: [] }],
-  ]);
-  const spent = new Map<string, Spent>([["u1", { until: Date.parse(HSONE_BACK), window: "seven" }]]);
-  const before: Folder[] = [{ slug: "hsone", dir: "/h/.claude-hsone", key: was.key }, { slug: "tuteroai", dir: "/h/.claude-tuteroai", key: was.key }];
-  const after: Folder[] = [before[0]!, { ...before[1]!, key: now.key }];
-  assert.deepEqual(rowsSeen(before, reads, new Map()).map((r) => [r.slugs, r.capped]), [[["hsone", "tuteroai"], true]]);
-  const rows = rowsSeen(after, reads, new Map([["/h/.claude-tuteroai", 1]]));
-  assert.deepEqual(rows.map((r) => [r.slugs, r.five, r.capped, r.agents]), [
-    [["hsone"], 0, true, 0],
-    [["tuteroai"], 20, false, 1],
-  ]);
-  const pickRows = (fs: Folder[]) => fs.map((f) => { const r = reads.get(f.key)!; return row(f.slug, "usage" in r ? r.usage : null, { key: f.key, spent: spent.has(f.key) ? HSONE_BACK : undefined }); });
-  assert.equal(picks(pickRows(before)), null);
-  assert.equal(picks(pickRows(after)), "tuteroai");
 });
 test("a push newer than the read wins, an older one does not, a rejected one says its reset", () => {
   const at = (ms: number) => new Date(ms).toISOString();
@@ -157,38 +131,23 @@ test("a push newer than the read wins, an older one does not, a rejected one say
     { window: "five_hour", state: "allowed", utilization: 12, resets_at: null, at: at(NOW + 1000) },
   ], 0)!;
   assert.equal(next.at, NOW + 2000);
-  assert.deepEqual(parse(next.data!), { five: 12, seven: 100, fiveResets: inDays(0.1), sevenResets: inDays(2) });
+  assert.deepEqual(parse(next.data), { five: 12, seven: 100, fiveResets: inDays(0.1), sevenResets: inDays(2) });
   assert.deepEqual(next.rejected, [{ window: "seven", resets: inDays(2) }]);
   // A refusal is a full window, whatever number came with it.
   const refused = takePushes(kept, [{ window: "five_hour", state: "rejected", utilization: null, resets_at: inDays(0.1), at: at(NOW + 1) }], 0)!;
-  assert.equal(parse(refused.data!).five, 100);
-  // No read to put it on: no numbers, only the refusal.
+  assert.equal(parse(refused.data).five, 100);
+  // No read yet: the first push makes one, the window not said reading as unused, and a refusal says its reset.
   const bare = takePushes(undefined, [{ window: "five_hour", state: "rejected", utilization: 100, resets_at: inDays(0.1), at: at(NOW) }], 0)!;
-  assert.deepEqual([bare.data, bare.rejected], [null, [{ window: "five", resets: inDays(0.1) }]]);
-  // Onto a shared read newer than this abymed's: the other window and the model windows are kept.
-  const mine = { at: NOW - 60_000, data: { five_hour: { utilization: 1 }, seven_day: { utilization: 1 } } };
-  const theirs = { at: NOW, data: { five_hour: { utilization: 80, resets_at: inDays(0.1) }, seven_day: { utilization: 40, resets_at: inDays(2) }, seven_day_opus: { utilization: 70, resets_at: inDays(2) } } };
-  const onto = takePushes(newest(mine, theirs), [{ window: "seven_day", state: "allowed", utilization: 45, resets_at: null, at: at(NOW + 1000) }], 0)!;
-  assert.deepEqual(parse(onto.data!), { five: 80, seven: 45, fiveResets: inDays(0.1), sevenResets: inDays(2) });
-  assert.equal(parseModels(onto.data!)[0]!.utilization, 70);
+  assert.deepEqual([parse(bare.data), bare.rejected], [{ five: 100, seven: 0, fiveResets: inDays(0.1), sevenResets: null }, [{ window: "five", resets: inDays(0.1) }]]);
+  // Onto a read: the other window and the model windows are kept.
+  const had = { at: NOW, data: { five_hour: { utilization: 80, resets_at: inDays(0.1) }, seven_day: { utilization: 40, resets_at: inDays(2) }, seven_day_opus: { utilization: 70, resets_at: inDays(2) } } };
+  const onto = takePushes(had, [{ window: "seven_day", state: "allowed", utilization: 45, resets_at: null, at: at(NOW + 1000) }], 0)!;
+  assert.deepEqual(parse(onto.data), { five: 80, seven: 45, fiveResets: inDays(0.1), sevenResets: inDays(2) });
+  assert.equal(parseModels(onto.data)[0]!.utilization, 70);
   // A window said with no number, and none read: it stays unread.
   assert.equal(takePushes({ at: NOW, data: {} }, [{ window: "five_hour", state: "allowed", utilization: null, resets_at: null, at: at(NOW + 1) }], 0)!.data!.five_hour, undefined);
   // Heard again after it was taken: nothing.
-  assert.equal(takePushes({ at: next.at, data: next.data! }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
-});
-
-test("a refusal is not believed only behind a newer own read under 95", () => {
-  const at = (ms: number) => new Date(ms).toISOString();
-  const refusal = { window: "five_hour", state: "rejected" as const, utilization: 100, resets_at: inDays(0.1), at: at(NOW) };
-  // Reads failing: the last one, 20 min older than the refusal, at 80. The refusal stands.
-  assert.equal(disbelieved(refusal, { at: NOW - 20 * 60_000, usage: usage(80, 10) }), false);
-  // A push carried from another login: the own read is newer and shows the window open.
-  assert.equal(disbelieved(refusal, { at: NOW + 60_000, usage: usage(5, 10) }), true);
-  // Newer but full, no read, or not a refusal: believed.
-  assert.equal(disbelieved(refusal, { at: NOW + 60_000, usage: usage(97, 10) }), false);
-  assert.equal(disbelieved(refusal, null), false);
-  assert.equal(disbelieved({ ...refusal, state: "warning" }, { at: NOW + 60_000, usage: usage(5, 10) }), false);
-  assert.equal(disbelieved({ ...refusal, window: "seven_day" }, { at: NOW + 60_000, usage: usage(99, 20) }), true);
+  assert.equal(takePushes({ at: next.at, data: next.data }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
 });
 
 // model.rs
@@ -237,12 +196,43 @@ test("a window whose reset has passed is zeroed", () => {
 });
 
 // server.ts's showCached
-test("an error read after the answer kept is shown", () => {
-  assert.equal(errorWins({ at: 1 }, { at: 2, error: "signed out" }), true);
-  assert.equal(errorWins(undefined, { at: 2, error: "signed out" }), true);
-  assert.equal(errorWins({ at: 3 }, { at: 2, error: "unreachable" }), false);
-  assert.equal(errorWins({ at: 1 }, { at: 2 }), false);
-  assert.equal(errorWins({ at: 1 }, undefined), false);
+// load's accounts: one per login, null kept null, capped on the binding window.
+test("load's accounts", () => {
+  const seen = [
+    { slugs: ["hsone", "tuteroai"], five: 0, seven: 100, fiveResets: null, sevenResets: "2026-10-25T11:00:00.000Z", windows: [], capped: true, binding: "seven" as const, back: null, read: null, agents: 0 },
+    { slugs: ["main"], five: null, seven: 74, fiveResets: "2026-10-23T17:30:00.000Z", sevenResets: null, windows: [], capped: false, binding: null, back: null, read: null, agents: 2 },
+  ];
+  const [h, m] = loadAccounts(seen);
+  assert.equal(h!.id, "hsone,tuteroai");
+  assert.deepEqual(h!.folders, ["hsone", "tuteroai"]);
+  assert.deepEqual(h!.windows.map((w) => [w.name, w.used, w.capped]), [["5h", 0, false], ["week", 1, true]]);
+  assert.equal(h!.windows[1]!.resets, Date.parse("2026-10-25T11:00:00.000Z"));
+  assert.equal(m!.windows[0]!.used, null);
+  assert.equal(m!.windows[1]!.resets, null);
+});
+
+// setup-tokens: read out of setup-token's output, a year long, warned of 30 days before.
+test("setup-tokens", () => {
+  const t = "sk-ant-oat01-" + "a".repeat(40) + "_-b";
+  assert.equal(tokenFrom(`Your OAuth token (valid for 1 year):\n\n${t}\n\nStore this token securely.`), t);
+  assert.equal(tokenFrom("Login cancelled"), null);
+  const made = Date.parse("2026-10-24T01:30:00Z");
+  assert.equal(tokenEnds(made), made + YEAR_MS);
+  assert.equal(tokenWarns(tokenEnds(made), made + 300 * 86_400_000), false);
+  assert.equal(tokenWarns(tokenEnds(made), made + 340 * 86_400_000), true);
+  assert.equal(keychainMade('    "cdat"<timedate>=0x32303236313032343031333030305A00  "20261024013000Z\\000"'), made);
+  assert.equal(keychainMade("no such item"), null);
+});
+
+// The keychain's listing of setup-tokens: each slug once, when it was last written; no other item.
+test("setup-tokens listed from the keychain", () => {
+  const item = (svce: string, mdat: string) => `keychain: "/Users/r/Library/Keychains/login.keychain-db"\nclass: "genp"\nattributes:\n    "acct"<blob>="r"\n    "cdat"<timedate>=0x00  "20261020000000Z\\000"\n    "mdat"<timedate>=0x00  "${mdat}Z\\000"\n    "svce"<blob>="${svce}"\n`;
+  const dump = item("abyme-accounts-main", "20261024111931") + item("Claude Code-credentials", "20261001000000") + item("abyme-accounts-hsone", "20261024112108");
+  assert.deepEqual(tokensListed(dump), [
+    { slug: "main", made: Date.UTC(2026, 9, 24, 11, 19, 31) },
+    { slug: "hsone", made: Date.UTC(2026, 9, 24, 11, 21, 8) },
+  ]);
+  assert.deepEqual(tokensListed(""), []);
 });
 
 let failed = 0;
@@ -255,31 +245,3 @@ for (const [name, f] of cases)
   }
 console.log(`${cases.length - failed}/${cases.length} passed`);
 process.exit(failed ? 1 : 0);
-
-// load's accounts: one per login, null kept null, capped on the binding window.
-{
-  const seen = [
-    { slugs: ["hsone", "tuteroai"], five: 0, seven: 100, fiveResets: null, sevenResets: "2026-10-25T11:00:00.000Z", windows: [], capped: true, binding: "seven" as const, back: null, read: null, error: null, agents: 0 },
-    { slugs: ["main"], five: null, seven: 74, fiveResets: "2026-10-23T17:30:00.000Z", sevenResets: null, windows: [], capped: false, binding: null, back: null, read: null, error: null, agents: 2 },
-  ];
-  const [h, m] = loadAccounts(seen);
-  assert.equal(h!.id, "hsone,tuteroai");
-  assert.deepEqual(h!.folders, ["hsone", "tuteroai"]);
-  assert.deepEqual(h!.windows.map((w) => [w.name, w.used, w.capped]), [["5h", 0, false], ["week", 1, true]]);
-  assert.equal(h!.windows[1]!.resets, Date.parse("2026-10-25T11:00:00.000Z"));
-  assert.equal(m!.windows[0]!.used, null);
-  assert.equal(m!.windows[1]!.resets, null);
-}
-
-// setup-tokens: read out of setup-token's output, a year long, warned of 30 days before.
-{
-  const t = "sk-ant-oat01-" + "a".repeat(40) + "_-b";
-  assert.equal(tokenFrom(`Your OAuth token (valid for 1 year):\n\n${t}\n\nStore this token securely.`), t);
-  assert.equal(tokenFrom("Login cancelled"), null);
-  const made = Date.parse("2026-10-24T01:30:00Z");
-  assert.equal(tokenEnds(made), made + YEAR_MS);
-  assert.equal(tokenWarns(tokenEnds(made), made + 300 * 86_400_000), false);
-  assert.equal(tokenWarns(tokenEnds(made), made + 340 * 86_400_000), true);
-  assert.equal(keychainMade('    "cdat"<timedate>=0x32303236313032343031333030305A00  "20261024013000Z\\000"'), made);
-  assert.equal(keychainMade("no such item"), null);
-}

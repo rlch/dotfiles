@@ -15,24 +15,14 @@ function until(at: string | null): string {
 }
 const pct = (n: number | null) => (n === null ? "" : `${Math.round(n)}%`);
 
-/** What an account's error means, in the operator's words. */
-const SAID: Record<string, string> = {
-  "no credentials": "not signed in: Sign in to Claude account…",
-  unauthorized: "signed out: Sign in to Claude account…",
-  "signed out": "signed out: Sign in to Claude account…",
-  "not read yet": "not read yet",
-};
-const said = (error: string) => SAID[error] ?? (error.includes("429") ? "rate limited" : error);
-
-/** Usable accounts first, the emptiest on top; then the spent, then the unreadable. */
+/** Usable accounts first, the emptiest on top; then the spent. */
 function ordered(seen: Seen[]): Seen[] {
-  const rank = (a: Seen) => (a.error ? 2 : a.capped ? 1 : 0);
+  const rank = (a: Seen) => (a.capped ? 1 : 0);
   return [...seen].sort((a, b) => rank(a) - rank(b) || (a.five ?? 0) - (b.five ?? 0) || a.slugs[0]!.localeCompare(b.slugs[0]!));
 }
 
 /** What is worth saying beside an account: when it is back, a model window nearly spent, who is on it. */
 function note(a: Seen): string {
-  if (a.error) return said(a.error);
   const said_: string[] = [];
   if (a.capped && a.back) said_.push(`back in ${until(a.back)}`);
   for (const w of a.windows) if ((w.utilization ?? 0) >= 80) said_.push(`${w.name} ${pct(w.utilization)}`);
@@ -60,12 +50,12 @@ function Meter({ n, spent }: { n: number | null; spent?: boolean }) {
   );
 }
 
-/** One account as a pip: how full its five hours are; amber when spent, faint when unreadable. */
+/** One account as a pip: how full its five hours are; amber when spent. */
 function Pip({ a }: { a: Seen }) {
-  const fill = a.error ? 0 : a.capped ? 100 : Math.max(8, a.five ?? 0);
+  const fill = a.capped ? 100 : Math.max(8, a.five ?? 0);
   return (
     <span style={{ position: "relative", width: 3, height: 10, borderRadius: 1, overflow: "hidden" }}>
-      <span style={{ position: "absolute", inset: 0, background: "currentColor", opacity: a.error ? 0.12 : 0.25 }} />
+      <span style={{ position: "absolute", inset: 0, background: "currentColor", opacity: 0.25 }} />
       <span
         style={{
           position: "absolute",
@@ -87,7 +77,7 @@ export function Quota() {
   const ending = Object.entries(tokens).filter(([, ends]) => Date.parse(ends) - Date.now() < 30 * 86_400_000);
   if (!seen?.length) return null;
   const rows = ordered(seen);
-  const free = rows.filter((a) => !a.capped && !a.error).length;
+  const free = rows.filter((a) => !a.capped).length;
   const back = rows.filter((a) => a.capped && a.back).map((a) => a.back!).sort()[0];
   const faint = { opacity: 0.6 };
   return (
@@ -120,16 +110,10 @@ export function Quota() {
           <span />
           {rows.map((a) => (
             <div key={a.slugs[0]} style={{ display: "contents" }}>
-              <span style={a.error ? faint : undefined}>{a.slugs.join(", ")}</span>
-              {a.error ? (
-                <span style={{ ...faint, gridColumn: "span 3" }}>{note(a)}</span>
-              ) : (
-                <>
-                  <Meter n={a.five} spent={a.capped} />
-                  <Meter n={a.seven} spent={(a.seven ?? 0) >= 100} />
-                  <span style={faint}>{note(a)}</span>
-                </>
-              )}
+              <span>{a.slugs.join(", ")}</span>
+              <Meter n={a.five} spent={a.capped} />
+              <Meter n={a.seven} spent={(a.seven ?? 0) >= 100} />
+              <span style={faint}>{note(a)}</span>
             </div>
           ))}
         </div>

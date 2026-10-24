@@ -1,316 +1,111 @@
 // accounts, in abymed: which Claude account an agent abyme launches runs on, as clodcurrent picks
-// one for `cl` in a terminal (design.md). It answers `agents.prepare` with the account's folder.
+// one for `cl` in a terminal (design.md). An account is a setup-token in the keychain
+// (`abyme-accounts-<slug>`, a year long); `agents.prepare` answers a Claude launch of the owner's
+// with that account's token as the harness's `CLAUDE_CODE_OAUTH_TOKEN` (`secret`) and its slug
+// (`account`), on Claude Code's default config folder.
 //
-// Tokens: read from the macOS keychain, where Claude Code keeps them, for one request, and never
-// kept: not in the store, a value a page follows, a log line, an error, an answer or a command's
-// arguments (a renewed one goes to `security -i` on stdin).
+// Tokens: read from the keychain for one launch and never kept: not in the store, a value a page
+// follows, a log line, an error, an answer or a command's arguments (a new one goes to
+// `security -i` on stdin).
 import abyme from "@abyme/plugin";
 import agents from "@abyme/agents";
-import terminal from "@abyme/terminal";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import options from "./options";
-import { keychainMade, tokenEnds, tokenFrom, loadAccounts, best, binding, disbelieved, errorWins, expirePast, family, loginOf, parse, parseModels, newest, rowsSeen, staleOk, takePushes, windowSaid, type AccountSeen, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, parse, parseModels, rowsSeen, takePushes, windowSaid, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
 
-/** The control plane's files, where the account folders are; refused where there are none. */
+/** The control plane's files: the plugin's scratch and the model settings a launch reads. */
 function files() {
-  if (!fs) throw new Error("no machine provides fs here, to read the Claude accounts");
+  if (!fs) throw new Error("no machine provides fs here, to keep Claude's setup-tokens");
   return fs;
 }
-/** The control plane's processes: the keychain, ps, git and cp. */
+/** The control plane's processes: the keychain, ps and claude. */
 function processes() {
   if (!process) throw new Error("no machine provides process here, to read the keychain");
   return process;
 }
 const USER = abyme.env.USER ?? "user";
-const FRESH_MS = 60_000;
 const PICKED_MS = 60_000;
 
-type Account = { slug: string; dir: string; main: boolean; key: string; service: string };
+// ---- accounts: one per setup-token in the keychain ----
 
-// ---- accounts: ~/.claude (main) and every ~/.claude-<slug> with an identity ----
+const tokenService = (slug: string) => `abyme-accounts-${slug}`;
+/** Accounts the operator took off the rotation, by slug. */
+const ignoredSlugs = () => (abyme.store.get("ignored") ?? []) as string[];
 
-/** A folder's login, read from its `.claude.json` at every look and never kept: a folder signed in
- * again as another login (tuteroai as tutero.ai@gmail.com, 2026-10-23) moves to that login's row,
- * quota, spent mark and busy at once. */
-async function identity(file: string) {
-  return loginOf((await files().read(file).catch(() => null)) ?? null);
+/** Every setup-token in the keychain, `main` first then by name, and when each was made: listed
+ * from the keychain's attributes (`security dump-keychain`, never a secret), at most once a
+ * second. The one owner of which accounts there are and when their tokens end. */
+let listed: { at: number; tokens: { slug: string; made: number | null }[] } | null = null;
+async function keychainTokens(): Promise<{ slug: string; made: number | null }[]> {
+  if (listed && Date.now() - listed.at < 1_000) return listed.tokens;
+  const r = await processes().run(o.security, { args: ["dump-keychain"] });
+  const tokens = r.code === 0 ? tokensListed(r.stdout) : [];
+  tokens.sort((a, b) => (a.slug === "main" ? -1 : b.slug === "main" ? 1 : a.slug.localeCompare(b.slug)));
+  listed = { at: Date.now(), tokens };
+  return tokens;
 }
 
+/** The accounts a pick may take: a token each, none the operator ignores. Each is its own login. */
 async function discover(): Promise<Account[]> {
-  const out: Account[] = [];
-  const main = (await files().stat(`${HOME}/.claude`))?.kind === "dir" ? await identity(`${HOME}/.claude.json`) : null;
-  if (main) out.push({ slug: "main", dir: `${HOME}/.claude`, main: true, key: main.key, service: "Claude Code-credentials" });
-  const rest: Account[] = [];
-  for (const f of (await files().list(HOME)) ?? []) {
-    if (f.kind !== "dir" || !f.name.startsWith(".claude-")) continue;
-    const dir = `${HOME}/${f.name}`;
-    if (await files().stat(`${dir}/.clodcurrent-disabled`)) continue;
-    const id = await identity(`${dir}/.claude.json`);
-    if (!id) continue;
-    const service = `Claude Code-credentials-${abyme.crypto.hash("sha256", dir).slice(0, 8)}`;
-    rest.push({ slug: f.name.slice(8), dir, main: false, key: id.key, service });
-  }
-  rest.sort((a, b) => a.slug.localeCompare(b.slug));
-  return [...out, ...rest];
+  const off = new Set(ignoredSlugs());
+  return (await keychainTokens()).filter((t) => !off.has(t.slug)).map((t) => ({ slug: t.slug, key: t.slug }));
 }
 
-// ---- tokens ----
-
-type Credentials = { claudeAiOauth?: { accessToken?: string; refreshToken?: string; expiresAt?: number; refreshTokenExpiresAt?: number; scopes?: string[] } } & Record<string, unknown>;
-
-/** Accounts whose refresh token the token endpoint refused (400, 401): only a browser login brings
- * them back. Forgotten when the keychain holds another refresh token. */
-const refusedTokens = new Map<string, string>();
-
-/** Signed out: the access token has expired and nothing can renew it, a refresh token past its
- * end or one refused. Claude Code fails such an agent at its first message ("OAuth session expired
- * and could not be refreshed", 2026-10-19), so no launch is given one. */
-function signedOut(a: Account, c: Credentials | null): boolean {
-  const t = c?.claudeAiOauth;
-  if (!t?.accessToken) return false;
-  if (t.expiresAt === undefined || Date.now() < t.expiresAt) return false;
-  if (!t.refreshToken) return true;
-  if (t.refreshTokenExpiresAt !== undefined && Date.now() >= t.refreshTokenExpiresAt) return true;
-  const was = refusedTokens.get(a.key);
-  if (was !== undefined && was !== abyme.crypto.hash("sha256", t.refreshToken)) refusedTokens.delete(a.key);
-  return refusedTokens.has(a.key);
+/** An account's setup-token, for one launch. */
+async function tokenOf(slug: string): Promise<string | null> {
+  const r = await processes().run(o.security, { args: ["find-generic-password", "-s", tokenService(slug), "-a", USER, "-w"] });
+  const t = r.code === 0 ? r.stdout.trim() : "";
+  return t || null;
 }
 
-async function credentials(a: Account): Promise<Credentials | null> {
-  const r = await processes().run(o.security, { args: ["find-generic-password", "-s", a.service, "-a", USER, "-w"] });
-  if (r.code !== 0 || !r.stdout.trim()) return null;
-  try {
-    return JSON.parse(r.stdout.trim()) as Credentials;
-  } catch {
-    return null;
-  }
-}
+// ---- usage: what each account's agents' harnesses said, each turn ----
 
-async function writeCredentials(a: Account, c: Credentials) {
-  // `security -i` reads its command from stdin: the secret is never in a process's arguments.
-  const secret = JSON.stringify(c).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  const r = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${a.service}" -a "${USER}" -w "${secret}"\n` });
-  // Never r.stderr: it could echo the line.
-  if (r.code !== 0) throw new Error(`${a.slug}: the keychain refused the renewed token`);
-}
-
-/** A renewal refused, by account: not asked again until `until`, each refusal doubling the wait
- * (5 min to 2 h). Every quota read asked again, and the token endpoint answered 429 to three
- * accounts every 1-4 minutes all day (2026-10-15). */
-const refused = new Map<string, { until: number; wait: number }>();
-const RENEW_WAIT_MS = 5 * 60_000;
-const RENEW_WAIT_MAX_MS = 2 * 60 * 60_000;
-
-/** The account's access token, renewed first when it has expired, renewal is on, it is not main's,
- * nothing runs on it and its last renewal was not refused a moment ago: a running Claude renews
- * its own, and a second renewal rotates its refresh token away. */
-async function token(a: Account, busy: boolean): Promise<string | null> {
-  const c = await credentials(a);
-  const t = c?.claudeAiOauth;
-  if (!t?.accessToken) return null;
-  const expired = t.expiresAt !== undefined && Date.now() + 5 * 60_000 >= t.expiresAt;
-  if (!expired || !o.renew || busy || a.main || !t.refreshToken) return t.accessToken;
-  const no = refused.get(a.key);
-  if (no && Date.now() < no.until) return t.accessToken;
-  const r = await abyme.net.fetch(o.tokenUrl, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ grant_type: "refresh_token", refresh_token: t.refreshToken, client_id: "9d1c250a-e61b-44d9-88ed-5944d1962f5e" }),
-    timeoutMs: 10_000,
-  });
-  if (r.status === 400 || r.status === 401) {
-    refusedTokens.set(a.key, abyme.crypto.hash("sha256", t.refreshToken));
-    abyme.log.warn(`${a.slug}: renewing the token answered HTTP ${r.status}; signed out until a login`);
-    return t.accessToken;
-  }
-  if (r.status !== 200) {
-    const wait = no ? Math.min(no.wait * 2, RENEW_WAIT_MAX_MS) : RENEW_WAIT_MS;
-    refused.set(a.key, { until: Date.now() + wait, wait });
-    abyme.log.warn(`${a.slug}: renewing the token answered HTTP ${r.status}; not asked again for ${Math.round(wait / 60_000)} min`);
-    return t.accessToken;
-  }
-  refused.delete(a.key);
-  const n = JSON.parse(r.body) as { access_token?: string; expires_in?: number; refresh_token?: string; scope?: string };
-  if (!n.access_token) return t.accessToken;
-  const next: Credentials = {
-    ...c,
-    claudeAiOauth: {
-      ...t,
-      accessToken: n.access_token,
-      ...(n.expires_in ? { expiresAt: Date.now() + n.expires_in * 1000 } : {}),
-      ...(n.refresh_token ? { refreshToken: n.refresh_token } : {}),
-      ...(n.scope ? { scopes: n.scope.split(" ") } : {}),
-    },
-  };
-  await writeCredentials(a, next);
-  abyme.log.info(`${a.slug}: token renewed`);
-  return n.access_token;
-}
-
-// ---- quota: one fetch per identity, 60 s fresh, a 30-minute-old answer when the API fails ----
-
-type Quota = Read;
-const quota = new Map<string, { at: number; data: Record<string, unknown> }>();
-
-/** The last answer of each identity, shared by every profile's abymed on this Mac (coding,
- * knowledge): a profile reads the others' before it asks, so two profiles ask no more often
- * than one. Usage only, never a token. */
-const SHARED = `${HOME}/.local/state/abyme-accounts-usage.json`;
-type Shared = Record<string, { at: number; data: Record<string, unknown> }>;
-async function readShared(): Promise<Shared> {
-  try {
-    return (JSON.parse((await files().read(SHARED)) ?? "{}") as Shared) ?? {};
-  } catch {
-    return {};
-  }
-}
-/** One write at a time from this abymed: the identities' reads finish together, and parallel
- * writes of one file lose all but one. Another profile's write between a read and a write is
- * retried. */
-let writing: Promise<void> = Promise.resolve();
-function writeShared(key: string, entry: Shared[string]): Promise<void> {
-  writing = writing.then(() => writeOne(key, entry)).catch(() => {});
-  return writing;
-}
-async function writeOne(key: string, entry: Shared[string]) {
-  for (let i = 0; i < 3; i++) {
-    const now = await files().read(SHARED, { version: true });
-    let all: Shared = {};
-    try {
-      all = now?.text ? (JSON.parse(now.text) as Shared) : {};
-    } catch {}
-    if ((all[key]?.at ?? 0) >= entry.at) return;
-    all[key] = entry;
-    if ((await files().write(SHARED, JSON.stringify(all), { ifVersion: now?.version ?? null })).written) return;
-  }
-}
-/** What each identity's last read said, an error included, for the status bar between reads. */
-const last = new Map<string, Quota>();
-
-const answer = (at: number, data: Record<string, unknown>): Quota => {
+/** Each login's read, by slug: what its harnesses last said of its windows (`usage_limits` on its
+ * agents), kept in the store so a cap stands across abymed's restarts. */
+const reads = () => (abyme.store.get("reads") ?? {}) as Record<string, Kept>;
+const answer = (at: number, data: Record<string, unknown>): Read => {
   const now = expirePast(data, Date.now());
   return { at, usage: parse(now), windows: parseModels(now) };
 };
+const readsNow = (all: Account[]) => new Map(all.flatMap((a) => (reads()[a.key] ? [[a.key, answer(reads()[a.key]!.at, reads()[a.key]!.data)] as const] : [])));
 
-async function fetchOne(a: Account, busy: boolean): Promise<Quota> {
-  // Before any answer kept: usage read with a token that has since died says nothing.
-  const c = await credentials(a);
-  if (!c?.claudeAiOauth?.accessToken) return { at: Date.now(), error: "no credentials" };
-  if (signedOut(a, c)) return { at: Date.now(), error: "signed out" };
-  const had = newest(quota.get(a.key), (await readShared())[a.key]);
-  if (had && Date.now() - had.at < FRESH_MS) return answer(had.at, had.data);
-  const t = await token(a, busy);
-  if (!t) return { at: Date.now(), error: "no credentials" };
-  // A failed read: the kept one stands for it only while it is young and not near a cap.
-  const fallback = (error: string): Quota => {
-    const kept = had ? answer(had.at, had.data) : null;
-    const age = had ? Date.now() - had.at : Infinity;
-    failedRead(a, error, age);
-    return kept && "usage" in kept && staleOk(kept.usage, age) ? kept : { at: Date.now(), error: kept ? `stale near its cap (${error})` : error };
-  };
-  let r: { status: number; body: string };
-  try {
-    r = await abyme.net.fetch(o.usageUrl, { headers: { authorization: `Bearer ${t}`, "anthropic-beta": "oauth-2025-04-20" }, timeoutMs: 5_000 });
-  } catch {
-    return fallback("unreachable");
-  }
-  if (r.status === 401) return (failedRead(a, "unauthorized", Infinity), { at: Date.now(), error: "unauthorized" });
-  if (r.status !== 200) return fallback(r.status === 429 ? "usage API rate-limited (HTTP 429)" : `HTTP ${r.status}`);
-  let data: Record<string, unknown>;
-  try {
-    data = JSON.parse(r.body) as Record<string, unknown>;
-  } catch {
-    return fallback("an answer that is not JSON");
-  }
-  if (failed.delete(a.key)) abyme.log.info(`${a.slug}: usage read again`);
-  quota.set(a.key, { at: Date.now(), data });
-  await writeShared(a.key, { at: Date.now(), data });
-  return answer(Date.now(), data);
-}
+// ---- busy: abyme's live agents, by the account a launch said, and picks not listed yet ----
 
-/** The last failed read of each login, by identity, to log each distinct one once. */
-const failed = new Map<string, string>();
-function failedRead(a: Account, error: string, age: number) {
-  if (failed.get(a.key) === error) return;
-  failed.set(a.key, error);
-  const kept = Number.isFinite(age) ? `kept read ${Math.round(age / 60_000)} min old` : "no read kept";
-  abyme.log.warn(`${a.slug}: usage read failed (${error}); ${kept}`);
-}
-
-/** Each account's quota: one fetch per identity, each folder's token tried until one answers. */
-async function quotas(all: Account[], busy: Set<string>): Promise<Map<string, Quota>> {
-  const groups = new Map<string, Account[]>();
-  for (const a of all) groups.set(a.key, [...(groups.get(a.key) ?? []), a]);
-  const out = new Map<string, Quota>();
-  await Promise.all(
-    [...groups].map(async ([key, members]) => {
-      let q: Quota = { at: Date.now(), error: "no credentials" };
-      for (const a of members) {
-        q = await fetchOne(a, busy.has(key));
-        if ("usage" in q) break;
-      }
-      out.set(key, q);
-      last.set(key, q);
-    }),
-  );
-  return out;
-}
-
-// ---- busy: terminal sessions, abyme's live agents, and picks not listed yet ----
-
-/** Picks of the last minute, by identity: busy from the moment they are made, as clodcurrent
- * registers a launch before it starts claude. */
+/** Picks of the last minute, by login: busy from the moment they are made. */
 let picked: { key: string; at: number }[] = [];
 
-/** Slugs in clodcurrent's register whose process still runs. Read only. */
-async function terminalSlugs(): Promise<string[]> {
-  let list: { slug: string; pid: number }[] = [];
-  try {
-    list = JSON.parse((await files().read(`${HOME}/.local/state/clodcurrent/sessions.json`)) ?? "[]") as typeof list;
-  } catch {
-    return [];
-  }
-  if (!list.length) return [];
-  // Every pid, not `-p`: one pid ps rejects makes it print none.
-  const r = await processes().run("ps", { args: ["-A", "-o", "pid="] });
-  const alive = new Set(r.stdout.split("\n").map((l) => Number(l.trim())).filter(Boolean));
-  return list.filter((s) => alive.has(s.pid)).map((s) => s.slug);
-}
-
-/** abyme's agents as `agents.all` joins them: what each is on and what its harness last said of
- * its account's usage. */
-type Joined = { id: string; name: string; busy: boolean; closed: unknown; config_dir: string | null; usage_limits?: Pushed[] | null };
+/** abyme's agents as `agents.all` joins them: the account each is on and what its harness last said
+ * of that account's usage. */
+type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
 const joined = async (): Promise<Joined[]> => Object.values((await agents.all()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
-/** Busy abyme agents per account folder: busy as agents says it, the one rule; with `open`, every
- * agent not closed. */
-async function agentsByDir(open = false): Promise<Map<string, { id: string; name: string }[]>> {
+/** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
+async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
   const out = new Map<string, { id: string; name: string }[]>();
   for (const x of await joined()) {
-    if (!x.config_dir || !(open ? !x.closed : x.busy)) continue;
-    out.set(x.config_dir, [...(out.get(x.config_dir) ?? []), { id: x.id, name: x.name ?? x.id }]);
+    if (!x.account || !(open ? !x.closed : x.busy)) continue;
+    out.set(x.account, [...(out.get(x.account) ?? []), { id: x.id, name: x.name ?? x.id }]);
   }
   return out;
 }
 
 async function busyKeys(all: Account[]): Promise<Set<string>> {
-  const slugs = new Set(await terminalSlugs());
-  const dirs = await agentsByDir();
+  const on = await agentsByAccount();
   picked = picked.filter((p) => Date.now() - p.at < PICKED_MS);
   const out = new Set(picked.map((p) => p.key));
-  for (const a of all) if (slugs.has(a.slug) || dirs.has(a.dir)) out.add(a.key);
+  for (const a of all) if (on.has(a.slug)) out.add(a.key);
   return out;
 }
 
 // ---- spent: an account a turn hit its usage limit on ----
 
-/** Accounts a turn hit a usage limit on, by identity, and until when: out of every pick until
- * then, whatever a quota read says, as the read can lag the limit. */
+/** Accounts a turn hit a usage limit on, by login, and until when: out of every pick until then,
+ * whatever a push says meanwhile. */
 const spent = new Map<string, Spent>();
 /** How long an account is spent when nothing gives a reset still ahead. */
 const SPENT_MS = 60 * 60_000;
@@ -322,22 +117,21 @@ function spentUntil(key: string): string | null {
   spent.delete(key);
   return null;
 }
-/** The account of config folder `dir` is spent until the window that caps it resets: the one `said`
- * (a harness's push), else the one its last read has at 100, else the one `why` names with the reset
- * its last read gives; else for SPENT_MS. */
-async function markSpent(dir: string, why: string, said?: { window: "five" | "seven"; resets: string | null }) {
-  const a = (await discover()).find((x) => x.dir === dir);
-  if (!a) return;
-  const q = last.get(a.key);
-  const u = q && "usage" in q ? q.usage : null;
+/** Account `slug` is spent until the window that caps it resets: the one `said` (a harness's push),
+ * else the one its read has at 100, else the one `why` names with the reset its read gives; else
+ * for SPENT_MS. */
+function markSpent(slug: string, why: string, said?: { window: "five" | "seven"; resets: string | null }) {
+  const kept = reads()[slug];
+  const q = kept ? answer(kept.at, kept.data) : null;
+  const u = q ? q.usage : null;
   const named = windowSaid(why);
   const bound = said ?? (u && binding(u)) ?? (named && { window: named, resets: u ? (named === "seven" ? u.sevenResets : u.fiveResets) : null });
   const reset = Date.parse(bound?.resets ?? "");
   const until = Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + SPENT_MS;
-  const was = spent.get(a.key);
+  const was = spent.get(slug);
   if (was && was.until >= until) return;
-  spent.set(a.key, { until, window: bound ? bound.window : null });
-  abyme.log.warn(`${a.slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
+  spent.set(slug, { until, window: bound ? bound.window : null });
+  abyme.log.warn(`${slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
 }
 
 // ---- what pages see: no token, no email, no uuid ----
@@ -351,22 +145,23 @@ const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, strin
 let forLoad: ReturnType<typeof loadAccounts> = [];
 load?.readers.add({ id: "accounts", accounts: () => forLoad });
 
+/** When each account's setup-token ends (ISO), by slug: a year after the keychain says it was made. */
+async function tokensEnding(): Promise<Record<string, string>> {
+  return Object.fromEntries((await keychainTokens()).flatMap((t) => (t.made === null ? [] : [[t.slug, new Date(tokenEnds(t.made)).toISOString()] as const])));
+}
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
-async function show(all: Account[], q: Map<string, Quota>) {
-  const dirs = await agentsByDir();
-  const counts = new Map([...dirs].map(([dir, xs]) => [dir, xs.length]));
-  const next = { accounts: rowsSeen(all, q, counts), tokens: tokensEnding() };
+async function show() {
+  const all = await discover();
+  const on = await agentsByAccount();
+  const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
+  const next = { accounts: rowsSeen(all, readsNow(all), counts), tokens: await tokensEnding() };
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;
   view.set(next);
   forLoad = loadAccounts(next.accounts);
-}
-
-async function refresh() {
-  const all = await discover();
-  await show(all, await quotas(all, await busyKeys(all)));
 }
 
 // ---- picking ----
@@ -388,29 +183,22 @@ const BY_QUOTA = "auto";
 function pick(model: string | null, how: { pinned?: string; count?: boolean } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
     const all = await discover();
-    if (!all.length) throw new Error(`no Claude account in ${HOME} (~/.claude or ~/.claude-<slug>)`);
+    if (!all.length) throw new Error("no Claude account has a setup-token (`abyme call accounts token slug=<s>`)");
     const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
     const busy = await busyKeys(all);
-    const q = await quotas(all, busy);
-    await show(all, q);
+    const q = readsNow(all);
+    await show();
     let account: Account | undefined;
     let why: string;
     if (pinned && (account = all.find((a) => a.slug === pinned))) why = "pinned";
     else {
       if (pinned) abyme.log.warn(`pinned account ${pinned} is gone; picking by quota`);
-      const f = family(model);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
-        return { slug: a.slug, key: a.key, usage: x && "usage" in x ? x.usage : null, windows: x && "usage" in x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key) };
+        return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key) };
       });
-      const out = best(rows, f, Date.now());
-      if (out.pick === null) {
-        const errors = all.map((a) => {
-          const x = q.get(a.key);
-          return `${a.slug}: ${spentUntil(a.key) ? "hit its limit" : x && "error" in x ? x.error : "spent"}`;
-        });
-        throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why}; ${errors.join(", ")})`);
-      }
+      const out = best(rows, family(model), Date.now());
+      if (out.pick === null) throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why})`);
       account = all[out.pick]!;
       why = out.why;
     }
@@ -435,195 +223,88 @@ async function modelOf(l: { config: Record<string, { value: string; category?: s
   return null;
 }
 
-// ---- trust: the folder's repository root, in the account's .claude.json ----
-
-async function trust(a: Account, cwd: string) {
-  const top = await processes().run("git", { args: ["-C", cwd, "rev-parse", "--show-toplevel"] });
-  const path = (await files().realpath(top.code === 0 && top.stdout.trim() ? top.stdout.trim() : cwd)) ?? cwd;
-  if (!path.startsWith(`${HOME}/`)) return;
-  const file = a.main ? `${HOME}/.claude.json` : `${a.dir}/.claude.json`;
-  for (let tries = 0; tries < 3; tries++) {
-    const now = await files().read(file, { version: true });
-    if (!now?.text) return;
-    const c = JSON.parse(now.text) as { projects?: Record<string, Record<string, unknown>> };
-    const p = ((c.projects ??= {})[path] ??= {});
-    if (p.hasTrustDialogAccepted === true && p.hasCompletedProjectOnboarding === true) return;
-    Object.assign(p, { hasTrustDialogAccepted: true, hasCompletedProjectOnboarding: true });
-    // Only over the version read: never over a running Claude's own write.
-    if ((await files().write(file, JSON.stringify(c, null, 2), { ifVersion: now.version })).written) return;
-  }
-}
-
-// ---- conversations: the newest copy of each, in every account folder ----
-
-let syncing: Promise<number> | null = null;
-
-/** Copies the newest copy of each `projects/<p>/<s>.jsonl` changed within `syncDays` into every
- * account folder that has an older one or none, its time kept. Answers how many it copied. */
-async function syncOnce(): Promise<number> {
-  const all = await discover();
-  if (all.length < 2) return 0;
-  const since = Date.now() - o.syncDays * 86_400_000;
-  const have = all.map(() => new Map<string, number>());
-  const newest = new Map<string, { from: string; mtime: number }>();
-  await Promise.all(
-    all.map(async (a, i) => {
-      for (const p of (await files().list(`${a.dir}/projects`)) ?? []) {
-        if (p.kind !== "dir") continue;
-        for (const f of (await files().list(`${a.dir}/projects/${p.name}`)) ?? []) {
-          if (f.kind !== "file" || !f.name.endsWith(".jsonl") || f.mtime === null) continue;
-          const rel = `${p.name}/${f.name}`;
-          have[i]!.set(rel, f.mtime);
-          if (f.mtime >= since && (newest.get(rel)?.mtime ?? -1) < f.mtime) newest.set(rel, { from: `${a.dir}/projects/${rel}`, mtime: f.mtime });
-        }
-      }
-    }),
-  );
-  let copies = 0;
-  for (const [rel, { from, mtime }] of newest)
-    for (const [i, a] of all.entries()) {
-      const to = `${a.dir}/projects/${rel}`;
-      if (to === from || (have[i]!.get(rel) ?? -1) >= mtime) continue;
-      await files().mkdir(to.slice(0, to.lastIndexOf("/")));
-      // -p keeps the time the comparison rests on.
-      if ((await processes().run("cp", { args: ["-p", from, to] })).code === 0) copies++;
-    }
-  return copies;
-}
-
-/** One sync at a time: a launch's is skipped while one runs; a resume waits for it, then runs its own. */
-function sync(wait: boolean): Promise<number> {
-  if (syncing && !wait) return syncing;
-  const after = syncing ?? Promise.resolve(0);
-  const run: Promise<number> = after
-    .catch(() => 0)
-    .then(syncOnce)
-    .finally(() => {
-      if (syncing === run) syncing = null;
-    });
-  syncing = run;
-  return run;
-}
-
 // ---- the hook every abyme launch passes through ----
 
 const prepare: Parameters<typeof agents.prepare.add>[0] = {
   async prepare(l) {
     if (l.kind !== "claude") return {};
     const model = await modelOf(l);
-    // A resume needs another account's copy in place before claude looks for it.
-    if (l.resume) await sync(true);
     // The agent's pin: the menu's, else what New agent's Account field picked, which is kept as
     // the agent's pin so the menu shows it and can take it off ("auto").
     const field = l.with?.["accounts.account"];
     if (l.agent && field && pins()[l.agent] === undefined) abyme.store.set("pins", { ...pins(), [l.agent]: field });
     const pinned = l.agent ? pins()[l.agent] : undefined;
-    // Its last turn hit a usage limit there: that account is out until it resets, and a pick by
-    // quota moves it (a pinned agent stays, and abyme shows the limit).
-    if (l.limited?.configDir) await markSpent(l.limited.configDir, l.limited.why);
-    const { account, why } = await pick(model, { pinned, count: !l.probe });
-    if (!l.probe) {
-      await trust(account, l.cwd);
-      if (!l.resume) void sync(false).catch((e) => abyme.log.warn("sync:", (e as Error).message));
+    // Its last turn hit a usage limit on the account it ran on: that account is out until it
+    // resets, and a pick by quota moves it (a pinned agent stays, and abyme shows the limit).
+    if (l.limited && l.agent) {
+      const was = (await joined()).find((x) => x.id === l.agent)?.account;
+      if (was) markSpent(was, l.limited.why);
     }
+    const { account, why } = await pick(model, { pinned, count: !l.probe });
+    const token = await tokenOf(account.slug);
+    if (!token) throw new Error(`${account.slug}: its setup-token is not in the keychain`);
     abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
-    const env: Record<string, string> = account.main ? {} : { CLAUDE_CONFIG_DIR: account.dir };
-    return { env, configDir: account.dir };
+    // `secret` reaches the harness's environment alone (agents gives it only to the owner's
+    // launches: another user's agent runs on that user's own sign-in, never a pool account).
+    return { secret: { CLAUDE_CODE_OAUTH_TOKEN: token }, account: account.slug };
   },
 };
 
-// Only with a machine: without its files and keychain there is no account to pick or show.
+// Only with a machine: without its keychain there is no account to pick or show.
 if (fs && process) {
   agents.prepare.add(prepare);
-  void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
-  setInterval(() => void refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message)), 5 * 60_000);
-}
-/** The quota as last read, with the agents as they are now. */
-async function showCached() {
-  const all = await discover();
-  const q = new Map<string, Quota>();
-  for (const a of all) {
-    const had = quota.get(a.key);
-    const read = last.get(a.key);
-    q.set(a.key, had && !errorWins(had, read) ? answer(had.at, had.data) : (read ?? { at: 0, error: "not read yet" }));
-  }
-  await show(all, q);
+  void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
 }
 
-/** The last push taken of each login (ms), by identity: one heard again changes nothing. */
+/** The last push taken of each login (ms): one heard again changes nothing. */
 const taken = new Map<string, number>();
-/** Refusals not believed, by login, window and time: each logged once. */
-const ignored = new Set<string>();
-/** What agents' harnesses said of their accounts (`usage_limits`), into each login's kept read:
- * newer than the read, it wins; `rejected` marks the login spent until that window resets. Never
- * into the shared file, which holds endpoint reads only. */
+/** What agents' harnesses said of their accounts (`usage_limits`), into each login's read: newer
+ * than the read, it wins; `rejected` marks the login spent until that window resets. */
 async function takeUsage() {
   const all = await discover();
-  const byDir = new Map(all.map((a) => [a.dir, a]));
-  const said = new Map<string, { a: Account; pushes: Pushed[] }>();
+  const said = new Map<string, Pushed[]>();
   for (const x of await joined()) {
-    const a = x.config_dir ? byDir.get(x.config_dir) : undefined;
-    if (!a || !x.usage_limits?.length) continue;
-    const s = said.get(a.key) ?? { a, pushes: [] };
-    s.pushes.push(...x.usage_limits);
-    said.set(a.key, s);
+    if (!x.account || !x.usage_limits?.length || !all.some((a) => a.slug === x.account)) continue;
+    said.set(x.account, [...(said.get(x.account) ?? []), ...x.usage_limits]);
   }
   for (const k of taken.keys()) if (!all.some((a) => a.key === k)) taken.delete(k);
-  const shared = said.size ? await readShared() : {};
-  for (const [key, { a, pushes }] of said) {
-    // A refusal an own read newer than it contradicts is not believed (`disbelieved`).
-    const own = shared[key] ? answer(shared[key].at, shared[key].data) : null;
-    const read = own && "usage" in own ? own : null;
-    const believed = pushes.filter((p) => {
-      if (!disbelieved(p, read)) return true;
-      const id = `${key} ${p.window} ${p.at}`;
-      if (!ignored.has(id)) {
-        ignored.add(id);
-        abyme.log.warn(`${a.slug}: ignored a harness's ${p.window === "seven_day" ? "weekly" : "5-hour"} limit: its own newer read shows ${p.window === "seven_day" ? read!.usage.seven : read!.usage.five}%`);
-      }
-      return false;
-    });
-    const next = takePushes(newest(quota.get(key), shared[key]), believed, taken.get(key) ?? 0);
+  for (const [slug, pushes] of said) {
+    const next = takePushes(reads()[slug], pushes, taken.get(slug) ?? 0);
     if (!next) continue;
-    taken.set(key, next.at);
-    if (next.data) {
-      quota.set(key, { at: next.at, data: next.data });
-      last.set(key, answer(next.at, next.data));
-    }
-    for (const r of next.rejected) await markSpent(a.dir, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
+    taken.set(slug, next.at);
+    abyme.store.set("reads", { ...reads(), [slug]: { at: next.at, data: next.data } });
+    for (const r of next.rejected) markSpent(slug, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }
-// An agent's list changes many times a second while agents work, and each show lists the home
-// folder and reads every account's identity: once a moment at most.
+// An agent's list changes many times a second while agents work: once a moment at most.
 let showing: ReturnType<typeof setTimeout> | null = null;
 if (fs && process)
   agents.items.on("change", () => {
     showing ??= setTimeout(() => {
       showing = null;
       void takeUsage()
-        .then(showCached)
+        .then(show)
         .catch((e) => abyme.log.warn("usage push:", (e as Error).message));
     }, 2_000);
   });
 
-// ---- setup-tokens (resource-budgets 5.4): one per account, in the keychain ----
+// ---- setup-tokens: one per account, in the keychain ----
 //
 // `token({ slug })` runs `claude setup-token` under the plugin, never in a terminal, so the token is
 // in no scrollback: its authorize URL comes back to the caller (an agent opens it on that account's
-// browser profile and hands it to the operator), and the token it prints goes straight to the
-// keychain as `abyme-accounts-<slug>`, with when it was made in the store. Launches do not use them
-// yet: they move once every account has one.
+// browser profile and hands it to the operator, or the operator opens it), and the token it prints
+// goes straight to the keychain as `abyme-accounts-<slug>`. Where its localhost callback cannot be
+// reached (another computer, a phone), Claude shows a code instead: `code({ slug, code })` gives it
+// to the waiting setup-token.
 
-const tokenService = (slug: string) => `abyme-accounts-${slug}`;
-/** When each account's token was made (ms), by slug. */
-const tokensMade = () => (abyme.store.get("tokens") ?? {}) as Record<string, number>;
-const tokensEnding = () => Object.fromEntries(Object.entries(tokensMade()).map(([slug, made]) => [slug, new Date(tokenEnds(made)).toISOString()]));
 /** Mints under way, by slug: one at a time an account. */
-const minting = new Map<string, string>();
+const minting = new Map<string, { url: string; scratch: string }>();
 
-/** `claude setup-token` with a stdin held open (with stdin closed it never opens the browser) and
- * `BROWSER` set to a script that writes the authorize URL to a file. */
-const MINT = 'f=$(mktemp -u); mkfifo -m 600 "$f"; exec 3<>"$f"; rm -f "$f"; exec "$CLAUDE" setup-token <&3';
+/** `claude setup-token` with stdin a fifo in the mint's scratch, held open by the shell (with stdin
+ * closed it never opens the browser) and written to by `code`; its pid in the scratch, so a mint
+ * whose process is gone (abymed restarted under it) is known dead; `BROWSER` a script that writes
+ * the authorize URL to a file. */
+const MINT = 'cd "$SCRATCH" && mkfifo -m 600 in && exec 3<>in && echo $$ > pid && exec "$CLAUDE" setup-token <&3';
 
 async function claudePath(): Promise<string> {
   const r = await processes().run("/bin/sh", { args: ["-lc", "command -v claude"] });
@@ -632,31 +313,25 @@ async function claudePath(): Promise<string> {
   return path;
 }
 
-/** A token made before this store kept them (by hand): when the keychain says it was made. */
-async function adoptTokens() {
-  const made = { ...tokensMade() };
-  for (const a of await discover()) {
-    if (made[a.slug] !== undefined) continue;
-    const r = await processes().run(o.security, { args: ["find-generic-password", "-s", tokenService(a.slug), "-a", USER] }).catch(() => null);
-    const at = r && r.code === 0 ? keychainMade(r.stdout + r.stderr) : null;
-    if (at !== null) made[a.slug] = at;
-  }
-  abyme.store.set("tokens", made);
+/** Whether a mint's setup-token still runs: its pid alive. */
+async function alive(scratch: string): Promise<boolean> {
+  const pid = Number(((await files().read(`${scratch}/pid`).catch(() => undefined)) ?? "").trim());
+  if (!pid) return false;
+  return (await processes().run("ps", { args: ["-p", String(pid), "-o", "pid="] })).code === 0;
 }
-if (fs && process) void adoptTokens().catch((e) => abyme.log.warn("setup-tokens:", (e as Error).message));
 
 async function mintToken(slug: string): Promise<{ slug: string; url: string; text: string }> {
-  const account = (await discover()).find((x) => x.slug === slug);
-  if (!account) throw new Error(`no account ${slug}`);
+  if (!/^[a-z0-9._-]+$/.test(slug)) throw new Error(`${slug} is no account name: letters, digits, . _ -`);
   const had = minting.get(slug);
-  if (had) return { slug, url: had, text: `a token for ${slug} is waiting for its Authorize: ${had}` };
-  const scratch = `${files().scratch}/mint-${slug}`;
+  if (had && (await alive(had.scratch))) return { slug, url: had.url, text: `a token for ${slug} is waiting for its Authorize: ${had.url}` };
+  // A mint whose setup-token is gone: forgotten, and made again.
+  if (had) minting.delete(slug);
+  const scratch = `${files().scratch}/mint-${slug}-${Date.now().toString(36)}`;
   await files().mkdir(scratch);
-  await files().remove(`${scratch}/url`).catch(() => {});
   await files().write(`${scratch}/browser`, `#!/bin/sh\nprintf '%s\\n' "$1" > '${scratch}/url'\n`);
-  await processes().run("chmod", { args: ["700", `${scratch}/browser`] });
+  await processes().run("chmod", { args: ["700", scratch, `${scratch}/browser`] });
   const claude = await claudePath();
-  const run = processes().run("/bin/sh", { args: ["-c", MINT], env: { BROWSER: `${scratch}/browser`, CLAUDE: claude }, timeoutMs: 2 * 60 * 60_000 });
+  const run = processes().run("/bin/sh", { args: ["-c", MINT], env: { BROWSER: `${scratch}/browser`, CLAUDE: claude, SCRATCH: scratch }, timeoutMs: 2 * 60 * 60_000 });
   void run
     .then(async (r) => {
       // The output holds the token: read here, and never logged, kept or answered.
@@ -664,20 +339,20 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
       if (!secret) return void abyme.log.warn(`${slug}: setup-token ended with no token (exit ${r.code})`);
       const w = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
       if (w.code !== 0) return void abyme.log.warn(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
-      abyme.store.set("tokens", { ...tokensMade(), [slug]: Date.now() });
       abyme.log.info(`${slug}: setup-token made and kept in the keychain`);
+      listed = null;
       shown = "";
-      await refresh();
+      await show();
     })
     .catch((e) => abyme.log.warn(`${slug}: setup-token:`, (e as Error).message))
     .finally(() => {
-      minting.delete(slug);
+      if (minting.get(slug)?.scratch === scratch) minting.delete(slug);
       void files().remove(scratch).catch(() => {});
     });
   for (let i = 0; i < 60; i++) {
     const url = ((await files().read(`${scratch}/url`).catch(() => undefined)) ?? "").trim();
     if (url) {
-      minting.set(slug, url);
+      minting.set(slug, { url, scratch });
       return { slug, url, text: `open ${url} on browser profile claude-${slug} and have the operator Authorize: the token goes to the keychain once they do` };
     }
     await new Promise((r) => setTimeout(r, 500));
@@ -686,12 +361,36 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
 }
 
 export default {
-  /** `abyme call accounts token slug=…`: a setup-token for that account (resource-budgets 5.4):
-   * answers the authorize URL to open on browser profile `claude-<slug>` for the operator; the
-   * token goes to the keychain once they Authorize. Launches do not use it yet. */
+  /** `abyme call accounts token slug=…`: a setup-token for that account, a new account when no
+   * token has the slug: answers the authorize URL to open on browser profile `claude-<slug>` for the
+   * operator; the token goes to the keychain once they Authorize. */
   token: (a: { slug: string }) => mintToken(a.slug),
+  /** `abyme call accounts code slug=… code=…`: the code Claude showed after Authorize (its localhost
+   * callback out of reach), given to that account's waiting setup-token. */
+  async code(a: { slug: string; code: string }) {
+    const m = minting.get(a.slug);
+    if (!m || !(await alive(m.scratch))) throw new Error(`no setup-token for ${a.slug} is waiting: \`abyme call accounts token slug=${a.slug}\` first`);
+    if (!/^[A-Za-z0-9#_-]+$/.test(a.code.trim())) throw new Error("that is not a code Claude shows");
+    // Into the fifo the setup-token reads as its stdin: written in place, never replaced.
+    const w = await processes().run("/bin/sh", { args: ["-c", 'printf "%s\\n" "$CODE" > "$FIFO"'], env: { CODE: a.code.trim(), FIFO: `${m.scratch}/in` } });
+    if (w.code !== 0) throw new Error(`${a.slug}: its setup-token would not take the code`);
+    return { slug: a.slug, text: `given to ${a.slug}'s setup-token: its token goes to the keychain` };
+  },
   /** When each account's setup-token ends, by slug: a year after it was made. */
   tokens: () => tokensEnding(),
+  /** `abyme call accounts revoke slug=…`: that account's token out of the keychain and its agents'
+   * harnesses closed, so nothing runs on it; Claude keeps the token valid until it is revoked at
+   * claude.ai/settings/claude-code, which the answer says. */
+  async revoke(a: { slug: string }) {
+    const r = await processes().run(o.security, { args: ["delete-generic-password", "-s", tokenService(a.slug), "-a", USER] });
+    if (r.code !== 0) throw new Error(`no setup-token for ${a.slug} in the keychain`);
+    listed = null;
+    const on = (await agentsByAccount(true)).get(a.slug) ?? [];
+    if (on.length) await agents.close({ ids: on.map((x) => x.id) }).catch((e: unknown) => abyme.log.warn(`revoke ${a.slug}: closing its agents:`, (e as Error).message));
+    shown = "";
+    await show();
+    return { slug: a.slug, closed: on.map((x) => x.name), text: `${a.slug}'s token is out of the keychain${on.length ? ` and ${on.length} agent(s) on it closed` : ""}; revoke it at https://claude.ai/settings/claude-code too` };
+  },
   /** `abyme call accounts pick model=…`: the account a launch would get now, and why. Counts nothing. */
   async pick(a: { model?: string } = {}) {
     const { account, why } = await pick(a.model ?? null);
@@ -702,9 +401,8 @@ export default {
   view: () => view,
   /** `abyme call accounts agents`: each abyme agent not closed and the account it runs on. */
   async agents() {
-    const all = await discover();
-    const dirs = await agentsByDir(true);
-    return all.flatMap((a) => (dirs.get(a.dir) ?? []).map((x) => ({ agent: x.id, name: x.name, account: a.slug, pinned: pins()[x.id] ?? null })));
+    const on = await agentsByAccount(true);
+    return [...on].flatMap(([slug, xs]) => xs.map((x) => ({ agent: x.id, name: x.name, account: slug, pinned: pins()[x.id] ?? null })));
   },
   /** The account an agent's resumes run on; null picks by quota again. */
   async pin(a: { agent: string; slug: string | null }) {
@@ -715,51 +413,20 @@ export default {
       now[a.agent] = a.slug;
     }
     abyme.store.set("pins", now);
-    void showCached();
+    void show();
     return { agent: a.agent, slug: a.slug };
   },
   pins: () => pins(),
-  /** `abyme call accounts sync`: the conversation sync now; how many copies it made. */
-  sync: () => sync(true),
-  /** `abyme call accounts login slug=…`: clodcurrent's browser login for that account, in a
-   * terminal of its own the operator types into; answers the terminal's id. */
-  async login(a: { slug: string }) {
-    const account = (await discover()).find((x) => x.slug === a.slug);
-    if (!account) throw new Error(`no account ${a.slug}`);
-    const shell = await terminal.run({ key: `accounts.login.${account.slug}`, title: `Sign in: ${account.slug}`, cwd: HOME, command: `clodcurrent renew --login ${account.slug}` });
-    return { shell: shell.id };
-  },
-  /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it, by
-   * clodcurrent's own marker (`clodcurrent disable`), so a terminal's `cl` skips it too. */
+  /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it. */
   async ignore(a: { slug: string; on?: boolean }) {
-    const marker = `${await folderOf(a.slug)}/.clodcurrent-disabled`;
-    if (a.on === false) await files().remove(marker);
-    else await files().write(marker, "");
-    await refresh();
+    if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+    const off = new Set(ignoredSlugs());
+    if (a.on === false) off.delete(a.slug);
+    else off.add(a.slug);
+    abyme.store.set("ignored", [...off].sort());
+    await show();
     return { slug: a.slug, ignored: a.on !== false };
   },
-  /** The accounts ignored: a folder with an identity and the marker. */
-  async ignored() {
-    const out: string[] = [];
-    for (const f of (await files().list(HOME)) ?? [])
-      if (f.kind === "dir" && f.name.startsWith(".claude-") && (await files().stat(`${HOME}/${f.name}/.clodcurrent-disabled`))) out.push(f.name.slice(8));
-    return out.sort();
-  },
+  /** The accounts ignored. */
+  ignored: () => ignoredSlugs(),
 };
-
-/** The folder of an account by slug, its marker left aside: `main` is ~/.claude. */
-async function folderOf(slug: string): Promise<string> {
-  const dir = slug === "main" ? `${HOME}/.claude` : `${HOME}/.claude-${slug}`;
-  if (!/^[a-z0-9._-]+$/.test(slug) || (await files().stat(dir))?.kind !== "dir") throw new Error(`no account ${slug}`);
-  return dir;
-}
-
-// A login that ended: read every account again, so the status bar and the next pick see it.
-if (fs && process)
-  terminal.followers.add({
-    async exited(shell) {
-      if (!shell.key?.startsWith("accounts.login.")) return;
-      quota.clear();
-      await refresh().catch((e) => abyme.log.warn("quota:", (e as Error).message));
-    },
-  });

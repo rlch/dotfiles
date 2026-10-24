@@ -84,7 +84,7 @@ abyme.server({ name: "Knowledge", color: "green", icon: "book" });
 // which routes it here.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4446" });
 
-common({ lead: false });
+common();
 
 // No app: what a vault of notes and learning needs, and nothing for code (no git,
 // terminals, language servers or worktrees). Each line is its own setup; a plugin a kept one

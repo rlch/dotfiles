@@ -1,7 +1,8 @@
 // accounts, in every page: each account's quota in the status bar, an Account field in New agent,
 // and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on;
-// `/login` in a Claude agent's composer opens the same picker. "Sign in to Claude account…" runs
-// an account's browser login in a terminal, and an account found signed out says so with a button.
+// `/login` in a Claude agent's composer opens the same picker. "Sign in to Claude account…" makes
+// an account's setup-token: its authorize page opens, and once the operator clicks Authorize the
+// token goes to the keychain.
 import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents";
@@ -12,7 +13,7 @@ import menus from "@abyme/menus/inventory";
 import notifications from "@abyme/notifications";
 import palette from "@abyme/palette";
 import status from "@abyme/status/inventory";
-import terminal from "@abyme/terminal";
+import markdown from "@abyme/markdown/optional";
 import type { AccountSeen } from "./pick.ts";
 import { Quota } from "./segment.tsx";
 
@@ -68,11 +69,14 @@ commands.add({
 });
 chat.slash.add({ name: "login", harness: "claude", description: "Choose the account this agent runs on", action: ({ agent }) => (agent ? void choose(agent) : "pass") });
 menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
-/** Its browser login, in a terminal of its own, in front. */
+/** A setup-token for the account: its authorize page opened, the token to the keychain once the
+ * operator clicks Authorize there. Off this Mac, Claude shows a code instead, which an agent gives
+ * the waiting setup-token (`abyme call accounts code slug=<s> code=<code>`). */
 async function signIn(slug: string) {
   try {
-    const { shell } = (await accounts.server.login({ slug })) as { shell: string };
-    terminal.open("shell", shell, { kind: "go", focus: true, event: { keep: true } });
+    const { url } = (await accounts.server.token({ slug })) as { url: string };
+    if (markdown) markdown.open(url);
+    notifications.notify({ level: "info", title: `Authorize ${slug}`, body: `Sign in to Claude as ${slug}'s login and click Authorize: the token goes to the keychain.${markdown ? "" : ` ${url}`}` });
   } catch (e) {
     notifications.notify({ level: "error", title: `${slug} not signed in`, body: (e as Error).message });
   }
@@ -88,65 +92,23 @@ async function ignore(slug: string, on = true) {
   }
 }
 
-/** What to do about one account: sign in again, or leave it out. */
-function fix(slug: string) {
-  palette.pick({
-    placeholder: slug,
-    items: [
-      { id: "signin", title: `Sign in to ${slug} again` },
-      { id: "ignore", title: `Ignore ${slug}: no agent runs on it until you use it again` },
-    ],
-    onPick: (id) => void (id === "signin" ? signIn(slug) : ignore(slug)),
-  });
-}
-
-const OUT = new Set(["signed out", "no credentials", "unauthorized"]);
 commands.add({
   id: "accounts.signin",
   title: "Sign in to Claude account…",
   group: "Agents",
   run: async () => {
-    const v = (await accounts.server.view()) as View;
-    const first = folders(v).sort((a, b) => Number(OUT.has(b.error ?? "")) - Number(OUT.has(a.error ?? "")));
+    // Each account by when its token ends, soonest first: the one to make again.
+    const v = (await accounts.server.view()) as View & { tokens?: Record<string, string> };
+    const ends = (slug: string) => Date.parse(v.tokens?.[slug] ?? "") || 0;
     palette.pick({
-      placeholder: "The account to sign in to again",
-      items: first.map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
+      placeholder: "The account to make a setup-token for",
+      items: folders(v)
+        .sort((a, b) => ends(a.slug) - ends(b.slug))
+        .map((a) => ({ id: a.slug, title: v.tokens?.[a.slug] ? `${a.slug}  token ends ${v.tokens[a.slug]!.slice(0, 10)}` : label(a), keywords: [a.slug] })),
       onPick: (slug) => void signIn(slug),
     });
   },
 });
-
-/** Each account found signed out or with no login, a notice that stays until it is back. */
-const told = new Map<string, { dispose(): void }>();
-function tell() {
-  // One notice per login, named by its first folder.
-  for (const a of (view()?.accounts ?? []).map((r) => ({ ...r, slug: r.slugs[0]! }))) {
-    const had = told.get(a.slug);
-    if (!OUT.has(a.error ?? "")) {
-      had?.dispose();
-      told.delete(a.slug);
-      continue;
-    }
-    if (had) continue;
-    told.set(
-      a.slug,
-      notifications.notify({
-        level: "warning",
-        key: `accounts.signedout.${a.slug}`,
-        title: `${a.slug} is signed out`,
-        body: "Its login has ended; no agent starts on it until you sign in or ignore it.",
-        sticky: true,
-        resolved: `${a.slug} is signed in`,
-        action: { label: "Sign in or ignore…", run: () => fix(a.slug) },
-      }),
-    );
-  }
-  // A folder no longer first of a login (signed in as another): its notice goes.
-  const firsts = new Set((view()?.accounts ?? []).map((r) => r.slugs[0]));
-  for (const [slug, had] of told) if (!firsts.has(slug)) (had.dispose(), told.delete(slug));
-}
-abyme.effect(() => seen.on("change", tell));
-tell();
 
 commands.add({
   id: "accounts.ignore",
@@ -156,7 +118,7 @@ commands.add({
     const v = (await accounts.server.view()) as View;
     palette.pick({
       placeholder: "The account no agent runs on",
-      items: folders(v).filter((a) => a.slug !== "main").map((a) => ({ id: a.slug, title: a.error ? `${a.slug}  ${a.error}` : label(a), keywords: [a.slug] })),
+      items: folders(v).filter((a) => a.slug !== "main").map((a) => ({ id: a.slug, title: label(a), keywords: [a.slug] })),
       onPick: (slug) => void ignore(slug),
     });
   },

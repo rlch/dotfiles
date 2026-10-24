@@ -17,7 +17,7 @@ abyme.server({ name: "Bevy", color: "orange", icon: "sparkles" });
 // which routes it here.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4447" });
 
-common({ lead: false });
+common();
 
 // The Bevy app: the platform list, then its own plugins (the studio, JSX edits).
 bevy.setup();

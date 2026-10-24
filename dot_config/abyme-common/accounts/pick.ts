@@ -1,6 +1,7 @@
-// clodcurrent's picking, as it is in ~/dev/clodcurrent/src (usage.rs, select.rs, model.rs,
-// usage_cache.rs), with nothing of abyme in it: server.ts gives it the accounts and their usage
-// answers, and test.ts (in the dotfiles source only, never deployed) checks it.
+// clodcurrent's picking, as it is in ~/dev/clodcurrent/src (usage.rs, select.rs, model.rs), with
+// nothing of abyme in it: server.ts gives it the accounts (one per setup-token) and what their
+// agents' harnesses said of their usage, and test.ts (in the dotfiles source only, never deployed)
+// checks it.
 
 export type Family = "fable" | "opus" | "sonnet" | "haiku" | "other";
 
@@ -87,12 +88,6 @@ export function expirePast(data: Raw, now: number): Raw {
   return out;
 }
 
-/** Between reads, the last read when it was an error newer than the answer kept: an older answer
- * must not hide it. It did: "hsone is signed out" was raised by each 5-minute read and cleared 2 s
- * later by the next agent change (2026-10-21). */
-export const errorWins = (kept: { at: number } | undefined, read: { at: number; error?: string } | undefined): boolean =>
-  read?.error !== undefined && (kept === undefined || read.at >= kept.at);
-
 const HORIZON = 5 * 3600;
 const WEEK = 7 * 86400;
 const WEEKLY_FLOOR = 0.15;
@@ -139,20 +134,6 @@ export function windowSaid(why: string): Window | null {
   return null;
 }
 
-/** How old a kept read may be and still stand for a failed one. */
-export const STALE_OK_MS = 30 * 60_000;
-
-/** Whether a kept read may stand for a read that failed: one with a window at 100 and its reset
- * still ahead stands at any age, as a cap does not lift before its reset (hsone, 7d at 100 until
- * 2026-10-25, showed no numbers while its reads failed, 2026-10-23); else under STALE_OK_MS old and
- * not near a cap (5h under 90, 7d under 85). Near a cap an old read hides the cap: tuteroai read
- * "7d 93%" for 50 picks while it ran into its week (2026-10-23). `u` has its past windows zeroed. */
-export const staleOk = (u: Usage, age: number): boolean => {
-  const b = binding(u);
-  if (b && Number.isFinite(Date.parse(b.resets ?? ""))) return true;
-  return age < STALE_OK_MS && u.five < 90 && u.seven < 85;
-};
-
 /** The usage with the model's window as the binding week, when it is the more used. */
 function withWindow(u: Usage, w: ModelWindow): Usage {
   return w.utilization !== null && w.utilization > u.seven ? { ...u, seven: w.utilization, sevenResets: w.resetsAt ?? u.sevenResets } : u;
@@ -161,22 +142,24 @@ function withWindow(u: Usage, w: ModelWindow): Usage {
 /** An account to pick from: `spent` is until when a turn's limit keeps it out (ISO), if it does. */
 export type Row = { slug: string; key: string; usage: Usage | null; windows: ModelWindow[]; busy: boolean; spent?: string | null };
 export type Outcome = { pick: number; why: string } | { pick: null; why: string };
+/** An account not read yet, as a pick counts it. */
+const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null };
 
 /** clodcurrent's `best_for`, without its capped tiers: an account whose window for the model is
  * spent is out, the model's window binds the week, then free and not capped, then not capped, the
  * highest score in the first tier that has one. A capped account is never picked: with only those
- * left the answer names the first back. Busy is per identity. */
+ * left the answer names the first back. Busy is per identity. An account no harness has said
+ * anything of yet counts as unused: its windows come only with its first turn's push. */
 export function best(rows: Row[], f: Family | null, now: number): Outcome {
   const busyKeys = new Set(rows.filter((r) => r.busy).map((r) => r.key));
   const eff = rows.map((r) => {
-    if (!r.usage) return null;
+    const u = r.usage ?? UNREAD;
     const w = f ? windowFor(r.windows, f) : null;
     if (w && w.utilization !== null && w.utilization >= 100) return null;
-    return w ? withWindow(r.usage, w) : r.usage;
+    return w ? withWindow(u, w) : u;
   });
   const usable = rows.map((_, i) => i).filter((i) => eff[i] !== null);
-  if (!usable.length)
-    return { pick: null, why: rows.some((r) => r.usage) ? `every account's ${f} window is spent` : "no account's usage could be read" };
+  if (!usable.length) return { pick: null, why: rows.length ? `every account's ${f} window is spent` : "no account" };
   const busy = (i: number) => busyKeys.has(rows[i]!.key);
   const cap = (i: number) => !!rows[i]!.spent || capped(eff[i]!);
   const tiers: [string, (i: number) => boolean][] = [
@@ -209,22 +192,24 @@ export function later(a: string | null, b: string | null): string | null {
 
 // ---- one row per login, as pages see it: no token, no email, no uuid ----
 
-/** An account folder: `key` is its login (accountUuid, else email), read from its `.claude.json`
- * at every look, never kept, so a folder signed in again as another login moves at once. */
-export type Folder = { slug: string; dir: string; key: string };
+/** An account: one setup-token in the keychain (`abyme-accounts-<slug>`), its login. */
+export type Account = { slug: string; key: string };
 
-/** A login's identity as its `.claude.json` says it; null when it has none. */
-export function loginOf(text: string | null): { email: string; uuid?: string; key: string } | null {
-  try {
-    const a = (JSON.parse(text ?? "{}") as { oauthAccount?: { emailAddress?: string; accountUuid?: string } }).oauthAccount;
-    return a?.emailAddress ? { email: a.emailAddress, uuid: a.accountUuid, key: a.accountUuid ?? `email:${a.emailAddress}` } : null;
-  } catch {
-    return null;
+/** The setup-tokens `security dump-keychain` lists (attributes only, never a secret): each
+ * `abyme-accounts-<slug>` item's slug and when it was last written (`mdat`, ms), a token made again
+ * replacing the one before. */
+export function tokensListed(dump: string): { slug: string; made: number | null }[] {
+  const out: { slug: string; made: number | null }[] = [];
+  for (const block of dump.split(/^keychain: /m)) {
+    const slug = /"svce"<blob>="abyme-accounts-([a-z0-9._-]+)"/.exec(block)?.[1];
+    if (!slug || out.some((t) => t.slug === slug)) continue;
+    out.push({ slug, made: keychainMade(block, "mdat") });
   }
+  return out;
 }
 
 /** What a login's last read said: its windows, or why they are unknown. */
-export type Read = { at: number; usage: Usage; windows: ModelWindow[] } | { at: number; error: string };
+export type Read = { at: number; usage: Usage; windows: ModelWindow[] };
 /** A login out of every pick until `until` (ms), by the window that capped it if known. */
 export type Spent = { until: number; window: Window | null };
 
@@ -240,7 +225,6 @@ export type AccountSeen = {
   binding: Window | null;
   back: string | null;
   read: string | null;
-  error: string | null;
   agents: number;
 };
 
@@ -254,9 +238,10 @@ export const tokenEnds = (made: number) => made + YEAR_MS;
 /** Whether a token ending at `ends` (ms) is within the 30 days the status bar warns of it. */
 export const tokenWarns = (ends: number, now: number) => ends - now < 30 * 86_400_000;
 
-/** When `security find-generic-password` says an item was made (`"cdat"<timedate>=… "20261024013000Z…"`), in ms. */
-export function keychainMade(out: string): number | null {
-  const m = /"cdat"<timedate>=[^"]*"(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)Z/.exec(out);
+/** When the keychain says an item was made (`cdat`) or last written (`mdat`)
+ * (`"cdat"<timedate>=… "20261024013000Z…"`), in ms. */
+export function keychainMade(out: string, field: "cdat" | "mdat" = "cdat"): number | null {
+  const m = new RegExp(`"${field}"<timedate>=[^"]*"(\\d{4})(\\d\\d)(\\d\\d)(\\d\\d)(\\d\\d)(\\d\\d)Z`).exec(out);
   return m ? Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +m[4]!, +m[5]!, +m[6]!) : null;
 }
 
@@ -264,7 +249,7 @@ export function keychainMade(out: string): number | null {
  * weekly windows a share of 1 (null when unknown, never 0), when each resets, and capped on the
  * window that binds. What load shows in Resources and admits turns by. */
 export type LoadWindow = { name: "5h" | "week"; used: number | null; tokens: null; resets: number | null; capped: boolean };
-export type LoadAccount = { id: string; label: string; folders: string[]; windows: LoadWindow[]; estimate: false; error: string | null };
+export type LoadAccount = { id: string; label: string; folders: string[]; windows: LoadWindow[]; estimate: false };
 export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
   const at = (t: string | null) => (t === null || Number.isNaN(Date.parse(t)) ? null : Date.parse(t));
   const share = (n: number | null) => (n === null ? null : n / 100);
@@ -277,7 +262,6 @@ export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
       { name: "week", used: share(r.seven), tokens: null, resets: at(r.sevenResets), capped: r.capped && r.binding === "seven" },
     ],
     estimate: false,
-    error: r.error,
   }));
 }
 
@@ -287,16 +271,16 @@ export const minute = (t: string | null): string | null => {
   return Number.isNaN(at) ? t : new Date(Math.round(at / 60_000) * 60_000).toISOString();
 };
 
-/** The rows: one per login, in the folders' order (main first, then by name), each with every
- * folder of it. `capped` is a window its read has at 100, until that window resets, and nothing
- * else: a spent mark keeps a login out of picks but is not shown as a cap (main, 5h 1%, showed
- * capped by another login's limit, 2026-10-23). */
-export function rowsSeen(folders: Folder[], reads: Map<string, Read>, agentsIn: Map<string, number>): AccountSeen[] {
-  const groups = new Map<string, Folder[]>();
-  for (const f of folders) groups.set(f.key, [...(groups.get(f.key) ?? []), f]);
+/** The rows: one per login, in the accounts' order (main first, then by name). `capped` is a window
+ * its read has at 100, until that window resets, and nothing else: a spent mark keeps a login out of
+ * picks but is not shown as a cap (main, 5h 1%, showed capped by another login's limit,
+ * 2026-10-23). `agentsIn` is the busy agents on each login. */
+export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn: Map<string, number>): AccountSeen[] {
+  const groups = new Map<string, Account[]>();
+  for (const a of accounts) groups.set(a.key, [...(groups.get(a.key) ?? []), a]);
   return [...groups].map(([key, members]) => {
     const x = reads.get(key);
-    const u = x && "usage" in x ? x : null;
+    const u = x ?? null;
     const bound = u ? binding(u.usage) : null;
     return {
       slugs: members.map((m) => m.slug),
@@ -309,8 +293,7 @@ export function rowsSeen(folders: Folder[], reads: Map<string, Read>, agentsIn: 
       binding: bound?.window ?? null,
       back: minute(bound?.resets ?? null),
       read: u ? new Date(u.at).toISOString() : null,
-      error: x && "error" in x ? x.error : null,
-      agents: members.reduce((n, m) => n + (agentsIn.get(m.dir) ?? 0), 0),
+      agents: agentsIn.get(key) ?? 0,
     };
   });
 }
@@ -320,34 +303,22 @@ export function rowsSeen(folders: Folder[], reads: Map<string, Read>, agentsIn: 
 /** One window as a harness said it: abyme's `UsageLimit` (`@abyme/agents`). */
 export type Pushed = { window: string | null; state: "allowed" | "warning" | "rejected"; utilization: number | null; resets_at: string | null; at: string };
 
-/** A login's endpoint read: the newer of this abymed's and the shared file's. */
+/** A login's read: what its harnesses last said, each window under its name as they say it. */
 export type Kept = { at: number; data: Raw };
-export const newest = (mine: Kept | undefined, theirs: Kept | undefined): Kept | undefined => (theirs && (!mine || theirs.at > mine.at) ? theirs : mine);
-
-/** Whether a harness's refusal is not believed: the login's own endpoint read (`own`, its past
- * windows zeroed) is newer than the refusal and shows that window under 95. The newer word wins, as
- * in `takePushes`: an older read never hides a refusal. abyme kept an agent's pushes when it moved to
- * another login (2026-10-23), and such a push keeps its old time while a login in use reads every
- * 60 s. */
-export function disbelieved(p: Pushed, own: { at: number; usage: Usage } | null): boolean {
-  const w = p.window === "seven_day" ? "seven" : p.window === "five_hour" ? "five" : null;
-  return p.state === "rejected" && w !== null && own !== null && own.at > Date.parse(p.at) && own.usage[w] < 95;
-}
 
 /** A login's read after what its agents' harnesses said: each `five_hour` or `seven_day` entry newer
- * than both the read (`base`, the newest of `newest`) and the last taken overwrites that window,
- * the others and the model windows kept. Answers the read, its new time, and each window said
- * `rejected` with its reset; null when nothing is newer. With no base, no read (`data` null): one
- * window alone would read the other as 0. */
-export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: number): { at: number; data: Raw | null; rejected: { window: Window; resets: string | null }[] } | null {
+ * than both the read (`base`) and the last taken overwrites that window, the other and the model
+ * windows kept. Answers the read, its new time, and each window said `rejected` with its reset; null
+ * when nothing is newer. With no base, the read starts from what was said: a window not said yet
+ * reads as unused, as an account no harness has spoken of does. */
+export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: number): { at: number; data: Raw; rejected: { window: Window; resets: string | null }[] } | null {
   const since = Math.max(base?.at ?? 0, taken);
   const fresh = pushes.filter((p) => (p.window === "five_hour" || p.window === "seven_day") && Date.parse(p.at) > since).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   if (!fresh.length) return null;
-  const data: Raw | null = base ? { ...base.data } : null;
+  const data: Raw = base ? { ...base.data } : {};
   const rejected: { window: Window; resets: string | null }[] = [];
   for (const p of fresh) {
     if (p.state === "rejected") rejected.push({ window: p.window === "five_hour" ? "five" : "seven", resets: p.resets_at });
-    if (!data) continue;
     const was = obj(data[p.window!]) ?? {};
     // A window said with no number keeps the one read; with neither it stays as it was. A refused
     // window is full, whatever number came with it.
