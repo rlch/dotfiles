@@ -145,6 +145,14 @@ export type Outcome = { pick: number; why: string } | { pick: null; why: string 
 /** An account not read yet, as a pick counts it. */
 const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null };
 
+/** A row's usage for `f`, the model's window binding the week; null when that window is spent. */
+function effective(r: Row, f: Family | null): Usage | null {
+  const u = r.usage ?? UNREAD;
+  const w = f ? windowFor(r.windows, f) : null;
+  if (w && w.utilization !== null && w.utilization >= 100) return null;
+  return w ? withWindow(u, w) : u;
+}
+
 /** clodcurrent's `best_for`, without its capped tiers: an account whose window for the model is
  * spent is out, the model's window binds the week, then free and not capped, then not capped, the
  * highest score in the first tier that has one. A capped account is never picked: with only those
@@ -152,12 +160,7 @@ const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null }
  * anything of yet counts as unused: its windows come only with its first turn's push. */
 export function best(rows: Row[], f: Family | null, now: number): Outcome {
   const busyKeys = new Set(rows.filter((r) => r.busy).map((r) => r.key));
-  const eff = rows.map((r) => {
-    const u = r.usage ?? UNREAD;
-    const w = f ? windowFor(r.windows, f) : null;
-    if (w && w.utilization !== null && w.utilization >= 100) return null;
-    return w ? withWindow(u, w) : u;
-  });
+  const eff = rows.map((r) => effective(r, f));
   const usable = rows.map((_, i) => i).filter((i) => eff[i] !== null);
   if (!usable.length) return { pick: null, why: rows.length ? `every account's ${f} window is spent` : "no account" };
   const busy = (i: number) => busyKeys.has(rows[i]!.key);
@@ -181,6 +184,37 @@ export function best(rows: Row[], f: Family | null, now: number): Outcome {
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   const first = backs[0];
   return { pick: null, why: first ? `every account is capped; the first back is ${first.slug} at ${first.at}` : "every account is capped; none says when it is back" };
+}
+
+/** How long a prompt cache lives: agents write 1-hour caches, and each is its account's alone. */
+export const WARM_MS = 60 * 60_000;
+
+/** The account an agent taken up again stays on: the one its last call ran on (`last`), while that
+ * call's cache lives and the account can serve `f` (not spent, no window at 100, the model's window
+ * not spent), busy or not; else null, and the pick is `best`'s. Moving it re-writes its whole
+ * context at the cache-write price on the new account (design.md, Warm). */
+export function warm(rows: Row[], last: { slug: string; at: number } | null, f: Family | null, now: number): Outcome | null {
+  if (!last || now - last.at >= WARM_MS) return null;
+  const i = rows.findIndex((r) => r.slug === last.slug);
+  const u = i < 0 ? null : effective(rows[i]!, f);
+  if (!u || rows[i]!.spent || capped(u)) return null;
+  return { pick: i, why: `warm, its last call ${Math.max(0, Math.round((now - last.at) / 60_000))} min ago, 5h ${Math.round(u.five)}% 7d ${Math.round(u.seven)}%${f ? `, ${f}` : ""}` };
+}
+
+/** When a Claude transcript's lines last have the model answering (ms): its last assistant line,
+ * not a subagent's (`isSidechain`) nor one Claude Code wrote itself (model `<synthetic>`, an error).
+ * Not the file's mtime: Claude Code writes its `cost-state` and `last-prompt` there as it exits. */
+export function lastAnswer(lines: string[]): number | null {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (!lines[i]!.includes('"assistant"')) continue;
+    try {
+      const o = JSON.parse(lines[i]!) as { type?: unknown; isSidechain?: unknown; timestamp?: unknown; message?: { model?: unknown } };
+      if (o.type !== "assistant" || o.isSidechain === true || o.message?.model === "<synthetic>") continue;
+      const at = typeof o.timestamp === "string" ? Date.parse(o.timestamp) : NaN;
+      if (Number.isFinite(at)) return at;
+    } catch {}
+  }
+  return null;
 }
 
 /** The later of two ISO times; either may be null. */

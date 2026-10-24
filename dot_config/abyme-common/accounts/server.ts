@@ -13,7 +13,7 @@ import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import options from "./options";
-import { tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, parse, parseModels, rowsSeen, takePushes, windowSaid, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, takePushes, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -185,7 +185,9 @@ const pins = () => (abyme.store.get("pins") ?? {}) as Record<string, string>;
 /** What New agent's Account field says when nothing is pinned. */
 const BY_QUOTA = "auto";
 
-function pick(model: string | null, how: { pinned?: string; count?: boolean } = {}): Promise<{ account: Account; why: string }> {
+/** `last`: the account an agent taken up again last ran on and when its last call was, which it
+ * stays on while warm (`warm`). */
+function pick(model: string | null, how: { pinned?: string; count?: boolean; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
     const all = await discover();
     if (!all.length) throw new Error("no Claude account has a setup-token (`abyme call accounts token slug=<s>`)");
@@ -202,7 +204,7 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean } = 
         const x = q.get(a.key);
         return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key) };
       });
-      const out = best(rows, family(model), Date.now());
+      const out = warm(rows, how.last ?? null, family(model), Date.now()) ?? best(rows, family(model), Date.now());
       if (out.pick === null) throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why})`);
       account = all[out.pick]!;
       why = out.why;
@@ -228,6 +230,30 @@ async function modelOf(l: { config: Record<string, { value: string; category?: s
   return null;
 }
 
+/** How much of a transcript's end is read for its last answer. */
+const TAIL = 1 << 20;
+/** When a session's transcript last has the model answering (ms), from its last MB; null when none. */
+async function answeredAt(cwd: string, session: string): Promise<number | null> {
+  const path = `${HOME}/.claude/projects/${cwd.replace(/[^A-Za-z0-9]/g, "-")}/${session}.jsonl`;
+  const info = await files().stat(path).catch(() => undefined);
+  if (info?.kind !== "file") return null;
+  const from = Math.max(0, info.size - TAIL);
+  const lines = ((await files().read(path, { from }).catch(() => undefined)) ?? "").split("\n");
+  // Cut into at `from`: its first line is part of one.
+  return lastAnswer(from > 0 ? lines.slice(1) : lines);
+}
+
+/** The account agent `id` last ran on and when its last call was: the later of its harness's last
+ * usage push (`usage_limits`, said with most calls, not every one) and its transcript's last answer,
+ * read only when the push is past the hour. Null when it ran on none. */
+async function lastCall(id: string, cwd: string, session: string, all: Joined[]): Promise<{ slug: string; at: number } | null> {
+  const x = all.find((j) => j.id === id);
+  if (!x?.account) return null;
+  const pushed = Math.max(0, ...(x.usage_limits ?? []).map((p) => Date.parse(p.at)).filter(Number.isFinite));
+  const at = Date.now() - pushed < WARM_MS ? pushed : Math.max(pushed, (await answeredAt(cwd, session)) ?? 0);
+  return at ? { slug: x.account, at } : null;
+}
+
 // ---- the hook every abyme launch passes through ----
 
 const prepare: Parameters<typeof agents.prepare.add>[0] = {
@@ -241,11 +267,15 @@ const prepare: Parameters<typeof agents.prepare.add>[0] = {
     const pinned = l.agent ? pins()[l.agent] : undefined;
     // Its last turn hit a usage limit on the account it ran on: that account is out until it
     // resets, and a pick by quota moves it (a pinned agent stays, and abyme shows the limit).
+    const all = l.agent && (l.limited || l.resume) ? await joined() : [];
     if (l.limited && l.agent) {
-      const was = (await joined()).find((x) => x.id === l.agent)?.account;
+      const was = all.find((x) => x.id === l.agent)?.account;
       if (was) markSpent(was, l.limited.why);
     }
-    const { account, why } = await pick(model, { pinned, count: !l.probe });
+    // Taken up again: within the hour of its last call it stays on the account that call ran on,
+    // where its prompt cache is, unless that account is spent or out of limit (design.md, Warm).
+    const last = l.resume && l.agent && !l.probe ? await lastCall(l.agent, l.cwd, l.resume, all) : null;
+    const { account, why } = await pick(model, { pinned, count: !l.probe, last });
     const token = await tokenOf(account.slug);
     if (!token) throw new Error(`${account.slug}: its setup-token is not in the keychain`);
     abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);

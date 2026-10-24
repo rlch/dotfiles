@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { keychainMade, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, parse, parseModels, rowsSeen, score, takePushes, windowSaid, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { keychainMade, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, score, takePushes, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -148,6 +148,45 @@ test("a push newer than the read wins, an older one does not, a rejected one say
   assert.equal(takePushes({ at: NOW, data: {} }, [{ window: "five_hour", state: "allowed", utilization: null, resets_at: null, at: at(NOW + 1) }], 0)!.data!.five_hour, undefined);
   // Heard again after it was taken: nothing.
   assert.equal(takePushes({ at: next.at, data: next.data }, [{ window: "seven_day", state: "rejected", utilization: 100, resets_at: inDays(2), at: at(NOW + 2000) }], next.at), null);
+});
+
+// Warm (2026-10-25): 388 of 394 cache rebuilds 5–60 min after a call came with an account change.
+const resumed = (rows: Row[], last: { slug: string; at: number } | null, f: Family | null = null) => {
+  const out = warm(rows, last, f, NOW) ?? best(rows, f, NOW);
+  return out.pick === null ? null : rows[out.pick]!.slug;
+};
+test("taken up again within the hour, an agent stays on its account, busy and worn or not", () => {
+  const rows = [row("a", [70, 60], { busy: true }), row("b", [5, 5])];
+  assert.equal(picks(rows), "b");
+  assert.equal(resumed(rows, { slug: "a", at: NOW - 40 * 60_000 }), "a");
+  assert.match(warm(rows, { slug: "a", at: NOW - 40 * 60_000 }, null, NOW)!.why, /^warm, its last call 40 min ago/);
+  // Past the hour its cache is gone: by quota.
+  assert.equal(resumed(rows, { slug: "a", at: NOW - WARM_MS }), "b");
+  assert.equal(resumed(rows, null), "b");
+});
+test("a warm agent leaves an account that is spent, capped, out for its model, or gone", () => {
+  const at = NOW - 10 * 60_000;
+  assert.equal(resumed([row("a", [10, 10], { spent: inDays(0.1) }), row("b", [50, 50])], { slug: "a", at }), "b");
+  assert.equal(resumed([row("a", [100, 10]), row("b", [50, 50])], { slug: "a", at }), "b");
+  assert.equal(resumed([row("a", [10, 100]), row("b", [50, 50])], { slug: "a", at }), "b");
+  assert.equal(resumed([row("a", [10, 10], { windows: fable(100) }), row("b", [50, 50])], { slug: "a", at }, "fable"), "b");
+  assert.equal(resumed([row("a", [10, 10], { windows: fable(100) }), row("b", [50, 50])], { slug: "a", at }, "opus"), "a");
+  assert.equal(resumed([row("b", [50, 50])], { slug: "a", at }), "b");
+});
+test("a transcript's last answer: the model's last line, no subagent's, none made up, not what exit wrote", () => {
+  const line = (o: object) => JSON.stringify(o);
+  const lines = [
+    line({ type: "assistant", timestamp: "2026-10-24T15:00:00.000Z", message: { model: "claude-opus-5-5" } }),
+    line({ type: "user", timestamp: "2026-10-24T15:01:00.000Z" }),
+    line({ type: "assistant", isSidechain: true, timestamp: "2026-10-24T15:02:00.000Z", message: { model: "claude-sonnet-5-5" } }),
+    line({ type: "assistant", timestamp: "2026-10-24T15:03:00.000Z", message: { model: "<synthetic>" } }),
+    line({ type: "cost-state", sessionId: "s" }),
+    line({ type: "last-prompt", leafUuid: "u", sessionId: "s" }),
+    "",
+  ];
+  assert.equal(lastAnswer(lines), Date.parse("2026-10-24T15:00:00.000Z"));
+  assert.equal(lastAnswer(['nt":"assistant" half a line', ...lines.slice(1)]), null);
+  assert.equal(lastAnswer([]), null);
 });
 
 // model.rs
