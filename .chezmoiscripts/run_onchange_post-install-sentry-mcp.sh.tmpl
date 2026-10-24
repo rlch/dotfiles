@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
-# Sentry for agents: a USER-scope stdio MCP server named `sentry` in EVERY
-# Claude account dir (~/.claude and ~/.claude-<slug>), started by
-# ~/.local/bin/sentry-mcp-token with the tutero-au token file — never OAuth.
-# The hosted plugin (`sentry@claude-plugins-official`) authorized per account
-# and lapsed, so every account and every expiry asked for a login again; it is
-# disabled in dot_claude/settings.json. Same idiom as the langfuse script:
-# `.claude.json` (mcpServers) is per-account. No secret lands in any
-# .claude.json — the wrapper reads the file at launch. `sentry-abyme` is the same
-# wrapper on the operator's own org (abyme.sentry.io), never Tutero's; it is
-# registered only where its token file is.
-#
-# Wrapper hash: {{ include "dot_local/bin/executable_sentry-mcp-token" | sha256sum }}
+# Sentry for agents is the `sentry` skill (~/dev/skills), which calls the API
+# through ~/.local/bin/sentry-mcp-token with a token file — not an MCP server.
+# The user-scope stdio servers `sentry` (tutero-au) and `sentry-abyme`
+# (abyme.sentry.io, which abyme no longer uses) this script used to register in
+# every Claude account dir cost two node processes per agent (190 servers,
+# 13.6 GB on 2026-10-24), so it now removes both and adds none. The hosted plugin
+# (`sentry@claude-plugins-official`) stays disabled in dot_claude/settings.json:
+# it authorized per account by OAuth and lapsed.
 
 set -euo pipefail
 
@@ -18,24 +14,14 @@ set -euo pipefail
 if ! command -v claude >/dev/null 2>&1; then
   echo "sentry-mcp: claude CLI not on PATH; skipping"; exit 0
 fi
-WRAPPER="$HOME/.local/bin/sentry-mcp-token"
-ABYME_TOKEN="$HOME/.config/sentry/abyme-mcp-token"
 
 for dir in "$HOME/.claude" "$HOME"/.claude-*; do
   case "$dir" in *-swap-backup) continue ;; esac
   [ -f "$dir/.claude.json" ] || continue
-  CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user sentry >/dev/null 2>&1 || true
-  if CLAUDE_CONFIG_DIR="$dir" claude mcp add -s user sentry -- "$WRAPPER" >/dev/null 2>&1; then
-    echo "sentry-mcp: registered in $(basename "$dir")"
-  else
-    echo "sentry-mcp: registration FAILED in $(basename "$dir")" >&2
-  fi
-  CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user sentry-abyme >/dev/null 2>&1 || true
-  [ -r "$ABYME_TOKEN" ] || continue
-  if CLAUDE_CONFIG_DIR="$dir" claude mcp add sentry-abyme -s user -e SENTRY_ORG=abyme -e "SENTRY_TOKEN_FILE=$ABYME_TOKEN" -- "$WRAPPER" >/dev/null 2>&1; then
-    echo "sentry-abyme-mcp: registered in $(basename "$dir")"
-  else
-    echo "sentry-abyme-mcp: registration FAILED in $(basename "$dir")" >&2
-  fi
+  for name in sentry sentry-abyme; do
+    if CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user "$name" >/dev/null 2>&1; then
+      echo "sentry-mcp: removed $name from $(basename "$dir")"
+    fi
+  done
 done
 {{- end }}
