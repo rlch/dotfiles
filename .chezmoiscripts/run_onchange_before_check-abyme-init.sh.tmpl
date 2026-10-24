@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Refuse to apply an abyme init.ts that does not parse. A syntax error there stops abymed's config
+# midway, and every preset, plugin and option after it is lost (2026-10-24: a quote inside a preset
+# string dropped 46 presets for an hour). Runs before chezmoi writes anything, only when init.ts changed.
+#
+# init.ts hash: {{ include "dot_config/abyme/init.ts" | sha256sum }}
+
+set -euo pipefail
+
+src="{{ .chezmoi.sourceDir }}/dot_config/abyme/init.ts"
+if ! command -v npx >/dev/null 2>&1; then
+  echo "check-abyme-init: npx not on PATH; skipping the parse check" >&2
+  exit 0
+fi
+if ! out=$(npx --yes esbuild --log-level=error --loader:.ts=ts "$src" 2>&1 >/dev/null); then
+  echo "check-abyme-init: $src does not parse; nothing applied:" >&2
+  echo "$out" >&2
+  exit 1
+fi
