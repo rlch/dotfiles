@@ -16,6 +16,12 @@ directly — `chezmoi apply` will overwrite them. The flow is:
    `exec fish`, `herdr server reload-config`).
 3. Commit + push when stable.
 
+**Parse-check `dot_config/abyme/init.ts` before every `chezmoi apply`**
+(`npx esbuild dot_config/abyme/init.ts`), and check abyme's log for
+`init.ts threw` afterwards. A syntax error there (a `"` inside a double-quoted
+preset string, 2026-10-24) drops every preset after it, and teams cannot start
+roles until it is fixed.
+
 **Don't end a task assuming the user will apply later.** If you've changed
 files under this repo, run `chezmoi apply` (or scope it: `chezmoi apply
 ~/.config/fish`) before reporting done — otherwise nothing you wrote is
