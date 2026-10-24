@@ -8,7 +8,7 @@
 	; 1Password's, where this key isn't loaded). Verification keeps the
 	; "Verified" badge on GitHub once the matching .pub is uploaded as a
 	; Signing Key. No Touch ID prompt per commit.
-	signingkey = ~/.ssh/git_signing.pub
+	signingkey = ~/.ssh/git_signing
 
 [gpg]
 	format = ssh
