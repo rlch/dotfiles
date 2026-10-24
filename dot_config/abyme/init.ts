@@ -75,8 +75,8 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
 replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 
-// Load reads the two check slots schools' `pnpm check` takes (scripts/slots.mjs, 127.0.0.1:46900-46901).
-load.setup({ slots: 2 });
+// Load reads the four check slots abyme's and schools' checks take (scripts/gate-slot, scripts/slots.mjs, 127.0.0.1:46900-46903).
+load.setup({ slots: 4 });
 
 // OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
 // native teams (moved there 2026-10-21, openspec teams-and-work 7); delete them once those finish.
