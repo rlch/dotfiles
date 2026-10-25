@@ -191,8 +191,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   client-specific rules. OpenCode consumes only `~/.config/opencode/skills`;
   fish disables its `.claude` and `.agents` compatibility scans to prevent
   duplicate skill names selecting the wrong implementation. Shared skills point
-  at one source under `~/dev/skills/plugins/rjm/skills`; non-shareable workflows
-  such as handoff/spinoff have client-specific sources. `~/.claude/skills/abyme`
+  at one source under `~/dev/skills/plugins/rjm/skills`. `~/.claude/skills/abyme`
   links to the plugin abymed writes (`~/.local/state/abyme/claude`: the
   `abyme:canvas` and `abyme:openui` skills and the canvas MCP tools); it dangles,
   harmlessly, where abymed has not run. `opencode.json` remains
