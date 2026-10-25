@@ -20,13 +20,21 @@ directly — `chezmoi apply` will overwrite them. The flow is:
 (`npx esbuild dot_config/abyme/init.ts`), and check abyme's log for
 `init.ts threw` afterwards. A syntax error there (a `"` inside a double-quoted
 preset string, 2026-10-24) drops every preset after it, and teams cannot start
-roles until it is fixed.
+roles until it is fixed. A config line that needs abyme code not yet promoted (a
+preset naming a new tool argument) stays out of this tree, on a branch, until that
+code is live: any `chezmoi apply`, promote's own included, deploys the working
+tree, committed or not. Keep a stop-gap in the abyme config (vim off on the phone)
+until its replacement is proven on the operator's real device.
 
 **Don't end a task assuming the user will apply later.** If you've changed
 files under this repo, run `chezmoi apply` (or scope it: `chezmoi apply
 ~/.config/fish`) before reporting done — otherwise nothing you wrote is
 actually in effect, and any "verification" you do is verifying the source
 copy, not the live one.
+
+`rlch/dotfiles` is public and the one source: one `chezmoi apply`, no private
+overlay or second source (tried and dropped, 2026-07-01). Secrets stay out
+(`.gitignore`).
 
 The `dot_` prefix is a chezmoi requirement, not a style choice — files
 prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
@@ -195,7 +203,16 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   links to the plugin abymed writes (`~/.local/state/abyme/claude`: the
   `abyme:canvas` and `abyme:openui` skills and the canvas MCP tools); it dangles,
   harmlessly, where abymed has not run. `opencode.json` remains
-  installer-owned and is not managed by chezmoi.
+  installer-owned and is not managed by chezmoi. A local Claude Code plugin is a
+  `dot_claude/skills/symlink_<name>.tmpl` (as `rjm`), never a `--plugin-dir` in
+  `cl`. An MCP server is registered by `claude mcp add -s user` in a
+  chezmoiscript (as langfuse's), never in settings.json's `mcpServers`.
+- **Karabiner rewrites `karabiner.json` itself** (on a device change, in its
+  UI): deploy it with `chezmoi apply --force ~/.config/karabiner/karabiner.json`.
+  Its source is one minified line.
+- **Nerd Font glyphs of three UTF-8 bytes (U+E000–U+F8FF) can vanish from an
+  Edit or Write**; four-byte ones (U+F0000+) survive. Write a placeholder, put the
+  glyph in with `python3` and `chr()`, and check the bytes with `xxd`.
 - **Ghostty config has NO inline/trailing comments.** A `#` on the same line as
   a directive is parsed as part of the *value*, not stripped. This is silent and
   nasty for keybinds: `keybind = cmd+j=csi:106;9u   # ...` makes Ghostty send the
