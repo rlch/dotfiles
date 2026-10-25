@@ -391,37 +391,5 @@
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": false,
   "skipAutoPermissionPrompt": true,
-  "autoMode": {
-    "soft_deny": [
-      "$defaults",
-      "Bash(git stash:*) \u2014 in the sonzai repo and its worktrees: refs/stash is one shared ref across every worktree, and a conflicting pop has previously left main unmergeable mid-landing; park work in a commit instead",
-      "Launching the studio with PF_STUDIO_LIVENESS=1 outside an explicit landing point \u2014 it boots a self-driving app over the operator's screen (2026-07-24 incident); use PF_STUDIO_PARKED=1 for repro/chrome work"
-    ],
-    "environment": [
-      "### Org-wide",
-      "**Organization**: None configured \u2014 personal repositories under github.com/rlch (no organization); posture is personal/hobby, scoped to this project only",
-      "**Cloud provider(s)**: Cloudflare, scoped to this project \u2014 Workers/Durable Objects, D1, and R2 (evidenced by infra/*.tf Terraform files and wrangler usage in repo docs)",
-      "**Repository visibility**: github.com/rlch/sonzai is PRIVATE (verified via authenticated gh)",
-      "**Internal sharing / snippet hosting**: None configured \u2014 treat public paste/gist services as outside the trust boundary",
-      "**Secrets management**: Cloudflare Wrangler secrets for production (`wrangler secret put <NAME> --env production`); local dev secrets live in gitignored files (apps/api/.dev.vars, .env / .env.*, /data/_sourcing/secrets.env) \u2014 never commit these or surface their contents",
-      "**Default / protected branches**: main (gh shows no classic branch protection and no rulesets; this repo's stated convention is direct commits/pushes to main with no PRs)",
-      "**CI/CD deploy targets**: GitHub Actions under .github/workflows (repo-ci.yml, crates.yml); production deploys via `wrangler deploy --env production` and `wrangler d1 migrations apply <DB> --remote`; Terraform under infra/ manages the Cloudflare resources",
-      "**Network posture**: None configured \u2014 repo docs mention a Tailscale-reached local ML worker (ComfyUI on the M5 Max) but no broader network policy",
-      "**Source control**: The trusted repo and its single remote only \u2014 github.com/rlch/sonzai (origin), private; no additional orgs configured",
-      "**Trusted internal domains**: None configured",
-      "**Trusted cloud buckets**: None configured",
-      "**Key internal services**: None configured",
-      "**Internal package registry**: None configured",
-      "**Sensitive data locations & audiences**: gitignored secret files in this repo (apps/api/.dev.vars, .env / .env.*, /data/_sourcing/secrets.env); shell history files carry inline secrets and must never be read raw; NSFW review assets (contact sheets, keeper boards, the FiftyOne app) must never be auto-opened onto the operator's screen \u2014 hand over the file path or URL instead; otherwise the default applies: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar",
-      "**Data retention / declassification**: None configured",
-      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited \u2014 e.g. matches `prod-db`, not `producer`); in this repo specifically, anything invoked with wrangler `--env production` or `--remote`",
-      "**Protected deployment namespaces / environments**: the Cloudflare `production` environment (`wrangler deploy --env production`, `wrangler secret put --env production`) and remote D1 databases (`wrangler d1 migrations apply --remote`)",
-      "**Protected IaC scopes**: the infra/ Terraform root (Cloudflare provider \u2014 backend.tf, d1.tf, r2.tf, encryption.tf, marketplace.tf, packs.tf); plus the default: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
-      "### User-specific",
-      "**Primary use of Claude Code**: software development \u2014 a personal/hobby project (an LLM-driven avatar sandbox engine) on a Claude Max subscription",
-      "**Trusted repo**: The git repository the agent started in (this checkout \u2014 a herdr worktree of ~/dev/sonzai) and its configured remote github.com/rlch/sonzai. The repo is PRIVATE, so confidential material of this project is fine to commit or push here; secrets and sensitive data (personal & entrusted) are never cleared into any repo by its visibility",
-      "**Org-specific CLIs**: herdr (session/tab/pane multiplexer \u2014 work runs in background tabs, never steal focus), openspec (spec-driven change flow), just (task runner), chezmoi (dotfiles source-of-truth flow), chrome-debug (debug-Chromium launcher) \u2014 all corroborated by shell history and/or this project's transcripts"
-    ]
-  },
   "theme": "dark"
 }
