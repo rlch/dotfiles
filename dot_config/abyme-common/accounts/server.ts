@@ -14,7 +14,7 @@ import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import options from "./options";
-import { tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, takePushes, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, takePushes, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -123,19 +123,25 @@ function spentUntil(key: string): string | null {
   const mark = spentNow().get(key);
   return mark ? new Date(mark.until).toISOString() : null;
 }
-/** Account `slug` is spent until the window that caps it resets: the one `said` (a harness's push),
- * else the one its read has at 100, else the one `why` names with the reset its read gives; else
- * for SPENT_MS. */
+/** Account `slug` is spent until its limit resets: when the refusal says it (a harness's push's
+ * `resets_at`, else the time its message names), which replaces any mark; else the window its read
+ * has at 100, or the one `why` names, at the reset that read gives, only while that read is fresh
+ * (a stale one can hold an old week's reset: hsone's said 29 Oct when its refusal said 10pm,
+ * 2026-10-25); else for SPENT_MS. */
 function markSpent(slug: string, why: string, said?: { window: "five" | "seven"; resets: string | null }) {
+  const now = Date.now();
   const kept = reads()[slug];
-  const q = kept ? answer(kept.at, kept.data) : null;
+  const q = kept && !stale(kept.at, now) ? answer(kept.at, kept.data) : null;
   const u = q ? q.usage : null;
   const named = windowSaid(why);
+  const pushed = Date.parse(said?.resets ?? "");
+  const told = Number.isFinite(pushed) && pushed > now ? pushed : resetSaid(why, now);
   const bound = said ?? (u && binding(u)) ?? (named && { window: named, resets: u ? (named === "seven" ? u.sevenResets : u.fiveResets) : null });
-  const reset = Date.parse(bound?.resets ?? "");
-  const until = Number.isFinite(reset) && reset > Date.now() ? reset : Date.now() + SPENT_MS;
+  const reset = told ?? Date.parse(bound?.resets ?? "");
+  const until = Number.isFinite(reset) && reset > now ? reset : now + SPENT_MS;
   const was = spentNow().get(slug);
-  if (was && was.until >= until) return;
+  // A reset the refusal states is the truth, earlier or later; any other only lengthens a mark.
+  if (was && (told === null ? was.until >= until : was.until === until)) return;
   abyme.store.set("spent", { ...spentMarks(), [slug]: { until, window: bound ? bound.window : null } });
   abyme.log.warn(`${slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
 }
@@ -412,6 +418,16 @@ export default {
     const w = await processes().run("/bin/sh", { args: ["-c", 'printf "%s\\n" "$CODE" > "$FIFO"'], env: { CODE: a.code.trim(), FIFO: `${m.scratch}/in` } });
     if (w.code !== 0) throw new Error(`${a.slug}: its setup-token would not take the code`);
     return { slug: a.slug, text: `given to ${a.slug}'s setup-token: its token goes to the keychain` };
+  },
+  /** `abyme call accounts limited slug=… why=…`: a refusal an account gave outside abyme's agents
+   * (a turn on its token by hand), in its words: spent until the reset they name ("resets 10pm
+   * (Australia/Melbourne)"), else as any limit. */
+  async limited(a: { slug: string; why: string }) {
+    if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+    markSpent(a.slug, a.why);
+    shown = "";
+    await show();
+    return { slug: a.slug, until: spentUntil(a.slug) };
   },
   /** When each account's setup-token ends, by slug: a year after it was made. */
   tokens: () => tokensEnding(),

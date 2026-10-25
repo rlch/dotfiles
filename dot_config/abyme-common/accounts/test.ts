@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { keychainMade, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, score, takePushes, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, score, takePushes, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -279,6 +279,17 @@ test("a spent mark is the row's spent, and load's cap until it ends", () => {
   const [none] = rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map(), new Map([["hsone", { until, window: null }]]));
   assert.deepEqual(loadAccounts([none!])[0]!.windows.map((x) => x.capped), [true, false]);
   assert.deepEqual(loadAccounts(rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map()))[0]!.windows.map((x) => x.capped), [false, false]);
+});
+
+// The reset a refusal names, in its own zone: the next such time.
+test("the reset a limit message names", () => {
+  const at = Date.parse("2026-10-25T03:15:00Z"); // 14:15 in Melbourne (AEDT, +11)
+  assert.equal(resetSaid("You have hit your weekly limit · resets 10pm (Australia/Melbourne)", at), Date.parse("2026-10-25T11:00:00Z"));
+  assert.equal(resetSaid("resets 10:30am (Australia/Melbourne)", at), Date.parse("2026-10-25T23:30:00Z"));
+  assert.equal(resetSaid("limit reached, resets Oct 29, 1pm (UTC)", at), Date.parse("2026-10-29T13:00:00Z"));
+  assert.equal(resetSaid("resets 4:30am (Australia/Melbourne)", at), Date.parse("2026-10-25T17:30:00Z"));
+  assert.equal(resetSaid("Claude AI usage limit reached", at), null);
+  assert.equal(resetSaid("resets 10pm (Not/AZone)", at), null);
 });
 
 // setup-tokens: read out of setup-token's output, a year long, warned of 30 days before.

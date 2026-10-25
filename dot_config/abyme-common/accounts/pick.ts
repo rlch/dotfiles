@@ -134,6 +134,53 @@ export function windowSaid(why: string): Window | null {
   return null;
 }
 
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** `at` (ms) as wall-clock parts in time zone `tz`. */
+function wall(tz: string, at: number) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" })
+      .formatToParts(at)
+      .map((p) => [p.type, Number(p.value)]),
+  );
+  return { y: parts.year!, m: parts.month! - 1, d: parts.day!, h: parts.hour!, min: parts.minute!, s: parts.second! };
+}
+/** The instant (ms) a wall-clock time in `tz` names. */
+function zoned(tz: string, y: number, m: number, d: number, h: number, min: number): number {
+  const guess = Date.UTC(y, m, d, h, min);
+  const offset = (at: number) => {
+    const w = wall(tz, at);
+    return Date.UTC(w.y, w.m, w.d, w.h, w.min, w.s) - at;
+  };
+  const first = guess - offset(guess);
+  return guess - offset(first);
+}
+
+/** When a harness's limit message says the limit resets, in ms: "resets 10pm (Australia/Melbourne)",
+ * "resets 10:30pm (…)", or "resets Oct 29, 10pm (…)"; the next such time after `now`. Null when it
+ * names none, or a zone this machine does not know. The time a refusal gives is the one to trust: a
+ * read's resets can be an old week's (hsone, 2026-10-25: its read said 29 Oct, the refusal 10pm). */
+export function resetSaid(why: string, now: number): number | null {
+  const r = /resets\s+(?:([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(?:at\s+)?)?(\d{1,2})(?::(\d\d))?\s*(am|pm)\s*\(([^)]+)\)/i.exec(why);
+  if (!r) return null;
+  const [, mon, day, hh, mm, ap, tz] = r;
+  const h = (Number(hh) % 12) + (ap!.toLowerCase() === "pm" ? 12 : 0);
+  const min = mm ? Number(mm) : 0;
+  try {
+    const t = wall(tz!, now);
+    if (mon) {
+      const m = MONTHS.indexOf(mon.toLowerCase());
+      if (m < 0) return null;
+      const at = zoned(tz!, t.y, m, Number(day), h, min);
+      return at > now ? at : zoned(tz!, t.y + 1, m, Number(day), h, min);
+    }
+    const at = zoned(tz!, t.y, t.m, t.d, h, min);
+    return at > now ? at : zoned(tz!, t.y, t.m, t.d + 1, h, min);
+  } catch {
+    return null;
+  }
+}
+
 /** The usage with the model's window as the binding week, when it is the more used. */
 function withWindow(u: Usage, w: ModelWindow): Usage {
   return w.utilization !== null && w.utilization > u.seven ? { ...u, seven: w.utilization, sevenResets: w.resetsAt ?? u.sevenResets } : u;
