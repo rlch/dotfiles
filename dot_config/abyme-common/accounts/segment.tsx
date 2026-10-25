@@ -25,6 +25,8 @@ function ordered(seen: Seen[]): Seen[] {
 function note(a: Seen): string {
   const said_: string[] = [];
   if (a.capped && a.back) said_.push(`back in ${until(a.back)}`);
+  // Its numbers come from its agents' turns: with none lately they may no longer stand.
+  else if (a.stale) said_.push("stale");
   for (const w of a.windows) if ((w.utilization ?? 0) >= 80) said_.push(`${w.name} ${pct(w.utilization)}`);
   if (a.agents) said_.push(`${a.agents} ${a.agents === 1 ? "agent" : "agents"}`);
   return said_.join(" · ");

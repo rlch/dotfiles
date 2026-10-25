@@ -140,7 +140,16 @@ function withWindow(u: Usage, w: ModelWindow): Usage {
 }
 
 /** An account to pick from: `spent` is until when a turn's limit keeps it out (ISO), if it does. */
-export type Row = { slug: string; key: string; usage: Usage | null; windows: ModelWindow[]; busy: boolean; spent?: string | null };
+export type Row = { slug: string; key: string; usage: Usage | null; windows: ModelWindow[]; busy: boolean; spent?: string | null; read?: number | null };
+
+/** How old a read may be and still be taken as how the account stands now: windows come only from
+ * its agents' turns, so an account nobody runs on keeps its last numbers however full it has since
+ * become (hsone read 89% of its week for 13 h after its token answered its weekly limit, 2026-10-25). */
+export const STALE_MS = 30 * 60_000;
+/** Whether a read is stale at `now`. */
+export const stale = (read: number | null | undefined, now: number) => read != null && now - read > STALE_MS;
+/** A stale read near its cap (5h at 90, 7d at 85): what it says may already be full. */
+const nearCap = (u: Usage) => u.five >= 90 || u.seven >= 85;
 export type Outcome = { pick: number; why: string } | { pick: null; why: string };
 /** An account not read yet, as a pick counts it. */
 const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null };
@@ -165,9 +174,12 @@ export function best(rows: Row[], f: Family | null, now: number): Outcome {
   if (!usable.length) return { pick: null, why: rows.length ? `every account's ${f} window is spent` : "no account" };
   const busy = (i: number) => busyKeys.has(rows[i]!.key);
   const cap = (i: number) => !!rows[i]!.spent || capped(eff[i]!);
+  // A stale read near its cap may already be full: such an account is the last tried.
+  const doubtful = (i: number) => stale(rows[i]!.read, now) && nearCap(eff[i]!);
   const tiers: [string, (i: number) => boolean][] = [
-    ["free", (i) => !busy(i) && !cap(i)],
-    ["in use, has quota", (i) => !cap(i)],
+    ["free", (i) => !busy(i) && !cap(i) && !doubtful(i)],
+    ["in use, has quota", (i) => !cap(i) && !doubtful(i)],
+    ["stale near its cap", (i) => !cap(i)],
   ];
   for (const [name, keep] of tiers) {
     const pool = usable.filter(keep);
@@ -261,6 +273,8 @@ export type AccountSeen = {
   /** Until when a turn's limit keeps it out of picks, and by which window if known; null when none does. */
   spent: { until: string; window: Window | null } | null;
   read: string | null;
+  /** Its read is older than STALE_MS: the numbers may no longer stand. */
+  stale: boolean;
   agents: number;
 };
 
@@ -292,7 +306,8 @@ export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
   const at = (t: string | null) => (t === null || Number.isNaN(Date.parse(t)) ? null : Date.parse(t));
   const share = (n: number | null) => (n === null ? null : n / 100);
   const window = (r: AccountSeen, name: LoadWindow["name"], w: Window, used: number | null, resets: string | null): LoadWindow => {
-    const read = r.capped && r.binding === w;
+    // Capped by its read: the window itself at 100 (`capped` also says a spent mark).
+    const read = (used ?? 0) >= 100;
     const spent = !!r.spent && (r.spent.window ?? "five") === w;
     return { name, used: share(used), tokens: null, resets: at(spent ? (read ? later(resets, r.spent!.until) : r.spent!.until) : resets), capped: read || spent };
   };
@@ -312,10 +327,11 @@ export const minute = (t: string | null): string | null => {
 };
 
 /** The rows: one per login, in the accounts' order (main first, then by name). `capped` is a window
- * its read has at 100, until that window resets, and nothing else: a spent mark keeps a login out of
- * picks and is its `spent`, not a cap (main, 5h 1%, showed capped by another login's limit,
- * 2026-10-23). `agentsIn` is the busy agents on each login, `spent` the marks standing. */
-export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn: Map<string, number>, spent: Map<string, Spent> = new Map()): AccountSeen[] {
+ * its read has at 100, or a spent mark, until it resets: a mark is a refusal the account itself gave
+ * (a rejected push, a turn at its limit; pushes are per account since setup-tokens, so another
+ * login's limit no longer marks it). `stale` is a read older than STALE_MS. `agentsIn` is the busy
+ * agents on each login, `spent` the marks standing. */
+export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn: Map<string, number>, spent: Map<string, Spent> = new Map(), now = Date.now()): AccountSeen[] {
   const groups = new Map<string, Account[]>();
   for (const a of accounts) groups.set(a.key, [...(groups.get(a.key) ?? []), a]);
   return [...groups].map(([key, members]) => {
@@ -330,11 +346,14 @@ export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn
       fiveResets: minute(u?.usage.fiveResets ?? null),
       sevenResets: minute(u?.usage.sevenResets ?? null),
       windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: minute(w.resetsAt) })),
-      capped: !!bound,
-      binding: bound?.window ?? null,
-      back: minute(bound?.resets ?? null),
+      // A spent mark is a refusal the account itself gave (a rejected push, a turn at its limit):
+      // capped until it resets, whatever its read says.
+      capped: !!bound || !!mark,
+      binding: bound?.window ?? mark?.window ?? null,
+      back: minute(later(bound?.resets ?? null, mark ? new Date(mark.until).toISOString() : null)),
       spent: mark ? { until: minute(new Date(mark.until).toISOString())!, window: mark.window } : null,
       read: u ? new Date(u.at).toISOString() : null,
+      stale: stale(u?.at, now),
       agents: agentsIn.get(key) ?? 0,
     };
   });

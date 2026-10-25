@@ -7,13 +7,14 @@ const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
 const usage = (five: number, seven: number): Usage => ({ five, seven, fiveResets: null, sevenResets: null });
 const weekly = (seven: number, days: number): Usage => ({ five: 0, seven, fiveResets: null, sevenResets: inDays(days) });
-const row = (slug: string, u: [number, number] | Usage | null, o: { busy?: boolean; key?: string; windows?: ModelWindow[]; spent?: string } = {}): Row => ({
+const row = (slug: string, u: [number, number] | Usage | null, o: { busy?: boolean; key?: string; windows?: ModelWindow[]; spent?: string; read?: number } = {}): Row => ({
   slug,
   key: o.key ?? `uuid-${slug}`,
   usage: u === null ? null : Array.isArray(u) ? usage(u[0], u[1]) : u,
   windows: o.windows ?? [],
   busy: o.busy ?? false,
   spent: o.spent ?? null,
+  read: o.read ?? null,
 });
 const fable = (utilization: number | null): ModelWindow[] => [{ name: "Fable", family: "fable", utilization, resetsAt: "2026-10-12T00:00:00Z" }];
 const picks = (rows: Row[], f: Family | null = null) => {
@@ -91,7 +92,7 @@ test("the binding window", () => {
   assert.equal(windowSaid("5-hour limit reached"), "five");
   assert.equal(windowSaid("Claude AI usage limit reached"), null);
 });
-test("capped is a window at 100 until its reset, never a spent mark alone", () => {
+test("capped is a window at 100, or a spent mark, until it resets", () => {
   const folders: Account[] = [{ slug: "main", key: "u-main" }, { slug: "tuteroai", key: "u2" }];
   const reads = new Map<string, Read>([
     ["u-main", { at: NOW, usage: { five: 1, seven: 60, fiveResets: inDays(0.1), sevenResets: inDays(5) }, windows: [] }],
@@ -105,8 +106,24 @@ test("capped is a window at 100 until its reset, never a spent mark alone", () =
   const past = { at: NOW, data: { five_hour: { utilization: 100, resets_at: inDays(-0.01) }, seven_day: { utilization: 16, resets_at: inDays(5) } } };
   const u = parse(expirePast(past.data, NOW));
   assert.equal(rowsSeen([folders[1]!], new Map([["u2", { at: NOW, usage: u, windows: [] }]]), new Map())[0]!.capped, false);
-  // A spent mark still keeps the login out of picks.
+  // A spent mark keeps the login out of picks, and its row is capped until it ends, whatever its
+  // read says: the account itself refused a turn (hsone, 2026-10-25).
   assert.equal(picks([row("main", [1, 60], { spent: inDays(0.04) }), row("b", [50, 50], { busy: true })]), "b");
+  const marked = rowsSeen([folders[0]!], reads, new Map(), new Map([["u-main", { until: Date.parse(inDays(2)), window: "seven" as const }]]), NOW)[0]!;
+  assert.deepEqual([marked.capped, marked.binding, marked.back], [true, "seven", inDays(2)]);
+});
+test("a stale read near its cap is tried last, and its row says stale", () => {
+  const old = NOW - 13 * 3600_000;
+  // hsone read 89% of its week 13 h ago; main is at 60% now.
+  assert.equal(picks([row("hsone", [0, 89], { read: old }), row("main", [10, 60], { read: NOW })]), "main");
+  // Busy elsewhere, it is still before a doubtful one; alone, the doubtful one is tried.
+  assert.equal(picks([row("hsone", [0, 89], { read: old }), row("main", [10, 60], { read: NOW, busy: true })]), "main");
+  assert.equal(picks([row("hsone", [0, 89], { read: old })]), "hsone");
+  assert.match(best([row("hsone", [0, 89], { read: old })], null, NOW).why, /stale near its cap/);
+  // Stale but far from its cap: as any other.
+  assert.equal(picks([row("a", [0, 20], { read: old }), row("b", [10, 60], { read: NOW })]), "a");
+  const rows = rowsSeen([{ slug: "hsone", key: "hsone" }, { slug: "main", key: "main" }], new Map([["hsone", { at: old, usage: usage(0, 89), windows: [] }], ["main", { at: NOW, usage: usage(10, 60), windows: [] }]]), new Map(), new Map(), NOW);
+  assert.deepEqual(rows.map((r) => [r.slugs[0], r.stale]), [["hsone", true], ["main", false]]);
 });
 test("one row per account, in order, with its busy agents", () => {
   const accounts: Account[] = [
@@ -255,7 +272,7 @@ test("a spent mark is the row's spent, and load's cap until it ends", () => {
   const until = Date.parse("2026-10-25T11:00:00Z");
   const reads = new Map<string, Read>([["hsone", { at: NOW, usage: { five: 0, seven: 88, fiveResets: null, sevenResets: "2026-10-29T02:00:00.000Z" }, windows: [] }]]);
   const [week] = rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map(), new Map([["hsone", { until, window: "seven" as const }]]));
-  assert.deepEqual([week!.capped, week!.spent], [false, { until: "2026-10-25T11:00:00.000Z", window: "seven" }]);
+  assert.deepEqual([week!.capped, week!.spent], [true, { until: "2026-10-25T11:00:00.000Z", window: "seven" }]);
   const [w] = loadAccounts([week!]);
   assert.deepEqual(w!.windows.map((x) => [x.name, x.capped, x.resets]), [["5h", false, null], ["week", true, until]]);
   // A mark naming no window caps the five hours; with none, nothing is capped.

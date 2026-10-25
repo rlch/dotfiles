@@ -8,6 +8,7 @@
 // follows, a log line, an error, an answer or a command's arguments (a new one goes to
 // `security -i` on stdin).
 import abyme from "@abyme/plugin";
+import type { Json } from "@abyme/server";
 import agents from "@abyme/agents";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
@@ -202,7 +203,7 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean; las
       if (pinned) abyme.log.warn(`pinned account ${pinned} is gone; picking by quota`);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
-        return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key) };
+        return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key), read: x ? x.at : null };
       });
       const out = warm(rows, how.last ?? null, family(model), Date.now()) ?? best(rows, family(model), Date.now());
       if (out.pick === null) throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why})`);
@@ -307,7 +308,8 @@ async function takeUsage() {
     const next = takePushes(reads()[slug], pushes, taken.get(slug) ?? 0);
     if (!next) continue;
     taken.set(slug, next.at);
-    abyme.store.set("reads", { ...reads(), [slug]: { at: next.at, data: next.data } });
+    // A harness's words, JSON as they came.
+    abyme.store.set("reads", { ...reads(), [slug]: { at: next.at, data: next.data } } as unknown as Json);
     for (const r of next.rejected) markSpent(slug, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }
