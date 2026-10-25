@@ -21,6 +21,9 @@ HOME = os.path.expanduser("~")
 PROTECTED = ("main", "master")
 WRAPPERS = {"rtk", "proxy", "command", "env", "time", "noglob", "sudo", "exec"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
+SEARCHERS = {"find", "fd", "du", "rg", "grep", "egrep", "ag", "tree", "ls", "gfind", "gdu"}
+BROAD = {"/", "~", "$HOME", "${HOME}", HOME, "/Users", "/Volumes", "/System", "/Library", "/private",
+         "/private/var", "/private/tmp/..", "~/Library", "$HOME/Library", HOME + "/Library"}
 MANAGED_ROOTS = tuple(os.path.join(HOME, d) + "/" for d in (".config", ".claude", ".agents", ".local"))
 UNMANAGED = (os.path.join(HOME, ".claude", "projects") + "/",)
 
@@ -133,6 +136,14 @@ def check_git(argv, cwd):
     return None
 
 
+def broad_search(prog, args):
+    """A searcher given / or the home folder (or ~/Library) as a path: recursive for ls/grep only with -R/-r."""
+    if prog in ("ls", "grep", "egrep") and not (short_flag(args, "R") or short_flag(args, "r")
+                                                 or "--recursive" in args):
+        return False
+    return any(a.rstrip("/") in BROAD or a in BROAD for a in args if not a.startswith("-"))
+
+
 def check_bash(command, cwd):
     try:
         segs = list(segments(command))
@@ -149,6 +160,11 @@ def check_bash(command, cwd):
             reason = ("%s is banned: a pattern matches other agents' processes (on 2026-10-12 one killed "
                       "every Claude session on the Mac). Kill only PIDs you started and recorded: "
                       "`kill <pid>`." % prog)
+        elif prog in SEARCHERS and broad_search(prog, argv[1:]):
+            reason = ("%s over / or the home folder is banned: it walks terabytes of worktrees, "
+                      "starves abyme's file watchers (load 150 on 2026-10-26) and raises macOS "
+                      "privacy prompts for the operator. Search the folder you mean: ~/dev/<repo>, "
+                      "your worktree, or `mdfind -name <file>` for the whole disk." % prog)
         elif prog == "playwright-cli" and {"close-all", "kill-all"} & set(argv[1:]):
             reason = ("playwright-cli close-all/kill-all end other agents' browsers. "
                       "Close your own session: playwright-cli -s=<name> close.")
@@ -203,6 +219,9 @@ def selftest():
         "playwright-cli kill-all", "playwright-cli -s=a close-all",
         "echo hi\ngit stash", 'pkill -f "abymed .*" -P 1', "killall node", "rtk pkill x",
         "cd x && /usr/bin/pkill -f y",
+        "find / -maxdepth 6 -name x", "rtk find / -name x", "find ~ -name x", "fd x /",
+        "du -sh ~", "rg foo ~/", "grep -rn foo /", "find $HOME -name x", "find ~/Library -name x",
+        "find /Users -name x",
     ]
     allow = [
         "git stash list", "git stash show -p stash@{0}", "git status", "git commit -m 'never git stash'",
@@ -211,6 +230,8 @@ def selftest():
         "playwright-cli -s=a close",
         "cat <<'EOF'\ngit stash\nEOF", "echo 'git stash'", "grep -rn 'git stash' .",
         "kill 1234", "kill $(cat x.pid)", "pgrep -fl abymed", "echo pkill",
+        "find ~/dev/abyme -name x", "find . -name x", "fd x ~/dev", "du -sh ~/dev/abyme",
+        "rg foo web/", "grep foo /etc/hosts", "ls /", "ls ~", "mdfind -name x",
     ]
     bad = [c for c in block if not check_bash(c, "/")] + ["ALLOWED? " + c for c in allow if check_bash(c, "/")]
     if decide({"tool_name": "Agent", "tool_input": {"model": "haiku"}}) is None:
