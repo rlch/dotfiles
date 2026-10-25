@@ -9,7 +9,7 @@ in a terminal, which stay as they are, on their own account folders.
   `claude setup-token` and good for a year. Which accounts there are, and when each token was
   made, is the keychain's to say: listed from its attributes (`security dump-keychain`, which
   prints no secret), at most once a second, the token made again replacing the one before (`mdat`).
-  Five on 2026-10-24: main, richard, hsone, tuteroai, rjmhjkl.
+  Five on 2026-10-24: main, richard, hsone, tuteroai, rjmhjkl; rjmathies on 2026-10-25.
 - A Claude launch of the owner's gets its account's token as the harness's
   `CLAUDE_CODE_OAUTH_TOKEN` (`secret`) and the slug (`account`), on Claude Code's default config
   folder: no `CLAUDE_CONFIG_DIR`, so every agent's sessions are in one folder and a resume finds
