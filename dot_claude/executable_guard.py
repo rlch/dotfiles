@@ -203,6 +203,8 @@ def decide(event):
         return check_bash(inp.get("command") or "", cwd)
     if tool in ("Edit", "Write", "MultiEdit", "NotebookEdit"):
         return check_edit(inp.get("file_path") or inp.get("notebook_path"), cwd)
+    if tool in ("Grep", "Glob") and broad_search("rg", [os.path.expanduser(inp.get("path") or ".")]):
+        return check_bash("find /", cwd)
     if tool == "Agent" and "haiku" in str(inp.get("model") or "").lower():
         return "Haiku is never used (global model rule). Use sonnet for retrieval, opus otherwise."
     return None
@@ -236,6 +238,12 @@ def selftest():
     bad = [c for c in block if not check_bash(c, "/")] + ["ALLOWED? " + c for c in allow if check_bash(c, "/")]
     if decide({"tool_name": "Agent", "tool_input": {"model": "haiku"}}) is None:
         bad.append("agent haiku")
+    if decide({"tool_name": "Grep", "tool_input": {"pattern": "x", "path": "/"}}) is None:
+        bad.append("grep tool /")
+    if decide({"tool_name": "Glob", "tool_input": {"pattern": "**/x", "path": "~"}}) is None:
+        bad.append("glob tool ~")
+    if decide({"tool_name": "Grep", "tool_input": {"pattern": "x", "path": "/Users/rjm/dev"}}):
+        bad.append("ALLOWED? grep tool ~/dev")
     if decide({"tool_name": "Agent", "tool_input": {"model": "sonnet"}}):
         bad.append("ALLOWED? agent sonnet")
     for c in bad:
