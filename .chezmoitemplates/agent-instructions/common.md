@@ -38,6 +38,8 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   login there. Ask me to sign in with my own.
 - **Told to match another tool, read its source first** (clone it into
   `~/dev/refs`) and cite file:line before calling anything impossible.
+- **In a design discussion with me, keep speccing**: start fix agents only once
+  I am confident it is all specced.
 - **End every report with the next step:** what you are doing next, or the one
   thing you need from me.
 - These are refused by a hook (`~/.claude/guard.py`), under every permission

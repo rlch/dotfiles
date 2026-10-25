@@ -19,9 +19,11 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     end
 
     # clodcurrent picks the highest-quota account not already running in another
-    # pane, trusts the launch folder in that account's config, kicks off the
-    # conversation sync in the background, then exec's `claude` with
-    # CLAUDE_CONFIG_DIR set. Everything in $args passes straight through.
+    # pane, trusts the launch folder in that account's config, then exec's
+    # `claude` with CLAUDE_CONFIG_DIR set. Every account's `projects` links to
+    # ~/.claude/projects (clodcurrent ensure), so memory and conversations are
+    # one per project whichever account runs. Everything in $args passes
+    # straight through.
     # herdr detects and tracks the claude agent on its own (integration hook), so
     # there's no launcher wrapper to route through — just run it.
     if command -q clodcurrent
