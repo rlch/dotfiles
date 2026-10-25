@@ -5,6 +5,7 @@
 // profile's (coding the code app, knowledge its own list).
 
 import abyme from "@abyme/plugin";
+import agents from "@abyme/agents/inventory";
 import theme from "@abyme/theme";
 import vim from "@abyme/vim";
 // import sentry from "@abyme/sentry";
@@ -28,6 +29,11 @@ export function common() {
   vim.setup({ composer: true, start: "normal" }, { when: { device: ["desktop"] } });
   // Which Claude account an agent abyme launches runs on, by its setup-token (accounts/design.md).
   accounts.setup();
+  // Claude Code's auto memory off for every agent abyme launches (operator, 2026-10-25): an agent's
+  // lessons go in its item's notes and its role's `.abyme/roles/<role>.md`, not a MEMORY.md every
+  // session loads. The variable wins over the setting `autoMemoryEnabled`; a terminal's `claude`
+  // keeps its memory. A running agent keeps what it loaded until it is next started or resumed.
+  agents.prepare.add({ prepare: (l) => (l.kind === "claude" ? { env: { CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1" } } : {}) });
   // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
   publish.setup();
   // Sentry is off (operator, 2026-10-22): 25 issues filed, none fixed from it. Uncomment to turn it back on.
