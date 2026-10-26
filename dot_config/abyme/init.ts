@@ -102,19 +102,20 @@ agents.setup({
     ],
   },
 });
-// By role: cloudflare only for infra, langfuse's server only for schools' eval, and no language
-// servers for a role that reads no code (a lead or a dispatcher too).
+// By role: cloudflare only for infra, langfuse's server only for schools' eval, the mobile server
+// (phone control) only for the mobile role, and no language servers for a role that reads no code
+// (a lead or a dispatcher too). Each agent paid a mobile-mcp and a node process for it (operator, 2026-10-26).
 type Without = { plugins?: string[]; servers?: string[] };
 const CLOUDFLARE = official(["cloudflare"]);
 const RUST_LSP = official(["rust-analyzer-lsp"]);
 const TS_LSP = official(["typescript-lsp"]);
-const NO_CODE: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP], servers: ["langfuse"] };
+const NO_CODE: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP], servers: ["langfuse", "mobile"] };
 const LEAD = NO_CODE;
 // abyme's and bevy-ts's roles: TypeScript and Rust.
-const CODE: Without = { plugins: CLOUDFLARE, servers: ["langfuse"] };
+const CODE: Without = { plugins: CLOUDFLARE, servers: ["langfuse", "mobile"] };
 // schools' roles: TypeScript; its eval reads langfuse's traces.
-const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse"] };
-const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP] };
+const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse", "mobile"] };
+const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["mobile"] };
 
 // OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
 // native teams (moved there 2026-10-21, openspec teams-and-work 7); delete them once those finish.
@@ -210,9 +211,21 @@ agents.presets.add({
   provider: "acp",
   harness: "claude",
   model: "opus",
-  without: { servers: ["langfuse"] },
+  without: { servers: ["langfuse", "mobile"] },
   instructions:
     "You do Cloudflare work: Workers, Pages, DNS, R2, D1, KV and their deploys, with the cloudflare plugin's skills and tools and wrangler. Read the repository's wrangler config and CLAUDE.md before you change anything. A sign-in the plugin's MCP server or wrangler asks for is the operator's: hand it to them. Anything run against production, or that cannot be undone, waits for the operator's go; say what it changes and how to roll it back. Land code changes as the repository lands them (the land skill), and say in two lines what you deployed and where.",
+});
+// Driving a real or simulated phone, in whichever repository it is (operator, 2026-10-26): the one
+// role that keeps the mobile server. Opus.
+agents.presets.add({
+  id: "mobile",
+  title: "Mobile",
+  provider: "acp",
+  harness: "claude",
+  model: "opus",
+  without: { plugins: CLOUDFLARE, servers: ["langfuse"] },
+  instructions:
+    "You drive a real or simulated iOS or Android device with the mobile server's tools: install, launch and walk the app, read the screen by its elements, and say what you saw with screenshots as evidence. Start with mobile_list_available_devices; a remote device costs money, so use one only when asked and release it when done. Land code changes as the repository lands them (the land skill).",
 });
 role("abyme-lead", "abyme · lead", "opus", LEAD,
   "You dispatch abyme's work, in ~/dev/abyme, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next. You may grant macOS Developer Tools and do laptop steps (sign-ins, settings) yourself while the operator is away; a GUI-only grant still needs Accessibility; never type or fetch a password.");
