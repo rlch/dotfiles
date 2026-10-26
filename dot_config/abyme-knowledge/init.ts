@@ -78,6 +78,7 @@ import packages from "@abyme/packages";
 import problems from "@abyme/problems";
 import learnRules from "@abyme/learn-rules";
 import ml from "/Users/rjm/Knowledge/subjects/ml";
+import tutor from "/Users/rjm/Knowledge/tutor";
 import { common } from "../abyme-common/index.ts";
 
 abyme.server({ port: 4478, stateDir: "~/.local/state/abyme-knowledge" });
@@ -184,3 +185,5 @@ problems.setup();
 learn.setup({ folder: "~/Knowledge" });
 learnRules.setup();
 ml.setup();
+// The tutor (~/Knowledge/tutor): its preset, and its nightly 02:00 write-ahead.
+tutor.setup();
