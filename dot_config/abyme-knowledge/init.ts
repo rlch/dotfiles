@@ -77,6 +77,10 @@ import profiles from "@abyme/profiles";
 import packages from "@abyme/packages";
 import problems from "@abyme/problems";
 import learnRules from "@abyme/learn-rules";
+import ports from "@abyme/ports";
+import surfaceStream from "@abyme/surface-stream";
+import bevyEngine from "@abyme/bevy-engine";
+import town from "@abyme/town";
 import ml from "/Users/rjm/Knowledge/subjects/ml";
 import tutor from "/Users/rjm/Knowledge/tutor";
 import { common } from "../abyme-common/index.ts";
@@ -111,7 +115,7 @@ layoutPanes.setup({
     search: { dock: "left", order: 25 }, problems: { dock: "left", order: 30 }, "settings.list": { dock: "left", order: 90 },
   },
 });
-rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "problems", "triggers.triggers", "settings.settings"] });
+rail.setup({ items: ["town", "spaces", "agents", "explorer", "learn.study", "problems", "triggers.triggers", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
 status.setup();
@@ -187,3 +191,9 @@ learnRules.setup();
 ml.setup();
 // The tutor (~/Knowledge/tutor): its preset, and its nightly 02:00 write-ahead.
 tutor.setup();
+// The skill galaxy, agent-town's learn entry, as the `town` view, first on the rail (operator, 2026-10-26).
+// Its engine runs only while the view is open, apart from the coding profile's town.
+ports.setup();
+surfaceStream.setup();
+bevyEngine.setup();
+town.setup({ folder: "~/dev/agent-town", entry: "src/learn/game.ts", title: "Skill galaxy" });
