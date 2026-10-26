@@ -33,9 +33,6 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   Bug fixes and changes that follow existing patterns are not on this list.
 - **Ask once.** Park the item, carry on with the rest, and never repeat an open
   question.
-- **Nothing of mine goes on Tutero's accounts** (my employer's): no org, project,
-  account or bill for abyme or my own projects, even when Tutero's is the only
-  login there. Ask me to sign in with my own.
 - **Told to match another tool, read its source first** (clone it into
   `~/dev/refs`) and cite file:line before calling anything impossible.
 - **In a design discussion with me, keep speccing**: start fix agents only once
