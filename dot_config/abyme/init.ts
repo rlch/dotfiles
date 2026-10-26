@@ -35,8 +35,7 @@ common();
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
-// Teams at once per repository: 20 while today's backlog clears (operator, 2026-10-24); lower it later.
-teams.setup({ limit: 20 });
+teams.setup();
 land.setup({ fix: "fix" });
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
@@ -81,7 +80,9 @@ replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
-load.setup({ slots: 4, budget: true, turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" } });
+// Teams at once per repository, every repository's quota ("*"): 20 while today's backlog clears
+// (operator, 2026-10-24); lower it later.
+load.setup({ slots: 4, budget: true, turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, quotas: { "*": { teams: 20 } } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
