@@ -75,6 +75,9 @@ import browser from "@abyme/browser";
 import triggers from "@abyme/triggers";
 import profiles from "@abyme/profiles";
 import packages from "@abyme/packages";
+import problems from "@abyme/problems";
+import learnRules from "@abyme/learn-rules";
+import ml from "/Users/rjm/Knowledge/subjects/ml";
 import { common } from "../abyme-common/index.ts";
 
 abyme.server({ port: 4478, stateDir: "~/.local/state/abyme-knowledge" });
@@ -107,7 +110,7 @@ layoutPanes.setup({
     search: { dock: "left", order: 25 }, "settings.list": { dock: "left", order: 90 },
   },
 });
-rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "triggers.triggers", "settings.settings"] });
+rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "problems.problems", "triggers.triggers", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
 status.setup();
@@ -174,7 +177,10 @@ triggers.setup();
 profiles.setup();
 packages.setup();
 
-// Learning from documents (`.md`, the `documents` plugin's): the vault's documents are things
-// to learn, its log (.learn/log.jsonl) the truth FSRS is computed from (docs/learning.md). Beside
-// the Obsidian vault in ~/Knowledge/vault, not inside it.
-learn.setup({ folder: "~/Knowledge/learn" });
+// Learning (docs/learning.md): ~/Knowledge's notes, each claimed by a subject in its subjects/
+// folder; the log (.learn/log.jsonl) is the truth schedules are computed from. Problems in the
+// notes, the subjects and the log show in the Problems view.
+problems.setup();
+learn.setup({ folder: "~/Knowledge" });
+learnRules.setup();
+ml.setup();
