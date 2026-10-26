@@ -77,7 +77,9 @@ replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 
 // Load reads the four check slots abyme's and schools' checks take (scripts/gate-slot, scripts/slots.mjs, 127.0.0.1:46900-46903).
 // With the budget a heavy run starts when its measured profile fits free cores and memory (resource-budgets, reviewed 2026-10-25).
-load.setup({ slots: 4, budget: true });
+// Turns on an account wait only once it is capped, not at 80% of a window: an idle account is waste
+// (operator, 2026-10-26).
+load.setup({ slots: 4, budget: true, accounts: { slow: 1 } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
