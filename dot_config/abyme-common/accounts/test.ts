@@ -2,13 +2,13 @@
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
 import { accountReady, accountRecord } from "./kind.ts";
-import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, score, takePushes, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
 const usage = (five: number, seven: number): Usage => ({ five, seven, fiveResets: null, sevenResets: null });
 const weekly = (seven: number, days: number): Usage => ({ five: 0, seven, fiveResets: null, sevenResets: inDays(days) });
-const row = (slug: string, u: [number, number] | Usage | null, o: { busy?: boolean; key?: string; windows?: ModelWindow[]; spent?: string; read?: number } = {}): Row => ({
+const row = (slug: string, u: [number, number] | Usage | null, o: { busy?: boolean; key?: string; windows?: ModelWindow[]; spent?: string; read?: number; said?: { five: number | null; seven: number | null }; agents?: number } = {}): Row => ({
   slug,
   key: o.key ?? `uuid-${slug}`,
   usage: u === null ? null : Array.isArray(u) ? usage(u[0], u[1]) : u,
@@ -16,6 +16,8 @@ const row = (slug: string, u: [number, number] | Usage | null, o: { busy?: boole
   busy: o.busy ?? false,
   spent: o.spent ?? null,
   read: o.read ?? null,
+  said: o.said,
+  agents: o.agents,
 });
 const fable = (utilization: number | null): ModelWindow[] => [{ name: "Fable", family: "fable", utilization, resetsAt: "2026-10-12T00:00:00Z" }];
 const picks = (rows: Row[], f: Family | null = null) => {
@@ -47,7 +49,27 @@ test("never a capped account: the refusal names the first back", () => {
 });
 test("falls back to best when all busy", () => assert.equal(picks([row("a", [10, 10], { busy: true }), row("b", [40, 40], { busy: true })]), "a"));
 // No harness has said anything of an account yet: it counts as unused, and its first turn reads it.
-test("an account not read yet counts as unused", () => assert.equal(picks([row("a", null), row("b", [90, 90])]), "a"));
+test("an account not read yet counts as half used", () => {
+  assert.equal(picks([row("a", null), row("b", [90, 90])]), "a");
+  assert.equal(picks([row("a", null), row("b", [20, 30])]), "b");
+  assert.match(best([row("a", null)], null, NOW).why, /5h \? 7d \?/);
+});
+test("a window said with no number is unknown, half used, not 0%", () => {
+  // samip: its harness said its 5 h with no number; tuteroai's 5 h is known at 30%.
+  const unknown = row("samip", [0, 0], { read: NOW, said: { five: null, seven: null } });
+  assert.equal(picks([unknown, row("tuteroai", [30, 40], { read: NOW, said: { five: 30, seven: 40 } })]), "tuteroai");
+  assert.equal(picks([unknown, row("tuteroai", [80, 76], { read: NOW, said: { five: 80, seven: 76 } })]), "samip");
+});
+test("on a score tie the account with fewer agents wins", () => {
+  // samip and vatsal read alike, every account busy: the one with fewer agents gets the next.
+  const busy = (slug: string, agents: number) => row(slug, null, { busy: true, agents });
+  assert.equal(picks([busy("samip", 5), busy("vatsal", 1)]), "vatsal");
+  assert.equal(picks([busy("samip", 1), busy("vatsal", 6)]), "samip");
+  // As many agents: the later, as before.
+  assert.equal(picks([busy("samip", 2), busy("vatsal", 2)]), "vatsal");
+  // Not a tie: the score wins, however many agents.
+  assert.equal(picks([row("a", [10, 10], { busy: true, agents: 5 }), row("b", [60, 60], { busy: true, agents: 1 })]), "a");
+});
 test("none with no account", () => assert.equal(picks([]), null));
 test("weekly exhausted free account is not best", () => assert.equal(picks([row("weekly-dead", [0, 100]), row("busy-usable", [30, 30], { busy: true })]), "busy-usable"));
 test("duplicate dir is busy when its twin is in session", () =>
@@ -115,9 +137,10 @@ test("capped is a window at 100, or a spent mark, until it resets", () => {
 });
 test("a read older than 5 h counts as unread, so the account is tried", () => {
   const ancient = NOW - 38 * 3600_000;
-  // hsone read 89% of its week 38 h ago, and its week had reset: it is tried before main at 60%.
-  assert.equal(picks([row("hsone", [0, 89], { read: ancient }), row("main", [10, 60], { read: NOW })]), "hsone");
-  assert.match(best([row("hsone", [0, 89], { read: ancient })], null, NOW).why, /^free, 5h 0% 7d 0%/);
+  // hsone read 89% of its week 38 h ago, and its week had reset: unread, half used, it is tried
+  // before main at 5h 60% 7d 80%.
+  assert.equal(picks([row("hsone", [0, 89], { read: ancient }), row("main", [60, 80], { read: NOW })]), "hsone");
+  assert.match(best([row("hsone", [0, 89], { read: ancient })], null, NOW).why, /^free, 5h \? 7d \?/);
 });
 test("a stale read near its cap is tried last, and its row says stale", () => {
   const old = NOW - 2 * 3600_000;
@@ -332,6 +355,34 @@ test("an account is not Ready while spent or capped, with when it is back", () =
   assert.equal(r.kind, "Account");
   assert.equal(r.id, "hsone");
   assert.equal(r.status.phase, "capped");
+});
+
+test("a window no harness gave a number for is null in the view, never 0", () => {
+  const a = [{ slug: "samip", key: "samip" }];
+  const read = (said: { five: number | null; seven: number | null }) => new Map([["samip", { at: NOW, usage: { five: 0, seven: 40, fiveResets: null, sevenResets: null }, windows: [], said }]]);
+  const r = rowsSeen(a, read({ five: null, seven: 40 }), new Map(), new Map(), NOW)[0]!;
+  assert.deepEqual([r.five, r.seven], [null, 40]);
+  assert.deepEqual([rowsSeen(a, read({ five: 0, seven: 40 }), new Map(), new Map(), NOW)[0]!.five], [0]);
+  assert.deepEqual(said({ five_hour: { resets_at: "x" }, seven_day: { utilization: 40 } }), { five: null, seven: 40 });
+});
+
+test("a refresh's turn gives both windows' numbers, refused or not", () => {
+  // As `claude -p --output-format stream-json` said them, 2026-10-27.
+  const refused = JSON.stringify({ type: "rate_limit_event", rate_limit_info: { status: "rejected", resetsAt: 1793232000, rateLimitType: "seven_day", unifiedWindows: { five_hour: { utilization: 0, resetsAt: 1793046000, status: "allowed" }, seven_day: { utilization: 1, resetsAt: 1793232000, status: "rejected" } } } });
+  const at = "2026-10-27T00:00:00.000Z";
+  assert.deepEqual(unified(`{"type":"system"}\n${refused}\n{"type":"result"}`, at), [
+    { window: "five_hour", state: "allowed", utilization: 0, resets_at: "2026-10-26T20:20:00.000Z", at },
+    { window: "seven_day", state: "rejected", utilization: 100, resets_at: "2026-10-29T00:00:00.000Z", at },
+  ]);
+  const allowed = JSON.stringify({ type: "rate_limit_event", rate_limit_info: { status: "allowed", rateLimitType: "five_hour", unifiedWindows: { five_hour: { utilization: 0, resetsAt: 1793045400, status: "allowed" }, seven_day: { utilization: 0.47, resetsAt: 1793286000, status: "allowed" } } } });
+  const pushes = unified(allowed, at);
+  assert.deepEqual(pushes.map((p) => [p.window, p.utilization]), [["five_hour", 0], ["seven_day", 47]]);
+  // Into a capped read: both overwritten, and nothing refused (rjmathies, 2026-10-27).
+  const next = takePushes({ at: Date.parse(at) - 3600_000, data: { seven_day: { utilization: 100, resets_at: "2026-10-29T10:00:00Z" } } }, pushes, 0)!;
+  assert.deepEqual([parse(next.data).five, parse(next.data).seven, next.rejected.length], [0, 47, 0]);
+  // With no unified windows, the one window it names, as a harness's push.
+  assert.deepEqual(unified(JSON.stringify({ type: "rate_limit_event", rate_limit_info: { status: "allowed_warning", utilization: 0.9, rateLimitType: "seven_day" } }), at).map((p) => [p.window, p.state, p.utilization]), [["seven_day", "warning", 90]]);
+  assert.deepEqual(unified("no events", at), []);
 });
 
 let failed = 0;

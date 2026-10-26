@@ -13,7 +13,8 @@ function until(at: string | null): string {
   const [d, h, m] = [Math.floor(s / 86400), Math.floor((s % 86400) / 3600), Math.floor((s % 3600) / 60)];
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
 }
-const pct = (n: number | null) => (n === null ? "" : `${Math.round(n)}%`);
+/** A window's number; "–" when no harness has given one (no data, never 0%). */
+const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n)}%`);
 
 /** Usable accounts first, the emptiest on top; then the spent. */
 function ordered(seen: Seen[]): Seen[] {

@@ -45,6 +45,12 @@ export function parse(data: Raw): Usage {
   };
 }
 
+/** The 5-hour and 7-day numbers a usage answer has, null where it has none: a harness says a window
+ * with no number while it is under its warning, so no number is no data, never 0%. */
+export function said(data: Raw): { five: number | null; seven: number | null } {
+  return { five: num(obj(data.five_hour)?.utilization), seven: num(obj(data.seven_day)?.utilization) };
+}
+
 /** Its model-scoped windows: the fixed keys and the `limits` entries that name a model. */
 export function parseModels(data: Raw): ModelWindow[] {
   const out: ModelWindow[] = [];
@@ -96,6 +102,13 @@ const secsUntil = (t: string | null, now: number) => {
   const at = Date.parse(t);
   return Number.isNaN(at) ? null : (at - now) / 1000;
 };
+
+/** A row's windows as a pick's why says them: `?` for one with no number. */
+function pct(r: Row, u: Usage, now: number): string {
+  const read = r.usage && !(r.read != null && now - r.read > PROBE_MS);
+  const w = (n: number, known: boolean) => (known ? `${Math.round(n)}%` : "?");
+  return `5h ${w(u.five, !!read && r.said?.five !== null)} 7d ${w(u.seven, !!read && r.said?.seven !== null)}`;
+}
 
 /** clodcurrent's score: 5-hour headroom and the refill due within 5 hours, gated below 15 % of the
  * week left, urged by the week's burn pace, with the week left as a tiebreak. */
@@ -187,7 +200,7 @@ function withWindow(u: Usage, w: ModelWindow): Usage {
 }
 
 /** An account to pick from: `spent` is until when a turn's limit keeps it out (ISO), if it does. */
-export type Row = { slug: string; key: string; usage: Usage | null; windows: ModelWindow[]; busy: boolean; spent?: string | null; read?: number | null };
+export type Row = { slug: string; key: string; usage: Usage | null; windows: ModelWindow[]; busy: boolean; spent?: string | null; read?: number | null; said?: { five: number | null; seven: number | null }; agents?: number };
 
 /** How old a read may be and still be taken as how the account stands now: windows come only from
  * its agents' turns, so an account nobody runs on keeps its last numbers however full it has since
@@ -198,8 +211,12 @@ export const stale = (read: number | null | undefined, now: number) => read != n
 /** A stale read near its cap (5h at 90, 7d at 85): what it says may already be full. */
 const nearCap = (u: Usage) => u.five >= 90 || u.seven >= 85;
 export type Outcome = { pick: number; why: string } | { pick: null; why: string };
+/** A window with no number, as a pick counts it: half used. Not proven empty, so an account with a
+ * known window under half beats it, and one over half loses to it (operator, 2026-10-27: samip and
+ * vatsal, unread, read 0% and took every agent). */
+export const UNKNOWN = 50;
 /** An account not read yet, as a pick counts it. */
-const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null };
+const UNREAD: Usage = { five: UNKNOWN, seven: UNKNOWN, fiveResets: null, sevenResets: null };
 
 /** A read older than a 5-hour window says nothing worth keeping an account idle for: its 5 h has
  * reset and its week may have (hsone sat idle 38 h at a stale "7d 89%" while its week had reset,
@@ -209,17 +226,22 @@ export const PROBE_MS = 5 * 3600_000;
 
 /** A row's usage for `f`, the model's window binding the week; null when that window is spent. */
 function effective(r: Row, f: Family | null, now: number): Usage | null {
-  const u = r.usage && !(r.read != null && now - r.read > PROBE_MS) ? r.usage : UNREAD;
+  const read = r.usage && !(r.read != null && now - r.read > PROBE_MS) ? r.usage : null;
+  const u = read ? { ...read, five: r.said && r.said.five === null ? UNKNOWN : read.five, seven: r.said && r.said.seven === null ? UNKNOWN : read.seven } : UNREAD;
   const w = f ? windowFor(r.windows, f) : null;
   if (w && w.utilization !== null && w.utilization >= 100) return null;
   return w ? withWindow(u, w) : u;
 }
 
+/** Scores this close are a tie, which the account with fewer agents on it wins. */
+const TIE = 1;
+
 /** clodcurrent's `best_for`, without its capped tiers: an account whose window for the model is
  * spent is out, the model's window binds the week, then free and not capped, then not capped, the
- * highest score in the first tier that has one. A capped account is never picked: with only those
- * left the answer names the first back. Busy is per identity. An account no harness has said
- * anything of yet counts as unused: its windows come only with its first turn's push. */
+ * highest score in the first tier that has one; on a tie (within TIE) the fewest agents (`agents`),
+ * so agents spread over accounts that read alike (operator, 2026-10-27). A capped account is never
+ * picked: with only those left the answer names the first back. Busy is per identity. A window no
+ * harness has given a number for counts as UNKNOWN. */
 export function best(rows: Row[], f: Family | null, now: number): Outcome {
   const busyKeys = new Set(rows.filter((r) => r.busy).map((r) => r.key));
   const eff = rows.map((r) => effective(r, f, now));
@@ -238,10 +260,14 @@ export function best(rows: Row[], f: Family | null, now: number): Outcome {
     const pool = usable.filter(keep);
     if (!pool.length) continue;
     let top = pool[0]!;
-    // On a tie the later wins, as Rust's `max_by` does.
-    for (const i of pool) if (score(eff[i]!, now) >= score(eff[top]!, now)) top = i;
+    const n = (i: number) => rows[i]!.agents ?? 0;
+    // A tie goes to fewer agents; at as many, the later wins, as Rust's `max_by` does.
+    for (const i of pool) {
+      const d = score(eff[i]!, now) - score(eff[top]!, now);
+      if (d > TIE || (d >= -TIE && (n(i) < n(top) || (n(i) === n(top) && d >= 0)))) top = i;
+    }
     const u = eff[top]!;
-    return { pick: top, why: `${name}, 5h ${Math.round(u.five)}% 7d ${Math.round(u.seven)}%${f ? `, ${f}` : ""}` };
+    return { pick: top, why: `${name}, ${pct(rows[top]!, u, now)}, ${n(top)} agent(s)${f ? `, ${f}` : ""}` };
   }
   const backs = usable
     .map((i) => ({ slug: rows[i]!.slug, at: later(rows[i]!.spent ?? null, binding(eff[i]!)?.resets ?? null) }))
@@ -263,7 +289,7 @@ export function warm(rows: Row[], last: { slug: string; at: number } | null, f: 
   const i = rows.findIndex((r) => r.slug === last.slug);
   const u = i < 0 ? null : effective(rows[i]!, f, now);
   if (!u || rows[i]!.spent || capped(u)) return null;
-  return { pick: i, why: `warm, its last call ${Math.max(0, Math.round((now - last.at) / 60_000))} min ago, 5h ${Math.round(u.five)}% 7d ${Math.round(u.seven)}%${f ? `, ${f}` : ""}` };
+  return { pick: i, why: `warm, its last call ${Math.max(0, Math.round((now - last.at) / 60_000))} min ago, ${pct(rows[i]!, u, now)}${f ? `, ${f}` : ""}` };
 }
 
 /** When a Claude transcript's lines last have the model answering (ms): its last assistant line,
@@ -308,7 +334,7 @@ export function tokensListed(dump: string): { slug: string; made: number | null 
 }
 
 /** What a login's last read said: its windows, or why they are unknown. */
-export type Read = { at: number; usage: Usage; windows: ModelWindow[] };
+export type Read = { at: number; usage: Usage; windows: ModelWindow[]; said?: { five: number | null; seven: number | null } };
 /** A login out of every pick until `until` (ms), by the window that capped it if known. */
 export type Spent = { until: number; window: Window | null };
 
@@ -394,8 +420,9 @@ export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn
     const mark = spent.get(key);
     return {
       slugs: members.map((m) => m.slug),
-      five: u ? u.usage.five : null,
-      seven: u ? u.usage.seven : null,
+      // No number said is no data (null), never 0%.
+      five: u && u.said?.five !== null ? u.usage.five : null,
+      seven: u && u.said?.seven !== null ? u.usage.seven : null,
       fiveResets: minute(u?.usage.fiveResets ?? null),
       sevenResets: minute(u?.usage.sevenResets ?? null),
       windows: (u?.windows ?? []).map((w) => ({ name: w.name, utilization: w.utilization, resetsAt: minute(w.resetsAt) })),
@@ -441,4 +468,36 @@ export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: numb
     if (utilization !== null) data[p.window!] = { ...was, utilization, resets_at: p.resets_at ?? str(was.resets_at) };
   }
   return { at: Date.parse(fresh[fresh.length - 1]!.at), data, rejected };
+}
+
+/** What a turn's `rate_limit_event` says of its account (`claude -p --output-format stream-json`),
+ * as pushes at `at`: each of its `unifiedWindows`, which give the 5-hour and the week a number on
+ * every turn, refused or not; else its one window, as a harness's push. The last event's; none when
+ * the output has none. */
+export function unified(out: string, at: string): Pushed[] {
+  const states = { allowed: "allowed", allowed_warning: "warning", rejected: "rejected" } as const;
+  let last: Pushed[] = [];
+  for (const line of out.split("\n")) {
+    if (!line.includes('"rate_limit_event"')) continue;
+    let info: Raw | null;
+    try {
+      info = obj((JSON.parse(line) as Raw).rate_limit_info);
+    } catch {
+      continue;
+    }
+    if (!info) continue;
+    const one = (window: string, w: Raw): Pushed | null => {
+      const state = states[str(w.status) as keyof typeof states];
+      if (!state) return null;
+      const u = num(w.utilization);
+      const r = num(w.resetsAt);
+      return { window, state, utilization: u === null ? null : Math.round(u * 10000) / 100, resets_at: r === null ? null : new Date(r * 1000).toISOString(), at };
+    };
+    const ws = obj(info.unifiedWindows);
+    const out = ws
+      ? (["five_hour", "seven_day"] as const).flatMap((k) => (obj(ws[k]) ? [one(k, obj(ws[k])!)] : [])).filter((p): p is Pushed => !!p)
+      : [one(str(info.rateLimitType) ?? "", info)].filter((p): p is Pushed => !!p && (p.window === "five_hour" || p.window === "seven_day"));
+    if (out.length) last = out;
+  }
+  return last;
 }

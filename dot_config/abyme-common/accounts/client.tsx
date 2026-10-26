@@ -2,7 +2,7 @@
 // and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on;
 // `/login` in a Claude agent's composer opens the same picker. "Sign in to Claude account…" makes
 // an account's setup-token: its authorize page opens, and once the operator clicks Authorize the
-// token goes to the keychain.
+// token goes to the keychain. "Add copied Claude setup-token…" keeps one made elsewhere.
 import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents";
@@ -12,6 +12,7 @@ import commands from "@abyme/commands/inventory";
 import menus from "@abyme/menus/inventory";
 import notifications from "@abyme/notifications";
 import palette from "@abyme/palette";
+import palettes from "@abyme/palette/inventory";
 import status from "@abyme/status/inventory";
 import markdown from "@abyme/markdown/optional";
 import type { AccountSeen } from "./pick.ts";
@@ -27,7 +28,8 @@ const seen = accounts.server.view();
 const view = (): View | undefined => seen.getState() as View | undefined;
 /** Every account folder, each with its login's row. */
 const folders = (v: View | undefined): Folder[] => (v?.accounts ?? []).flatMap((a) => a.slugs.map((slug) => ({ ...a, slug })));
-const label = (a: Folder) => (a.five === null ? a.slug : `${a.slug}  5h ${Math.round(a.five)}%  7d ${Math.round(a.seven ?? 0)}%`);
+const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n)}%`);
+const label = (a: Folder) => (a.read === null ? a.slug : `${a.slug}  5h ${pct(a.five)}  7d ${pct(a.seven)}`);
 
 const options = createStore<readonly { value: string; name: string; description?: string }[]>([]);
 function follow() {
@@ -107,6 +109,35 @@ commands.add({
         .map((a) => ({ id: a.slug, title: v.tokens?.[a.slug] ? `${a.slug}  token ends ${v.tokens[a.slug]!.slice(0, 10)}` : label(a), keywords: [a.slug] })),
       onPick: (slug) => void signIn(slug),
     });
+  },
+});
+
+/** A setup-token made elsewhere, copied, kept as account `slug`'s: the page's clipboard, else the
+ * Mac's, which the server half reads and empties. */
+async function add(slug: string) {
+  let token: string | undefined;
+  try {
+    const t = (await navigator.clipboard.readText()).trim();
+    if (/^sk-ant-oat01-/.test(t)) token = t;
+  } catch {}
+  try {
+    const { text } = (await accounts.server.add({ slug, token })) as { text: string };
+    notifications.notify({ level: "success", title: `${slug} added`, body: text });
+  } catch (e) {
+    notifications.notify({ level: "error", title: `${slug} not added`, body: (e as Error).message });
+  }
+}
+
+palettes.pickers.add({
+  id: "accounts.add",
+  title: "Add copied Claude setup-token…",
+  placeholder: "The account it is: one listed, or a new name",
+  empty: (q) => (q.trim() ? "Letters, digits, . _ - only." : "Type the account's name."),
+  search(query) {
+    const q = query.trim().toLowerCase();
+    const have = folders(view()).map((a) => a.slug);
+    const rows = have.filter((s) => s.includes(q)).map((slug) => ({ id: slug, title: `${slug}  (replace its token)`, keywords: [slug], run: () => void add(slug) }));
+    return q && /^[a-z0-9._-]+$/.test(q) && !have.includes(q) ? [{ id: `new:${q}`, title: `${q}  (new account)`, run: () => void add(q) }, ...rows] : rows;
   },
 });
 

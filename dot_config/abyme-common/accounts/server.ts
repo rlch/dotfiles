@@ -17,7 +17,7 @@ import kinds from "@abyme/kinds/inventory";
 import { setCondition, type Condition } from "@abyme/kinds/condition";
 import options from "./options";
 import { accountReady, accountRecord } from "./kind";
-import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, takePushes, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -74,14 +74,14 @@ async function tokenOf(slug: string): Promise<string | null> {
 const reads = () => (abyme.store.get("reads") ?? {}) as Record<string, Kept>;
 const answer = (at: number, data: Record<string, unknown>): Read => {
   const now = expirePast(data, Date.now());
-  return { at, usage: parse(now), windows: parseModels(now) };
+  return { at, usage: parse(now), windows: parseModels(now), said: said(now) };
 };
 const readsNow = (all: Account[]) => new Map(all.flatMap((a) => (reads()[a.key] ? [[a.key, answer(reads()[a.key]!.at, reads()[a.key]!.data)] as const] : [])));
 
 // ---- busy: abyme's live agents, by the account a launch said, and picks not listed yet ----
 
-/** Picks of the last minute, by login: busy from the moment they are made. */
-let picked: { key: string; at: number }[] = [];
+/** Picks of the last minute, by login and agent: busy from the moment they are made. */
+let picked: { key: string; at: number; agent: string | null }[] = [];
 
 /** abyme's agents as `agents.all` joins them: the account each is on and what its harness last said
  * of that account's usage. */
@@ -98,11 +98,17 @@ async function agentsByAccount(open = false): Promise<Map<string, { id: string; 
   return out;
 }
 
-async function busyKeys(all: Account[]): Promise<Set<string>> {
+/** How many agents are busy on each login, by key: those agents says, and the picks of the last
+ * minute, each agent once. Busy is more than none. */
+async function busyCounts(all: Account[]): Promise<Map<string, number>> {
   const on = await agentsByAccount();
   picked = picked.filter((p) => Date.now() - p.at < PICKED_MS);
-  const out = new Set(picked.map((p) => p.key));
-  for (const a of all) if (on.has(a.slug)) out.add(a.key);
+  const out = new Map<string, number>();
+  for (const a of all) {
+    const ids = new Set((on.get(a.slug) ?? []).map((x) => x.id));
+    for (const p of picked) if (p.key === a.key) ids.add(p.agent ?? `pick-${p.at}`);
+    if (ids.size) out.set(a.key, ids.size);
+  }
   return out;
 }
 
@@ -210,12 +216,12 @@ const BY_QUOTA = "auto";
 
 /** `last`: the account an agent taken up again last ran on and when its last call was, which it
  * stays on while warm (`warm`). */
-function pick(model: string | null, how: { pinned?: string; count?: boolean; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
+function pick(model: string | null, how: { pinned?: string; count?: boolean; agent?: string; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
     const all = await discover();
     if (!all.length) throw new Error("no Claude account has a setup-token (`abyme call accounts token slug=<s>`)");
     const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
-    const busy = await busyKeys(all);
+    const busy = await busyCounts(all);
     const q = readsNow(all);
     await show();
     let account: Account | undefined;
@@ -230,14 +236,14 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean; las
       if (pinned) abyme.log.warn(`pinned account ${pinned} is ${pin ? "capped" : "gone"}; picking by quota`);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
-        return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key), read: x ? x.at : null };
+        return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key), read: x ? x.at : null, said: x?.said, agents: busy.get(a.key) ?? 0 };
       });
       const out = warm(rows, how.last ?? null, family(model), Date.now()) ?? best(rows, family(model), Date.now());
       if (out.pick === null) throw new Error(`no account can serve ${model ?? "Claude"} now (${out.why})`);
       account = all[out.pick]!;
       why = out.why;
     }
-    if (how.count) picked.push({ key: account.key, at: Date.now() });
+    if (how.count) picked.push({ key: account.key, at: Date.now(), agent: how.agent ?? null });
     return { account, why };
   });
 }
@@ -296,14 +302,17 @@ const prepare: Parameters<typeof agents.prepare.add>[0] = {
     // Its last turn hit a usage limit on the account it ran on: that account is out until it
     // resets, and a pick by quota moves it (a pinned agent too, until its pin has room again).
     const all = l.agent && (l.limited || l.resume) ? await joined() : [];
+    // The account the limit hit is the one the launch says (`limited.account`): the agent's record
+    // may already name the next one, and marking that put a healthy account out for days with
+    // another's reset (rjmathies until main's week, 2026-10-26).
     if (l.limited && l.agent) {
-      const was = all.find((x) => x.id === l.agent)?.account;
+      const was = l.limited.account ?? all.find((x) => x.id === l.agent)?.account;
       if (was) markSpent(was, l.limited.why);
     }
     // Taken up again: within the hour of its last call it stays on the account that call ran on,
     // where its prompt cache is, unless that account is spent or out of limit (design.md, Warm).
     const last = l.resume && l.agent && !l.probe ? await lastCall(l.agent, l.cwd, l.resume, all) : null;
-    const { account, why } = await pick(model, { pinned, count: !l.probe, last });
+    const { account, why } = await pick(model, { pinned, count: !l.probe, agent: l.agent, last });
     const token = await tokenOf(account.slug);
     if (!token) throw new Error(`${account.slug}: its setup-token is not in the keychain`);
     abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
@@ -317,6 +326,10 @@ const prepare: Parameters<typeof agents.prepare.add>[0] = {
 if (fs && process) {
   agents.prepare.add(prepare);
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
+  // A token added or taken out of the keychain by hand shows within half a minute, agents working or
+  // not (vatsal was in `tokens` and not in the view, 2026-10-26). A listing changes nothing it shows
+  // sends nothing.
+  setInterval(() => void show().catch(() => {}), 30_000);
 }
 
 /** The last push taken of each login (ms): one heard again changes nothing. */
@@ -424,14 +437,95 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
   throw new Error(`${slug}: setup-token gave no authorize URL in 30 s`);
 }
 
+// ---- refresh: an account's windows read by a turn of its own, on demand ----
+
+/** The turn a refresh runs on an account's token: one line, on Sonnet, no tools, settings, MCP,
+ * skills or session kept, in the plugin's scratch. Its `rate_limit_event` gives both windows' numbers;
+ * a refused one costs nothing, one with room about $0.006 (2026-10-27). */
+const REFRESH_ARGS = ["-p", "Reply with ok.", "--model", "sonnet", "--max-turns", "1", "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--disable-slash-commands", "--no-session-persistence", "--output-format", "stream-json", "--verbose"];
+
+/** Which accounts a refresh with no slug reads: those capped (a window at 100, or spent), never read,
+ * or read longer than STALE_MS ago: what only a turn of their own can change. */
+function toRefresh(rows: AccountSeen[], now: number): string[] {
+  return rows.filter((r) => r.capped || r.read === null || stale(Date.parse(r.read), now)).flatMap((r) => r.slugs.slice(0, 1));
+}
+
+/** One account's windows, from a turn on its token: the read overwritten with both numbers; a
+ * refusal marks it spent until the reset it gives; a turn let through takes off a spent mark, so a
+ * wrong mark or an early reset puts it back now. */
+async function refreshOne(slug: string): Promise<{ slug: string; five: number | null; seven: number | null; capped: boolean; error?: string }> {
+  const token = await tokenOf(slug);
+  if (!token) return { slug, five: null, seven: null, capped: false, error: "no setup-token in the keychain" };
+  const scratch = `${files().scratch}/refresh-${slug}`;
+  await files().mkdir(scratch);
+  const r = await processes().run(await claudePath(), { args: REFRESH_ARGS, cwd: scratch, env: { CLAUDE_CODE_OAUTH_TOKEN: token }, timeoutMs: 120_000 });
+  const pushes = unified(r.stdout, new Date().toISOString());
+  if (!pushes.length) return { slug, five: null, seven: null, capped: false, error: `its turn said no limits (exit ${r.code})` };
+  const next = takePushes(reads()[slug], pushes, 0);
+  if (next) {
+    taken.set(slug, next.at);
+    abyme.store.set("reads", { ...reads(), [slug]: { at: next.at, data: next.data } } as unknown as Json);
+    for (const x of next.rejected) markSpent(slug, `a refresh's turn was refused by its ${x.window === "seven" ? "weekly" : "5-hour"} limit`, x);
+  }
+  const refused = pushes.some((p) => p.state === "rejected");
+  if (!refused && spentMarks()[slug]) {
+    const { [slug]: _, ...rest } = spentMarks();
+    abyme.store.set("spent", rest);
+    abyme.log.info(`${slug}: a refresh's turn was let through; no longer spent`);
+  }
+  const n = (w: string) => pushes.find((p) => p.window === w)?.utilization ?? null;
+  return { slug, five: n("five_hour"), seven: n("seven_day"), capped: refused };
+}
+
+/** Accounts given and their arguments, which a call from the shell or a page may leave out. */
+function slugOf(a: { slug?: string } | undefined, fn: string): string {
+  const slug = a?.slug?.trim();
+  if (!slug) throw new Error(`which account: \`abyme call accounts ${fn} slug=<s>\``);
+  return slug;
+}
+
 export default {
   /** `abyme call accounts token slug=…`: a setup-token for that account, a new account when no
    * token has the slug: answers the authorize URL to open on browser profile `claude-<slug>` for the
    * operator; the token goes to the keychain once they Authorize. */
-  token: (a: { slug: string }) => mintToken(a.slug),
+  token: (a: { slug?: string }) => mintToken(slugOf(a, "token")),
+  /** `abyme call accounts add slug=…`: a setup-token made elsewhere (`claude setup-token` in a
+   * terminal, another computer) into the keychain as that account's, a new account when no token has
+   * the slug. The token is the page's clipboard, which "Add copied Claude setup-token…" gives, else
+   * this Mac's (`pbpaste`), which is then emptied: never an argument on a command line. */
+  async add(a: { slug?: string; token?: string }) {
+    const slug = slugOf(a, "add");
+    if (!/^[a-z0-9._-]+$/.test(slug)) throw new Error(`${slug} is no account name: letters, digits, . _ -`);
+    const fromMac = !a.token;
+    const secret = tokenFrom(a.token ?? (await processes().run("pbpaste", { args: [] })).stdout);
+    if (!secret) throw new Error(fromMac ? "this Mac's clipboard holds no setup-token (sk-ant-oat01-…): copy the one `claude setup-token` printed" : "that is no setup-token (sk-ant-oat01-…)");
+    const w = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
+    if (w.code !== 0) throw new Error(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
+    if (fromMac) await processes().run("/bin/sh", { args: ["-c", "printf '' | pbcopy"] });
+    abyme.log.info(`${slug}: setup-token added and kept in the keychain`);
+    listed = null;
+    shown = "";
+    await show();
+    return { slug, text: `${slug}'s setup-token is in the keychain${fromMac ? " and the clipboard emptied" : ""}; agents may run on it now` };
+  },
+  /** `abyme call accounts refresh [slug=…]`: each account's windows read by a one-line turn on its
+   * token (about $0.006 each, nothing when refused): that account, else those capped, never read or
+   * stale. A refusal marks it spent until the reset it gives; a turn let through takes a spent mark
+   * off. On demand only. */
+  async refresh(a: { slug?: string } = {}) {
+    const slugs = a?.slug ? [a.slug] : toRefresh(view.getState().accounts, Date.now());
+    const known = new Set((await keychainTokens()).map((t) => t.slug));
+    const out = [];
+    for (const slug of slugs) out.push(known.has(slug) ? await refreshOne(slug).catch((e: Error) => ({ slug, five: null, seven: null, capped: false, error: e.message })) : { slug, five: null, seven: null, capped: false, error: "no such account" });
+    shown = "";
+    await show();
+    return { refreshed: out };
+  },
   /** `abyme call accounts code slug=… code=…`: the code Claude showed after Authorize (its localhost
    * callback out of reach), given to that account's waiting setup-token. */
   async code(a: { slug: string; code: string }) {
+    slugOf(a, "code");
+    if (!a.code) throw new Error("which code: `abyme call accounts code slug=<s> code=<code>`");
     const m = minting.get(a.slug);
     if (!m || !(await alive(m.scratch))) throw new Error(`no setup-token for ${a.slug} is waiting: \`abyme call accounts token slug=${a.slug}\` first`);
     if (!/^[A-Za-z0-9#_-]+$/.test(a.code.trim())) throw new Error("that is not a code Claude shows");
@@ -444,6 +538,7 @@ export default {
    * (a turn on its token by hand), in its words: spent until the reset they name ("resets 10pm
    * (Australia/Melbourne)"), else as any limit. */
   async limited(a: { slug: string; why: string }) {
+    slugOf(a, "limited");
     if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
     markSpent(a.slug, a.why);
     shown = "";
@@ -456,6 +551,7 @@ export default {
    * harnesses closed, so nothing runs on it; Claude keeps the token valid until it is revoked at
    * claude.ai/settings/claude-code, which the answer says. */
   async revoke(a: { slug: string }) {
+    slugOf(a, "revoke");
     const r = await processes().run(o.security, { args: ["delete-generic-password", "-s", tokenService(a.slug), "-a", USER] });
     if (r.code !== 0) throw new Error(`no setup-token for ${a.slug} in the keychain`);
     listed = null;
@@ -493,6 +589,7 @@ export default {
   pins: () => pins(),
   /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it. */
   async ignore(a: { slug: string; on?: boolean }) {
+    slugOf(a, "ignore");
     if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
     const off = new Set(ignoredSlugs());
     if (a.on === false) off.delete(a.slug);
