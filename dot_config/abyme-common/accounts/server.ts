@@ -60,6 +60,11 @@ async function discover(): Promise<Account[]> {
   return (await keychainTokens()).filter((t) => !off.has(t.slug)).map((t) => ({ slug: t.slug, key: t.slug }));
 }
 
+/** A setup-token into the keychain as account `slug`'s, replacing any: on `security -i`'s stdin,
+ * never an argument. */
+const keep = (slug: string, secret: string) =>
+  processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
+
 /** An account's setup-token, for one launch. */
 async function tokenOf(slug: string): Promise<string | null> {
   const r = await processes().run(o.security, { args: ["find-generic-password", "-s", tokenService(slug), "-a", USER, "-w"] });
@@ -414,7 +419,7 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
       // The output holds the token: read here, and never logged, kept or answered.
       const secret = tokenFrom(r.stdout);
       if (!secret) return void abyme.log.warn(`${slug}: setup-token ended with no token (exit ${r.code})`);
-      const w = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
+      const w = await keep(slug, secret);
       if (w.code !== 0) return void abyme.log.warn(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
       abyme.log.info(`${slug}: setup-token made and kept in the keychain`);
       listed = null;
@@ -499,7 +504,7 @@ export default {
     const fromMac = !a.token;
     const secret = tokenFrom(a.token ?? (await processes().run("pbpaste", { args: [] })).stdout);
     if (!secret) throw new Error(fromMac ? "this Mac's clipboard holds no setup-token (sk-ant-oat01-…): copy the one `claude setup-token` printed" : "that is no setup-token (sk-ant-oat01-…)");
-    const w = await processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
+    const w = await keep(slug, secret);
     if (w.code !== 0) throw new Error(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
     if (fromMac) await processes().run("/bin/sh", { args: ["-c", "printf '' | pbcopy"] });
     abyme.log.info(`${slug}: setup-token added and kept in the keychain`);
