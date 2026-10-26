@@ -220,9 +220,14 @@ function pick(model: string | null, how: { pinned?: string; count?: boolean; las
     await show();
     let account: Account | undefined;
     let why: string;
-    if (pinned && (account = all.find((a) => a.slug === pinned))) why = "pinned";
+    const pin = pinned ? all.find((a) => a.slug === pinned) : undefined;
+    // A pin capped by its harness or its read is skipped until it resets, so the agent does not
+    // loop on "account full"; it comes back to the pin once it has room (operator, 2026-10-26).
+    const pinUsage = pin ? q.get(pin.key)?.usage : undefined;
+    const pinCapped = !!pin && (!!spentUntil(pin.key) || (!!pinUsage && !!binding(pinUsage)));
+    if (pin && !pinCapped) (account = pin), (why = "pinned");
     else {
-      if (pinned) abyme.log.warn(`pinned account ${pinned} is gone; picking by quota`);
+      if (pinned) abyme.log.warn(`pinned account ${pinned} is ${pin ? "capped" : "gone"}; picking by quota`);
       const rows: Row[] = all.map((a) => {
         const x = q.get(a.key);
         return { slug: a.slug, key: a.key, usage: x ? x.usage : null, windows: x ? x.windows : [], busy: busy.has(a.key), spent: spentUntil(a.key), read: x ? x.at : null };
@@ -289,7 +294,7 @@ const prepare: Parameters<typeof agents.prepare.add>[0] = {
     if (l.agent && field && pins()[l.agent] === undefined) abyme.store.set("pins", { ...pins(), [l.agent]: field });
     const pinned = l.agent ? pins()[l.agent] : undefined;
     // Its last turn hit a usage limit on the account it ran on: that account is out until it
-    // resets, and a pick by quota moves it (a pinned agent stays, and abyme shows the limit).
+    // resets, and a pick by quota moves it (a pinned agent too, until its pin has room again).
     const all = l.agent && (l.limited || l.resume) ? await joined() : [];
     if (l.limited && l.agent) {
       const was = all.find((x) => x.id === l.agent)?.account;
