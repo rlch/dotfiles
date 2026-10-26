@@ -177,4 +177,4 @@ packages.setup();
 // Learning from documents (`.md`, the `documents` plugin's): the vault's documents are things
 // to learn, its log (.learn/log.jsonl) the truth FSRS is computed from (docs/learning.md). Beside
 // the Obsidian vault in ~/Knowledge/vault, not inside it.
-learn.setup({ vault: "~/Knowledge/learn" });
+learn.setup({ folder: "~/Knowledge/learn" });
