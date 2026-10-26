@@ -470,6 +470,20 @@ export function takePushes(base: Kept | undefined, pushes: Pushed[], taken: numb
   return { at: Date.parse(fresh[fresh.length - 1]!.at), data, rejected };
 }
 
+/** Why a turn failed, as its `result` says (`claude -p --output-format stream-json`): "Failed to
+ * authenticate. API Error: 401 OAuth access token is invalid." for a bad token; null when it did not. */
+export function turnError(out: string): string | null {
+  let said: string | null = null;
+  for (const line of out.split("\n")) {
+    if (!line.includes('"result"')) continue;
+    try {
+      const r = JSON.parse(line) as Raw;
+      if (r.type === "result" && r.is_error === true) said = str(r.result) ?? "the turn failed";
+    } catch {}
+  }
+  return said;
+}
+
 /** What a turn's `rate_limit_event` says of its account (`claude -p --output-format stream-json`),
  * as pushes at `at`: each of its `unifiedWindows`, which give the 5-hour and the week a number on
  * every turn, refused or not; else its one window, as a harness's push. The last event's; none when

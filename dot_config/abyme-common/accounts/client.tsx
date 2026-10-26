@@ -78,7 +78,7 @@ async function signIn(slug: string) {
   try {
     const { url } = (await accounts.server.token({ slug })) as { url: string };
     if (markdown) markdown.open(url);
-    notifications.notify({ level: "info", title: `Authorize ${slug}`, body: `Sign in to Claude as ${slug}'s login and click Authorize: the token goes to the keychain.${markdown ? "" : ` ${url}`}` });
+    notifications.notify({ level: "info", toast: true, title: `Authorize ${slug}`, body: `Sign in to Claude as ${slug}'s login and click Authorize: the token goes to the keychain.${markdown ? "" : ` ${url}`}` });
   } catch (e) {
     notifications.notify({ level: "error", title: `${slug} not signed in`, body: (e as Error).message });
   }
@@ -88,7 +88,7 @@ async function signIn(slug: string) {
 async function ignore(slug: string, on = true) {
   try {
     await accounts.server.ignore({ slug, on });
-    notifications.notify({ level: "success", title: on ? `${slug} ignored` : `${slug} in use again`, body: on ? "Undo with \"Use Claude account again…\"." : undefined });
+    notifications.notify({ level: "success", toast: true, title: on ? `${slug} ignored` : `${slug} in use again`, body: on ? "Undo with \"Use Claude account again…\"." : undefined });
   } catch (e) {
     notifications.notify({ level: "error", title: `${slug} not changed`, body: (e as Error).message });
   }
@@ -112,8 +112,8 @@ commands.add({
   },
 });
 
-/** A setup-token made elsewhere, copied, kept as account `slug`'s: the page's clipboard, else the
- * Mac's, which the server half reads and empties. */
+/** A setup-token made elsewhere, copied, kept as account `slug`'s: the page's clipboard, emptied
+ * once kept, else the Mac's, which the server half reads and empties. */
 async function add(slug: string) {
   let token: string | undefined;
   try {
@@ -121,8 +121,9 @@ async function add(slug: string) {
     if (/^sk-ant-oat01-/.test(t)) token = t;
   } catch {}
   try {
-    const { text } = (await accounts.server.add({ slug, token })) as { text: string };
-    notifications.notify({ level: "success", title: `${slug} added`, body: text });
+    let { text } = (await accounts.server.add({ slug, token })) as { text: string };
+    if (token) text += (await navigator.clipboard.writeText("").then(() => true, () => false)) ? ". Clipboard emptied." : ". Empty the clipboard: it still holds the token.";
+    notifications.notify({ level: "success", toast: true, title: `${slug} added`, body: text });
   } catch (e) {
     notifications.notify({ level: "error", title: `${slug} not added`, body: (e as Error).message });
   }
@@ -160,7 +161,7 @@ commands.add({
   group: "Agents",
   run: async () => {
     const off = (await accounts.server.ignored()) as string[];
-    if (!off.length) return void notifications.notify({ level: "info", title: "No account is ignored" });
+    if (!off.length) return void notifications.notify({ level: "info", toast: true, title: "No account is ignored" });
     palette.pick({ placeholder: "The account to use again", items: off.map((slug) => ({ id: slug, title: slug })), onPick: (slug) => void ignore(slug, false) });
   },
 });

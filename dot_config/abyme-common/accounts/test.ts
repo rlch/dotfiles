@@ -2,7 +2,7 @@
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
 import { accountReady, accountRecord } from "./kind.ts";
-import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -383,6 +383,9 @@ test("a refresh's turn gives both windows' numbers, refused or not", () => {
   // With no unified windows, the one window it names, as a harness's push.
   assert.deepEqual(unified(JSON.stringify({ type: "rate_limit_event", rate_limit_info: { status: "allowed_warning", utilization: 0.9, rateLimitType: "seven_day" } }), at).map((p) => [p.window, p.state, p.utilization]), [["seven_day", "warning", 90]]);
   assert.deepEqual(unified("no events", at), []);
+  // A turn that says no limits says why it failed: a bad token's 401, never only "no limits".
+  assert.equal(turnError(`{"type":"system"}\n${JSON.stringify({ type: "result", subtype: "success", is_error: true, result: "Failed to authenticate. API Error: 401 OAuth access token is invalid." })}`), "Failed to authenticate. API Error: 401 OAuth access token is invalid.");
+  assert.equal(turnError(JSON.stringify({ type: "result", is_error: false, result: "ok" })), null);
 });
 
 let failed = 0;

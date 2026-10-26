@@ -17,7 +17,7 @@ import kinds from "@abyme/kinds/inventory";
 import { setCondition, type Condition } from "@abyme/kinds/condition";
 import options from "./options";
 import { accountReady, accountRecord } from "./kind";
-import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
 const HOME = o.home || fs?.home || "";
@@ -467,7 +467,7 @@ async function refreshOne(slug: string): Promise<{ slug: string; five: number | 
   await files().mkdir(scratch);
   const r = await processes().run(await claudePath(), { args: REFRESH_ARGS, cwd: scratch, env: { CLAUDE_CODE_OAUTH_TOKEN: token }, timeoutMs: 120_000 });
   const pushes = unified(r.stdout, new Date().toISOString());
-  if (!pushes.length) return { slug, five: null, seven: null, capped: false, error: `its turn said no limits (exit ${r.code})` };
+  if (!pushes.length) return { slug, five: null, seven: null, capped: false, error: turnError(r.stdout) ?? `its turn said no limits (exit ${r.code})` };
   const next = takePushes(reads()[slug], pushes, 0);
   if (next) {
     taken.set(slug, next.at);
@@ -504,11 +504,11 @@ export default {
     const slug = slugOf(a, "add");
     if (!/^[a-z0-9._-]+$/.test(slug)) throw new Error(`${slug} is no account name: letters, digits, . _ -`);
     const fromMac = !a.token;
-    const secret = tokenFrom(a.token ?? (await processes().run("pbpaste", { args: [] })).stdout);
-    if (!secret) throw new Error(fromMac ? "this Mac's clipboard holds no setup-token (sk-ant-oat01-…): copy the one `claude setup-token` printed" : "that is no setup-token (sk-ant-oat01-…)");
+    const secret = tokenFrom(a.token ?? (await processes().run(o.pbpaste, { args: [] })).stdout);
+    if (!secret) throw new Error(fromMac ? "no setup-token on the clipboard (one starts sk-ant-oat01-): copy the one `claude setup-token` printed" : "that is no setup-token (one starts sk-ant-oat01-)");
     const w = await keep(slug, secret);
     if (w.code !== 0) throw new Error(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
-    if (fromMac) await processes().run("/bin/sh", { args: ["-c", "printf '' | pbcopy"] });
+    if (fromMac) await processes().run(o.pbcopy, { args: [], stdin: "" });
     abyme.log.info(`${slug}: setup-token added and kept in the keychain`);
     listed = null;
     shown = "";

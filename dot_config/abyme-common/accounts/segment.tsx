@@ -53,12 +53,14 @@ function Meter({ n, spent }: { n: number | null; spent?: boolean }) {
   );
 }
 
-/** One account as a pip: how full its five hours are; amber when spent. */
+/** One account as a pip: how full its five hours are; amber when spent; faint and empty with no
+ * number, never 0%'s stub. */
 function Pip({ a }: { a: Seen }) {
-  const fill = a.capped ? 100 : Math.max(8, a.five ?? 0);
+  const unknown = !a.capped && a.five === null;
+  const fill = a.capped ? 100 : unknown ? 0 : Math.max(8, a.five!);
   return (
-    <span style={{ position: "relative", width: 3, height: 10, borderRadius: 1, overflow: "hidden" }}>
-      <span style={{ position: "absolute", inset: 0, background: "currentColor", opacity: 0.25 }} />
+    <span data-accounts-pip={unknown ? "unknown" : undefined} style={{ position: "relative", width: 3, height: 10, borderRadius: 1, overflow: "hidden" }}>
+      <span style={{ position: "absolute", inset: 0, background: "currentColor", opacity: unknown ? 0.1 : 0.25 }} />
       <span
         style={{
           position: "absolute",

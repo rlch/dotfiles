@@ -30,7 +30,7 @@ in a terminal, which stay as they are, on their own account folders.
 | | the plugin |
 | --- | --- |
 | Push | each turn, Claude's adapter says how full its account is (`rate_limit_event`), and abyme keeps it on the agent (`usage_limits` in `agents.all`). On the debounced agents change, each account takes its agents' `five_hour` and `seven_day` entries newer than its read and its last push taken: each overwrites that window, the other and the model windows kept. The read is kept in the store, so a cap stands across abymed's restarts. An account no harness has spoken of reads as unknown (no data) until its first turn or a refresh does. `rejected` puts that window at 100 and marks the account spent until it resets. A harness says a window with no number while it is under its warning (abyme's acp reads only the top-level `utilization`, not `unifiedWindows`, 2026-10-27): no number is no data, `null` in the view, never 0% |
-| Refresh | `abyme call accounts refresh [slug=…]`, on demand only (operator, 2026-10-27: recurring spend is ask-first): a one-line `claude -p` turn on the account's token, on Sonnet, no tools, settings, MCP or session; its `rate_limit_event`'s `unifiedWindows` give both windows a number. With no slug, the accounts capped, never read or stale. A refusal marks the account spent until the reset it gives (costs nothing); a turn let through (about $0.006) takes a spent mark off, so a wrong mark or an early reset puts it back now. rjmathies, marked until 29 Oct, read 7d 47% (2026-10-27) |
+| Refresh | `abyme call accounts refresh [slug=…]`, on demand only (operator, 2026-10-27: recurring spend is ask-first): a one-line `claude -p` turn on the account's token, on Sonnet, no tools, settings, MCP or session; its `rate_limit_event`'s `unifiedWindows` give both windows a number. With no slug, the accounts capped, never read or stale. A refusal marks the account spent until the reset it gives (costs nothing); a turn let through (about $0.006) takes a spent mark off, so a wrong mark or an early reset puts it back now. rjmathies, marked until 29 Oct, read 7d 47% (2026-10-27). A turn that says no limits answers its own error (a bad token: "401 OAuth access token is invalid") |
 | Score, model windows | clodcurrent's (`pick.ts`); the model is the launch's value of category `model`. A window with no number (never read, read over 5 h ago, or said with none) scores as 50% used (`UNKNOWN`): not proven empty, so a known window under half beats it and one over half loses to it (samip and vatsal, unread, read 0% and took every agent, 2026-10-27) |
 | Tiers | clodcurrent's first two: free and not capped, then not capped, the highest score in each; scores within 1 point are a tie, which the account with fewer busy agents wins (operator, 2026-10-27); then an account whose read is stale (older than 30 min) and near its cap (5h 90, 7d 85), which may already be full: it is tried last (hsone read 89% of its week for 13 h after its token answered its weekly limit, 2026-10-25). A capped account (a window at 100, or spent) is never picked: with only those left, the launch fails with `every account is capped; the first back is <slug> at <ISO>`. A pinned account stays pinned while it has room; capped (a window at 100, or spent), it is skipped by quota until it resets, then the agent returns to it (operator, 2026-10-26) |
 | Busy | per account: abyme's agents whose `agents.all` record is `busy` (the agents plugin's one rule), by the `account` their launch said, plus a pick counted from the moment it is made; how many, each agent once, for a tie |
@@ -50,8 +50,10 @@ in a terminal, which stay as they are, on their own account folders.
   token yet is a new account.
 - A setup-token made elsewhere (`claude setup-token` in a terminal): copy it, then "Add copied Claude
   setup-token…" in the palette, typing the account's name (a new one, or one listed to replace its
-  token). The page's clipboard goes to `add({ slug, token })`; else `abyme call accounts add slug=<s>`
-  reads this Mac's clipboard (`pbpaste`) and empties it. Never an argument on a command line.
+  token). The page's clipboard goes to `add({ slug, token })` and is emptied once the token is kept;
+  else `abyme call accounts add slug=<s>` reads this Mac's clipboard (`pbpaste`) and empties it. Never
+  an argument on a command line. Its answer toasts (abyme toasts only errors unless told: "added"
+  showed nowhere, 2026-10-27). The options `security`, `pbpaste` and `pbcopy` take fakes for a walk.
 - A token added or taken out of the keychain by hand shows in the view within 30 s (the view is
   listed again every 30 s; vatsal was in `tokens` and not the view, 2026-10-26).
 - A call missing `slug` answers which account, naming the command (`token` with none threw
@@ -75,7 +77,7 @@ in a terminal, which stay as they are, on their own account folders.
 
 ## What the operator sees
 
-- **Status segment** (right): how many accounts have quota left, each one's windows in its tooltip,
+- **Status segment** (right): a pip per account (faint and empty with no 5-hour number, never 0%'s stub), how many accounts have quota left, each one's windows in its tooltip,
   and a token near its year's end. "Back in" is the row's `back`, the reset of the window that caps it.
 - **`abyme call accounts view`**: `{ accounts: AccountSeen[], tokens }` (`pick.ts`), one per
   account: `slugs`, `five`/`seven` in percent (null: no number said, shown "–"), their resets, per-model `windows`,
