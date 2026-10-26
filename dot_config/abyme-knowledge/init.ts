@@ -107,10 +107,10 @@ shell.setup();
 layoutPanes.setup({
   placement: {
     spaces: { dock: "left", order: 5 }, agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
-    search: { dock: "left", order: 25 }, "settings.list": { dock: "left", order: 90 },
+    search: { dock: "left", order: 25 }, problems: { dock: "left", order: 30 }, "settings.list": { dock: "left", order: 90 },
   },
 });
-rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "problems.problems", "triggers.triggers", "settings.settings"] });
+rail.setup({ items: ["spaces", "agents", "explorer", "learn.study", "problems", "triggers.triggers", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
 status.setup();
