@@ -80,7 +80,8 @@ replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 // Turns on an account wait only once it is capped, not at 80% of a window: an idle account is waste
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
-load.setup({ slots: 4, budget: true, turns: false, accounts: { slow: 1 } });
+// Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
+load.setup({ slots: 4, budget: true, turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
