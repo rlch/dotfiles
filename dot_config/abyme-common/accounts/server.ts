@@ -201,6 +201,8 @@ kinds.kinds.add({
   kind: "Account",
   get: (id) => accountsNow().find((r) => r.id === id) ?? null,
   list: accountsNow,
+  expire: { none: "a login is not work: it is capped or open" },
+  retry: { none: "a login is not work: a cap ends by itself" },
 });
 
 // ---- picking ----

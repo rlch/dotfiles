@@ -18,6 +18,7 @@ export const accountRecord = (a: AccountSeen, conditions: readonly Condition[]):
   id: a.slugs[0] ?? "",
   name: a.slugs.join(", "),
   owners: [],
+  deadline: null,
   spec: { slugs: a.slugs },
   status: { phase: a.spent ? "spent" : a.capped ? "capped" : "open", five: a.five, seven: a.seven, agents: a.agents, stale: a.stale, conditions: [...conditions] },
 });
