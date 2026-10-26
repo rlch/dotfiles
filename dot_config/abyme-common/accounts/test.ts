@@ -112,9 +112,15 @@ test("capped is a window at 100, or a spent mark, until it resets", () => {
   const marked = rowsSeen([folders[0]!], reads, new Map(), new Map([["u-main", { until: Date.parse(inDays(2)), window: "seven" as const }]]), NOW)[0]!;
   assert.deepEqual([marked.capped, marked.binding, marked.back], [true, "seven", inDays(2)]);
 });
+test("a read older than 5 h counts as unread, so the account is tried", () => {
+  const ancient = NOW - 38 * 3600_000;
+  // hsone read 89% of its week 38 h ago, and its week had reset: it is tried before main at 60%.
+  assert.equal(picks([row("hsone", [0, 89], { read: ancient }), row("main", [10, 60], { read: NOW })]), "hsone");
+  assert.match(best([row("hsone", [0, 89], { read: ancient })], null, NOW).why, /^free, 5h 0% 7d 0%/);
+});
 test("a stale read near its cap is tried last, and its row says stale", () => {
-  const old = NOW - 13 * 3600_000;
-  // hsone read 89% of its week 13 h ago; main is at 60% now.
+  const old = NOW - 2 * 3600_000;
+  // hsone read 89% of its week 2 h ago; main is at 60% now.
   assert.equal(picks([row("hsone", [0, 89], { read: old }), row("main", [10, 60], { read: NOW })]), "main");
   // Busy elsewhere, it is still before a doubtful one; alone, the doubtful one is tried.
   assert.equal(picks([row("hsone", [0, 89], { read: old }), row("main", [10, 60], { read: NOW, busy: true })]), "main");

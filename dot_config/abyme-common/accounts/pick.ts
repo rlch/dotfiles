@@ -201,9 +201,15 @@ export type Outcome = { pick: number; why: string } | { pick: null; why: string 
 /** An account not read yet, as a pick counts it. */
 const UNREAD: Usage = { five: 0, seven: 0, fiveResets: null, sevenResets: null };
 
+/** A read older than a 5-hour window says nothing worth keeping an account idle for: its 5 h has
+ * reset and its week may have (hsone sat idle 38 h at a stale "7d 89%" while its week had reset,
+ * 2026-10-26). Such an account counts as unread, so it is tried and its first turn's push reads it;
+ * a refused turn is marked spent and sent elsewhere. */
+export const PROBE_MS = 5 * 3600_000;
+
 /** A row's usage for `f`, the model's window binding the week; null when that window is spent. */
-function effective(r: Row, f: Family | null): Usage | null {
-  const u = r.usage ?? UNREAD;
+function effective(r: Row, f: Family | null, now: number): Usage | null {
+  const u = r.usage && !(r.read != null && now - r.read > PROBE_MS) ? r.usage : UNREAD;
   const w = f ? windowFor(r.windows, f) : null;
   if (w && w.utilization !== null && w.utilization >= 100) return null;
   return w ? withWindow(u, w) : u;
@@ -216,7 +222,7 @@ function effective(r: Row, f: Family | null): Usage | null {
  * anything of yet counts as unused: its windows come only with its first turn's push. */
 export function best(rows: Row[], f: Family | null, now: number): Outcome {
   const busyKeys = new Set(rows.filter((r) => r.busy).map((r) => r.key));
-  const eff = rows.map((r) => effective(r, f));
+  const eff = rows.map((r) => effective(r, f, now));
   const usable = rows.map((_, i) => i).filter((i) => eff[i] !== null);
   if (!usable.length) return { pick: null, why: rows.length ? `every account's ${f} window is spent` : "no account" };
   const busy = (i: number) => busyKeys.has(rows[i]!.key);
@@ -255,7 +261,7 @@ export const WARM_MS = 60 * 60_000;
 export function warm(rows: Row[], last: { slug: string; at: number } | null, f: Family | null, now: number): Outcome | null {
   if (!last || now - last.at >= WARM_MS) return null;
   const i = rows.findIndex((r) => r.slug === last.slug);
-  const u = i < 0 ? null : effective(rows[i]!, f);
+  const u = i < 0 ? null : effective(rows[i]!, f, now);
   if (!u || rows[i]!.spent || capped(u)) return null;
   return { pick: i, why: `warm, its last call ${Math.max(0, Math.round((now - last.at) / 60_000))} min ago, 5h ${Math.round(u.five)}% 7d ${Math.round(u.seven)}%${f ? `, ${f}` : ""}` };
 }
