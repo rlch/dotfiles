@@ -76,7 +76,8 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 
 // Load reads the four check slots abyme's and schools' checks take (scripts/gate-slot, scripts/slots.mjs, 127.0.0.1:46900-46903).
-load.setup({ slots: 4 });
+// With the budget a heavy run starts when its measured profile fits free cores and memory (resource-budgets, reviewed 2026-10-25).
+load.setup({ slots: 4, budget: true });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
