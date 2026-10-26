@@ -13,7 +13,10 @@ import agents from "@abyme/agents";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
+import kinds from "@abyme/kinds/inventory";
+import { setCondition, type Condition } from "@abyme/kinds/condition";
 import options from "./options";
+import { accountReady, accountRecord } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, takePushes, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
@@ -162,6 +165,10 @@ async function tokensEnding(): Promise<Record<string, string>> {
   return Object.fromEntries((await keychainTokens()).flatMap((t) => (t.made === null ? [] : [[t.slug, new Date(tokenEnds(t.made)).toISOString()] as const])));
 }
 
+// Its kind, for kinds' describe and stuck: each login, not Ready while capped or spent, `since`
+// when that changed.
+const readies = new Map<string, Condition[]>();
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
 async function show() {
@@ -174,7 +181,16 @@ async function show() {
   shown = json;
   view.set(next);
   forLoad = loadAccounts(next.accounts);
+  const at = Date.now();
+  for (const a of next.accounts) readies.set(a.slugs[0] ?? "", setCondition(readies.get(a.slugs[0] ?? "") ?? [], accountReady(a), at));
 }
+
+const accountsNow = () => view.getState().accounts.map((a) => accountRecord(a, readies.get(a.slugs[0] ?? "") ?? []));
+kinds.kinds.add({
+  kind: "Account",
+  get: (id) => accountsNow().find((r) => r.id === id) ?? null,
+  list: accountsNow,
+});
 
 // ---- picking ----
 

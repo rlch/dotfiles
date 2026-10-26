@@ -1,6 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
+import { accountReady, accountRecord } from "./kind.ts";
 import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, score, takePushes, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
@@ -320,6 +321,17 @@ test("setup-tokens listed from the keychain", () => {
     { slug: "hsone", made: Date.UTC(2026, 9, 24, 11, 21, 8) },
   ]);
   assert.deepEqual(tokensListed(""), []);
+});
+
+test("an account is not Ready while spent or capped, with when it is back", () => {
+  const seen = { slugs: ["hsone"], five: 40, seven: 99, fiveResets: null, sevenResets: null, windows: [], capped: true, binding: null, back: "2026-10-27T01:00", spent: null, read: null, stale: false, agents: 2 };
+  assert.deepEqual(accountReady(seen), { type: "Ready", status: "False", reason: "Capped", message: "capped until 2026-10-27T01:00", observedBy: "accounts" });
+  assert.equal(accountReady({ ...seen, spent: { until: "2026-10-26T22:00", window: null } }).reason, "Spent");
+  assert.equal(accountReady({ ...seen, capped: false }).status, "True");
+  const r = accountRecord(seen, []);
+  assert.equal(r.kind, "Account");
+  assert.equal(r.id, "hsone");
+  assert.equal(r.status.phase, "capped");
 });
 
 let failed = 0;
