@@ -18,6 +18,7 @@ import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
 import teams from "@abyme/teams";
+import permissions from "@abyme/permissions";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import "./triggers";
@@ -37,6 +38,8 @@ common();
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
 teams.setup();
+// Every member reads the edit log of the profile they can see (operator, 2026-10-24): edits.read* only, on any node.
+permissions.setup({ grants: { "edits-readers": { who: { user: "*" }, calls: ["edits.read*"], to: "*" } } });
 land.setup({ fix: "fix" });
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
