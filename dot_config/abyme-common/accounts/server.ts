@@ -88,10 +88,10 @@ const readsNow = (all: Account[]) => new Map(all.flatMap((a) => (reads()[a.key] 
 /** Picks of the last minute, by login and agent: busy from the moment they are made. */
 let picked: { key: string; at: number; agent: string | null }[] = [];
 
-/** abyme's agents as `agents.all` joins them: the account each is on and what its harness last said
+/** abyme's agents as `agents.index` joins them: the account each is on and what its harness last said
  * of that account's usage. */
 type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
-const joined = async (): Promise<Joined[]> => Object.values((await agents.all()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
+const joined = async (): Promise<Joined[]> => Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
 /** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
 async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
