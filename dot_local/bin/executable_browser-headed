@@ -14,7 +14,7 @@
 # holder at a time, and every other CDP client killed on acquire and release,
 # means no client can outlive the agent that started it.
 #
-#   browser-headed up                 make sure the service is running (herdr `browser` workspace)
+#   browser-headed up                 make sure the service is running (herdr `browser` workspace, else an abyme process)
 #   browser-headed acquire <name>     take the lease; prints the CDP endpoint
 #   browser-headed run <name> <cmd>…  a playwright-cli command on the lease, focus put back
 #   browser-headed release [--force]  drop the lease, reap every CDP client
@@ -146,11 +146,18 @@ cmd_serve() {
 
 cmd_up() {
   healthy && [[ -n "$(service_pane)" ]] && { echo "$endpoint"; return 0; }
-  command -v herdr >/dev/null && herdr workspace list >/dev/null 2>&1 || {
-    echo "browser-headed: herdr is not running; the service lives in a herdr workspace" >&2
-    return 1
-  }
   local ws pane
+  if ! { command -v herdr >/dev/null && herdr workspace list >/dev/null 2>&1; }; then
+    # No herdr: run the watchdog as an abyme process (~/dev/dotfiles/.abyme/processes.ts).
+    (cd "$HOME/dev/dotfiles" && abyme call processes start name=browser-headed >/dev/null) || {
+      echo "browser-headed: neither herdr nor abyme is running; nowhere to start the service" >&2
+      return 1
+    }
+    for _ in $(seq 60); do healthy && break; sleep 0.5; done
+    healthy || { echo "browser-headed: Chromium did not come up on :$port; see abyme's browser-headed terminal" >&2; return 1; }
+    echo "$endpoint"
+    return 0
+  fi
   find_ws() { herdr workspace list | jq -r '.result.workspaces[] | select(.label == "browser") | .workspace_id' | head -n 1; }
   ws=$(find_ws)
   if [[ -z "$ws" ]]; then
