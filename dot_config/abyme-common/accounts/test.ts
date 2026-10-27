@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { accountReady, accountRecord } from "./kind.ts";
+import { accountId, accountReady, accountStored, accountUrgent } from "./kind.ts";
 import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
@@ -351,10 +351,13 @@ test("an account is not Ready while spent or capped, with when it is back", () =
   assert.deepEqual(accountReady(seen), { type: "Ready", status: "False", reason: "Capped", message: "capped until 2026-10-27T01:00", observedBy: "accounts" });
   assert.equal(accountReady({ ...seen, spent: { until: "2026-10-26T22:00", window: null } }).reason, "Spent");
   assert.equal(accountReady({ ...seen, capped: false }).status, "True");
-  const r = accountRecord(seen, []);
-  assert.equal(r.kind, "Account");
-  assert.equal(r.id, "hsone");
+  const r = accountStored(seen, []);
+  assert.equal(accountId(seen), "hsone");
+  assert.deepEqual(r.spec, { slugs: ["hsone"] });
   assert.equal(r.status.phase, "capped");
+  // Its windows and agents wait; its phase is written at once.
+  assert.equal(accountUrgent(accountStored({ ...seen, five: 80, agents: 3 }, []).status), accountUrgent(r.status));
+  assert.notEqual(accountUrgent(accountStored({ ...seen, capped: false }, []).status), accountUrgent(r.status));
 });
 
 test("a window no harness gave a number for is null in the view, never 0", () => {

@@ -13,10 +13,12 @@ import agents from "@abyme/agents";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
-import kinds from "@abyme/kinds/inventory";
+import kinds from "@abyme/kinds";
 import { setCondition, type Condition } from "@abyme/kinds/condition";
+import { Writer } from "@abyme/kinds/stored";
+import { controller } from "@abyme/kinds/controller";
 import options from "./options";
-import { accountReady, accountRecord } from "./kind";
+import { accountId, accountReady, accountStored, accountUrgent, type AccountSpec, type AccountStatus } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
@@ -176,8 +178,8 @@ async function tokensEnding(): Promise<Record<string, string>> {
   return Object.fromEntries((await keychainTokens()).flatMap((t) => (t.made === null ? [] : [[t.slug, new Date(tokenEnds(t.made)).toISOString()] as const])));
 }
 
-// Its kind, for kinds' describe and stuck: each login, not Ready while capped or spent, `since`
-// when that changed.
+// Its kind, `Account`, kept in kinds' store (kinds-store stage 8): each login, not Ready while
+// capped or spent, `since` when that changed.
 const readies = new Map<string, Condition[]>();
 
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
@@ -193,17 +195,70 @@ async function show() {
   view.set(next);
   forLoad = loadAccounts(next.accounts);
   const at = Date.now();
-  for (const a of next.accounts) readies.set(a.slugs[0] ?? "", setCondition(readies.get(a.slugs[0] ?? "") ?? [], accountReady(a), at));
+  for (const a of next.accounts) readies.set(accountId(a), setCondition(readies.get(accountId(a)) ?? [], accountReady(a), at));
+  markAccounts();
 }
 
-const accountsNow = () => view.getState().accounts.map((a) => accountRecord(a, readies.get(a.slugs[0] ?? "") ?? []));
 kinds.kinds.add({
   kind: "Account",
-  get: (id) => accountsNow().find((r) => r.id === id) ?? null,
-  list: accountsNow,
+  stored: true,
+  columns: { STATE: "status.phase", AGENTS: "status.agents" },
   expire: { none: "a login is not work: it is capped or open" },
   retry: { none: "a login is not work: a cap ends by itself" },
 });
+/** The copy into kinds' store is made once, said by this key. */
+const MOVED = "moved/Account";
+kinds.keeps.add({ what: MOVED, where: "store", for: "forever", why: "that its logins were copied into kinds' store once" });
+/** How long a change of a login's windows, agents or staleness alone waits to be written, in ms. */
+const ACCOUNT_LATER_MS = 5 * 60_000;
+const stored = new Writer<AccountSpec, AccountStatus>({
+  kind: "Account",
+  kinds,
+  records: async (ids) => {
+    const out = new Map<string, ReturnType<typeof accountStored>>();
+    for (const a of view.getState().accounts) if (ids.includes(accountId(a))) out.set(accountId(a), accountStored(a, readies.get(accountId(a)) ?? []));
+    return out;
+  },
+  // Each since as kinds held it, kept while the login stands as it did.
+  held: (id, status) => {
+    const a = view.getState().accounts.find((x) => accountId(x) === id);
+    if (a) readies.set(id, setCondition(status.conditions, accountReady(a), Date.now()));
+  },
+  ids: () => view.getState().accounts.map(accountId),
+  moved: () => abyme.store.get(MOVED) === true,
+  setMoved: () => abyme.store.set(MOVED, true),
+  warn: (...args) => abyme.log.warn(...args),
+  urgent: accountUrgent,
+  later: ACCOUNT_LATER_MS,
+});
+/** Account's controller: a login is the keychain's, not the record's; a record deleted holds no
+ * finalizer and is written again from what the keychain lists. */
+const control = controller({
+  informers: kinds.informers,
+  plugin: "accounts",
+  kind: "Account",
+  reconcile: (id) => void stored.mark(id),
+  warn: (...args) => abyme.log.warn(...args),
+});
+// A record gone from kinds' store (deleted) is written again; one only gone from this node's
+// records is still in the store.
+control.cache.on(({ id, record }) => {
+  if (record) return;
+  void (async () => {
+    if ((await kinds.get({ kind: "Account", id }).catch(() => undefined)) !== null) return;
+    stored.forget(id);
+    stored.mark(id);
+  })().catch((e: unknown) => abyme.log.warn(`accounts: writing ${id} again:`, e));
+});
+/** Every login's record written again at each change shown: those gone deleted. The writer starts
+ * at the first show, so a start writes no login as gone before the keychain is read. */
+let marked: Set<string> | null = null;
+function markAccounts() {
+  const now = new Set(view.getState().accounts.map(accountId));
+  if (marked === null) void stored.start();
+  else for (const id of new Set([...marked, ...now])) stored.mark(id);
+  marked = now;
+}
 
 // ---- picking ----
 

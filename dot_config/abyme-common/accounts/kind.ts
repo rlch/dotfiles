@@ -1,6 +1,7 @@
-// accounts' kind, `Account`, for kinds' describe and stuck: a login as a record, and its `Ready`.
+// accounts' kind, `Account`, kept in kinds' store: a login as a record, and its `Ready`.
 // Pure: test.ts checks it.
-import type { Condition, KindRecord } from "@abyme/kinds";
+import type { Condition } from "@abyme/kinds";
+import type { Written } from "@abyme/kinds/stored";
 import type { AccountSeen } from "./pick.ts";
 
 /** A login's `Ready`, as accounts observes it: False while it is capped (reason `Capped`) or a
@@ -12,13 +13,24 @@ export function accountReady(a: AccountSeen): Omit<Condition, "since"> {
   return { type: "Ready", status: "True", reason: "Ready", observedBy: "accounts" };
 }
 
-/** A login as kinds reads it, `Account`: its slugs its spec, its windows and agents its status. */
-export const accountRecord = (a: AccountSeen, conditions: readonly Condition[]): KindRecord => ({
-  kind: "Account",
-  id: a.slugs[0] ?? "",
+/** An `Account`'s spec: the login's slugs. */
+export type AccountSpec = { slugs: string[] };
+/** An `Account`'s status: its phase, windows and agents, and its `Ready`. */
+export type AccountStatus = { phase: "open" | "capped" | "spent"; five: number | null; seven: number | null; agents: number; stale: boolean; conditions: Condition[] };
+
+/** A login's id in kinds' store: its first slug. */
+export const accountId = (a: AccountSeen) => a.slugs[0] ?? "";
+
+/** A login as accounts writes it to kinds' store, `Account`: its slugs its spec, its windows and
+ * agents its status. No owner: a login is no one's work. */
+export const accountStored = (a: AccountSeen, conditions: readonly Condition[]): Written<AccountSpec, AccountStatus> => ({
   name: a.slugs.join(", "),
   owners: [],
-  deadline: null,
+  trace: null,
   spec: { slugs: a.slugs },
   status: { phase: a.spent ? "spent" : a.capped ? "capped" : "open", five: a.five, seven: a.seven, agents: a.agents, stale: a.stale, conditions: [...conditions] },
 });
+
+/** What a reader acts on at once: its phase and `Ready`. Its windows, agents and staleness move each
+ * turn, and wait. */
+export const accountUrgent = ({ phase, conditions }: AccountStatus) => JSON.stringify([phase, conditions]);
