@@ -18,6 +18,7 @@ import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
 import teams from "@abyme/teams";
+import transcripts from "@abyme/transcripts";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import "./triggers";
@@ -26,9 +27,18 @@ import "./triggers";
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
-// The address devices reach Coding at, shown under Add a device: a serve port in front of the
-// gateway (`tailscale serve --https=4443 http://127.0.0.1:4477`), which routes it here.
-abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
+// Coding runs on two machines as peers (where-profiles-run, 3.1): this Mac, and linode-8 always on,
+// a full abymed behind its own gateway whose unit sets ABYME_PEER_HERE. Each dials the other at
+// its serve port on the tailnet (`tailscale serve --https=4443 http://127.0.0.1:4477`), the
+// address devices reach Coding at there too (Add a device). linode-8 keeps every chat the Mac
+// writes, so the phone reads them there with the Mac shut, and runs no agents.
+const MAC = "https://richards-macbook-pro-2.tail21822e.ts.net:4443";
+const LINODE = "https://richard.tail21822e.ts.net:4443";
+const onLinode = abyme.env.ABYME_PEER_HERE === "linode-8-peer";
+if (onLinode) {
+  abyme.server({ url: LINODE, peerName: "linode-8-peer", peers: { mac: MAC } });
+  transcripts.setup({ keep: true });
+} else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
 common();
 
@@ -40,7 +50,7 @@ teams.setup();
 land.setup({ fix: "fix" });
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
-town.setup({ folder: "/Users/rjm/dev/agent-town" });
+if (!onLinode) town.setup({ folder: "/Users/rjm/dev/agent-town" });
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
@@ -60,8 +70,8 @@ layoutPanes.setup({
 mistral.setup({}, { secrets: { MISTRAL_API_KEY: abyme.env.MISTRAL_API_KEY } });
 voice.setup({ preload: false, hearing: "mistral", speaking: "mistral" });
 conversation.setup({ voiceModel: "mistral-small-4" }); // the reply model too, in the cloud
-// tart VMs: the VMs view and each VM's screen live (change vm-view).
-tart.setup();
+// tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
+if (!onLinode) tart.setup();
 rail.setup({
   items: [
     "spaces", "agents", "explorer", "github.prs", "tart",
