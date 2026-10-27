@@ -41,12 +41,33 @@ triggers.items.add({
 });
 
 // schools' open prod alerts, every five minutes: a script, no model (the process `prod-alerts` of schools'
-// .abyme/processes.ts), gives lead@schools work once per opening (schools .claude/skills/sentry/ALERT.md).
+// .abyme/processes.ts), keeps one Incident record per open alert (schools .abyme/kinds.ts).
 triggers.items.add({
   name: "prod-alerts",
   root: SCHOOLS,
   on: { cron: "*/5 * * * *" },
   run: { processes: "start", args: { name: "prod-alerts", dir: SCHOOLS } },
+});
+
+// schools' Incident kind's controller: an incident team per record, named after it and owned by it, its lead
+// starting from schools .claude/skills/sentry/ALERT.md. A team of that name already up makes a resync a no-op;
+// deleting the record takes its team down.
+triggers.items.add({
+  name: "incident-team",
+  root: SCHOOLS,
+  on: { "kinds.changed": { kind: "Incident", reasons: ["changed", "resync"] } },
+  run: {
+    teams: "up",
+    args: {
+      dir: SCHOOLS,
+      template: "incident",
+      name: "{name}",
+      owner: { kind: "Incident.schools", id: "{id}" },
+      to: "lead",
+      brief:
+        "Sentry has a prod alert open: `abyme kinds get kind=Incident.schools name={name}` is its record. Read .claude/skills/sentry/ALERT.md and follow it.",
+    },
+  },
 });
 
 // An engineer's schools pull request, once ready for review: a team of its own on its branch, its review role
