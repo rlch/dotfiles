@@ -82,6 +82,7 @@ import surfaceStream from "@abyme/surface-stream";
 import bevyEngine from "@abyme/bevy-engine";
 import town from "@abyme/town";
 import ml from "/Users/rjm/Knowledge/subjects/ml";
+import ja from "/Users/rjm/Knowledge/subjects/ja";
 import tutor from "/Users/rjm/Knowledge/tutor";
 import { common } from "../abyme-common/index.ts";
 
@@ -189,6 +190,7 @@ problems.setup();
 learn.setup({ folder: "~/Knowledge" });
 learnRules.setup();
 ml.setup();
+ja.setup();
 // The tutor (~/Knowledge/tutor): its preset, and its nightly 02:00 write-ahead.
 tutor.setup();
 // The skill galaxy, agent-town's learn entry, as the `town` view, first on the rail (operator, 2026-10-26).
