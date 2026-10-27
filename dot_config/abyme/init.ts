@@ -20,6 +20,7 @@ import town from "@abyme/town";
 import teams from "@abyme/teams";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
+import "./triggers";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
