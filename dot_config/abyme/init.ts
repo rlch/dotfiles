@@ -74,15 +74,15 @@ terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddin
 // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
 replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
 
-// Load reads the four check slots abyme's and schools' checks take (scripts/gate-slot, scripts/slots.mjs, 127.0.0.1:46900-46903).
-// With the budget a heavy run starts when its measured profile fits free cores and memory (resource-budgets, reviewed 2026-10-25).
+// A heavy run starts when its measured profile fits free cores and memory (resource-budgets, reviewed
+// 2026-10-25); the budget is always on and the check slots are gone (load-grants, 2026-10-27).
 // Turns on an account wait only once it is capped, not at 80% of a window: an idle account is waste
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
 // Teams at once per repository, every repository's quota ("*"): 20 while today's backlog clears
 // (operator, 2026-10-24); lower it later.
-load.setup({ slots: 4, budget: true, turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, quotas: { "*": { teams: 20 } } });
+load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, quotas: { "*": { teams: 20 } } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
