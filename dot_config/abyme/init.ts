@@ -19,6 +19,7 @@ import tart from "@abyme/tart";
 import town from "@abyme/town";
 import teams from "@abyme/teams";
 import transcripts from "@abyme/transcripts";
+import kinds from "@abyme/kinds";
 import triggers from "@abyme/triggers";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
@@ -43,6 +44,9 @@ if (onLinode) {
   // The Mac runs the plugins' triggers (agents' hourly agents.ends): both would run each cron and
   // write one record each.
   triggers.setup({ run: false });
+  // The Mac writes the records load, the machines and the config make from config: both would make
+  // each under one id, and the peer's claim could win.
+  kinds.setup({ config: false });
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
 common();
