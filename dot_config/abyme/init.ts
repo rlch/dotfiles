@@ -21,7 +21,7 @@ import teams from "@abyme/teams";
 import transcripts from "@abyme/transcripts";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
-import "./triggers";
+import addTriggers from "./triggers";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -41,13 +41,18 @@ if (onLinode) {
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
 common();
+if (!onLinode) addTriggers();
 
 // The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
-teams.setup();
-land.setup({ fix: "fix" });
+// linode-8 runs no agents and lands nothing, and fires no trigger until a cron takes a lease
+// (where-profiles-run 4.2): coding.ts leaves teams and land out there, and triggers.ts adds none.
+if (!onLinode) {
+  teams.setup();
+  land.setup({ fix: "fix" });
+}
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
 if (!onLinode) town.setup({ folder: "/Users/rjm/dev/agent-town" });
