@@ -19,6 +19,7 @@ import tart from "@abyme/tart";
 import town from "@abyme/town";
 import teams from "@abyme/teams";
 import transcripts from "@abyme/transcripts";
+import triggers from "@abyme/triggers";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -39,6 +40,9 @@ const onLinode = abyme.env.ABYME_PEER_HERE === "linode-8-peer";
 if (onLinode) {
   abyme.server({ url: LINODE, peerName: "linode-8-peer", peers: { mac: MAC }, port: 4481, stateDir: "~/.local/state/abyme-peer" });
   transcripts.setup({ keep: true });
+  // The Mac runs the plugins' triggers (agents' hourly agents.ends): both would run each cron and
+  // write one record each.
+  triggers.setup({ run: false });
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
 common();
