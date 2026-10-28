@@ -42,6 +42,8 @@ if (onLinode) {
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
 common();
+// common's clientDir is the Mac's install; linode-8's peer runs the build beside its own binary.
+if (onLinode) abyme.server({ clientDir: "~/.local/share/abyme-peer/client" });
 if (!onLinode) addTriggers();
 
 // The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
