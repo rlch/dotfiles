@@ -16,6 +16,11 @@ import load from "@abyme/load/optional";
 import kinds from "@abyme/kinds";
 import { setCondition, type Condition } from "@abyme/kinds/condition";
 import options from "./options";
+// Until the live build has kinds.writer (64415a9c6), fall back to the helpers it replaced.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const k = kinds as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const old: any = "writer" in k ? null : { ...(await import("@abyme/kinds/stored")), ...(await import("@abyme/kinds/controller")) };
 import { accountId, accountReady, accountStored, accountUrgent, type AccountSpec, type AccountStatus } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
@@ -209,7 +214,8 @@ const MOVED = "moved/Account";
 kinds.keeps.add({ what: MOVED, where: "store", for: "forever", why: "that its logins were copied into kinds' store once" });
 /** How long a change of a login's windows, agents or staleness alone waits to be written, in ms. */
 const ACCOUNT_LATER_MS = 5 * 60_000;
-const stored = kinds.writer<AccountSpec, AccountStatus>({
+const writerOf = <S, T>(o: object) => (old ? new old.Writer({ ...o, kinds }) : k.writer(o)) as ReturnType<typeof kinds.writer<S, T>>;
+const stored = writerOf<AccountSpec, AccountStatus>({
   kind: "Account",
   records: async (ids) => {
     const out = new Map<string, ReturnType<typeof accountStored>>();
@@ -230,7 +236,7 @@ const stored = kinds.writer<AccountSpec, AccountStatus>({
 });
 /** Account's controller: a login is the keychain's, not the record's; a record deleted holds no
  * finalizer and is written again from what the keychain lists. */
-const control = kinds.controller({
+const control = (old ? (o: object) => old.controller({ ...o, informers: kinds.informers }) : k.controller)({
   plugin: "accounts",
   kind: "Account",
   reconcile: (id) => void stored.mark(id),
