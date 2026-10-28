@@ -31,12 +31,13 @@ abyme.server({ name: "Coding", color: "blue", icon: "code" });
 // a full abymed behind its own gateway whose unit sets ABYME_PEER_HERE. Each dials the other at
 // its serve port on the tailnet (`tailscale serve --https=4443 http://127.0.0.1:4477`), the
 // address devices reach Coding at there too (Add a device). linode-8 keeps every chat the Mac
-// writes, so the phone reads them there with the Mac shut, and runs no agents.
+// writes, so the phone reads them there with the Mac shut, and runs no agents. There it is a profile of
+// its own gateway (4480), on 4481 and a state folder of its own: the node holds 4477 and the default.
 const MAC = "https://richards-macbook-pro-2.tail21822e.ts.net:4443";
 const LINODE = "https://richard.tail21822e.ts.net:4443";
 const onLinode = abyme.env.ABYME_PEER_HERE === "linode-8-peer";
 if (onLinode) {
-  abyme.server({ url: LINODE, peerName: "linode-8-peer", peers: { mac: MAC } });
+  abyme.server({ url: LINODE, peerName: "linode-8-peer", peers: { mac: MAC }, port: 4481, stateDir: "~/.local/state/abyme-peer" });
   transcripts.setup({ keep: true });
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
