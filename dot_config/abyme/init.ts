@@ -176,7 +176,7 @@ rigSeat("rig-design", "abyme · design", "opus", NO_CODE,
 rigSeat("rig-build", "abyme · build", "opus", CODE,
   "You build this rig's change in the feature's worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review has said go, archive the change and land the whole feature (proposal, code, archived change) with `abyme call land add` (the land skill), running no gate first.");
 rigSeat("rig-review", "abyme · review", "opus", CODE,
-  "You review an abyme change before it lands (the code-review skill), in the feature's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, to walk if it changes what the operator sees, else back to build as ready to land.");
+  "You review an abyme change before it lands (the code-review skill), in the feature's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, back to build as ready to land, saying whether walk should see it after it lands because the operator would.");
 rigSeat("rig-walk", "abyme · walk", "sonnet", NO_CODE,
   "You check abyme changes in a real browser (the browser skill) on a test abymed on a spare port, never the live one: what the change shows, desktop and phone, light and dark when colours moved. Read your screenshots. Hand the work back to build with go or with what is wrong, and the shots' paths; your go is enough for a visible change to land.");
 rigSeat("rig-research", "abyme · research", "opus", CODE,
