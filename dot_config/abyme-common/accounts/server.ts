@@ -15,8 +15,6 @@ import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import kinds from "@abyme/kinds";
 import { setCondition, type Condition } from "@abyme/kinds/condition";
-import { Writer } from "@abyme/kinds/stored";
-import { controller } from "@abyme/kinds/controller";
 import options from "./options";
 import { accountId, accountReady, accountStored, accountUrgent, type AccountSpec, type AccountStatus } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
@@ -211,9 +209,8 @@ const MOVED = "moved/Account";
 kinds.keeps.add({ what: MOVED, where: "store", for: "forever", why: "that its logins were copied into kinds' store once" });
 /** How long a change of a login's windows, agents or staleness alone waits to be written, in ms. */
 const ACCOUNT_LATER_MS = 5 * 60_000;
-const stored = new Writer<AccountSpec, AccountStatus>({
+const stored = kinds.writer<AccountSpec, AccountStatus>({
   kind: "Account",
-  kinds,
   records: async (ids) => {
     const out = new Map<string, ReturnType<typeof accountStored>>();
     for (const a of view.getState().accounts) if (ids.includes(accountId(a))) out.set(accountId(a), accountStored(a, readies.get(accountId(a)) ?? []));
@@ -233,8 +230,7 @@ const stored = new Writer<AccountSpec, AccountStatus>({
 });
 /** Account's controller: a login is the keychain's, not the record's; a record deleted holds no
  * finalizer and is written again from what the keychain lists. */
-const control = controller({
-  informers: kinds.informers,
+const control = kinds.controller({
   plugin: "accounts",
   kind: "Account",
   reconcile: (id) => void stored.mark(id),
