@@ -165,6 +165,8 @@ def check_bash(command, cwd):
                       "starves abyme's file watchers (load 150 on 2026-10-26) and raises macOS "
                       "privacy prompts for the operator. Search the folder you mean: ~/dev/<repo>, "
                       "your worktree, or `mdfind -name <file>` for the whole disk." % prog)
+        elif prog == "rm" and {"/", "/*"} & set(argv[1:]):
+            reason = "rm of / is banned. Remove the folder you mean."
         elif prog == "playwright-cli" and {"close-all", "kill-all"} & set(argv[1:]):
             reason = ("playwright-cli close-all/kill-all end other agents' browsers. "
                       "Close your own session: playwright-cli -s=<name> close.")
@@ -223,7 +225,7 @@ def selftest():
         "cd x && /usr/bin/pkill -f y",
         "find / -maxdepth 6 -name x", "rtk find / -name x", "find ~ -name x", "fd x /",
         "du -sh ~", "rg foo ~/", "grep -rn foo /", "find $HOME -name x", "find ~/Library -name x",
-        "find /Users -name x",
+        "find /Users -name x", "rm -rf /", "rm -rf /*", "cd x && rm -fr /",
     ]
     allow = [
         "git stash list", "git stash show -p stash@{0}", "git status", "git commit -m 'never git stash'",
@@ -234,6 +236,7 @@ def selftest():
         "kill 1234", "kill $(cat x.pid)", "pgrep -fl abymed", "echo pkill",
         "find ~/dev/abyme -name x", "find . -name x", "fd x ~/dev", "du -sh ~/dev/abyme",
         "rg foo web/", "grep foo /etc/hosts", "ls /", "ls ~", "mdfind -name x",
+        "rm -rf /tmp/x /tmp/y", "rm -rf /Users/rjm/dev/x/build",
     ]
     bad = [c for c in block if not check_bash(c, "/")] + ["ALLOWED? " + c for c in allow if check_bash(c, "/")]
     if decide({"tool_name": "Agent", "tool_input": {"model": "haiku"}}) is None:
