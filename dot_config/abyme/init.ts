@@ -20,6 +20,7 @@ import town from "@abyme/town";
 import teams from "@abyme/teams";
 import transcripts from "@abyme/transcripts";
 import kinds from "@abyme/kinds";
+import records from "@abyme/records";
 import triggers from "@abyme/triggers";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
@@ -46,6 +47,9 @@ if (onLinode) {
   triggers.setup({ run: false });
   // The Mac writes the records load, the machines and the config make from config: both would make
   // each under one id, and the peer's claim could win.
+  // records on a build of the rename, kinds on one before it (2026-10-29): drop kinds once linode-8
+  // runs the rename.
+  records.setup({ config: false });
   kinds.setup({ config: false });
 } else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
 
