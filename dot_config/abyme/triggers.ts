@@ -68,7 +68,7 @@ export default function addTriggers(): void {
         owner: { kind: "Incident.schools", id: "{id}" },
         to: "lead",
         brief:
-          "Sentry has a prod alert open: `abyme kinds get kind=Incident.schools name={name}` is its record. Read .claude/skills/sentry/ALERT.md and follow it.",
+          "Sentry has a prod alert open: `abyme records get kind=Incident.schools name={name}` is its record. Read .claude/skills/sentry/ALERT.md and follow it.",
       },
     },
   });
