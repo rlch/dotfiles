@@ -21,7 +21,7 @@ const DIR = fs ? (o.dir || `${fs.stateDir}/replays`).replace(/^~(?=\/|$)/, fs.ho
 /** A stylesheet shorter than this stays where it is. */
 const CSS_AT = 1024;
 const KEEP = Math.max(1, o.keep);
-const CLIP = Math.max(1, Math.min(o.clip, KEEP));
+const CLIP = Math.max(0.25, Math.min(o.clip, KEEP));
 const SAVES = Math.max(1, Math.floor(o.saves));
 /** Error and stall saves of one page, at most one in this long. */
 const GAP_MS = 60_000;
@@ -100,7 +100,7 @@ const why = (reason: string) => (reason.startsWith("error") ? "error" : reason.s
 async function saveOne(page: string, reason: string, minutes: number, w = why(reason)): Promise<Save | null> {
   const now = Date.now();
   if ((w === "error" || w === "stall") && now - (gapped.get(page) ?? 0) < GAP_MS) return null;
-  const span = Math.max(1, Math.min(minutes, KEEP));
+  const span = Math.max(0.25, Math.min(minutes, KEEP));
   const taken = ring.take(page, now - span * 60_000);
   if (!taken) return null;
   if (w === "error" || w === "stall") gapped.set(page, now);

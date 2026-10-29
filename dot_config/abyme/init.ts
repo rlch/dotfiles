@@ -100,10 +100,10 @@ rail.setup({
 });
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
-// rrweb on every page but a phone's (a foldable's too), unmasked but for passwords and local: the last hour on disk,
-// a checkout every 2 minutes; leader ⇧R and any uncaught error save the last 10 minutes to
+// rrweb on every page but a phone's (a foldable's too), unmasked but for passwords and local: the last 15 minutes kept,
+// a checkout every 30 s; leader ⇧R and any uncaught error save the last 30 seconds (operator, 2026-10-30) to
 // <stateDir>/replays, "Save replay of the last hour" all of it; agents read them with replay_read (replay/).
-replay.setup({}, { when: { device: ["desktop", "tablet", "foldable"] } });
+replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tablet", "foldable"] } });
 
 // A heavy run starts when its measured profile fits free cores and memory (resource-budgets, reviewed
 // 2026-10-25); the budget is always on and the check slots are gone (load-grants, 2026-10-27).

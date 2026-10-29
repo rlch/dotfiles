@@ -104,7 +104,7 @@ async function saveNow(minutes: number | undefined, event?: unknown) {
 commands.add(
   {
     id: "replay.save",
-    title: `Save replay of the last ${o.clip} minutes`,
+    title: o.clip < 1 ? `Save replay of the last ${Math.round(o.clip * 60)} seconds` : `Save replay of the last ${o.clip} minutes`,
     group: "Replay",
     keywords: ["rrweb", "record", "jank", "bug"],
     run: (event) => saveNow(undefined, event),
