@@ -56,13 +56,12 @@ export default function addTriggers(): void {
   // .abyme/processes.ts, scripts/main-red.mjs). Red on a second run, it pauses landing in schools and starts one
   // fix agent; once main is green it ends that pause. Nothing is reverted by itself (operator, 2026-10-29).
   // The fix agent lands by pull request (schools #1354) through the pause it owns (abyme b965151f8).
-  // Off until schools' main-red.mjs stops pausing landing: "U can land and fix later" (operator, 2026-10-29).
-  // triggers.items.add({
-  //   name: "main-red",
-  //   root: SCHOOLS,
-  //   on: { cron: "*/5 * * * *" },
-  //   run: { processes: "start", args: { name: "main-red", dir: SCHOOLS } },
-  // });
+  triggers.items.add({
+    name: "main-red",
+    root: SCHOOLS,
+    on: { cron: "*/5 * * * *" },
+    run: { processes: "start", args: { name: "main-red", dir: SCHOOLS } },
+  });
 
   // schools' Incident kind's controller: an incident team per record, named after it and owned by it, its lead
   // starting from schools .claude/skills/sentry/ALERT.md. A team of that name already up makes a resync a no-op;
