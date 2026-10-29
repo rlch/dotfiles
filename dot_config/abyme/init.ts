@@ -111,9 +111,9 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
-// Teams at once per repository, every repository's quota ("*"): 20 while today's backlog clears
-// (operator, 2026-10-24); lower it later.
-load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, quotas: { "*": { teams: 20 } } });
+// Teams at once per repository, every repository's quota ("*"): 10 (operator, 2026-10-29), under
+// the machine budget of 25 busy teams across repositories.
+load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, quotas: { "*": { teams: 10 } } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
