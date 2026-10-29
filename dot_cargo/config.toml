@@ -11,11 +11,11 @@
 # ---------------------------------------------------------------------------
 # Machine has 18 cores (6P + 12E). Default cargo `jobs = ncpus` plus any
 # per-rustc parallel front-end (`-Z threads=N` set in nightly projects)
-# can spawn 100+ contending threads. 14 outer jobs saturates the perf
-# cores + half the efficiency cores while leaving headroom for the OS,
-# tmux, browser, Claude sessions, etc.
+# can spawn 100+ contending threads. Many agents build at once, each
+# outside abyme's load grants, so 4-5 builds at 14 jobs took 70 cores
+# (operator, 2026-10-29): 4 jobs each keeps several builds from piling up.
 [build]
-jobs = 14
+jobs = 4
 # sccache caches the registry's crates across every worktree; the workspace's own
 # crates stay incremental (sccache passes incremental crates through uncached).
 rustc-wrapper = "sccache"
