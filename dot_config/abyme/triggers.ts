@@ -44,7 +44,7 @@ export default function addTriggers(): void {
   });
 
   // schools' open prod alerts, every five minutes: a script, no model (the process `prod-alerts` of schools'
-  // .abyme/processes.ts), keeps one Incident record per open alert (schools .abyme/kinds.ts).
+  // .abyme/processes.ts), keeps one Incident record per open alert (schools .abyme/records.ts).
   triggers.items.add({
     name: "prod-alerts",
     root: SCHOOLS,
@@ -58,7 +58,7 @@ export default function addTriggers(): void {
   triggers.items.add({
     name: "incident-team",
     root: SCHOOLS,
-    on: { "kinds.changed": { kind: "Incident", reasons: ["changed", "resync"] } },
+    on: { "records.changed": { kind: "Incident", reasons: ["changed", "resync"] } },
     run: {
       teams: "up",
       args: {
