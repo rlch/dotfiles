@@ -13,15 +13,11 @@ import agents from "@abyme/agents";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
-import kinds from "@abyme/kinds";
-import { setCondition, type Condition } from "@abyme/kinds/condition";
+import records from "@abyme/records";
+import { setCondition, type Condition } from "@abyme/records/condition";
+import { z } from "@abyme/schema";
 import options from "./options";
-// Until the live build has kinds.writer (64415a9c6), fall back to the helpers it replaced.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const k = kinds as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const old: any = "writer" in k ? null : { ...(await import("@abyme/kinds/stored")), ...(await import("@abyme/kinds/controller")) };
-import { accountId, accountReady, accountStored, accountUrgent, type AccountSpec, type AccountStatus } from "./kind";
+import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).plugin.options;
@@ -181,7 +177,7 @@ async function tokensEnding(): Promise<Record<string, string>> {
   return Object.fromEntries((await keychainTokens()).flatMap((t) => (t.made === null ? [] : [[t.slug, new Date(tokenEnds(t.made)).toISOString()] as const])));
 }
 
-// Its kind, `Account`, kept in kinds' store (kinds-store stage 8): each login, not Ready while
+// Its kind, `Account`, kept in records' store (kinds-store 13.5m): each login, not Ready while
 // capped or spent, `since` when that changed.
 const readies = new Map<string, Condition[]>();
 
@@ -202,64 +198,71 @@ async function show() {
   markAccounts();
 }
 
-kinds.kinds.add({
-  kind: "Account",
-  stored: true,
-  columns: { STATE: "status.phase", AGENTS: "status.agents" },
-  expire: { none: "a login is not work: it is capped or open" },
-  retry: { none: "a login is not work: a cap ends by itself" },
-});
-/** The copy into kinds' store is made once, said by this key. */
-const MOVED = "moved/Account";
-kinds.keeps.add({ what: MOVED, where: "store", for: "forever", why: "that its logins were copied into kinds' store once" });
+/** An `Account`'s spec and status, as records checks each write (kind.ts's types). */
+const AccountSpecSchema = z.object({ slugs: z.array(z.string()) });
+const AccountStatusSchema = z.object({ phase: z.enum(["open", "capped", "spent"]), five: z.number().nullable(), seven: z.number().nullable(), agents: z.number(), stale: z.boolean() });
 /** How long a change of a login's windows, agents or staleness alone waits to be written, in ms. */
 const ACCOUNT_LATER_MS = 5 * 60_000;
-const writerOf = <S, T>(o: object) => (old ? new old.Writer({ ...o, kinds }) : k.writer(o)) as ReturnType<typeof kinds.writer<S, T>>;
-const stored = writerOf<AccountSpec, AccountStatus>({
-  kind: "Account",
-  records: async (ids) => {
-    const out = new Map<string, ReturnType<typeof accountStored>>();
-    for (const a of view.getState().accounts) if (ids.includes(accountId(a))) out.set(accountId(a), accountStored(a, readies.get(accountId(a)) ?? []));
-    return out;
-  },
-  // Each since as kinds held it, kept while the login stands as it did.
-  held: (id, status) => {
-    const a = view.getState().accounts.find((x) => accountId(x) === id);
-    if (a) readies.set(id, setCondition(status.conditions, accountReady(a), Date.now()));
-  },
-  ids: () => view.getState().accounts.map(accountId),
-  moved: () => abyme.store.get(MOVED) === true,
-  setMoved: () => abyme.store.set(MOVED, true),
-  warn: (...args) => abyme.log.warn(...args),
-  urgent: accountUrgent,
-  later: ACCOUNT_LATER_MS,
+const accountRecords = records.define("Account", {
+  spec: AccountSpecSchema,
+  status: AccountStatusSchema,
+  columns: { STATE: (r) => r.status.phase, AGENTS: (r) => r.status.agents },
+  deadline: { none: "a login is not work: it is capped or open" },
+  retry: { none: "a login is not work: a cap ends by itself" },
+  // Its phase goes at once, its `Ready` too (conditions); its windows, agents and staleness wait.
+  coalesce: { ms: ACCOUNT_LATER_MS, urgent: accountUrgent },
 });
-/** Account's controller: a login is the keychain's, not the record's; a record deleted holds no
- * finalizer and is written again from what the keychain lists. */
-const control = (old ? (o: object) => old.controller({ ...o, informers: kinds.informers }) : k.controller)({
-  plugin: "accounts",
-  kind: "Account",
-  reconcile: (id) => void stored.mark(id),
-  warn: (...args) => abyme.log.warn(...args),
-});
-// A record gone from kinds' store (deleted) is written again; one only gone from this node's
-// records is still in the store.
-control.cache.on(({ id, record }) => {
-  if (record) return;
-  void (async () => {
-    if ((await kinds.get({ kind: "Account", id }).catch(() => undefined)) !== null) return;
-    stored.forget(id);
-    stored.mark(id);
-  })().catch((e: unknown) => abyme.log.warn(`accounts: writing ${id} again:`, e));
-});
-/** Every login's record written again at each change shown: those gone deleted. The writer starts
- * at the first show, so a start writes no login as gone before the keychain is read. */
+/** Where stage 8 said its logins were copied into records' store once: deleted at start. */
+const MOVED = "moved/Account";
+records.keeps.add({ what: MOVED, where: "store", for: "forever", why: "deleted at start since kinds-store 13.5; this row and the delete go at 13.6" });
+/** The logins shown at the last change, null before the first: a start writes no login as gone
+ * before the keychain is read. */
 let marked: Set<string> | null = null;
+/** Once each record's `Ready` since is held: no record is written before. */
+let started = false;
+/** Each record's writes, one at a time. */
+const writing = new Map<string, Promise<void>>();
+function markAccount(id: string) {
+  if (!started) return;
+  const next = (writing.get(id) ?? Promise.resolve())
+    .then(async () => {
+      const a = view.getState().accounts.find((x) => accountId(x) === id);
+      await writeAccount(accountRecords, await accountRecords.node(), id, a ? accountStored(a, readies.get(id) ?? []) : null, (...args) => abyme.log.warn(...args));
+    })
+    .catch((e: unknown) => abyme.log.warn(`accounts: writing ${id}'s record:`, e));
+  writing.set(id, next);
+  void next.then(() => writing.get(id) === next && writing.delete(id));
+}
+// A login is the keychain's, not the record's: one past its controller's turn is written again, and
+// one deleted (it holds no finalizer) is written again while the keychain lists it.
+accountRecords.reconcile((r) => markAccount(r.id));
+accountRecords.watch((r, was) => {
+  if (!r && was && marked?.has(was.id)) markAccount(was.id);
+});
+/** Every login's record written again at each change shown, those gone deleted. At the first, each
+ * record's `Ready` since is held, then every login shown written and this node's records of logins
+ * gone deleted. */
 function markAccounts() {
   const now = new Set(view.getState().accounts.map(accountId));
-  if (marked === null) void stored.start();
-  else for (const id of new Set([...marked, ...now])) stored.mark(id);
+  const was = marked;
   marked = now;
+  if (was) {
+    for (const id of new Set([...was, ...now])) markAccount(id);
+    return;
+  }
+  void (async () => {
+    abyme.store.delete(MOVED);
+    await accountRecords.synced();
+    const node = await accountRecords.node();
+    const ours = accountRecords.list((r) => r.node === node);
+    // Each since as records held it, kept while the login stands as it did.
+    for (const r of ours) {
+      const a = view.getState().accounts.find((x) => accountId(x) === r.id);
+      if (a) readies.set(r.id, setCondition(r.status.conditions, accountReady(a), Date.now()));
+    }
+    started = true;
+    for (const id of new Set([...marked!, ...ours.map((r) => r.id)])) markAccount(id);
+  })().catch((e: unknown) => abyme.log.warn("accounts: writing every login:", e));
 }
 
 // ---- picking ----

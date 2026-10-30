@@ -1,7 +1,7 @@
 // clodcurrent's selection and scoring tests (select.rs, usage.rs, usage_cache.rs), against pick.ts.
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
-import { accountId, accountReady, accountStored, accountUrgent } from "./kind.ts";
+import { accountId, accountReady, accountStored, accountUrgent, writeAccount, type AccountRecords } from "./kind.ts";
 import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
@@ -24,8 +24,8 @@ const picks = (rows: Row[], f: Family | null = null) => {
   const out = best(rows, f, NOW);
   return out.pick === null ? null : rows[out.pick]!.slug;
 };
-const cases: [string, () => void][] = [];
-const test = (name: string, f: () => void) => cases.push([name, f]);
+const cases: [string, () => void | Promise<void>][] = [];
+const test = (name: string, f: () => void | Promise<void>) => cases.push([name, f]);
 
 // usage.rs
 test("expiring soon outscores same usage with time left", () => assert.ok(score(weekly(10, 1), NOW) > score(weekly(10, 6), NOW)));
@@ -391,10 +391,40 @@ test("a refresh's turn gives both windows' numbers, refused or not", () => {
   assert.equal(turnError(JSON.stringify({ type: "result", is_error: false, result: "ok" })), null);
 });
 
+test("a login's record is written on its node alone: another node's is left to it, written or gone", async () => {
+  const seen = { slugs: ["main"], five: 10, seven: 20, fiveResets: null, sevenResets: null, windows: [], capped: false, binding: null, back: null, spent: null, read: null, stale: false, agents: 1 };
+  const ready = { ...accountReady(seen), since: 1000 };
+  const rec = (node: string, conditions = [ready]) => ({ node, lease: null, status: { conditions } });
+  // Node n's records and node m's, as both nodes' caches hold them.
+  const held = new Map([["main", rec("n", [ready, { type: "Old", status: "True" as const, reason: "Old", observedBy: "accounts", since: 1 }])], ["theirs", rec("m")], ["gone", rec("n")], ["gone-theirs", rec("m")]]);
+  const calls: string[] = [];
+  const h: AccountRecords = {
+    get: (id) => held.get(id) ?? null,
+    apply: async (id) => void calls.push(`apply ${id}`),
+    conditions: async (id, set, o) => void calls.push(`conditions ${id} ${set.map((c) => c.type)} drop ${o.drop}`),
+    status: async (id, patch) => void calls.push(`status ${id} ${patch.phase}`),
+    delete: async (id) => void calls.push(`delete ${id}`),
+  };
+  const warn = () => {};
+  await writeAccount(h, "n", "main", accountStored(seen, [ready]), warn);
+  await writeAccount(h, "n", "theirs", accountStored({ ...seen, slugs: ["theirs"] }, [ready]), warn);
+  await writeAccount(h, "n", "gone", null, warn);
+  await writeAccount(h, "n", "gone-theirs", null, warn);
+  await writeAccount(h, "n", "never", null, warn);
+  await Promise.resolve();
+  assert.deepEqual(calls, ["apply main", "conditions main Ready drop Old", "status main open", "delete gone"]);
+  // Node m writes its own, and leaves node n's.
+  calls.length = 0;
+  await writeAccount(h, "m", "theirs", accountStored({ ...seen, slugs: ["theirs"] }, [ready]), warn);
+  await writeAccount(h, "m", "main", null, warn);
+  await Promise.resolve();
+  assert.deepEqual(calls, ["apply theirs", "conditions theirs Ready drop ", "status theirs open"]);
+});
+
 let failed = 0;
 for (const [name, f] of cases)
   try {
-    f();
+    await f();
   } catch (e) {
     failed++;
     console.log(`FAIL ${name}: ${(e as Error).message}`);
