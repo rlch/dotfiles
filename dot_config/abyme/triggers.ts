@@ -63,6 +63,15 @@ export default function addTriggers(): void {
     run: { processes: "start", args: { name: "main-red", dir: SCHOOLS } },
   });
 
+  // A red nightly acceptance on dev, daily: a script, no model (the process `nightly-red` of schools'
+  // .abyme/processes.ts, scripts/nightly-red.mjs). It gives lead@schools one item per red streak (schools #1407, #1424).
+  triggers.items.add({
+    name: "nightly-red",
+    root: SCHOOLS,
+    on: { cron: "0 8 * * *" },
+    run: { processes: "start", args: { name: "nightly-red", dir: SCHOOLS } },
+  });
+
   // schools' Incident kind's controller: an incident team per record, named after it and owned by it, its lead
   // starting from schools .claude/skills/sentry/ALERT.md. A team of that name already up makes a resync a no-op;
   // deleting the record takes its team down.
