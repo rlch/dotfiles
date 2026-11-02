@@ -1,5 +1,11 @@
 // Patched for the replay plugin: mutations serialised in slices after paint (vendor/README.md).
 const __BUDGET = 4;
+// A checkout's walk while it runs (takeFullSnapshotSliced), what its last step waits for, and each
+// element ever seen scrolled: the walk reads no scroll position (each read lays the page out, which a
+// page changing between slices makes dear), its last step reads these, in a frame.
+let __walk = null;
+const __FRAME = {};
+const __scrolled = new WeakSet();
 const __post = typeof scheduler !== "undefined" && scheduler.postTask ? (f) => scheduler.postTask(f, { priority: "user-visible" }) : (() => { const c = new MessageChannel(), q = []; c.port1.onmessage = () => q.shift()(); return (f) => { q.push(f); c.port2.postMessage(0); }; })();
 var __defProp = Object.defineProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -339,6 +345,7 @@ function escapeImportStatement(rule) {
   return statement.join(" ") + ";";
 }
 function stringifyStylesheet(s) {
+  if (__walk && __walk.css.has(s)) return __walk.css.get(s);
   try {
     const rules = s.rules || s.cssRules;
     if (!rules) {
@@ -1177,12 +1184,16 @@ function serializeElementNode(n, options) {
     mediaAttributes.rr_mediaLoop = n.loop;
     mediaAttributes.rr_mediaVolume = n.volume;
   }
-  if (!newlyAddedElement) {
+  if (!newlyAddedElement && __walk) {
+    if (__scrolled.has(n)) __walk.scrolls.push([n, attributes]);
+  } else if (!newlyAddedElement) {
     if (n.scrollLeft) {
       attributes.rr_scrollLeft = n.scrollLeft;
+      __scrolled.add(n);
     }
     if (n.scrollTop) {
       attributes.rr_scrollTop = n.scrollTop;
+      __scrolled.add(n);
     }
   }
   if (needBlock) {
@@ -1499,6 +1510,337 @@ function serializeNodeWithId(n, options) {
     );
   }
   return serializedNode;
+}
+function* __serializeSliced(n, options) {
+  const {
+    doc,
+    mirror: mirror2,
+    blockClass,
+    blockSelector,
+    maskTextClass,
+    maskTextSelector,
+    skipChild = false,
+    inlineStylesheet = true,
+    maskInputOptions = {},
+    maskTextFn,
+    maskInputFn,
+    slimDOMOptions,
+    dataURLOptions = {},
+    inlineImages = false,
+    recordCanvas = false,
+    onSerialize,
+    onIframeLoad,
+    iframeLoadTimeout = 5e3,
+    onStylesheetLoad,
+    stylesheetLoadTimeout = 5e3,
+    keepIframeSrcFn = () => false,
+    newlyAddedElement = false,
+    cssCaptured = false
+  } = options;
+  let { needsMask } = options;
+  let { preserveWhiteSpace = true } = options;
+  if (!needsMask) {
+    const checkAncestors = needsMask === void 0;
+    needsMask = needMaskingText(
+      n,
+      maskTextClass,
+      maskTextSelector,
+      checkAncestors
+    );
+  }
+  if (performance.now() > __walk.end) yield;
+  if (inlineStylesheet && (n.localName === "style" || n.localName === "link")) yield* __cssSliced(n, doc);
+  const _serializedNode = serializeNode(n, {
+    doc,
+    mirror: mirror2,
+    blockClass,
+    blockSelector,
+    needsMask,
+    inlineStylesheet,
+    maskInputOptions,
+    maskTextFn,
+    maskInputFn,
+    dataURLOptions,
+    inlineImages,
+    recordCanvas,
+    keepIframeSrcFn,
+    newlyAddedElement,
+    cssCaptured
+  });
+  if (!_serializedNode) {
+    console.warn(n, "not serialized");
+    return null;
+  }
+  let id;
+  if (mirror2.hasNode(n)) {
+    id = mirror2.getId(n);
+  } else if (slimDOMExcluded(_serializedNode, slimDOMOptions) || !preserveWhiteSpace && _serializedNode.type === NodeType.Text && !_serializedNode.textContent.replace(/^\s+|\s+$/gm, "").length) {
+    id = IGNORED_NODE;
+  } else {
+    id = genId();
+  }
+  const serializedNode = Object.assign(_serializedNode, { id });
+  mirror2.add(n, serializedNode);
+  if (id === IGNORED_NODE) {
+    return null;
+  }
+  if (onSerialize) {
+    onSerialize(n);
+  }
+  let recordChild = !skipChild;
+  if (serializedNode.type === NodeType.Element) {
+    recordChild = recordChild && !serializedNode.needBlock;
+    delete serializedNode.needBlock;
+    const shadowRootEl = index.shadowRoot(n);
+    if (shadowRootEl && isNativeShadowDom(shadowRootEl))
+      serializedNode.isShadowHost = true;
+  }
+  if ((serializedNode.type === NodeType.Document || serializedNode.type === NodeType.Element) && recordChild) {
+    if (slimDOMOptions.headWhitespace && serializedNode.type === NodeType.Element && serializedNode.tagName === "head") {
+      preserveWhiteSpace = false;
+    }
+    const bypassOptions = {
+      doc,
+      mirror: mirror2,
+      blockClass,
+      blockSelector,
+      needsMask,
+      maskTextClass,
+      maskTextSelector,
+      skipChild,
+      inlineStylesheet,
+      maskInputOptions,
+      maskTextFn,
+      maskInputFn,
+      slimDOMOptions,
+      dataURLOptions,
+      inlineImages,
+      recordCanvas,
+      preserveWhiteSpace,
+      onSerialize,
+      onIframeLoad,
+      iframeLoadTimeout,
+      onStylesheetLoad,
+      stylesheetLoadTimeout,
+      keepIframeSrcFn,
+      cssCaptured: false
+    };
+    if (serializedNode.type === NodeType.Element && serializedNode.tagName === "textarea" && serializedNode.attributes.value !== void 0) ;
+    else {
+      if (serializedNode.type === NodeType.Element && serializedNode.attributes._cssText !== void 0 && typeof serializedNode.attributes._cssText === "string") {
+        bypassOptions.cssCaptured = true;
+      }
+      for (const childN of Array.from(index.childNodes(n))) {
+        if (__skip(childN, n)) continue;
+        const serializedChildNode = __leaf(childN) ? serializeNodeWithId(childN, bypassOptions) : yield* __serializeSliced(childN, bypassOptions);
+        if (serializedChildNode) {
+          serializedNode.childNodes.push(serializedChildNode);
+        }
+      }
+    }
+    let shadowRootEl = null;
+    if (isElement(n) && (shadowRootEl = index.shadowRoot(n))) {
+      for (const childN of Array.from(index.childNodes(shadowRootEl))) {
+        if (__skip(childN, shadowRootEl)) continue;
+        const serializedChildNode = __leaf(childN) ? serializeNodeWithId(childN, bypassOptions) : yield* __serializeSliced(childN, bypassOptions);
+        if (serializedChildNode) {
+          isNativeShadowDom(shadowRootEl) && (serializedChildNode.isShadow = true);
+          serializedNode.childNodes.push(serializedChildNode);
+        }
+      }
+    }
+  }
+  const parent = index.parentNode(n);
+  if (parent && isShadowRoot(parent) && isNativeShadowDom(parent)) {
+    serializedNode.isShadow = true;
+  }
+  if (serializedNode.type === NodeType.Element && serializedNode.tagName === "iframe") {
+    onceIframeLoaded(
+      n,
+      () => {
+        const iframeDoc = n.contentDocument;
+        if (iframeDoc && onIframeLoad) {
+          const serializedIframeNode = serializeNodeWithId(iframeDoc, {
+            doc: iframeDoc,
+            mirror: mirror2,
+            blockClass,
+            blockSelector,
+            needsMask,
+            maskTextClass,
+            maskTextSelector,
+            skipChild: false,
+            inlineStylesheet,
+            maskInputOptions,
+            maskTextFn,
+            maskInputFn,
+            slimDOMOptions,
+            dataURLOptions,
+            inlineImages,
+            recordCanvas,
+            preserveWhiteSpace,
+            onSerialize,
+            onIframeLoad,
+            iframeLoadTimeout,
+            onStylesheetLoad,
+            stylesheetLoadTimeout,
+            keepIframeSrcFn
+          });
+          if (serializedIframeNode) {
+            onIframeLoad(
+              n,
+              serializedIframeNode
+            );
+          }
+        }
+      },
+      iframeLoadTimeout
+    );
+  }
+  if (serializedNode.type === NodeType.Element && serializedNode.tagName === "link" && typeof serializedNode.attributes.rel === "string" && (serializedNode.attributes.rel === "stylesheet" || serializedNode.attributes.rel === "preload" && typeof serializedNode.attributes.href === "string" && extractFileExtension(serializedNode.attributes.href) === "css")) {
+    onceStylesheetLoaded(
+      n,
+      () => {
+        if (onStylesheetLoad) {
+          const serializedLinkNode = serializeNodeWithId(n, {
+            doc,
+            mirror: mirror2,
+            blockClass,
+            blockSelector,
+            needsMask,
+            maskTextClass,
+            maskTextSelector,
+            skipChild: false,
+            inlineStylesheet,
+            maskInputOptions,
+            maskTextFn,
+            maskInputFn,
+            slimDOMOptions,
+            dataURLOptions,
+            inlineImages,
+            recordCanvas,
+            preserveWhiteSpace,
+            onSerialize,
+            onIframeLoad,
+            iframeLoadTimeout,
+            onStylesheetLoad,
+            stylesheetLoadTimeout,
+            keepIframeSrcFn
+          });
+          if (serializedLinkNode) {
+            onStylesheetLoad(
+              n,
+              serializedLinkNode
+            );
+          }
+        }
+      },
+      stylesheetLoadTimeout
+    );
+  }
+  return serializedNode;
+}
+// A checkout's walk (patch.mjs snapshot). A child the walk reaches is skipped if it left its parent
+// since the parent listed it, was walked already (moved), or a queued record added it: the records,
+// emitted after the FullSnapshot, put each of those where it is.
+function __skip(c, parent) {
+  return index.parentNode(c) !== parent || __walk.walked.has(c) || __walk.fresh.has(c);
+}
+function __leaf(c) {
+  return c.nodeType !== 1 || (!c.firstChild && !index.shadowRoot(c) && c.localName !== "link");
+}
+// A big sheet's rules stringified in slices, as stringifyStylesheet would; not kept if a rule of it
+// changed meanwhile (serializeNode then stringifies it whole, as it is).
+function* __cssSliced(n, doc) {
+  let sheet = null, rules;
+  try {
+    sheet = n.localName === "style" ? n.sheet : Array.from(doc.styleSheets).find((s) => s.href === n.href);
+    rules = sheet && (sheet.rules || sheet.cssRules);
+  } catch (e) {
+    return;
+  }
+  if (!rules || rules.length < 256 || __walk.css.has(sheet)) return;
+  let href = sheet.href;
+  if (!href && sheet.ownerNode) href = sheet.ownerNode.baseURI;
+  const parts = [];
+  try {
+    for (let i = 0; i < rules.length; i++) {
+      parts.push(stringifyRule(rules[i], href));
+      if ((i & 63) === 63 && performance.now() > __walk.end) yield;
+    }
+  } catch (e) {
+    return;
+  }
+  if (!__walk.changed.has(n)) __walk.css.set(sheet, fixBrowserCompatibilityIssuesInCSS(parts.join("")));
+}
+function* __snapshotSliced(n, options) {
+  const {
+    mirror: mirror2 = new Mirror(),
+    blockClass = "rr-block",
+    blockSelector = null,
+    maskTextClass = "rr-mask",
+    maskTextSelector = null,
+    inlineStylesheet = true,
+    inlineImages = false,
+    recordCanvas = false,
+    maskAllInputs = false,
+    maskTextFn,
+    maskInputFn,
+    slimDOM = false,
+    dataURLOptions,
+    preserveWhiteSpace,
+    onSerialize,
+    onIframeLoad,
+    iframeLoadTimeout,
+    onStylesheetLoad,
+    stylesheetLoadTimeout,
+    keepIframeSrcFn = () => false
+  } = options;
+  const maskInputOptions = maskAllInputs === true ? {
+    color: true,
+    date: true,
+    "datetime-local": true,
+    email: true,
+    month: true,
+    number: true,
+    range: true,
+    search: true,
+    tel: true,
+    text: true,
+    time: true,
+    url: true,
+    week: true,
+    textarea: true,
+    select: true,
+    password: true
+  } : maskAllInputs === false ? {
+    password: true
+  } : maskAllInputs;
+  const slimDOMOptions = slimDOMDefaults(slimDOM);
+  return yield* __serializeSliced(n, {
+    doc: n,
+    mirror: mirror2,
+    blockClass,
+    blockSelector,
+    maskTextClass,
+    maskTextSelector,
+    skipChild: false,
+    inlineStylesheet,
+    maskInputOptions,
+    maskTextFn,
+    maskInputFn,
+    slimDOMOptions,
+    dataURLOptions,
+    inlineImages,
+    recordCanvas,
+    preserveWhiteSpace,
+    onSerialize,
+    onIframeLoad,
+    iframeLoadTimeout,
+    onStylesheetLoad,
+    stylesheetLoadTimeout,
+    keepIframeSrcFn,
+    newlyAddedElement: false
+  });
 }
 function snapshot(n, options) {
   const {
@@ -1941,7 +2283,7 @@ class MutationBuffer {
       else __post(go);
     });
     __publicField(this, "slice", () => {
-      if (this.frozen || this.locked) return;
+      if (this.frozen || this.locked || __walk) return;
       const end = performance.now() + __BUDGET;
       let done = false;
       while (performance.now() < end) {
@@ -2907,7 +3249,11 @@ function initScrollObserver({
       sampling.scroll || 100
     )
   );
-  return on("scroll", updatePosition, doc);
+  return on("scroll", (evt) => {
+    const t = getEventTarget(evt);
+    if (t) __scrolled.add(t);
+    updatePosition(evt);
+  }, doc);
 }
 function initViewportResizeObserver({ viewportResizeCb }, { win }) {
   let lastH = -1;
@@ -4723,6 +5069,7 @@ class ProcessedNodeManager {
 }
 let wrappedEmit;
 let takeFullSnapshot;
+let takeFullSnapshotSliced;
 let canvasManager;
 let recording = false;
 try {
@@ -4829,6 +5176,7 @@ function record(options = {}) {
   };
   wrappedEmit = (r, isCheckout) => {
     var _a2;
+    if (__walk && !__walk.open) return __defer(r, isCheckout);
     const e = r;
     e.timestamp = nowTimestamp();
     if (((_a2 = mutationBuffers[0]) == null ? void 0 : _a2.isFrozen()) && e.type !== EventType.FullSnapshot && !(e.type === EventType.IncrementalSnapshot && e.data.source === IncrementalSource.Mutation)) {
@@ -5016,6 +5364,146 @@ function record(options = {}) {
         document.adoptedStyleSheets,
         mirror.getId(document)
       );
+  };
+  const __fullSliced = function* (isCheckout) {
+    stylesheetManager.reset();
+    shadowDomManager.init();
+    mutationBuffers.forEach((buf) => buf.lock());
+    const node = yield* __snapshotSliced(document, {
+      mirror,
+      blockClass,
+      blockSelector,
+      maskTextClass,
+      maskTextSelector,
+      inlineStylesheet,
+      maskAllInputs: maskInputOptions,
+      maskTextFn,
+      maskInputFn,
+      slimDOM: slimDOMOptions,
+      dataURLOptions,
+      recordCanvas,
+      inlineImages,
+      onSerialize: (n) => {
+        if (__walk) __walk.walked.add(n);
+        if (isSerializedIframe(n, mirror)) {
+          iframeManager.addIframe(n);
+        }
+        if (isSerializedStylesheet(n, mirror)) {
+          stylesheetManager.trackLinkElement(n);
+        }
+        if (hasShadowRoot(n)) {
+          shadowDomManager.addShadowRoot(index.shadowRoot(n), document);
+        }
+      },
+      onIframeLoad: (iframe, childSn) => {
+        iframeManager.attachIframe(iframe, childSn);
+        shadowDomManager.observeAttachShadow(iframe);
+      },
+      onStylesheetLoad: (linkEl, childSn) => {
+        stylesheetManager.attachLinkElement(linkEl, childSn);
+      },
+      keepIframeSrcFn
+    });
+    if (!node) {
+      mutationBuffers.forEach((buf) => buf.unlock());
+      return console.warn("Failed to snapshot the document");
+    }
+    // Once the page is laid out: the scroll positions the walk did not read, and the window's.
+    yield __FRAME;
+    for (const [el, a] of __walk.scrolls) {
+      if (el.scrollLeft) a.rr_scrollLeft = el.scrollLeft;
+      if (el.scrollTop) a.rr_scrollTop = el.scrollTop;
+    }
+    // The Meta and the FullSnapshot together, once the walk is done.
+    __walk.open = true;
+    wrappedEmit(
+      {
+        type: EventType.Meta,
+        data: {
+          href: window.location.href,
+          width: getWindowWidth(),
+          height: getWindowHeight()
+        }
+      },
+      isCheckout
+    );
+    wrappedEmit(
+      {
+        type: EventType.FullSnapshot,
+        data: {
+          node,
+          initialOffset: getWindowScroll(window)
+        }
+      },
+      isCheckout
+    );
+    mutationBuffers.forEach((buf) => buf.unlock());
+    if (document.adoptedStyleSheets && document.adoptedStyleSheets.length > 0)
+      stylesheetManager.adoptStyleSheets(
+        document.adoptedStyleSheets,
+        mirror.getId(document)
+      );
+  };
+  // A rule event of a sheet the walk has not reached yet: the walk will read the sheet as it is then.
+  const __defer = (r, isCheckout) => {
+    if (r.type === EventType.IncrementalSnapshot && (r.data.source === IncrementalSource.StyleSheetRule || r.data.source === IncrementalSource.StyleDeclaration) && r.data.id != null) {
+      const n = mirror.getNode(r.data.id);
+      if (n && !__walk.walked.has(n)) return void __walk.changed.add(n);
+    }
+    __walk.deferred.push([r, isCheckout]);
+  };
+  // Each slice first marks what the records queued since the last one added.
+  const __scan = (w) => {
+    for (const buf of mutationBuffers) {
+      let i = w.seen.get(buf) || 0;
+      for (const q = buf.queue; i < q.length; i++) if (q[i].type === "childList") for (const a of q[i].addedNodes) w.fresh.add(a);
+      w.seen.set(buf, i);
+    }
+  };
+  takeFullSnapshotSliced = (isCheckout = false) => {
+    if (!recordDOM) return Promise.resolve(null);
+    if (__walk) return __walk.promise;
+    const w = __walk = { walked: new WeakSet(), fresh: new WeakSet(), css: new Map(), changed: new Set(), seen: new Map(), deferred: [], scrolls: [], open: false, end: 0, t0: performance.now(), work: 0, longest: 0, slices: 0 };
+    const it = __fullSliced(isCheckout);
+    w.promise = new Promise((resolve) => {
+      const step = () => {
+        const t = performance.now();
+        w.end = t + __BUDGET;
+        let done = false, frame = false;
+        try {
+          if (!recording) it.return();
+          if (w.slices) __scan(w);
+          const r = it.next();
+          done = r.done;
+          frame = r.value === __FRAME;
+        } catch (error) {
+          done = true;
+          console.warn(error);
+        }
+        const d = performance.now() - t;
+        w.work += d;
+        w.longest = Math.max(w.longest, d);
+        w.slices++;
+        if (frame) {
+          // In the next frame once it is laid out, where a ResizeObserver's first callback runs: its scroll
+          // positions then cost no layout of their own (a page that draws no frames, hidden: after a while).
+          let go = () => { go = null; clearTimeout(timer); ro.disconnect(); step(); };
+          const timer = setTimeout(() => go && go(), 250);
+          const ro = new ResizeObserver(() => go && go());
+          return void ro.observe(document.documentElement);
+        }
+        if (!done) return __post(step);
+        __walk = null;
+        if (!w.open) mutationBuffers.forEach((buf) => buf.unlock());
+        if (w.open && recording) for (const [r, c] of w.deferred) wrappedEmit(r, c);
+        let records = 0;
+        for (const k of w.seen.values()) records += k;
+        const st = w.open ? { ms: performance.now() - w.t0, work: w.work, longest: w.longest, slices: w.slices, records } : null;
+        resolve(st);
+      };
+      step();
+    });
+    return w.promise;
   };
   try {
     const handlers = [];
@@ -5218,7 +5706,7 @@ record.takeFullSnapshot = (isCheckout) => {
   if (!recording) {
     throw new Error("please take full snapshot after start recording");
   }
-  takeFullSnapshot(isCheckout);
+  return takeFullSnapshotSliced(isCheckout);
 };
 record.mirror = mirror;
 export {

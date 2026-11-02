@@ -13,5 +13,7 @@ export function record(options: {
 }): (() => void) | undefined;
 export namespace record {
   function addCustomEvent<T>(tag: string, payload: T): void;
-  function takeFullSnapshot(isCheckout?: boolean): void;
+  /** Patched (README.md): a checkout walked in slices, its cost once its FullSnapshot is out (wall
+   * `ms`, `work` in slices, the `longest` slice, the `records` queued meanwhile); null if none was. */
+  function takeFullSnapshot(isCheckout?: boolean): Promise<{ ms: number; work: number; longest: number; slices: number; records: number } | null>;
 }

@@ -41,7 +41,8 @@ const idle = (f: () => void, timeout: number) => (typeof requestIdleCallback ===
  * Records the page with rrweb and sends it to abymed at idle, asked every two seconds (the call's
  * own JSON is the one serialisation; nothing here stringifies), each checkout (a full snapshot)
  * starting a batch of its own. A checkout is taken once `checkout` ms have passed and the operator
- * has not pressed a key or a pointer for 2 s, at idle; it marks its cost (`replay.checkout`, `{ ms }`).
+ * has not pressed a key or a pointer for 2 s, at idle, and walks the page in slices; it marks its
+ * cost (`replay.checkout`, `{ ms, work, longest }`).
  * The two-second timer also measures its own lateness: late by `stall` ms while the page was
  * visible, or a long animation frame that long where the browser reports them, is a stall
  * (`onStall`). A terminal draws on a canvas in a worker, which rrweb records blank: each visible
@@ -98,24 +99,22 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
   window.addEventListener("pointerdown", touched, { capture: true, passive: true });
   window.addEventListener("keydown", touched, { capture: true, passive: true });
   let checkingOut = false;
-  /** The last checkout's span: its own long task is replay's, not the page's stall. */
-  let snap = { start: 0, end: 0 };
+  // rrweb walks the page in slices of 4 ms (vendor/README.md), so no checkout is a long task of its
+  // own and a stall during one is the page's. Its cost: wall ms, ms of work, the longest slice.
   const checkout = () => {
-    checkingOut = false;
-    if (!recordingNow || performance.now() - input < QUIET_MS) return;
-    const t0 = performance.now();
-    record.takeFullSnapshot(true);
-    snap = { start: t0, end: performance.now() };
-    const ms = Math.round((snap.end - t0) * 10) / 10;
-    checked = snap.end;
-    mark("replay.checkout", { ms });
-    send();
+    if (!recordingNow || performance.now() - input < QUIET_MS) return void (checkingOut = false);
+    void record.takeFullSnapshot(true).then((st) => {
+      checkingOut = false;
+      checked = performance.now();
+      if (!st || !recordingNow) return;
+      const r = (x: number) => Math.round(x * 10) / 10;
+      mark("replay.checkout", { ms: r(st.ms), work: r(st.work), longest: r(st.longest) });
+      send();
+    });
   };
 
   // Stalls: the timer's lateness while the page was visible throughout, and long animation frames.
   let lastStall = -Infinity;
-  /** What of the span from `start` to `end` was not replay's own checkout. */
-  const theirs = (start: number, end: number) => end - start - Math.max(0, Math.min(end, snap.end) - Math.max(start, snap.start));
   const stalled = (ms: number, via: "timer" | "frame") => {
     if (ms < o.stall || performance.now() - lastStall < STALL_GAP_MS) return;
     lastStall = performance.now();
@@ -128,14 +127,14 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
   let loaf: PerformanceObserver | null = null;
   if (PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")) {
     loaf = new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) if (e.duration >= o.stall) stalled(theirs(e.startTime, e.startTime + e.duration), "frame");
+      for (const e of list.getEntries()) if (e.duration >= o.stall) stalled(e.duration, "frame");
     });
     loaf.observe({ type: "long-animation-frame", buffered: false });
   }
   let tick = performance.now();
   const timer = setInterval(() => {
     const now = performance.now();
-    const late = theirs(tick, now) - SEND_MS;
+    const late = now - tick - SEND_MS;
     tick = now;
     if (!hidden) stalled(late, "timer");
     hidden = document.visibilityState !== "visible";

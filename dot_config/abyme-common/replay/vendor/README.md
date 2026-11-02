@@ -21,9 +21,38 @@ drain after the frame has painted (`requestAnimationFrame`, then `scheduler.post
 sibling added since an emit began, with no id yet, is skipped so that its own add goes first. A
 checkout (`lock`) drops the queue, since its full snapshot holds the page as it is; `unlock` and
 `unfreeze` schedule a drain instead of emitting at once. It is made by abyme's
-`scripts/replay-rig/patch.mjs <record.js> sliced` on rrweb's own file; on an update, apply both
-patches to the new file and run `scripts/replay-rig` before and after (rrweb's time in a click's
-task, the longest slice, and the replay's fidelity).
+`scripts/replay-rig/patch.mjs <record.js> sliced` on rrweb's own file; on an update, apply all
+three patches to the new file and run `scripts/replay-rig` before and after (rrweb's time in a
+click's task, the longest slice, and the replay's fidelity).
+
+A third patch walks a checkout in slices too (2026-11-02; `patch.mjs <record.js> snapshot`, after
+`sliced`): a whole snapshot of a big chat page took 200-800 ms of one task, live. `record.takeFullSnapshot`
+now answers a promise of its cost (`{ ms, work, longest, slices, records }`); the page's first
+snapshot, at `record()`, stays whole. The walk is `serializeNodeWithId` as a generator that yields
+once a slice has spent `__BUDGET` (a leaf is serialised as before); the page goes on changing
+meanwhile, and one consistent recording comes of it so:
+- The mutation buffers stay locked for the walk and keep queueing (a buffer made during it, for a
+  shadow root or an iframe, waits too); the queue goes out after the FullSnapshot, as rrweb's usual
+  diffs against the page as it is then.
+- A child is skipped by the walk if a record queued so far added it (its add serialises it whole,
+  as it is then; walked, its add would find its old copy unequal and replay it twice), if it left
+  its parent since the parent listed it, or if it was walked already (moved).
+- Meta and FullSnapshot go out together at the end; whatever rrweb emitted during the walk (input,
+  scroll, a same-origin iframe attaching) after them. A stylesheet rule event of a sheet the walk
+  has not reached is dropped, since the walk reads the sheet as it is then.
+- A sheet of 256 rules or more is stringified in slices, and again whole if a rule of it changed
+  meanwhile.
+- The walk reads no scroll position: each read lays out a page that changed between slices, and in
+  WebKit 8,000 of them cost about 90 ms even on a still page. Every element ever seen scrolled (a
+  `scroll` event, or a position in the first snapshot) is kept in a WeakSet; the last step reads
+  those, and the window's, in a `ResizeObserver` callback, once the frame is laid out (after 250 ms
+  if the page draws no frames).
+
+On abyme's chat page rebuilt from a save (0986bc1c, 8,250 elements, 580 KB of CSS) a checkout went
+from one task of 91 ms (Chromium) and 158 ms (WebKit) to slices of at most 6 ms, 35 and 29 ms of
+work in all, 105 and 43 ms of wall time; a replay from a checkout taken while the page added,
+removed, moved and restyled nodes in the light DOM, a shadow root and an iframe matched the page
+in every run, and failed without the skips.
 
 To update: `npm pack @rrweb/record@<v> @rrweb/replay@<v>` in an empty folder, copy the
 same files, and write the new integrity here. The `.d.ts` files are the little the plugin uses.
