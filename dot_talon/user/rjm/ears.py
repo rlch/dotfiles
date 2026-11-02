@@ -68,7 +68,7 @@ def vocabulary() -> list[str]:
                 rule = re.sub(r"<[^>]*>|\{[^}]*\}", " ", line.split(":")[0])
                 words.update(re.findall(r"[a-z]+", rule))
     for name, values in registry.lists.items():
-        if name.startswith("user.herdr_") or name.startswith("user.omniwm_"):
+        if name.startswith("user.herdr_"):
             for spoken in values[0]:
                 words.update(spoken.split())
     return sorted(words)
