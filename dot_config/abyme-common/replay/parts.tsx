@@ -4,6 +4,7 @@ import replay from "@abyme/replay";
 import layout from "@abyme/layout";
 import terminal from "@abyme/terminal/optional";
 import { record, type RecordEvent } from "./vendor/record.js";
+import { Presence } from "./here.ts";
 
 /** This page, while it is loaded: a reload is another page. */
 export const PAGE = crypto.randomUUID();
@@ -44,7 +45,7 @@ const idle = (f: () => void, timeout: number) => (typeof requestIdleCallback ===
  * has not pressed a key or a pointer for 2 s, at idle, and walks the page in slices; it marks its
  * cost (`replay.checkout`, `{ ms, work, longest }`).
  * The two-second timer also measures its own lateness: late by `stall` ms while the page was
- * visible, or a long animation frame that long where the browser reports them, is a stall
+ * visible and focused (here.ts), or a long animation frame that long where the browser reports them, is a stall
  * (`onStall`). A terminal draws on a canvas in a worker, which rrweb records blank: each visible
  * one's output and size go in beside it as custom events (`replay.terminal`), its whole screen
  * again at each checkout so a replay from there has it. Answers how to stop it, and to send what
@@ -113,7 +114,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     });
   };
 
-  // Stalls: the timer's lateness while the page was visible throughout, and long animation frames.
+  // Stalls: the timer's lateness while the page was visible and focused throughout, and long animation frames.
   let lastStall = -Infinity;
   const stalled = (ms: number, via: "timer" | "frame") => {
     if (ms < o.stall || performance.now() - lastStall < STALL_GAP_MS) return;
@@ -121,9 +122,10 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     mark("replay.stall", { ms: Math.round(ms), via });
     o.onStall(Math.round(ms));
   };
-  let hidden = document.visibilityState !== "visible";
-  const seen = () => void (hidden ||= document.visibilityState !== "visible");
+  const here = new Presence(() => ({ visible: document.visibilityState === "visible", focused: document.hasFocus() }));
+  const seen = () => here.left();
   document.addEventListener("visibilitychange", seen);
+  window.addEventListener("blur", seen);
   let loaf: PerformanceObserver | null = null;
   if (PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")) {
     loaf = new PerformanceObserver((list) => {
@@ -136,8 +138,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     const now = performance.now();
     const late = now - tick - SEND_MS;
     tick = now;
-    if (!hidden) stalled(late, "timer");
-    hidden = document.visibilityState !== "visible";
+    if (here.tick()) stalled(late, "timer");
     send();
     if (!checkingOut && now - checked >= o.checkout && now - input >= QUIET_MS) {
       checkingOut = true;
@@ -196,6 +197,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     clearInterval(timer);
     loaf?.disconnect();
     document.removeEventListener("visibilitychange", seen);
+    window.removeEventListener("blur", seen);
     window.removeEventListener("pointerdown", touched, { capture: true });
     window.removeEventListener("keydown", touched, { capture: true });
     flush();
