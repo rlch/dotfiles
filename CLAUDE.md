@@ -105,7 +105,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | Local LLM      | Ollama (heavy hardware only)                        |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
-| Browser        | Firefox (daily) + Chrome (Flutter web dev) + Brave (PWA host) |
+| Browser        | Firefox (daily) + Chrome (secondary) + Brave (Gather PWA only, off Chrome's process tree) |
 | Notes          | Obsidian                                            |
 | Launcher       | Raycast                                             |
 

@@ -145,7 +145,7 @@ in first.**
 | Local LLM      | Ollama (heavyHardware only)                         |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
-| Browser split  | Firefox (daily) + Chrome (Flutter web dev) + Brave (PWA) |
+| Browser split  | Firefox (daily) + Chrome (secondary) + Brave (Gather PWA only) |
 | Notes          | Obsidian                                            |
 | Launcher       | Raycast                                             |
 

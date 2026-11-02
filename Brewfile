@@ -302,5 +302,5 @@ cask "obsidian"
 # Brave hosts Gather (and any other PWAs) so their lifetime is decoupled
 # from Chrome's — Chrome PWAs share Chrome's process tree, so Cmd-Q on
 # Chrome kills them. Brave is Chromium so the PWA UX is identical; it is
-# NOT a daily browser. (Chrome=Flutter web dev, Firefox=daily, Brave=PWAs.)
+# NOT a daily browser. (Firefox=daily, Chrome=secondary, Brave=the Gather PWA.)
 cask "brave-browser"
