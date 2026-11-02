@@ -112,7 +112,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 ## Conventions / invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in
-  OmniWM (alt-hjkl, ctrl-alt-N, ported from aerospace), herdr (vim-style modal, below), nvim, fish abbreviations, and
+  OmniWM (option layer, below), herdr (vim-style modal, below), nvim, fish abbreviations, and
   tridactyl. Cosmetic refactors fine; keybind changes are not.
 - **k9s `config.yaml` is global prefs only**, not cluster state. k9s rewrites
   cluster-specific sections at runtime — keeping them in source pollutes the
@@ -210,6 +210,22 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 - **Karabiner rewrites `karabiner.json` itself** (on a device change, in its
   UI): deploy it with `chezmoi apply --force ~/.config/karabiner/karabiner.json`.
   Its source is one minified line.
+- **OmniWM rewrites `settings.toml` itself** (its Settings window, sorting keys and
+  dropping comments), so the file carries no comments: deploy it with `chezmoi apply
+  --force ~/.config/omniwm/settings.toml`, and `chezmoi re-add` a change made in its
+  UI. The schema is strict: a missing key or a binding used twice rejects the whole
+  file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
+  IPC is on: `omniwmctl` (talon's `desk` commands, `browser-headed`'s focus restore,
+  abyme's window-manager service).
+- **OmniWM workspaces are tasks, not apps** (operator, 2026-11-02): ten anonymous
+  Niri workspaces (1-5 main display, 6-8 second, 9-10 third, by `[[monitors.ranking]]`),
+  one per repo or agent, its terminal, browser and docs side by side as columns. No app
+  routes to a workspace; app rules only float or size. Option is the window layer
+  (ctrl = herdr panes, cmd = herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or
+  next/previous workspace, `⌥⇧hjkl` move, `⌥1-9` slot on this monitor, `⌥r` width
+  preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of column, `⌥,` tabbed,
+  `⌥s` the chat scratchpad (`⌥⇧s` adds a window: membership ends when OmniWM restarts),
+  `⌥⇧o` overview. Not `⌃⌥hjkl`: herdr swaps panes there.
 - **Nerd Font glyphs of three UTF-8 bytes (U+E000–U+F8FF) can vanish from an
   Edit or Write**; four-byte ones (U+F0000+) survive. Write a placeholder, put the
   glyph in with `python3` and `chr()`, and check the bytes with `xxd`.

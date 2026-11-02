@@ -157,7 +157,7 @@ to multiplexing or re-introduce its config/packages/fish helpers.
 
 ## Preserve existing keymaps
 
-The user has muscle memory in: OmniWM (ported aerospace chords), herdr (vim-style modal),
+The user has muscle memory in: OmniWM (option layer, see CLAUDE.md), herdr (vim-style modal),
 nvim/LazyVim, fish abbreviations, tridactyl, karabiner. **Cosmetic refactors
 are fine; keybind changes are not** unless explicitly asked.
 
