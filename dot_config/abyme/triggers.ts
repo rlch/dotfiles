@@ -9,6 +9,9 @@ import triggers from "@abyme/triggers";
 export default function addTriggers(): void {
   const SCHOOLS = "/Users/rjm/dev/tutero/frontend/app/schools";
   const IAC = "/Users/rjm/dev/tutero/infrastructure/iac";
+  // Whose pull requests no review team is brought up for: the operator's own, and bots' (GitHub's GraphQL login,
+  // without `app/`; release-please opens its PRs as github-actions).
+  const NOT_REVIEWED = ["rlch", "tutero-bot", "github-actions", "dependabot", "release-please"];
 
   // schools' triggers are the operator's, never the repository's (operator, 2026-10-27; schools #1269).
   // Work that reaches schools on its own goes to lead@schools or to a team of its own (schools .abyme/teams.ts).
@@ -96,15 +99,14 @@ export default function addTriggers(): void {
 
   // An engineer's schools pull request, once ready for review: a team of its own on its branch, its review role
   // posting as @rlch (schools .claude/skills/review/), ending when the PR merges or closes (engineer-pr's `ends`).
-  // The authors are schools CLAUDE.md's People but the operator, whose own pull requests are never reviewed; add
-  // an engineer here when they join.
+  // Every author but those in NOT_REVIEWED: anyone who can open one has write access, and is trusted.
   triggers.items.add({
     name: "engineer-pr",
     root: SCHOOLS,
     on: {
       "github.pr.opened": {
         draft: false,
-        author: ["oliatienza", "sonnymosh", "shbmx", "Drabu", "noman2002", "hemanta212", "vatsalpatel"],
+        notAuthor: NOT_REVIEWED,
       },
     },
     run: {
@@ -124,15 +126,15 @@ export default function addTriggers(): void {
   });
 
   // An engineer's iac pull request, as schools' engineer-pr: the operator's `iac-pr` template (teams.ts), its
-  // review role (init.ts's iac-review) posting as @rlch and never merging, since a merge applies. The authors
-  // are schools' engineers and theaarya, who opens iac PRs too; the operator's and tutero-bot's are never reviewed.
+  // review role (init.ts's iac-review) posting as @rlch and never merging, since a merge applies. Every author
+  // but those in NOT_REVIEWED.
   triggers.items.add({
     name: "iac-engineer-pr",
     root: IAC,
     on: {
       "github.pr.opened": {
         draft: false,
-        author: ["oliatienza", "sonnymosh", "shbmx", "Drabu", "noman2002", "hemanta212", "vatsalpatel", "theaarya"],
+        notAuthor: NOT_REVIEWED,
       },
     },
     run: {
