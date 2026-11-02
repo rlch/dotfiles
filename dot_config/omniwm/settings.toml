@@ -19,6 +19,27 @@ blue = 0.979300037944676
 green = 1.0
 red = 0.08458520228437894
 
+[borders.glow]
+enabled = false
+opacity = 0.6
+radius = 8.0
+
+[borders.gradient]
+direction = "topLeftToBottomRight"
+enabled = false
+
+[borders.gradient.end]
+alpha = 1.0
+blue = 0.7
+green = 1.0
+red = 0.0
+
+[borders.gradient.start]
+alpha = 1.0
+blue = 1.0
+green = 0.4
+red = 0.0
+
 [clipboard]
 historyEnabled = false
 ignoredTypes = []
@@ -37,14 +58,14 @@ useGlobalGaps = true
 [focus]
 crossesMonitorAtEdge = true
 followsMouse = false
-followsWindowToMonitor = false
+followsWindowToMonitor = true
 lockModifier = "off"
 moveCrossesMonitorAtEdge = true
 moveMouseToFocusedWindow = true
 raiseOnMouseFocus = false
 
 [gaps]
-fullscreenUsesOuterGaps = false
+fullscreenUsesOuterGaps = true
 size = 10.0
 
 [gaps.outer]
@@ -54,7 +75,7 @@ right = 10.0
 top = 10.0
 
 [general]
-animationSpeed = 1.0
+animationSpeed = 2.0
 animationsEnabled = true
 defaultLayoutType = "niri"
 hotkeysEnabled = true
@@ -69,7 +90,7 @@ fingerCount = 3
 invertDirection = true
 mouseMoveModifierKey = "option"
 mouseResizeModifierKey = "option"
-overviewGestureEnabled = false
+overviewGestureEnabled = true
 overviewGestureFingerCount = 4
 scrollEnabled = true
 scrollModifierKey = "optionShift"
@@ -81,12 +102,12 @@ windowMoveFingerCount = 4
 windowResizeEnabled = false
 windowResizeFingerCount = 3
 workspaceSwipeAxis = "vertical"
-workspaceSwipeEnabled = false
+workspaceSwipeEnabled = true
 workspaceSwipeFingerCount = 3
 
 [hiddenBar]
 enabled = false
-hiddenBundleIDs = []
+hiddenBundleIDs = ["dev.abyme.app", "com.1password.1password", "com.henrikruscon.Alcove", "com.lwouis.alt-tab-macos", "theboringteam.boringnotch", "com.openai.codex", "io.github.clash-verge-rev.clash-verge-rev", "com.anthropic.claudefordesktop", "com.openai.sky.CUAService", "com.figma.Desktop", "org.mozilla.firefox", "com.mitchellh.ghostty", "com.google.drivefs", "org.pqrs.Karabiner-Menu", "com.nuebling.mac-mouse-fix", "com.moomoo.mm.mac.au", "com.marcoluthi.Annotate-Input", "com.malwarebytes.mbam.frontend.agent", "notion.id", "com.oplus.devicespace", "com.electron.ollama", "com.parallels.desktop.console", "dev.kdrag0n.MacVirt", "ch.protonvpn.mac", "com.raycast.macos", "com.apple.ScriptMonitor", "cc.ffitch.shottr", "com.tinyspeck.slackmacgap", "com.superduper.superwhisper", "io.tailscale.ipn.macsys", "com.tdesktop.Telegram"]
 rehideIntervalSeconds = 5.0
 
 [monitors]
@@ -194,14 +215,15 @@ useWorkspaceId = false
 autoHide = false
 autoHideHideDelayMilliseconds = 0.0
 autoHideRevealDelayMilliseconds = 0.0
-backgroundOpacity = 0.1
+backgroundOpacity = 0.0
 deduplicateAppIcons = true
 enabled = true
 excludedBundleIDs = []
-height = 24.0
+height = 28.0
 hideEmptyWorkspaces = true
 hideInNativeFullscreen = true
 hoverPreviewsEnabled = true
+inactiveIconOpacity = 0.65
 notchActiveZoneWidth = 180.0
 notchMode = "rightOfNotch"
 notificationBadgeRefreshIntervalSeconds = 5.0
@@ -210,7 +232,7 @@ position = "overlappingMenuBar"
 reserveLayoutSpace = false
 revealHoldMilliseconds = 200.0
 revealModifier = "off"
-showAccentHighlights = true
+showAccentHighlights = false
 showFloatingWindows = false
 showItemBackgrounds = true
 showLabels = true
@@ -218,8 +240,8 @@ solidBlackBackground = false
 systemStatsButton = false
 transparentBackground = false
 windowLevel = "popup"
-xOffset = 0.0
-yOffset = 0.0
+xOffset = -2.0
+yOffset = 6.0
 
 [workspaceBar.iconOverrides]
 
@@ -504,6 +526,14 @@ binding = "Unassigned"
 id = "moveToWorkspace.8"
 
 [[hotkeys]]
+binding = "Unassigned"
+id = "switchWorkspace.9"
+
+[[hotkeys]]
+binding = "Unassigned"
+id = "moveToWorkspace.9"
+
+[[hotkeys]]
 binding = "Option+1"
 id = "switchWorkspaceSlot.1"
 
@@ -698,6 +728,10 @@ id = "moveColumnToWorkspace.7"
 [[hotkeys]]
 binding = "Unassigned"
 id = "moveColumnToWorkspace.8"
+
+[[hotkeys]]
+binding = "Unassigned"
+id = "moveColumnToWorkspace.9"
 
 [[hotkeys]]
 binding = "Unassigned"
