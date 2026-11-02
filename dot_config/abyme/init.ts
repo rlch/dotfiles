@@ -14,6 +14,7 @@ import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
 import voice from "@abyme/voice";
 import mistral from "@abyme/mistral";
+import canvas from "@abyme/canvas";
 import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
@@ -86,6 +87,8 @@ layoutPanes.setup({
 mistral.setup({}, { secrets: { MISTRAL_API_KEY: abyme.env.MISTRAL_API_KEY } });
 voice.setup({ preload: false, hearing: "mistral", speaking: "mistral" });
 conversation.setup({ voiceModel: "mistral-small-4" }); // the reply model too, in the cloud
+// tldraw canvases; the operator's hobby key (for *.abyme.studio, to 2027-10-29) is in the keychain (abyme-tldraw), never here.
+canvas.setup({}, { secrets: { TLDRAW_LICENSE_KEY: abyme.env.TLDRAW_LICENSE_KEY } });
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
 if (!onLinode) tart.setup();
 rail.setup({
