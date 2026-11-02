@@ -262,8 +262,7 @@ status_indicators = "dots"
 [ui.sidebar.agents]
 # herdr's default rows, plus two tokens from the agent-tags plugin
 # (~/dev/plugins/herdr/agent-tags), on the bottom row (letter bold, port dimmed) so the top row
-# keeps its alignment: $letter prefixes the agent name and is its sticky
-# name for voice ("agent bat" in Talon, the same letter in the Talon HUD), and
+# keeps its alignment: $letter prefixes the agent name as its sticky name, and
 # $port lists its frontend dev-server ports (:5173) so you can open them. Both
 # disappear when unreported, so the rows fall back to the defaults without the
 # plugin. ⌘1-9 stays positional and does not follow the letters.

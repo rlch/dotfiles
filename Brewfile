@@ -292,17 +292,6 @@ cask "the-unarchiver"
 # (Touch ID / password prompt in the real tty), then launch Google Drive and
 # sign in to establish the mount.
 
-# === Voice control ===
-# Talon (talonvoice.com) — hands-free computer control by voice. User scripts
-# live in ~/.talon/user: the talonhub/community base config + rango-talon are
-# cloned by .chezmoiscripts/run_onchange_install-talon.sh, and the bunpro
-# voice plugin is chezmoi-managed under dot_talon/user/bunpro/ (real files,
-# not symlinks — Talon's hot reload breaks through symlinked paths).
-# One-time per host after install: launch Talon, grant Microphone +
-# Accessibility, and install the Conformer speech engine from the menu-bar
-# icon (Speech Recognition > Conformer D).
-cask "talon"
-
 # Flashes the Moonlander from ~/dev/moonlander (./flash); the firmware itself
 # builds in Docker, so no ARM toolchain is installed here.
 brew "dfu-util"
