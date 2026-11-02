@@ -1,0 +1,4 @@
+# Targets chezmoi deletes on apply: configs whose source was removed.
+.config/aerospace
+.talon/user/rjm/aerospace.py
+.talon/user/rjm/aerospace.talon

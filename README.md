@@ -40,7 +40,7 @@ not the deployed copies in `~` — the next `chezmoi apply` will overwrite them.
 | Shell          | fish 4 + fisher                                     |
 | Terminal       | Ghostty                                             |
 | Multiplexer    | herdr                                               |
-| Window manager | AeroSpace                                           |
+| Window manager | OmniWM                                              |
 | Editor         | Neovim (LazyVim base, no AI plugins)                |
 | Prompt         | starship                                            |
 | History        | atuin                                               |

@@ -32,6 +32,9 @@ lease="$state/lease"
 endpoint="http://127.0.0.1:$port"
 mkdir -p "$state"
 
+# The window manager's focused window, by its session id (OmniWM), or nothing.
+focused_window() { omniwmctl query focused-window --format json 2>/dev/null | jq -r '.result.payload.window.id // empty' 2>/dev/null || true; }
+
 healthy() { curl -sf --max-time 1 "$endpoint/json/version" >/dev/null 2>&1; }
 
 chromium_pid() { # the browser process that listens on the port
@@ -89,10 +92,10 @@ cmd_icon() {
 launch() {
   cmd_icon || true
   # `open -g` asks for no activation, but Chromium activates itself once its
-  # first window is up and aerospace follows it to `agent` (2026-10-06). So the
+  # first window is up and OmniWM follows it to `agent` (2026-10-06). So the
   # window the user had focused is put back once the browser answers.
   local prev
-  prev=$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null || true)
+  prev=$(focused_window)
   # MacAppCodeSignClone off, or every launch that ends in a kill leaks a whole
   # app copy under $TMPDIR/../X.
   open -g -n -a "$app" --args \
@@ -102,8 +105,8 @@ launch() {
     --no-first-run
   for _ in $(seq 40); do healthy && break; sleep 0.25; done
   sleep 1
-  if [[ -n "$prev" && "$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null)" != "$prev" ]]; then
-    aerospace focus --window-id "$prev" 2>/dev/null || true
+  if [[ -n "$prev" && "$(focused_window)" != "$prev" ]]; then
+    omniwmctl window focus "$prev" >/dev/null 2>&1 || true
   fi
 }
 
@@ -120,7 +123,7 @@ cmd_extension() {
     curl -s "$endpoint/json/version" | jq -r '.Browser | split("/")[1]'
   )&acceptformat=crx2,crx3&x=id%3D$id%26uc"
   curl -sf -X PUT "$endpoint/json/new?$(jq -rn --arg u "$url" '$u|@uri')" >/dev/null
-  echo "The 'Add extension' dialog is open in Chromium (aerospace workspace 'agent'); click Add."
+  echo "The 'Add extension' dialog is open in Chromium (OmniWM workspace 'agent'); click Add."
 }
 
 cmd_serve() {
@@ -194,7 +197,7 @@ cmd_acquire() {
 
 cmd_run() {
   # Playwright's tab-new opens a foreground tab and tab-select calls
-  # Page.bringToFront; both activate Chromium, and aerospace follows it to the
+  # Page.bringToFront; both activate Chromium, and OmniWM follows it to the
   # `agent` workspace (tested 2026-10-06; Target.createTarget background:true
   # and goto do not). So every headed command runs here: the lease is checked,
   # and the window the user had focused gets focus back.
@@ -205,10 +208,10 @@ cmd_run() {
     echo "browser-headed: you do not hold the lease; browser-headed acquire <name> first" >&2
     return 2
   fi
-  prev=$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null || true)
+  prev=$(focused_window)
   playwright-cli -s="$name" "$@" || rc=$?
-  if [[ -n "$prev" && "$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null)" != "$prev" ]]; then
-    aerospace focus --window-id "$prev" 2>/dev/null || true
+  if [[ -n "$prev" && "$(focused_window)" != "$prev" ]]; then
+    omniwmctl window focus "$prev" >/dev/null 2>&1 || true
   fi
   return "$rc"
 }

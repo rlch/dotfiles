@@ -7,16 +7,12 @@
 brew "chezmoi"
 
 # === Window manager ===
-tap "nikitabobko/tap"
-cask "nikitabobko/tap/aerospace"
-# Native instant macOS Spaces switching — companion to AeroSpace. Strips the
-# Spaces transition animation, plus cycle bindings/swipes, Cmd-Tab follow, and
-# instant Mission Control. Replaced jurplel/tap/instant-space-switcher
-# (2026-08-12), which it's derived from — don't run both, they fight over the
-# same synthetic gesture interception. Needs Accessibility permission
-# (System Settings → Privacy & Security → Accessibility) and macOS >= 15;
-# self-updates, so brew only bootstraps it.
-cask "space-rabbit"
+# OmniWM replaced AeroSpace and Space Rabbit (2026-11-02): Niri-style scrolling
+# columns + Dwindle per workspace, built for Tahoe (no ghost-window reaper), and
+# a local IPC socket abyme drives and introspects windows through. It refuses to
+# run beside another tiling WM. Needs Accessibility + Input Monitoring, and
+# "Displays have separate Spaces" on. Config: dot_config/omniwm/settings.toml.
+cask "omniwm"
 
 # === Terminal + multiplexer ===
 cask "ghostty"
@@ -274,7 +270,7 @@ cask "1password-cli"
 # === Screenshot / capture ===
 # Native screenshot + screen recording with annotations, OCR, scroll capture.
 # Menu-bar app, default global hotkey Cmd-Shift-X (watch for conflicts with
-# Ghostty/aerospace/tridactyl bindings). Auto-updates.
+# Ghostty/OmniWM/tridactyl bindings). Auto-updates.
 cask "macshot"
 
 # === Archive utilities ===

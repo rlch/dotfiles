@@ -53,7 +53,7 @@ Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, hooks; guard.py is the
                               PreToolUse hook that enforces the global bans —
                               run `guard.py --selftest` after editing it)
-dot_config/                 → ~/.config/ (aerospace, fish, ghostty, k9s,
+dot_config/                 → ~/.config/ (omniwm, fish, ghostty, k9s,
                               lazydocker, starship.toml, herdr, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
 dev/trading/                → ~/dev/trading/.obsidian/ (per-project vault — vault root is the repo root, all .md across the repo become wikilinkable)
@@ -96,7 +96,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty (auto-launches herdr; theme/font from Ghostty config) |
 | Multiplexer    | herdr (daily driver; workspaces/tabs/panes)         |
-| Window manager | aerospace (no yabai/skhd)                           |
+| Window manager | OmniWM (replaced aerospace 2026-11-02; no yabai/skhd) |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
 | Prompt         | starship                                            |
@@ -112,7 +112,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
 ## Conventions / invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in
-  aerospace, herdr (vim-style modal, below), nvim, fish abbreviations, and
+  OmniWM (alt-hjkl, ctrl-alt-N, ported from aerospace), herdr (vim-style modal, below), nvim, fish abbreviations, and
   tridactyl. Cosmetic refactors fine; keybind changes are not.
 - **k9s `config.yaml` is global prefs only**, not cluster state. k9s rewrites
   cluster-specific sections at runtime — keeping them in source pollutes the

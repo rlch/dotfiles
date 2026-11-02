@@ -2,7 +2,7 @@
 name: dotfiles
 description: >-
   Edit the user's chezmoi-managed macOS dotfiles in ~/dev/dotfiles. Use whenever
-  changing fish, herdr, Ghostty, aerospace, Neovim, Starship, lazygit, k9s,
+  changing fish, herdr, Ghostty, OmniWM, Neovim, Starship, lazygit, k9s,
   Claude, OpenCode, Karabiner, Homebrew, ~/.config, ~/.claude, or another
   home-rooted configuration; also use when installing a tool, bootstrapping a
   machine, or making a setting persist. Always edit the source repository, run
@@ -35,7 +35,9 @@ them on the next `apply`. The flow is:
    effect in the live process — the source isn't enough on its own:
    - fish: `exec fish` in the relevant shell (or just open a new pane).
    - herdr: `herdr server reload-config` (config.toml changes).
-   - aerospace: `aerospace reload-config`.
+   - OmniWM: live-reloads `settings.toml` on save; its Settings window rewrites
+     the file, so deploy with `chezmoi apply --force ~/.config/omniwm/settings.toml`
+     and `chezmoi re-add` a change made there. `omniwmctl` drives it (IPC on).
    - karabiner: picks up changes automatically.
    - ghostty: reload with `cmd+shift+,`; keybind changes are not live until then.
    - claude code / `~/.claude/settings.json`: takes effect on next prompt
@@ -75,7 +77,7 @@ rename them away** — they're functional, not stylistic.
 | :----------------------------- | :---------------------- | :------ |
 | `dot_foo`                      | `~/.foo`                | `dot_claude/` → `~/.claude/` |
 | `dot_config/foo/`              | `~/.config/foo/`        | `dot_config/fish/config.fish` → `~/.config/fish/config.fish` |
-| `executable_foo`               | `~/foo` mode 755        | `dot_config/aerospace/executable_scratchpad.sh` |
+| `executable_foo`               | `~/foo` mode 755        | `dot_local/bin/executable_browser-headed` |
 | `private_dot_foo`              | `~/.foo` mode 600       | `private_dot_gitconfig` |
 | `foo.tmpl`                     | rendered as Go template | `.chezmoi.toml.tmpl` |
 | `run_onchange_install-x.sh.tmpl` | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |
@@ -134,7 +136,7 @@ in first.**
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty (auto-launches herdr)                       |
 | Multiplexer    | herdr (daily driver)                                |
-| Window manager | aerospace (no yabai/skhd)                           |
+| Window manager | OmniWM (no yabai/skhd)                              |
 | Status bar     | macOS default (sketchybar/jankyborders rejected)    |
 | Editor         | Neovim + LazyVim base — **no AI plugins**, pure editor |
 | Prompt         | starship                                            |
@@ -155,7 +157,7 @@ to multiplexing or re-introduce its config/packages/fish helpers.
 
 ## Preserve existing keymaps
 
-The user has muscle memory in: aerospace, herdr (vim-style modal),
+The user has muscle memory in: OmniWM (ported aerospace chords), herdr (vim-style modal),
 nvim/LazyVim, fish abbreviations, tridactyl, karabiner. **Cosmetic refactors
 are fine; keybind changes are not** unless explicitly asked.
 
@@ -232,10 +234,10 @@ git -C ~/dev/dotfiles status          # see what's staged for commit
 The user is in auto mode often, and prefers action over planning for
 routine config edits. Do ask before:
 - Changing keybindings the user actively uses.
-- Re-evaluating a locked-in stack choice (yabai vs aerospace, etc.).
+- Re-evaluating a locked-in stack choice (yabai vs OmniWM, etc.).
 - Adding a heavy package to the *base* Brewfile (vs Brewfile.heavy).
 - Anything that affects the mini host you can't test locally.
 
 For everything else — adding a fish function, a herdr binding that
-doesn't conflict, a new aerospace rule, a Claude Code hook, a starship
+doesn't conflict, a new OmniWM app rule, a Claude Code hook, a starship
 segment — research the pattern and ship it.
