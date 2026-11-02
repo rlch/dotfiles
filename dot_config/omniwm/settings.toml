@@ -90,7 +90,7 @@ fingerCount = 3
 invertDirection = true
 mouseMoveModifierKey = "option"
 mouseResizeModifierKey = "option"
-overviewGestureEnabled = true
+overviewGestureEnabled = false
 overviewGestureFingerCount = 4
 scrollEnabled = true
 scrollModifierKey = "optionShift"
@@ -103,7 +103,7 @@ windowResizeEnabled = false
 windowResizeFingerCount = 3
 workspaceSwipeAxis = "vertical"
 workspaceSwipeEnabled = true
-workspaceSwipeFingerCount = 3
+workspaceSwipeFingerCount = 4
 
 [hiddenBar]
 enabled = false
@@ -131,7 +131,6 @@ margin = 1
 alwaysCenterSingleColumn = false
 centerFocusedColumn = "never"
 containerPrimarySpanPresets = [0.3333333333333333, 0.5, 0.6666666666666666]
-defaultContainerPrimarySpan = 0.5
 edgeGaps = true
 infiniteLoop = false
 resizeStepPercent = 5
@@ -302,8 +301,8 @@ minHeight = 495.0
 minWidth = 500.0
 
 [[appRules]]
-bundleId = "org.mozilla.firefox"
 assignToWorkspace = "1"
+bundleId = "org.mozilla.firefox"
 id = "005C00D3-F665-47F8-BDAE-D80790E9E46B"
 minHeight = 120.0
 minWidth = 500.0
@@ -1166,8 +1165,8 @@ binding = "Unassigned"
 id = "toggleSystemStats"
 
 [[workspaces]]
-id = "B8343ECC-82F8-5E4D-8AC9-1ACE389974DD"
 displayName = "web"
+id = "B8343ECC-82F8-5E4D-8AC9-1ACE389974DD"
 layoutType = "niri"
 name = "1"
 
@@ -1175,8 +1174,8 @@ name = "1"
 type = "secondary"
 
 [[workspaces]]
-id = "97E4AA2D-C512-56BF-B51B-7BF313B7D006"
 displayName = "comms"
+id = "97E4AA2D-C512-56BF-B51B-7BF313B7D006"
 layoutType = "niri"
 name = "2"
 
@@ -1184,8 +1183,8 @@ name = "2"
 type = "tertiary"
 
 [[workspaces]]
-id = "0BBA0196-6817-5B20-A166-DDDDBCBD17CE"
 displayName = "abyme"
+id = "0BBA0196-6817-5B20-A166-DDDDBCBD17CE"
 layoutType = "niri"
 name = "3"
 
@@ -1193,8 +1192,8 @@ name = "3"
 type = "secondary"
 
 [[workspaces]]
-id = "E8069CA9-B097-5BC7-B7D0-E77B7AF85EC9"
 displayName = "1"
+id = "E8069CA9-B097-5BC7-B7D0-E77B7AF85EC9"
 layoutType = "niri"
 name = "4"
 
@@ -1202,8 +1201,8 @@ name = "4"
 type = "main"
 
 [[workspaces]]
-id = "315C26EA-1D3A-56A8-A404-A7E3C208AA81"
 displayName = "2"
+id = "315C26EA-1D3A-56A8-A404-A7E3C208AA81"
 layoutType = "niri"
 name = "5"
 
@@ -1211,8 +1210,8 @@ name = "5"
 type = "main"
 
 [[workspaces]]
-id = "5E6D7BDC-7D32-577E-B699-050DF4DB638B"
 displayName = "3"
+id = "5E6D7BDC-7D32-577E-B699-050DF4DB638B"
 layoutType = "niri"
 name = "6"
 
@@ -1220,8 +1219,8 @@ name = "6"
 type = "main"
 
 [[workspaces]]
-id = "F0C1F720-2752-5B58-A0B4-48FD6CBCE9A0"
 displayName = "4"
+id = "F0C1F720-2752-5B58-A0B4-48FD6CBCE9A0"
 layoutType = "niri"
 name = "7"
 
@@ -1229,8 +1228,8 @@ name = "7"
 type = "main"
 
 [[workspaces]]
-id = "B9C43267-0F13-5A2B-B585-CEB699A650BF"
 displayName = "5"
+id = "B9C43267-0F13-5A2B-B585-CEB699A650BF"
 layoutType = "niri"
 name = "8"
 
@@ -1238,8 +1237,8 @@ name = "8"
 type = "main"
 
 [[workspaces]]
-id = "ADB8E2B0-57AB-5F66-8BA6-604076C91B97"
 displayName = "6"
+id = "ADB8E2B0-57AB-5F66-8BA6-604076C91B97"
 layoutType = "niri"
 name = "9"
 
@@ -1247,8 +1246,8 @@ name = "9"
 type = "main"
 
 [[workspaces]]
-id = "E97DF7BC-F2E6-5734-A64F-A0752ABEE333"
 displayName = "7"
+id = "E97DF7BC-F2E6-5734-A64F-A0752ABEE333"
 layoutType = "niri"
 name = "10"
 
