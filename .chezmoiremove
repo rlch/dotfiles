@@ -1,2 +1,7 @@
 # Targets chezmoi deletes on apply: configs whose source was removed.
 .config/aerospace
+.local/bin/browser-headed
+.local/share/browser-headed
+.local/state/browser-headed
+.config/fish/functions/chrome-debug.fish
+.config/fish/functions/flutter-web.fish

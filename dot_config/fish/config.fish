@@ -64,7 +64,7 @@ set -gx OPENCODE_DISABLE_CLAUDE_CODE_SKILLS 1
 set -gx OPENCODE_DISABLE_EXTERNAL_SKILLS 1
 
 # playwright-cli (the `browser` skill) — one config for every agent, every
-# account, every cwd: ungoogled Chromium, headless, MacAppCodeSignClone off (a
+# account, every cwd: headless, MacAppCodeSignClone off (a
 # killed launch otherwise leaks a whole app copy under $TMPDIR/../X), and
 # snapshots/screenshots written to one cache dir instead of `.playwright-cli/`
 # in whatever repo the agent stands in. chromium-clone-sweep prunes the dir.

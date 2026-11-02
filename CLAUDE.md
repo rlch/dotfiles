@@ -215,8 +215,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   --force ~/.config/omniwm/settings.toml`, and `chezmoi re-add` a change made in its
   UI. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
-  IPC is on: `omniwmctl` (`browser-headed`'s focus restore,
-  abyme's window-manager service).
+  IPC is on: `omniwmctl` (abyme's window-manager service).
 - **OmniWM workspaces are tasks, not apps** (operator, 2026-11-02): ten anonymous
   Niri workspaces (1-5 main display, 6-8 second, 9-10 third, by `[[monitors.ranking]]`),
   one per repo or agent, its terminal, browser and docs side by side as columns. No app

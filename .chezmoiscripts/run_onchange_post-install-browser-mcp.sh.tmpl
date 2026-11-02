@@ -5,9 +5,8 @@
 # playwright servers plus their plugin twins were 171 processes and 11.6 GB.
 # Browsers are driven on demand by the vendors' CLIs instead: Microsoft's
 # `playwright-cli` and the `chrome-devtools` CLI the chrome-devtools-mcp
-# package ships. Headless work runs in a browser of each agent's own; the one
-# headed Chromium on 127.0.0.1:9222 is a service taken on a lease
-# (`browser-headed`), and the `browser` skill says how. The plugins are disabled
+# package ships. Each agent drives a browser of its own that abyme starts, and
+# abyme's `browser` skill says how. The plugins are disabled
 # in settings.json and the npm globals are installed by the claude-plugins
 # script.
 #

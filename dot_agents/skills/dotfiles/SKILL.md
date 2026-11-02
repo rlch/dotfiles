@@ -77,7 +77,7 @@ rename them away** — they're functional, not stylistic.
 | :----------------------------- | :---------------------- | :------ |
 | `dot_foo`                      | `~/.foo`                | `dot_claude/` → `~/.claude/` |
 | `dot_config/foo/`              | `~/.config/foo/`        | `dot_config/fish/config.fish` → `~/.config/fish/config.fish` |
-| `executable_foo`               | `~/foo` mode 755        | `dot_local/bin/executable_browser-headed` |
+| `executable_foo`               | `~/foo` mode 755        | `dot_local/bin/executable_slack-api` |
 | `private_dot_foo`              | `~/.foo` mode 600       | `private_dot_gitconfig` |
 | `foo.tmpl`                     | rendered as Go template | `.chezmoi.toml.tmpl` |
 | `run_onchange_install-x.sh.tmpl` | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |

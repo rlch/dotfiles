@@ -304,11 +304,3 @@ cask "obsidian"
 # Chrome kills them. Brave is Chromium so the PWA UX is identical; it is
 # NOT a daily browser. (Chrome=Flutter web dev, Firefox=daily, Brave=PWAs.)
 cask "brave-browser"
-# Ungoogled-Chromium is the dedicated host for `chrome-debug` /
-# chrome-devtools-mcp on :9222. Same Blink/V8/DevTools/CDP as Google
-# Chrome, but with Google sign-in/sync/telemetry stripped out — clean
-# process, distinct icon, manual updates only when you ask. Lets the
-# agent-controlled browser be visually & process-wise distinct from any
-# manually-opened stable-Chrome window. NOT a daily browser; just a
-# CDP host for instrumentation.
-cask "ungoogled-chromium"
