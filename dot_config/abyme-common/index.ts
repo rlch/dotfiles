@@ -8,6 +8,7 @@ import abyme from "@abyme/plugin";
 import agents from "@abyme/agents/inventory";
 import theme from "@abyme/theme";
 import vim from "@abyme/vim";
+import status from "@abyme/status";
 // import sentry from "@abyme/sentry";
 import spaces from "@abyme/spaces/inventory";
 import accounts from "./accounts";
@@ -27,6 +28,8 @@ export function common() {
   // in place of the app's and is no second setup. An iPad is a tablet with or without its keyboard.
   // The composer starts in normal mode on both (operator, 2026-10-22): one setup stands per plugin.
   vim.setup({ composer: true, start: "normal" }, { when: { device: ["desktop"] } });
+  // No "N asks" in the bottom bar (operator, 2026-11-02): asks show in Needs you and the composer's row.
+  status.setup({ hidden: ["agent-list.needs"] });
   // Which Claude account an agent abyme launches runs on, by its setup-token (accounts/design.md).
   accounts.setup();
   // Claude Code's auto memory off for every agent abyme launches (operator, 2026-10-25): an agent's
