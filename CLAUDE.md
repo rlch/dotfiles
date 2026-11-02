@@ -216,15 +216,19 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   UI. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
   IPC is on: `omniwmctl` (abyme's window-manager service).
-- **OmniWM workspaces are tasks, not apps** (operator, 2026-11-02): ten anonymous
-  Niri workspaces (1-5 main display, 6-8 second, 9-10 third, by `[[monitors.ranking]]`),
-  one per repo or agent, its terminal, browser and docs side by side as columns. No app
-  routes to a workspace; app rules only float or size. Option is the window layer
-  (ctrl = herdr panes, cmd = herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or
-  next/previous workspace, `⌥⇧hjkl` move, `⌥1-9` slot on this monitor, `⌥r` width
-  preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of column, `⌥,` tabbed,
-  `⌥s` the chat scratchpad (`⌥⇧s` adds a window: membership ends when OmniWM restarts),
-  `⌥⇧o` overview. Not `⌃⌥hjkl`: herdr swaps panes there.
+- **OmniWM workspaces: three fixed, seven projects** (operator, 2026-11-02): ten Niri
+  workspaces. Fixed ones, on letters: 1 `web` (Firefox, `⌥w`), 2 `comms` (Slack, Gather,
+  Telegram, `⌥m`), 3 `abyme` (abyme.app, `⌥a`); `⌥⇧` + the letter moves a window there.
+  Only these apps route, by `assignToWorkspace`; other app rules only float or size.
+  Workspaces 4-10 are projects, labelled 1-7 and on `⌥1-7` (`⌥⇧1-7` moves): one per repo or
+  agent, its terminal, browser and docs side by side as columns. Displays by
+  `[[monitors.ranking]]`: projects main, web and abyme second, comms third (all fall back
+  to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
+  herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or next/previous workspace,
+  `⌥⇧hjkl` move, `⌥r` width preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of
+  column, `⌥,` tabbed, `⌥s` the chat scratchpad (`⌥⇧s` adds a window: membership ends when
+  OmniWM restarts), `⌥⇧o` overview. Not `⌃⌥hjkl`: herdr swaps panes there. A window open
+  before a rule change moves with `omniwmctl rule apply --pid <pid>`.
 - **Nerd Font glyphs of three UTF-8 bytes (U+E000–U+F8FF) can vanish from an
   Edit or Write**; four-byte ones (U+F0000+) survive. Write a placeholder, put the
   glyph in with `python3` and `chr()`, and check the bytes with `xxd`.
