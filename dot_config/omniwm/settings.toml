@@ -107,7 +107,7 @@ workspaceSwipeFingerCount = 3
 
 [hiddenBar]
 enabled = false
-hiddenBundleIDs = ["dev.abyme.app", "com.1password.1password", "com.henrikruscon.Alcove", "com.lwouis.alt-tab-macos", "theboringteam.boringnotch", "com.openai.codex", "io.github.clash-verge-rev.clash-verge-rev", "com.anthropic.claudefordesktop", "com.openai.sky.CUAService", "com.figma.Desktop", "org.mozilla.firefox", "com.mitchellh.ghostty", "com.google.drivefs", "org.pqrs.Karabiner-Menu", "com.nuebling.mac-mouse-fix", "com.moomoo.mm.mac.au", "com.marcoluthi.Annotate-Input", "com.malwarebytes.mbam.frontend.agent", "notion.id", "com.oplus.devicespace", "com.electron.ollama", "com.parallels.desktop.console", "dev.kdrag0n.MacVirt", "ch.protonvpn.mac", "com.raycast.macos", "com.apple.ScriptMonitor", "cc.ffitch.shottr", "com.tinyspeck.slackmacgap", "com.superduper.superwhisper", "io.tailscale.ipn.macsys", "com.tdesktop.Telegram"]
+hiddenBundleIDs = ["dev.abyme.app", "com.1password.1password", "com.henrikruscon.Alcove", "com.lwouis.alt-tab-macos", "com.openai.codex", "io.github.clash-verge-rev.clash-verge-rev", "com.anthropic.claudefordesktop", "com.openai.sky.CUAService", "com.figma.Desktop", "org.mozilla.firefox", "com.mitchellh.ghostty", "com.google.drivefs", "org.pqrs.Karabiner-Menu", "com.nuebling.mac-mouse-fix", "com.moomoo.mm.mac.au", "com.marcoluthi.Annotate-Input", "com.malwarebytes.mbam.frontend.agent", "notion.id", "com.oplus.devicespace", "com.electron.ollama", "com.parallels.desktop.console", "dev.kdrag0n.MacVirt", "ch.protonvpn.mac", "com.raycast.macos", "com.apple.ScriptMonitor", "cc.ffitch.shottr", "com.tinyspeck.slackmacgap", "com.superduper.superwhisper", "io.tailscale.ipn.macsys", "com.tdesktop.Telegram"]
 rehideIntervalSeconds = 5.0
 
 [monitors]
@@ -343,11 +343,6 @@ bundleId = "com.apple.MobileSMS"
 id = "552FB77D-BF0E-4737-90A6-B5BC6986C579"
 minHeight = 320.0
 minWidth = 660.0
-
-[[appRules]]
-bundleId = "theboringteam.boringnotch"
-id = "8B1C74A6-8E53-5359-8BE6-2C1DE779095C"
-layout = "float"
 
 [[appRules]]
 bundleId = "com.apple.finder"
