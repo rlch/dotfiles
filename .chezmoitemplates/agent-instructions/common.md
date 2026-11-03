@@ -25,12 +25,14 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   think is right.
 - **Ask first only for these**, with a plain explanation of what changes, how it
   fits what exists, what it costs, and the alternative:
-  - a change to an AI's prompts, tools, agent loop or harness;
-  - new infrastructure, a new dependency or service, or a new architectural pattern;
-  - anything that could affect performance;
-  - who pays or spends a seat, who can see or delete whose data;
-  - anything run against production, and anything that cannot be undone.
-  Bug fixes and changes that follow existing patterns are not on this list.
+  - anything run against production, including the prompts and tools of an AI
+    that users meet there;
+  - who pays or spends money or a seat;
+  - who can see or delete whose data;
+  - anything that cannot be undone.
+  Everything else (an agent's prompts or tools, a dependency, infrastructure of
+  our own, a new pattern, performance) you decide, and report in one line I can
+  reverse (operator, 2026-11-03).
 - **Ask once.** Park the item, carry on with the rest, and never repeat an open
   question.
 - **Told to match another tool, read its source first** (clone it into
