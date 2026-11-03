@@ -91,7 +91,13 @@ conversation.setup({ voiceModel: "mistral-small-4" }); // the reply model too, i
 // tldraw canvases; the operator's hobby key (for *.abyme.studio, to 2027-10-29) is in the keychain (abyme-tldraw), never here.
 canvas.setup({}, { secrets: { TLDRAW_LICENSE_KEY: abyme.env.TLDRAW_LICENSE_KEY } });
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
-if (!onLinode) tart.setup();
+// golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
+// whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
+// themselves (operator, 2026-11-03). Every clone carries those logins.
+if (!onLinode)
+  tart.setup({
+    goldens: { "golden-ui": { description: "UI review: ChatGPT, Claude, Linear, Notion, Godot, Unity; Firefox holds the operator's logins" } },
+  });
 rail.setup({
   items: [
     "spaces", "agents", "explorer", "github.prs", "tart",
