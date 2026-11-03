@@ -25,4 +25,8 @@ for key, value in (
         root = re.sub(pattern, assignment, root)
     else:
         root = assignment + root
+# Unspoke is gone (operator, 2026-11-03): drop its MCP server and project tables.
+tables = re.sub(
+    r'(?ms)^\[(?:mcp_servers\.unspoke|projects\."[^"\n]*/unspoke")[\].][^\n]*\n.*?(?=^\[|\Z)', "", tables
+)
 sys.stdout.write(root + tables)

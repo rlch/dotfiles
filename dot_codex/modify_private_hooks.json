@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Remove hooks left by deleted Unspoke smoke-test builds.
+"""Remove every Unspoke hook (operator, 2026-11-03: Unspoke is gone).
 
 Hook installers own this file. Preserve their registrations and remove only
-missing executables from Unspoke's temporary pane-apply test directories.
+hooks whose executable is an `unspoke` binary.
 """
 import json
 from pathlib import Path
@@ -15,15 +15,7 @@ def stale_test_hook(hook):
         command = shlex.split(hook.get("command", ""))
     except ValueError:
         return False
-    if len(command) != 5 or command[1] != "hook" or command[3:] != ["--runtime", "codex"]:
-        return False
-    executable = Path(command[0])
-    return (
-        executable.is_absolute()
-        and executable.parts[-3:] == ("target", "debug", "unspoke")
-        and any(part.startswith("unspoke-pane-apply-") for part in executable.parts)
-        and not executable.exists()
-    )
+    return bool(command) and Path(command[0]).name == "unspoke"
 
 
 content = sys.stdin.read()
