@@ -83,7 +83,7 @@ hyperKeyModifiers = "Control+Option+Shift+Command"
 ipcEnabled = true
 preventSleepEnabled = false
 systemHyperTrigger = "None"
-updateChecksEnabled = true
+updateChecksEnabled = false
 
 [gestures]
 fingerCount = 3

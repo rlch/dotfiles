@@ -11,8 +11,9 @@ brew "chezmoi"
 # columns + Dwindle per workspace, built for Tahoe (no ghost-window reaper), and
 # a local IPC socket abyme drives and introspects windows through. It refuses to
 # run beside another tiling WM. Needs Accessibility + Input Monitoring, and
-# "Displays have separate Spaces" on. Config: dot_config/omniwm/settings.toml.
-cask "omniwm"
+# "Displays have separate Spaces" on. Config: dot_config/omniwm/.settings.toml.
+# Not a cask since 2026-11-03: the operator's fork (rlch/OmniWM window-reveal, in
+# ~/dev/forks/OmniWM) runs instead, installed by its Scripts/omniwm-fork-install.sh.
 
 # === Terminal + multiplexer ===
 cask "ghostty"

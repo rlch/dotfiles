@@ -218,6 +218,14 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   hand (`chezmoi cat` against the live file shows it); `re-add` cannot take a modify script. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
   IPC is on: `omniwmctl` (abyme's window-manager service).
+- **OmniWM is the operator's fork, not the cask** (2026-11-03): `rlch/OmniWM` branch
+  `window-reveal`, cloned at `~/dev/forks/OmniWM`. Sparkle is off (`updateChecksEnabled = false`),
+  since an upstream update would replace the fork. To update: rebase `window-reveal` on upstream
+  `main`, build in a tart VM with `Scripts/omniwm-fork-build.sh` (it needs a newer Xcode than the
+  host's), copy the app out, then run `Scripts/omniwm-fork-install.sh <app>`. That script signs it
+  with the Developer ID, checks it, uninstalls the cask if present, swaps `/Applications/OmniWM.app`
+  (keeping the previous one in `~/.local/state/omniwm-fork`), links `omniwmctl` and writes its fish
+  completion. The first switch from the cask asks for Accessibility and Input Monitoring again.
 - **OmniWM workspaces: two on letters, eight on numbers** (operator, 2026-11-02; ⌥a folded
   into ⌥1, 2026-11-03): ten Niri workspaces. On letters: 1 `web` (Firefox, `⌥w`), 2 `comms`
   (Slack, Gather, Telegram, `⌥m`); `⌥⇧` + the letter moves a window there. 3 `abyme` is `⌥1`,
