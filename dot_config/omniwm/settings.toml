@@ -236,7 +236,7 @@ showFloatingWindows = false
 showItemBackgrounds = true
 showLabels = true
 solidBlackBackground = false
-systemStatsButton = false
+systemStatsButton = true
 transparentBackground = false
 windowLevel = "popup"
 xOffset = -2.0
@@ -801,11 +801,11 @@ binding = "Control+Command+Grave"
 id = "focusMonitorLast"
 
 [[hotkeys]]
-binding = "Unassigned"
+binding = "Control+Command+Shift+H"
 id = "moveWorkspaceToMonitor.left"
 
 [[hotkeys]]
-binding = "Unassigned"
+binding = "Control+Command+Shift+L"
 id = "moveWorkspaceToMonitor.right"
 
 [[hotkeys]]
