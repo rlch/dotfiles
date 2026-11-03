@@ -1272,23 +1272,7 @@ id = "toggleSystemStats"
 
 [[hotkeys]]
 binding = "Unassigned"
-id = "toggleShellWidget.battery-details"
-
-[[hotkeys]]
-binding = "Unassigned"
-id = "toggleShellWidget.clock"
-
-[[hotkeys]]
-binding = "Unassigned"
-id = "toggleShellWidget.control-center"
-
-[[hotkeys]]
-binding = "Unassigned"
 id = "toggleShellWidget.hidden-bar"
-
-[[hotkeys]]
-binding = "Unassigned"
-id = "toggleShellWidget.media"
 
 [[hotkeys]]
 binding = "Unassigned"

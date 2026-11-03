@@ -3,8 +3,8 @@
 
 [profiles.default]
 center = []
-leading = ["app-menu", "omniwm", "workspaces", "scratchpads"]
-trailing = ["media", "battery-details", "system-stats", "control-center", "clock"]
+leading = ["omniwm", "app-menu", "workspaces", "scratchpads"]
+trailing = ["system-stats"]
 
 [profiles.default.widgets]
 
@@ -18,12 +18,14 @@ icon = false
 [profiles.default.workspaceBar]
 autoHide = false
 backgroundOpacity = 0.0
-height = 32.0
+fullWidth = false
+height = 30.0
 inactiveIconOpacity = 0.6000000000000001
 position = "overlappingMenuBar"
 showAccentHighlights = false
 showItemBackgrounds = false
 solidBlackBackground = false
-transparentBackground = true
+transparentBackground = false
 windowLevel = "screensaver"
-xOffset = 0.0
+xOffset = -3.0
+yOffset = 5.0
