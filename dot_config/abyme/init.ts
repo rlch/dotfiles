@@ -25,6 +25,7 @@ import triggers from "@abyme/triggers";
 import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
+import machines from "@abyme/machines";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -62,6 +63,9 @@ if (!onLinode) addTriggers();
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
+// linode-8 is a test box (operator, 2026-11-03): no start is placed there by its free cores, only
+// one that names it. Takes effect once abyme with the `named` taint is promoted.
+machines.setup({ taints: { "linode-8": "named" } });
 // linode-8 runs no agents and lands nothing, and fires no trigger until a cron takes a lease
 // (where-profiles-run 4.2): coding.ts leaves teams and land out there, and triggers.ts adds none.
 if (!onLinode) {
