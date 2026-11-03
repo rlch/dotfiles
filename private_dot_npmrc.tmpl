@@ -7,3 +7,5 @@
 # `gh auth login` / `gh auth refresh`.
 @mathgaps:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken={{ output "gh" "auth" "token" | trim }}
+{{/* npmjs.org's token is `npm login`'s, written into the live file: keep it. */ -}}
+{{ output "sh" "-c" "grep '^//registry.npmjs.org/' ~/.npmrc || true" -}}
