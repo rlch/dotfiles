@@ -1,0 +1,15 @@
+#!/bin/sh
+# A heavy cargo run takes a grant from abyme's machine budget (scripts/gate-slot), so at most what the
+# machine's cores hold compile at once; eight `cargo build --release -p abymed` ran ungranted at load
+# 178 on 18 cores (machine-pressure, 2026-11-03). Everything else, and a run inside a grant
+# (ABYME_GATE_HELD) or rust-analyzer's, goes straight to rustup's cargo.
+real=/opt/homebrew/opt/rustup/bin/cargo
+[ -n "$ABYME_GATE_HELD" ] && exec "$real" "$@"
+sub=
+for a in "$@"; do case "$a" in +*) ;; *) sub=$a; break;; esac; done
+case "$sub" in build|test|check|clippy|bench|doc|nextest|install) ;; *) exec "$real" "$@";; esac
+for a in "$@"; do case "$a" in --message-format=json-diagnostic-rendered-ansi|--help|-h) exec "$real" "$@";; esac; done
+slot=$(git rev-parse --show-toplevel 2>/dev/null)/scripts/gate-slot
+[ -x "$slot" ] || slot=$HOME/dev/abyme/scripts/gate-slot
+[ -x "$slot" ] || exec "$real" "$@"
+exec "$slot" run "cargo-$sub" -- "$real" "$@"
