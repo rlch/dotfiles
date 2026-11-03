@@ -6,7 +6,7 @@ tabRailAppIcons = false
 
 [borders]
 enabled = false
-width = 5.0
+width = 2.5
 
 [borders.color]
 alpha = 1.0
@@ -152,6 +152,7 @@ edgeGaps = false
 infiniteLoop = false
 moveWindowStacksIntoColumn = true
 overscrollVisibleStripPercent = 5
+partialColumnsAcrossDisplays = true
 resizeStepPercent = 5
 singleWindowFit = "fill"
 visibleContainerCount = 2
