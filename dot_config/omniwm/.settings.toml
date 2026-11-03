@@ -197,8 +197,8 @@ monitorName = "Built-in Retina Display"
 [[routing.arrangements.monitors]]
 gridColumn = 1
 gridRow = 0
-monitorDisplayUUID = "A4E6F133-F721-4430-8C1A-692E20EE2C65"
-monitorName = "Sidecar Display (AirPlay)"
+monitorDisplayUUID = "FB3D6EE8-A5AB-4131-ADC8-47C14CFABDAD"
+monitorName = "MeowDisplay — iPad"
 
 [scratchpads]
 
@@ -1183,8 +1183,8 @@ name = "2"
 type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
-displayUUID = "A4E6F133-F721-4430-8C1A-692E20EE2C65"
-name = "Sidecar Display (AirPlay)"
+displayUUID = "FB3D6EE8-A5AB-4131-ADC8-47C14CFABDAD"
+name = "MeowDisplay — iPad"
 
 [[workspaces]]
 displayName = "abyme"
