@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# macOS settings with no UI of their own. Re-runs when this file changes; an app picks a change up
+# only once it is quit and reopened.
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+# Square window corners (operator, 2026-11-03): with OmniWM's gaps at 0, Tahoe's 26 pt corners left
+# wallpaper slivers where windows meet. NSConvolutionOverride1 is undocumented (MacRumors thread
+# 2484925): 26 is Tahoe's radius, 20 macOS 27's, 10 the pre-Tahoe one. Chromium apps ignore it.
+# 0.01 is what the operator had already set by hand.
+# Undo: defaults delete -g NSConvolutionOverride1.
+defaults write -g NSConvolutionOverride1 -float 0.01
+{{ end -}}
