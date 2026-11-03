@@ -63,17 +63,17 @@ raiseOnMouseFocus = false
 
 [gaps]
 fullscreenUsesOuterGaps = true
-size = 10.0
+size = 0.0
 
 [gaps.outer]
-bottom = 10.0
-left = 10.0
-right = 10.0
-top = 10.0
+bottom = 0.0
+left = 0.0
+right = 0.0
+top = 0.0
 
 [general]
 animationSpeed = 2.0
-animationsEnabled = true
+animationsEnabled = false
 defaultLayoutType = "niri"
 hotkeysEnabled = true
 hyperKeyModifiers = "Control+Option+Shift+Command"
