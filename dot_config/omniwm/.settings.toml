@@ -153,6 +153,7 @@ edgeOutset = 1.0
 infiniteLoop = false
 moveWindowStacksIntoColumn = true
 overscrollVisibleStripPercent = 5
+partialColumnPreview = true
 partialColumnsAcrossDisplays = true
 resizeStepPercent = 5
 singleWindowFit = "fill"
