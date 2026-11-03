@@ -14,6 +14,7 @@ import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
 import voice from "@abyme/voice";
 import mistral from "@abyme/mistral";
+import chatCompletions from "@abyme/chat-completions";
 import canvas from "@abyme/canvas";
 import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
@@ -105,7 +106,20 @@ layoutPanes.setup({
 // Mistral for hearing and speaking in the cloud (operator, 2026-10-22); a local silence gate sends only speech. The key is in the keychain (abyme-mistral), never here.
 mistral.setup({}, { secrets: { MISTRAL_API_KEY: abyme.env.MISTRAL_API_KEY } });
 voice.setup({ preload: false, hearing: "mistral", speaking: "mistral" });
-conversation.setup({ voiceModel: "mistral-small-4" }); // the reply model too, in the cloud
+// The reply model is DeepSeek V4.1 Flash, thinking off (operator, 2026-11-03: conversation-review's benchmark). Its key is in the keychain (deepseek), never here.
+chatCompletions.setup({
+  models: {
+    "deepseek-flash": {
+      title: "DeepSeek V4.1 Flash",
+      provider: "DeepSeek",
+      base: "https://api.deepseek.com",
+      model: "deepseek-flash",
+      keychain: "deepseek",
+      body: { thinking: { type: "disabled" } },
+    },
+  },
+});
+conversation.setup({ voiceModel: "deepseek-flash" });
 // tldraw canvases; the operator's hobby key (for *.abyme.studio, to 2027-10-29) is in the keychain (abyme-tldraw), never here.
 canvas.setup({}, { secrets: { TLDRAW_LICENSE_KEY: abyme.env.TLDRAW_LICENSE_KEY } });
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
