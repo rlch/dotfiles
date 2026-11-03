@@ -346,6 +346,8 @@ role("curriculum-review", "curriculum · review", "opus", CODE,
 // Admission (openspec/changes/archive/2026-10-27-admission, design.md 10): what needs the operator's go
 // at landing, as rules over the merge's facts. A rule warns for its first 7 days (logs `would-go`, stops
 // nothing), then holds the branch behind a go item. Rules are regular expressions over paths: tune here.
+// Off 2026-11-03: admission threw on every land (read-only `seen.ran`, parts.server.ts:161); on again once fixed.
+const ADMISSION_ON = false;
 const ABYME_DIR = "/Users/rjm/dev/abyme", SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
 const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
 /** The files any of `res` matches. */
@@ -353,16 +355,16 @@ const touches = (files: string[], ...res: RegExp[]) => files.filter((f) => res.s
 const go = (what: string, hit: string[]) => (hit.length ? { go: `${what}: ${hit.slice(0, 5).join(", ")}` } : null);
 
 // every repository
-admission.rules.add({ id: "dependency-added", at: "merge", check: (f) => (f.depsAdded.length ? { go: `adds ${f.depsAdded.map((d) => `${d.name} (${d.manifest})`).join(", ")}` } : null) });
+ADMISSION_ON && admission.rules.add({ id: "dependency-added", at: "merge", check: (f) => (f.depsAdded.length ? { go: `adds ${f.depsAdded.map((d) => `${d.name} (${d.manifest})`).join(", ")}` } : null) });
 
 // abyme
-admission.rules.add({ id: "abyme-agent-prompts", at: "merge", check: (f) =>
+ADMISSION_ON && admission.rules.add({ id: "abyme-agent-prompts", at: "merge", check: (f) =>
   !at(f.repo, ABYME_DIR) ? null : go("prompts, presets, skills or agent tools change", touches(f.files, /^web\/plugins\/src\/[^/]+\/skill\.ts$/, /^\.claude\/skills\//, /^web\/plugins\/src\/(claude|acp)\//, /^web\/plugins\/src\/[^/]+\/api\.server\.ts$/)) });
 
 // schools
-admission.rules.add({ id: "schools-migration", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("a DB migration", touches(f.files, /^server\/migrations\//))) });
-admission.rules.add({ id: "schools-env-infra", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("env or infra", touches(f.files, /^deploy\//, /^\.github\/workflows\//))) });
-admission.rules.add({ id: "schools-ai-prompts", at: "merge", check: (f) =>
+ADMISSION_ON && admission.rules.add({ id: "schools-migration", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("a DB migration", touches(f.files, /^server\/migrations\//))) });
+ADMISSION_ON && admission.rules.add({ id: "schools-env-infra", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("env or infra", touches(f.files, /^deploy\//, /^\.github\/workflows\//))) });
+ADMISSION_ON && admission.rules.add({ id: "schools-ai-prompts", at: "merge", check: (f) =>
   !at(f.repo, SCHOOLS_DIR) ? null : go("AI prompts, guides or presets", touches(f.files, /^server\/crates\/generation\/prompts\//, /^server\/crates\/generation\/src\/llm\/prompt\/[^/]+\.rs$/)) });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
