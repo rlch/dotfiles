@@ -1171,7 +1171,7 @@ layoutType = "niri"
 name = "1"
 
 [workspaces.monitorAssignment]
-type = "secondary"
+type = "main"
 
 [[workspaces]]
 displayName = "comms"
@@ -1180,7 +1180,11 @@ layoutType = "niri"
 name = "2"
 
 [workspaces.monitorAssignment]
-type = "tertiary"
+type = "specificDisplay"
+
+[workspaces.monitorAssignment.output]
+displayUUID = "A4E6F133-F721-4430-8C1A-692E20EE2C65"
+name = "Sidecar Display (AirPlay)"
 
 [[workspaces]]
 displayName = "abyme"
@@ -1189,7 +1193,7 @@ layoutType = "niri"
 name = "3"
 
 [workspaces.monitorAssignment]
-type = "secondary"
+type = "main"
 
 [[workspaces]]
 displayName = "1"
