@@ -801,11 +801,11 @@ binding = "Control+Command+Grave"
 id = "focusMonitorLast"
 
 [[hotkeys]]
-binding = "Control+Command+Shift+H"
+binding = "Control+Option+1"
 id = "moveWorkspaceToMonitor.left"
 
 [[hotkeys]]
-binding = "Control+Command+Shift+L"
+binding = "Control+Option+2"
 id = "moveWorkspaceToMonitor.right"
 
 [[hotkeys]]
