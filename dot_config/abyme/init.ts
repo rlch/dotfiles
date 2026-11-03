@@ -347,7 +347,7 @@ role("curriculum-review", "curriculum · review", "opus", CODE,
 // at landing, as rules over the merge's facts. A rule warns for its first 7 days (logs `would-go`, stops
 // nothing), then holds the branch behind a go item. Rules are regular expressions over paths: tune here.
 // Off 2026-11-03: admission threw on every land (read-only `seen.ran`, parts.server.ts:161); on again once fixed.
-const ADMISSION_ON = false;
+const ADMISSION_ON = true;
 const ABYME_DIR = "/Users/rjm/dev/abyme", SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
 const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
 /** The files any of `res` matches. */
