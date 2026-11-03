@@ -218,10 +218,9 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   hand (`chezmoi cat` against the live file shows it); `re-add` cannot take a modify script. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
   IPC is on: `omniwmctl` (abyme's window-manager service).
-  The bar itself is the fork's shell, `dot_config/omniwm/shell/shell.toml`: a full-width
-  replacement for the macOS menu bar (app menu, workspaces, clock, …), which stays auto-hidden. Its
-  `[profiles.default.workspaceBar]` overrides `settings.toml`'s; `windowLevel = "screensaver"` keeps
-  macOS's menu bar from sliding over it on hover. A schema bump (v4 to v5, 2026-11-03) migrates the
+  The bar is the fork's shell, `dot_config/omniwm/shell/shell.toml`: an island, not full width
+  (the operator's setup, 2026-11-03); its `[profiles.default.workspaceBar]` overrides
+  `settings.toml`'s. Hiding the macOS menu bar under it was tried and dropped (2026-11-03). A schema bump (v4 to v5, 2026-11-03) migrates the
   live file once: copy it back into `.settings.toml`, or chezmoi reverts it and OmniWM blocks writes
   once both `settings.toml.pre-v<N>` backups are taken.
 - **OmniWM is the operator's fork, not the cask** (2026-11-03): `rlch/OmniWM` branch
