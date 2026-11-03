@@ -223,7 +223,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   Only these apps route, by `assignToWorkspace`; other app rules only float or size.
   Workspaces 4-10 are repositories, labelled 2-8 and on `⌥2-8` (`⌥⇧1-8` moves): one per
   repository, its terminal, its abyme window and its browser side by side as columns. The
-  labels are to become the repository's name, set by abyme (spec with lead@abyme). Displays
+  labels are to become the repository's name, set by abyme (spec with lead@abyme). Pinned (operator, 2026-11-03): ⌥2 abyme, ⌥3 schools (~/dev/tutero), ⌥4 dotfiles; ⌥5-8 go to any other repository, first free. Displays
   by each workspace's `monitorAssignment` (all fall back to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
   herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or next/previous workspace,
   `⌥⇧hjkl` move, `⌥r` width preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of
