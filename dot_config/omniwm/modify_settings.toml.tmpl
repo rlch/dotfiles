@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""OmniWM's settings.toml: dot_config/omniwm/.settings.toml (chezmoi skips a dotted source file),
+keeping the live label of workspaces 4-10, which abyme's wm plugin writes as it claims one for a
+repository and puts back when it lets it go."""
+import re
+import sys
+import tomllib
+
+base = open("{{ .chezmoi.sourceDir }}/dot_config/omniwm/.settings.toml", encoding="utf-8").read()
+try:
+    live = tomllib.loads(sys.stdin.read())
+except tomllib.TOMLDecodeError:
+    live = {}
+labels = {w["name"]: w["displayName"] for w in live.get("workspaces", [])
+          if w.get("name") in {str(n) for n in range(4, 11)} and "displayName" in w}
+
+
+def keep(block):
+    name = re.search(r'^name = "(\d+)"$', block.group(0), re.M)
+    if not name or name.group(1) not in labels:
+        return block.group(0)
+    label = labels[name.group(1)].replace("\\", "\\\\").replace('"', '\\"')
+    return re.sub(r'^displayName = ".*"$', lambda _: f'displayName = "{label}"', block.group(0), count=1, flags=re.M)
+
+
+sys.stdout.write(re.sub(r"^\[\[workspaces\]\]\n(?:(?!\[\[).*\n)*", keep, base, flags=re.M))

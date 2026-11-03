@@ -24,6 +24,7 @@ import records from "@abyme/records";
 import triggers from "@abyme/triggers";
 import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
+import wm from "@abyme/wm";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -73,6 +74,15 @@ if (!onLinode) {
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
 if (!onLinode) town.setup({ folder: "/Users/rjm/dev/agent-town" });
+// OmniWM, by its raw workspace names (operator, 2026-11-03): abyme.app's main window on 3 (⌥1), a
+// pinned repository's window on its own (⌥2 abyme, ⌥3 schools, ⌥4 dotfiles), any other on the first
+// free of 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
+// settings.toml, which chezmoi's modify_ script keeps.
+if (!onLinode) wm.setup({
+  workspace: "3",
+  repositories: { "/Users/rjm/dev/abyme": "4", "/Users/rjm/dev/tutero": "5", "/Users/rjm/dev/dotfiles": "6" },
+  pool: ["7", "8", "9", "10"],
+});
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their

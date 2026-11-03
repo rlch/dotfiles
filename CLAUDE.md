@@ -211,9 +211,11 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   UI): deploy it with `chezmoi apply --force ~/.config/karabiner/karabiner.json`.
   Its source is one minified line.
 - **OmniWM rewrites `settings.toml` itself** (its Settings window, sorting keys and
-  dropping comments), so the file carries no comments: deploy it with `chezmoi apply
-  --force ~/.config/omniwm/settings.toml`, and `chezmoi re-add` a change made in its
-  UI. The schema is strict: a missing key or a binding used twice rejects the whole
+  dropping comments), so the file carries no comments. Its source is
+  `dot_config/omniwm/.settings.toml`, deployed by `modify_settings.toml.tmpl`, which keeps the
+  live labels of workspaces 4-10 (abyme's wm plugin writes them): `chezmoi apply
+  ~/.config/omniwm/settings.toml`. A change made in its UI is copied into `.settings.toml` by
+  hand (`chezmoi cat` against the live file shows it); `re-add` cannot take a modify script. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
   IPC is on: `omniwmctl` (abyme's window-manager service).
 - **OmniWM workspaces: two on letters, eight on numbers** (operator, 2026-11-02; ⌥a folded
@@ -223,7 +225,7 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   Only these apps route, by `assignToWorkspace`; other app rules only float or size.
   Workspaces 4-10 are repositories, labelled 2-8 and on `⌥2-8` (`⌥⇧1-8` moves): one per
   repository, its terminal, its abyme window and its browser side by side as columns. The
-  labels are to become the repository's name, set by abyme (spec with lead@abyme). Pinned (operator, 2026-11-03): ⌥2 abyme, ⌥3 schools (~/dev/tutero), ⌥4 dotfiles; ⌥5-8 go to any other repository, first free. Displays
+  labels are the repository's name while abyme holds one there (`wm.setup` in init.ts). Pinned (operator, 2026-11-03): ⌥2 abyme, ⌥3 schools (~/dev/tutero), ⌥4 dotfiles; ⌥5-8 go to any other repository, first free. Displays
   by each workspace's `monitorAssignment` (all fall back to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
   herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or next/previous workspace,
   `⌥⇧hjkl` move, `⌥r` width preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of
