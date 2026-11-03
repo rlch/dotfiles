@@ -14,6 +14,9 @@ brew "chezmoi"
 # "Displays have separate Spaces" on. Config: dot_config/omniwm/.settings.toml.
 # Not a cask since 2026-11-03: the operator's fork (rlch/OmniWM window-reveal, in
 # ~/dev/forks/OmniWM) runs instead, installed by its Scripts/omniwm-fork-install.sh.
+# Yellow Dot hides the privacy dot macOS draws in the top-right corner while the
+# menu bar is hidden (it sat over the shell bar's clock, 2026-11-03).
+cask "yellowdot"
 
 # === Terminal + multiplexer ===
 cask "ghostty"
