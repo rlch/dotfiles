@@ -216,14 +216,15 @@ Locked-in tool choices (don't re-litigate without checking with the user):
   UI. The schema is strict: a missing key or a binding used twice rejects the whole
   file, and OmniWM then runs on defaults. Workspace `name`s must be numbers ("1".."10").
   IPC is on: `omniwmctl` (abyme's window-manager service).
-- **OmniWM workspaces: three fixed, seven projects** (operator, 2026-11-02): ten Niri
-  workspaces. Fixed ones, on letters: 1 `web` (Firefox, `⌥w`), 2 `comms` (Slack, Gather,
-  Telegram, `⌥m`), 3 `abyme` (abyme.app, `⌥a`); `⌥⇧` + the letter moves a window there.
+- **OmniWM workspaces: two on letters, eight on numbers** (operator, 2026-11-02; ⌥a folded
+  into ⌥1, 2026-11-03): ten Niri workspaces. On letters: 1 `web` (Firefox, `⌥w`), 2 `comms`
+  (Slack, Gather, Telegram, `⌥m`); `⌥⇧` + the letter moves a window there. 3 `abyme` is `⌥1`,
+  abyme.app's main window, repository-agnostic.
   Only these apps route, by `assignToWorkspace`; other app rules only float or size.
-  Workspaces 4-10 are projects, labelled 1-7 and on `⌥1-7` (`⌥⇧1-7` moves): one per repo or
-  agent, its terminal, browser and docs side by side as columns. Displays by
-  `[[monitors.ranking]]`: projects main, web and abyme second, comms third (all fall back
-  to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
+  Workspaces 4-10 are repositories, labelled 2-8 and on `⌥2-8` (`⌥⇧1-8` moves): one per
+  repository, its terminal, its abyme window and its browser side by side as columns. The
+  labels are to become the repository's name, set by abyme (spec with lead@abyme). Displays
+  by each workspace's `monitorAssignment` (all fall back to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
   herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or next/previous workspace,
   `⌥⇧hjkl` move, `⌥r` width preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of
   column, `⌥,` tabbed, `⌥s` the chat scratchpad (`⌥⇧s` adds a window: membership ends when

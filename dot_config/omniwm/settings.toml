@@ -485,67 +485,67 @@ binding = "Option+Shift+M"
 id = "moveToWorkspace.1"
 
 [[hotkeys]]
-binding = "Option+A"
+binding = "Option+1"
 id = "switchWorkspace.2"
 
 [[hotkeys]]
-binding = "Option+Shift+A"
+binding = "Option+Shift+1"
 id = "moveToWorkspace.2"
 
 [[hotkeys]]
-binding = "Option+1"
+binding = "Option+2"
 id = "switchWorkspace.3"
 
 [[hotkeys]]
-binding = "Option+Shift+1"
+binding = "Option+Shift+2"
 id = "moveToWorkspace.3"
 
 [[hotkeys]]
-binding = "Option+2"
+binding = "Option+3"
 id = "switchWorkspace.4"
 
 [[hotkeys]]
-binding = "Option+Shift+2"
+binding = "Option+Shift+3"
 id = "moveToWorkspace.4"
 
 [[hotkeys]]
-binding = "Option+3"
+binding = "Option+4"
 id = "switchWorkspace.5"
 
 [[hotkeys]]
-binding = "Option+Shift+3"
+binding = "Option+Shift+4"
 id = "moveToWorkspace.5"
 
 [[hotkeys]]
-binding = "Option+4"
+binding = "Option+5"
 id = "switchWorkspace.6"
 
 [[hotkeys]]
-binding = "Option+Shift+4"
+binding = "Option+Shift+5"
 id = "moveToWorkspace.6"
 
 [[hotkeys]]
-binding = "Option+5"
+binding = "Option+6"
 id = "switchWorkspace.7"
 
 [[hotkeys]]
-binding = "Option+Shift+5"
+binding = "Option+Shift+6"
 id = "moveToWorkspace.7"
 
 [[hotkeys]]
-binding = "Option+6"
+binding = "Option+7"
 id = "switchWorkspace.8"
 
 [[hotkeys]]
-binding = "Option+Shift+6"
+binding = "Option+Shift+7"
 id = "moveToWorkspace.8"
 
 [[hotkeys]]
-binding = "Option+7"
+binding = "Option+8"
 id = "switchWorkspace.9"
 
 [[hotkeys]]
-binding = "Option+Shift+7"
+binding = "Option+Shift+8"
 id = "moveToWorkspace.9"
 
 [[hotkeys]]
@@ -1196,7 +1196,7 @@ name = "3"
 type = "main"
 
 [[workspaces]]
-displayName = "1"
+displayName = "2"
 id = "E8069CA9-B097-5BC7-B7D0-E77B7AF85EC9"
 layoutType = "niri"
 name = "4"
@@ -1205,7 +1205,7 @@ name = "4"
 type = "main"
 
 [[workspaces]]
-displayName = "2"
+displayName = "3"
 id = "315C26EA-1D3A-56A8-A404-A7E3C208AA81"
 layoutType = "niri"
 name = "5"
@@ -1214,7 +1214,7 @@ name = "5"
 type = "main"
 
 [[workspaces]]
-displayName = "3"
+displayName = "4"
 id = "5E6D7BDC-7D32-577E-B699-050DF4DB638B"
 layoutType = "niri"
 name = "6"
@@ -1223,7 +1223,7 @@ name = "6"
 type = "main"
 
 [[workspaces]]
-displayName = "4"
+displayName = "5"
 id = "F0C1F720-2752-5B58-A0B4-48FD6CBCE9A0"
 layoutType = "niri"
 name = "7"
@@ -1232,7 +1232,7 @@ name = "7"
 type = "main"
 
 [[workspaces]]
-displayName = "5"
+displayName = "6"
 id = "B9C43267-0F13-5A2B-B585-CEB699A650BF"
 layoutType = "niri"
 name = "8"
@@ -1241,7 +1241,7 @@ name = "8"
 type = "main"
 
 [[workspaces]]
-displayName = "6"
+displayName = "7"
 id = "ADB8E2B0-57AB-5F66-8BA6-604076C91B97"
 layoutType = "niri"
 name = "9"
@@ -1250,7 +1250,7 @@ name = "9"
 type = "main"
 
 [[workspaces]]
-displayName = "7"
+displayName = "8"
 id = "E97DF7BC-F2E6-5734-A64F-A0752ABEE333"
 layoutType = "niri"
 name = "10"
