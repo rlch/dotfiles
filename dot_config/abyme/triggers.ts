@@ -127,7 +127,7 @@ export default function addTriggers(): void {
   });
 
   // An engineer's iac pull request, as schools' engineer-pr: the operator's `iac-pr` template (teams.ts), its
-  // review role (init.ts's iac-review) posting as @rlch and never merging, since a merge applies. Every author
+  // review role (init.ts's iac-review) posting as @rlch and fixing its branch, never merging, since a merge applies. Every author
   // but those in NOT_REVIEWED.
   triggers.items.add({
     name: "iac-engineer-pr",
