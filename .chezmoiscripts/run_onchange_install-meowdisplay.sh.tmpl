@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Install MeowDisplay — the iPad, iPhone or Android phone as a display for the Mac (Mirror, Extend
+# as a real second display OmniWM can put a workspace on, or Windows as tiles), open source
+# (raiseCatError/meowdisplay, GPL-3.0). Chosen over Sill (operator, 2026-11-03): Sill streams one
+# window and has no Android. A notarized .dmg from GitHub releases; no brew cask.
+#
+# Idempotent: skips once /Applications/MeowDisplay.app exists, as the app updates itself (Sparkle,
+# the release's appcast.xml); the pin is only what a fresh Mac starts from.
+#
+# To force a reinstall:
+#   rm -rf /Applications/MeowDisplay.app && chezmoi apply
+
+set -euo pipefail
+
+{{ if eq .chezmoi.os "darwin" -}}
+MEOW_VERSION="2.0.0"
+MEOW_APP="/Applications/MeowDisplay.app"
+
+if [ -d "$MEOW_APP" ]; then
+  echo "meowdisplay: already installed at $MEOW_APP — skipping"
+  exit 0
+fi
+
+echo "meowdisplay: downloading v$MEOW_VERSION from GitHub releases"
+TMPDIR="$(mktemp -d)"
+MOUNTPOINT=""
+cleanup() {
+  if [ -n "$MOUNTPOINT" ] && [ -d "$MOUNTPOINT" ]; then
+    hdiutil detach "$MOUNTPOINT" -quiet 2>/dev/null || true
+  fi
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
+
+base="https://github.com/raiseCatError/meowdisplay/releases/download/v$MEOW_VERSION"
+curl -fsSL -o "$TMPDIR/MeowDisplay.dmg" "$base/MeowDisplay.dmg"
+curl -fsSL -o "$TMPDIR/SHA256SUMS.txt" "$base/SHA256SUMS.txt"
+(cd "$TMPDIR" && grep ' MeowDisplay.dmg$' SHA256SUMS.txt | shasum -a 256 -c -)
+
+MOUNTPOINT="$TMPDIR/mount"
+mkdir -p "$MOUNTPOINT"
+hdiutil attach "$TMPDIR/MeowDisplay.dmg" -mountpoint "$MOUNTPOINT" -nobrowse -quiet
+
+src="$(find "$MOUNTPOINT" -maxdepth 2 -name "MeowDisplay.app" -type d | head -1)"
+if [ -z "$src" ]; then
+  echo "meowdisplay: MeowDisplay.app not found in mounted dmg" >&2
+  ls -la "$MOUNTPOINT" >&2
+  exit 1
+fi
+
+cp -R "$src" "$MEOW_APP"
+echo "meowdisplay: installed → $MEOW_APP (v$MEOW_VERSION)"
+{{- end }}
