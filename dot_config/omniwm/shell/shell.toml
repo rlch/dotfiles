@@ -1,0 +1,29 @@
+
+[profiles]
+
+[profiles.default]
+center = []
+leading = ["app-menu", "omniwm", "workspaces", "scratchpads"]
+trailing = ["media", "battery-details", "system-stats", "clock", "control-center"]
+
+[profiles.default.widgets]
+
+[profiles.default.widgets.battery-details]
+percent = "inside"
+
+[profiles.default.widgets.clock]
+date = false
+icon = false
+
+[profiles.default.workspaceBar]
+autoHide = false
+backgroundOpacity = 0.0
+height = 32.0
+inactiveIconOpacity = 0.6000000000000001
+position = "overlappingMenuBar"
+showAccentHighlights = false
+showItemBackgrounds = false
+solidBlackBackground = false
+transparentBackground = true
+windowLevel = "screensaver"
+xOffset = 0.0
