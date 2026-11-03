@@ -300,6 +300,7 @@ id = "BFFBC927-3399-5CA4-A80D-C25EEE442928"
 assignToWorkspace = "2"
 bundleId = "com.tinyspeck.slackmacgap"
 id = "418C29F3-3A3E-54AB-98AD-2DDD81D22C4F"
+initialContainerPrimarySpan = 0.5
 
 [[appRules]]
 bundleId = "com.openai.codex"
