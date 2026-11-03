@@ -26,10 +26,14 @@ Library/LaunchAgents/com.moomoo.opend.plist
 Library/LaunchAgents/com.synadia.nats-server.plist
 Library/LaunchAgents/com.rjm.wireproxy-nl.plist
 Library/LaunchAgents/com.rjm.abymed.plist
+Library/LaunchAgents/com.rjm.cloudflared-mac.plist
 {{- end }}
 
 # wireproxy's WG config carries a ProtonVPN private key — never manage/commit it.
 .config/wireproxy
+
+# The Mac's Tunnel token (com.rjm.cloudflared-mac) is a secret.
+.config/cloudflared
 
 # The accounts plugin's picker test runs from the source; abymed has no use for it.
 .config/abyme/accounts/test.ts
