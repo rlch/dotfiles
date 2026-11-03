@@ -238,13 +238,6 @@ brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
 brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
 brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
 
-# === Game dev / 2D editors ===
-# LDtk (Level Designer Toolkit) — free open-source 2D level + tileset editor.
-# Used for room templates (assets/rooms/*.ldtk) and the tile-asset
-# pipeline (atlas + autotile rules). Not on brew — installed by
-# .chezmoiscripts/run_onchange_install-ldtk.sh.tmpl from GitHub releases.
-# Version pin lives in that script.
-
 # === 3D / video / animation ===
 # Blender — used as an offline asset
 # factory for non-parametric scenes (cave / creature / Liquid Glass cameo)
