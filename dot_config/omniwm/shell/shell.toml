@@ -17,13 +17,13 @@ icon = false
 
 [profiles.default.workspaceBar]
 autoHide = false
-backgroundOpacity = 1.0
+backgroundOpacity = 0.0
 height = 32.0
 inactiveIconOpacity = 0.6000000000000001
 position = "overlappingMenuBar"
 showAccentHighlights = false
 showItemBackgrounds = false
-solidBlackBackground = true
-transparentBackground = false
+solidBlackBackground = false
+transparentBackground = true
 windowLevel = "screensaver"
 xOffset = 0.0
