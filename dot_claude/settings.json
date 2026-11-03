@@ -52,43 +52,12 @@
     ],
     "PermissionRequest": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": false
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {
             "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
             "timeout": 10,
             "type": "command"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "ExitPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
           }
         ]
       }
@@ -110,26 +79,6 @@
           {
             "type": "command",
             "command": "~/.claude/rtk-hook.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "ExitPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
           }
         ]
       },
@@ -171,15 +120,6 @@
         ]
       },
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {
@@ -209,15 +149,6 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
       }
     ],
     "Stop": [
@@ -238,15 +169,6 @@
             "type": "command",
             "command": "~/.claude/herdr-title.sh",
             "timeout": 10
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
           }
         ]
       },
@@ -322,15 +244,6 @@
       }
     ],
     "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'/opt/homebrew/bin/moshi-hook' claude-hook",
-            "async": true
-          }
-        ]
-      },
       {
         "matcher": "*",
         "hooks": [
