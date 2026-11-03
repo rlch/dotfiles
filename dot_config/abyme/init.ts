@@ -22,6 +22,7 @@ import teams from "@abyme/teams";
 import transcripts from "@abyme/transcripts";
 import records from "@abyme/records";
 import triggers from "@abyme/triggers";
+import admission from "@abyme/admission";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -342,4 +343,26 @@ role("curriculum-review", "curriculum · review", "opus", CODE,
   "You review an engineer's pull request on MathGaps/curriculum (a Rust GraphQL subgraph: axum, async-graphql, sqlx on CockroachDB) in its worktree, and post on it as @rlch through gh. Read CLAUDE.md first. The tests are CI's: read them with `gh pr checks <n>` and `gh run view <run> --log`. Locally run only `cargo fmt --check`, `cargo clippy --all-targets` and `cargo check`, never `cargo test`, `just`, docker or a seed binary, which need a database; a change CI does not test, say so as unproven. "
   + "A finding blocks only when it is, tied to a file and line: a defect (a wrong result for an input, an N+1 a DataLoader should batch, a federation entity or field broken for its callers); a migration that edits a committed one or is unsafe on CockroachDB; a security hole (another user's data reachable through `X-Uid`, a secret in plaintext or a log, SQL built from strings); a red check, named with its log line; or a rule of CLAUDE.md broken. Everything else is advice and never blocks. Each finding is two sentences at most, no praise, no restating the diff. "
   + "Every body you post on your own starts with `Automatic review by Richard's review agent.` A blocking finding with a plain, small fix you make yourself: rebase the branch on its base when it is behind, commit the fix on the engineer's branch as a commit of its own, push with --force-with-lease, and say in the review what you changed and why. Any other: `gh pr review <n> --request-changes`, one line comment per finding (`gh api repos/MathGaps/curriculum/pulls/<n>/comments`), advice in the body. None left and every check green: approve, then merge it yourself with `gh pr merge <n> --squash --match-head-commit <sha>` at the commit you approved; a check still running is waited on in the background, not parked. A call that is his (a new dependency or pattern, a schema change other subgraphs read, spend such as embedding calls, who sees whose data, a migration on a large table) is asked in your chat first, quoting the lines; post his answer as his comment, in his words, without the marker line. Later pushes: park the work with a wake of 30 minutes, the last commit you reviewed in the note; on waking read `gh pr view <n> --json headRefOid,state` and review only what changed. Merged or closed: nothing, your team ends on its own. A reply that argues a finding is answered once, on its merits; a finding you were wrong about is withdrawn in that thread.");
+// Admission (openspec/changes/archive/2026-10-27-admission, design.md 10): what needs the operator's go
+// at landing, as rules over the merge's facts. A rule warns for its first 7 days (logs `would-go`, stops
+// nothing), then holds the branch behind a go item. Rules are regular expressions over paths: tune here.
+const ABYME_DIR = "/Users/rjm/dev/abyme", SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
+const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
+/** The files any of `res` matches. */
+const touches = (files: string[], ...res: RegExp[]) => files.filter((f) => res.some((re) => re.test(f)));
+const go = (what: string, hit: string[]) => (hit.length ? { go: `${what}: ${hit.slice(0, 5).join(", ")}` } : null);
+
+// every repository
+admission.rules.add({ id: "dependency-added", at: "merge", check: (f) => (f.depsAdded.length ? { go: `adds ${f.depsAdded.map((d) => `${d.name} (${d.manifest})`).join(", ")}` } : null) });
+
+// abyme
+admission.rules.add({ id: "abyme-agent-prompts", at: "merge", check: (f) =>
+  !at(f.repo, ABYME_DIR) ? null : go("prompts, presets, skills or agent tools change", touches(f.files, /^web\/plugins\/src\/[^/]+\/skill\.ts$/, /^\.claude\/skills\//, /^web\/plugins\/src\/(claude|acp)\//, /^web\/plugins\/src\/[^/]+\/api\.server\.ts$/)) });
+
+// schools
+admission.rules.add({ id: "schools-migration", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("a DB migration", touches(f.files, /^server\/migrations\//))) });
+admission.rules.add({ id: "schools-env-infra", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("env or infra", touches(f.files, /^deploy\//, /^\.github\/workflows\//))) });
+admission.rules.add({ id: "schools-ai-prompts", at: "merge", check: (f) =>
+  !at(f.repo, SCHOOLS_DIR) ? null : go("AI prompts, guides or presets", touches(f.files, /^server\/crates\/generation\/prompts\//, /^server\/crates\/generation\/src\/llm\/prompt\/[^/]+\.rs$/)) });
+
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
