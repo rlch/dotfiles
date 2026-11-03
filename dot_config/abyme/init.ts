@@ -137,7 +137,7 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 // Machine teams 40 (was the default 25): CPU sat ~40-60% idle with teams queued (more-teams, 2026-11-03).
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
 // Teams at once per repository, every repository's quota ("*"): 20, so teams run in parallel; the
-// machine budget of 25 busy teams across repositories guards the Mac.
+// machine budget of 40 busy teams across repositories guards the Mac.
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 40, quotas: { "*": { teams: 20 } } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
