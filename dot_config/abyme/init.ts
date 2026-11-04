@@ -103,9 +103,9 @@ layoutPanes.setup({
   },
 });
 // The speech engine (about 1.4 GB) loads on the first dictation, not at start (operator, 2026-10-22).
-// Mistral for hearing and speaking in the cloud (operator, 2026-10-22); a local silence gate sends only speech. The key is in the keychain (abyme-mistral), never here.
+// Hearing is local, Whisper on the Mac (2026-11-04); Mistral speaks in the cloud (operator, 2026-10-22), and stays selectable for hearing. The key is in the keychain (abyme-mistral), never here.
 mistral.setup({}, { secrets: { MISTRAL_API_KEY: abyme.env.MISTRAL_API_KEY } });
-voice.setup({ preload: false, hearing: "mistral", speaking: "mistral" });
+voice.setup({ preload: false, speaking: "mistral" });
 // The reply model is DeepSeek V4.1 Flash, thinking off (operator, 2026-11-03: conversation-review's benchmark). Its key is in the keychain (deepseek), never here.
 chatCompletions.setup({
   models: {
