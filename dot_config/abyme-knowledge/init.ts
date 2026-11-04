@@ -21,7 +21,6 @@ import titlebar from "@abyme/titlebar";
 import desktop from "@abyme/desktop";
 import status from "@abyme/status";
 import spaces from "@abyme/spaces";
-import spacesView from "@abyme/spaces-view";
 import loading from "@abyme/loading";
 import commands from "@abyme/commands";
 import keys from "@abyme/keys";
@@ -108,25 +107,19 @@ connection.setup();
 state.setup();
 storage.setup();
 // The frame: the layout, the rail, the title bar and status bar, and the app's window.
-shell.setup();
-// No app gives this profile a placement: the views it keeps in the left dock.
-layoutPanes.setup({
-  placement: {
-    spaces: { dock: "left", order: 5 }, agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
-    search: { dock: "left", order: 25 }, problems: { dock: "left", order: 30 }, "settings.list": { dock: "left", order: 90 },
-  },
-});
-rail.setup({ items: ["town", "spaces", "agents", "explorer", "learn.study", "problems", "triggers.triggers", "settings.settings"] });
+// A learning app, not an IDE: the left dock keeps only Settings' list; the strip shows only with tabs to switch.
+shell.setup({ look: "tab", preview: true });
+layoutPanes.setup({ strip: "many", placement: { "settings.list": { dock: "left", order: 90 } } });
+rail.setup({ items: ["town", "learn.library", "learn.study", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
 status.setup();
 spaces.setup();
-spacesView.setup();
 loading.setup();
 // Driving it: commands, keys, quick open, menus, gestures (vim is common's).
 commands.setup();
 keys.setup();
-palette.setup();
+palette.setup({ titlebar: "none" });
 menus.setup();
 gestures.setup();
 // Telling me things, Settings, what runs, and the colours (every scheme, as each device chose one).
