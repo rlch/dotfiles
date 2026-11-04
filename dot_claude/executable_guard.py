@@ -262,6 +262,14 @@ def selftest():
                                env=dict(os.environ, PRETOOL_ROUTE="1"))
             if r.stdout.strip() != "guard":
                 bad.append("PRETOOL SKIPS GUARD? " + c)
+    for tool, path, want in (("Grep", "~", "guard"), ("Glob", "/", "guard"), ("Grep", HOME, "guard"),
+                             ("Grep", HOME + "/dev/abyme", "pass"), ("Glob", None, "pass")):
+        inp = {"pattern": "x"} if path is None else {"pattern": "x", "path": path}
+        ev = json.dumps({"tool_name": tool, "cwd": HOME + "/dev/x", "tool_input": inp})
+        r = subprocess.run(["/bin/bash", pretool], input=ev, capture_output=True, text=True,
+                           env=dict(os.environ, PRETOOL_ROUTE="1"))
+        if r.stdout.strip() != want:
+            bad.append("PRETOOL %s %s routes %s, not %s" % (tool, path, r.stdout.strip(), want))
     for c in bad:
         print("FAIL", c)
     print("ok" if not bad else "%d failures" % len(bad))
