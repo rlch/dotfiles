@@ -19,5 +19,11 @@ if [[ $input =~ \"tool_name\":[[:space:]]*\"Bash\" ]] && ! [[ $input =~ $risky ]
   [ -n "$PRETOOL_ROUTE" ] && { echo rtk; exit 0; }
   exec rtk hook claude <<<"$input"
 fi
+# Grep and Glob: guard.py refuses only a broad path (the hook's matcher left them
+# out until 2026-11-04, so that ban never fired).
+if [[ $input =~ \"tool_name\":[[:space:]]*\"(Grep|Glob)\" ]] && ! [[ $input =~ $broad ]]; then
+  [ -n "$PRETOOL_ROUTE" ] && { echo pass; exit 0; }
+  exit 0
+fi
 [ -n "$PRETOOL_ROUTE" ] && { echo guard; exit 0; }
 exec "$HOME/.claude/guard.py" <<<"$input"

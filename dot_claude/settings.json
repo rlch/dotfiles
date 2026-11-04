@@ -52,7 +52,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Agent",
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Agent|Grep|Glob",
         "hooks": [
           {
             "type": "command",
