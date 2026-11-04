@@ -1,5 +1,4 @@
-// The operator's own triggers (the triggers plugin's `items`): ones that run on this Mac only, never
-// on linode-8's peer. A repository's `.abyme/triggers.ts` fires on every machine that checks it out;
+// The operator's own triggers (the triggers plugin's `items`): ones that run on this Mac only. A repository's `.abyme/triggers.ts` fires on every machine that checks it out;
 // these never leave here.
 // Each is rooted at a repository's main checkout: its source is read and its call run there.
 

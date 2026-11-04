@@ -35,55 +35,26 @@ import addTriggers from "./triggers";
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
-// Coding runs on two machines as peers (where-profiles-run, 3.1): this Mac, and linode-8 always on,
-// a full abymed behind its own gateway whose unit sets ABYME_PEER_HERE. Each dials the other at
-// its serve port on the tailnet (`tailscale serve --https=4443 http://127.0.0.1:4477`), the
-// address devices reach Coding at there too (Add a device). linode-8 keeps every chat the Mac
-// writes, so the phone reads them there with the Mac shut, and runs no agents. There it is a profile of
-// its own gateway (4480), on 4481 and a state folder of its own: the node holds 4477 and the default.
-const MAC = "https://richards-macbook-pro-2.tail21822e.ts.net:4443";
-const LINODE = "https://richard.tail21822e.ts.net:4443";
-const onLinode = abyme.env.ABYME_PEER_HERE === "linode-8-peer";
-if (onLinode) {
-  abyme.server({ url: LINODE, peerName: "linode-8-peer", peers: { mac: MAC }, port: 4481, stateDir: "~/.local/state/abyme-peer" });
-  transcripts.setup({ keep: true });
-  // The Mac runs the plugins' triggers (agents' hourly agents.ends): both would run each cron and
-  // write one record each.
-  triggers.setup({ run: false });
-  // The Mac writes the records load, the machines and the config make from config: both would make
-  // each under one id, and the peer's claim could win.
-  records.setup({ config: false });
-} else abyme.server({ url: MAC, peerName: "mac", peers: { "linode-8-peer": LINODE } });
-
 common();
-// common's clientDir is the Mac's install; linode-8's peer runs the build beside its own binary.
-if (onLinode) abyme.server({ clientDir: "~/.local/share/abyme-peer/client" });
-if (!onLinode) addTriggers();
+addTriggers();
 
 // The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
 // line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
 // stands in place of the app's setup of it, before or after this line.
 coding.setup();
-// linode-8 is a test box (operator, 2026-11-03): no start is placed there by its free cores, only
-// one that names it. Takes effect once abyme with the `named` taint is promoted.
-machines.setup({ taints: { "linode-8": "named" } });
-// linode-8 runs no agents and lands nothing, and fires no trigger until a cron takes a lease
-// (where-profiles-run 4.2): coding.ts leaves teams and land out there, and triggers.ts adds none.
-if (!onLinode) {
-  teams.setup();
-  land.setup({ fix: "fix" });
-  // GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
-  // Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
-  webhooks.setup({}, { secrets: { WEBHOOKS_KEY: abyme.env.ABYME_WEBHOOKS_KEY } });
-}
+teams.setup();
+land.setup({ fix: "fix" });
+// GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
+// Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
+webhooks.setup({}, { secrets: { WEBHOOKS_KEY: abyme.env.ABYME_WEBHOOKS_KEY } });
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
-if (!onLinode) town.setup({ folder: "/Users/rjm/dev/agent-town" });
+town.setup({ folder: "/Users/rjm/dev/agent-town" });
 // OmniWM, by its raw workspace names (operator, 2026-11-03): abyme.app's main window on 3 (⌥1), a
 // pinned repository's window on its own (⌥2 abyme, ⌥3 schools, ⌥4 dotfiles), any other on the first
 // free of 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
 // settings.toml, which chezmoi's modify_ script keeps.
-if (!onLinode) wm.setup({
+wm.setup({
   workspace: "3",
   repositories: { "/Users/rjm/dev/abyme": "4", "/Users/rjm/dev/tutero": "5", "/Users/rjm/dev/dotfiles": "6" },
   pool: ["7", "8", "9", "10"],
@@ -125,10 +96,9 @@ canvas.setup({});
 // golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
 // whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
 // themselves (operator, 2026-11-03). Every clone carries those logins.
-if (!onLinode)
-  tart.setup({
-    goldens: { "golden-ui": { description: "UI review: ChatGPT, Claude, Linear, Notion, Godot, Unity; Firefox holds the operator's logins" } },
-  });
+tart.setup({
+  goldens: { "golden-ui": { description: "UI review: ChatGPT, Claude, Linear, Notion, Godot, Unity; Firefox holds the operator's logins" } },
+});
 // Off the rail and the left dock: spaces, pull requests, VMs, usage and triggers, by the palette and
 // their keys still; they become records lenses (operator, 2026-11-04).
 rail.setup({
