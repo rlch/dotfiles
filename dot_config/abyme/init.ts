@@ -131,7 +131,7 @@ if (!onLinode)
   });
 rail.setup({
   items: [
-    "spaces", "agents", "explorer", "github.prs", "tart",
+    "spaces", "agents", "records-view.records", "explorer", "github.prs", "tart",
     "usage.usage", "triggers.triggers", "settings.settings",
   ],
 });
