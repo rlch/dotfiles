@@ -120,8 +120,7 @@ chatCompletions.setup({
   },
 });
 conversation.setup({ voiceModel: "deepseek-flash" });
-// tldraw canvases; the operator's hobby key (for *.abyme.studio, to 2027-10-29) is in the keychain (abyme-tldraw), never here.
-canvas.setup({}, { secrets: { TLDRAW_LICENSE_KEY: abyme.env.TLDRAW_LICENSE_KEY } });
+canvas.setup({});
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
 // golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
 // whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
