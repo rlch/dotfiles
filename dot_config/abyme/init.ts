@@ -96,9 +96,9 @@ if (!onLinode) wm.setup({
 layoutPanes.setup({
   docks: { left: "rail" },
   placement: {
-    spaces: { dock: "left", order: 5 }, agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
-    search: { dock: "left", order: 25 }, git: { dock: "left", order: 30 }, "github.prs": { dock: "left", order: 32 },
-    ports: { dock: "left", order: 36 }, tasks: { dock: "left", order: 38 }, tart: { dock: "left", order: 45 },
+    agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
+    search: { dock: "left", order: 25 }, git: { dock: "left", order: 30 },
+    ports: { dock: "left", order: 36 }, tasks: { dock: "left", order: 38 },
     "settings.list": { dock: "left", order: 90 },
   },
 });
@@ -129,11 +129,10 @@ if (!onLinode)
   tart.setup({
     goldens: { "golden-ui": { description: "UI review: ChatGPT, Claude, Linear, Notion, Godot, Unity; Firefox holds the operator's logins" } },
   });
+// Off the rail and the left dock: spaces, pull requests, VMs, usage and triggers, by the palette and
+// their keys still; they become records lenses (operator, 2026-11-04).
 rail.setup({
-  items: [
-    "spaces", "agents", "records-view.records", "explorer", "github.prs", "tart",
-    "usage.usage", "triggers.triggers", "settings.settings",
-  ],
+  items: ["agents", "records-view.records", "explorer", "settings.settings"],
 });
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
