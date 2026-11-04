@@ -51,9 +51,9 @@ prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
 Brewfile                    → packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
 dot_claude/                 → ~/.claude/ (settings.json, hooks; pretool.sh is the
-                              one PreToolUse hook: a Bash call nothing bans goes
-                              straight to rtk, the rest to guard.py, which enforces
-                              the global bans then rewrites with rtk — run
+                              one PreToolUse hook: a Bash call nothing bans passes
+                              at once, the rest go to guard.py, which enforces
+                              the global bans (rtk removed 2026-11-04) — run
                               `guard.py --selftest` after editing either. herdr's
                               state hook is wired on SessionStart alone, the only
                               event it acts on; a herdr update that re-adds it

@@ -7,8 +7,8 @@ A hook still blocks under bypassPermissions, where `ask` rules are skipped and
 `Bash(git stash:*)` patterns miss `git -C dir stash`. It reads the command the
 model wrote (hooks all see the original input, before rtk's rewrite), and fails
 open on anything it cannot parse. Exit 2 with the reason on stderr blocks the call.
-A Bash call it lets through then goes to rtk's rewrite from here: this is the one
-PreToolUse hook, so each tool call spawns one hook, not three.
+It runs behind pretool.sh, the one PreToolUse hook, which skips it for a Bash call
+no ban can match.
 
 Run `guard.py --selftest` after editing.
 """
@@ -251,7 +251,7 @@ def selftest():
         bad.append("ALLOWED? grep tool ~/dev")
     if decide({"tool_name": "Agent", "tool_input": {"model": "sonnet"}}):
         bad.append("ALLOWED? agent sonnet")
-    # pretool.sh must send every blocked case to guard.py, never straight to rtk.
+    # pretool.sh must send every blocked case to guard.py, never pass it.
     pretool = os.path.join(os.path.dirname(os.path.realpath(__file__)), "pretool.sh")
     if not os.path.exists(pretool):
         pretool = os.path.join(HOME, ".claude", "pretool.sh")
@@ -276,27 +276,6 @@ def selftest():
     return 1 if bad else 0
 
 
-def rtk_rewrite(raw, event):
-    """Bash only: hand the call to rtk's rewrite, as the separate rtk-hook.sh did.
-
-    One hook per tool call, not three in parallel: each spawn cost ~0.5-1.5 s of
-    wall under load (waste-hunt, 2026-11-04). Except git inside an isolated agent
-    worktree (*/.claude/worktrees/*): Claude Code's worktree guard accepts plain
-    `git ...` there but refuses the rewritten `rtk git ...` (2026-09-29).
-    """
-    if "/.claude/worktrees/" in raw:
-        cmd = str((event.get("tool_input") or {}).get("command") or "")
-        if cmd == "git" or cmd.startswith("git "):
-            return 0
-    try:
-        r = subprocess.run(["rtk", "hook", "claude"], input=raw, capture_output=True, text=True, timeout=8)
-    except Exception:
-        return 0
-    sys.stdout.write(r.stdout)
-    sys.stderr.write(r.stderr)
-    return r.returncode
-
-
 def main():
     if "--selftest" in sys.argv:
         return selftest()
@@ -309,8 +288,6 @@ def main():
     if reason:
         sys.stderr.write("Blocked by ~/.claude/guard.py: " + reason + "\n")
         return 2
-    if event.get("tool_name") == "Bash":
-        return rtk_rewrite(raw, event)
     return 0
 
 

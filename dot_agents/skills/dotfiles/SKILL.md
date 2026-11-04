@@ -96,7 +96,6 @@ wrappers. Put a rule in the shared core unless it truly depends on one client.
 | "edit my agent instructions", cross-client rule | `~/dev/dotfiles/.chezmoitemplates/agent-instructions/common.md` |
 | "edit my CLAUDE.md", Claude-specific rule | `~/dev/dotfiles/dot_claude/CLAUDE.md.tmpl` → `~/.claude/CLAUDE.md` |
 | "edit my OpenCode AGENTS.md", OpenCode-specific rule | `~/dev/dotfiles/dot_config/opencode/AGENTS.md.tmpl` → `~/.config/opencode/AGENTS.md` |
-| "edit RTK.md" / "the RTK reference"                 | `~/dev/dotfiles/dot_claude/RTK.md` → deploys to `~/.claude/RTK.md` (loaded via `@RTK.md` from the user-global CLAUDE.md) |
 | "the project CLAUDE.md", "the dotfiles CLAUDE.md", "this repo's CLAUDE.md" | `~/dev/dotfiles/CLAUDE.md` (in-tree, not deployed) |
 | "the CLAUDE.md for project X"                       | `<project-X>/CLAUDE.md` — *not* a dotfiles edit, this skill doesn't apply |
 

@@ -234,7 +234,6 @@ cask "codex"       # OpenAI's coding agent CLI
 brew "opencode"
 brew "ast-grep"    # structural code search (`sg`) — OMO's ast-grep skill depends on it
 brew "gemini-cli"  # Google's Gemini CLI
-brew "rtk"         # CLI proxy that compresses dev-tool output before it reaches the agent's context
 brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
 brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
 brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
