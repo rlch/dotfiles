@@ -10,4 +10,7 @@ export default {
   "MathGaps/schools": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
   // main takes a pull request (ruleset); CI applies each stack on merge.
   "MathGaps/iac": { mode: "pr" },
+  // A push to main is an apply (its CLAUDE.md, CI applies): squash-merged pull requests, applied
+  // and planned to no changes from a laptop first (operator, 2026-11-04).
+  "abyme-studio/iac": { mode: "pr" },
 } satisfies LandFiles;
