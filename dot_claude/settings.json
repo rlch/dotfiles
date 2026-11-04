@@ -50,45 +50,14 @@
         ]
       }
     ],
-    "PermissionRequest": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' blocked",
-            "timeout": 10,
-            "type": "command"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Agent",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/guard.py",
+            "command": "~/.claude/pretool.sh",
             "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/rtk-hook.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
           }
         ]
       }
@@ -116,16 +85,6 @@
           {
             "type": "command",
             "command": "~/.claude/lsp-cleanup-hook.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' release",
-            "timeout": 10,
-            "type": "command"
           }
         ]
       }
@@ -158,7 +117,8 @@
           {
             "type": "command",
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
+            "timeout": 5,
+            "async": true
           }
         ]
       },
@@ -168,17 +128,8 @@
           {
             "type": "command",
             "command": "~/.claude/herdr-title.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' idle",
             "timeout": 10,
-            "type": "command"
+            "async": true
           }
         ]
       }
@@ -239,18 +190,6 @@
             "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' working",
-            "timeout": 10,
-            "type": "command"
           }
         ]
       }

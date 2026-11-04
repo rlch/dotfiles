@@ -50,9 +50,14 @@ prefixed `dot_foo` deploy as `~/.foo`, `executable_foo` deploys with mode 755,
                               (e.g. obsidian-shared/ — see "Obsidian vaults" below)
 Brewfile                    → packages, installed everywhere
 Brewfile.heavy              → installed only when heavyHardware = true
-dot_claude/                 → ~/.claude/ (settings.json, hooks; guard.py is the
-                              PreToolUse hook that enforces the global bans —
-                              run `guard.py --selftest` after editing it)
+dot_claude/                 → ~/.claude/ (settings.json, hooks; pretool.sh is the
+                              one PreToolUse hook: a Bash call nothing bans goes
+                              straight to rtk, the rest to guard.py, which enforces
+                              the global bans then rewrites with rtk — run
+                              `guard.py --selftest` after editing either. herdr's
+                              state hook is wired on SessionStart alone, the only
+                              event it acts on; a herdr update that re-adds it
+                              everywhere shows as settings.json drift: drop it)
 dot_config/                 → ~/.config/ (omniwm, fish, ghostty, k9s,
                               lazydocker, starship.toml, herdr, tridactyl)
 Knowledge/dot_obsidian/     → ~/Knowledge/.obsidian/ (notes vault config)
