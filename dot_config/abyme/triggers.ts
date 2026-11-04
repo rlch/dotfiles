@@ -28,25 +28,6 @@ export default function addTriggers(): void {
     },
   });
 
-  // The weekly Chalkie run captures a competitor's lessons and sheets from schools' fixed briefs to see when its
-  // generator changes (schools tools/chalkie/WEEKLY.md; operator, 2026-10-16). It tells lead@schools what changed.
-  triggers.items.add({
-    name: "chalkie-weekly",
-    root: SCHOOLS,
-    on: { cron: "0 9 * * MON" },
-    run: {
-      agents: "start",
-      args: {
-        provider: "acp",
-        config: { model: "sonnet" },
-        dir: SCHOOLS,
-        branch: "chalkie-weekly-{date}",
-        base: "main",
-        brief: "Read tools/chalkie/WEEKLY.md and follow it.",
-      },
-    },
-  });
-
   // schools' open prod alerts, every five minutes: a script, no model (the process `prod-alerts` of schools'
   // .abyme/processes.ts), keeps one Incident record per open alert (schools .abyme/records.ts).
   triggers.items.add({

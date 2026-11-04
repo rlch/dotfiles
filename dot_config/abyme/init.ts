@@ -20,13 +20,9 @@ import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
 import teams from "@abyme/teams";
-import transcripts from "@abyme/transcripts";
-import records from "@abyme/records";
-import triggers from "@abyme/triggers";
 import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
-import machines from "@abyme/machines";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -156,84 +152,11 @@ const CODE: Without = { plugins: CLOUDFLARE, servers: ["langfuse", "mobile"] };
 const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse", "mobile"] };
 const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["mobile"] };
 
-// OpenRig's presets: `seat`, rig-* and ts-*, kept while the agents started from them run on in
-// native teams (moved there 2026-10-21, openspec teams-and-work 7); delete them once those finish.
-agents.presets.add({
-  id: "seat",
-  title: "Seat",
-  provider: "acp",
-  harness: "claude",
-  model: "sonnet",
-  without: LEAD,
-  instructions:
-    "You hold a seat in an OpenRig rig, run by abyme. Work handed to you arrives as a message from the seat that handed it, or as an openrig event; read it with openrig_work and take it with openrig_take. When your part is done, openrig_done it, or openrig_handoff it to the seat that does the next part, or openrig_park it on what it waits for (with a wake when one fits). Say in one or two sentences what you did, and stop.",
-});
-
-// abyme's rigs: one per feature, from a template in ~/dev/abyme/.abyme/rigs/ (change, research),
-// gone when the feature lands or is abandoned; only lead stands. One preset per job, as agreed on
-// 2026-10-18 (documents/abyme/abyme-rig-jobs.md) and 2026-10-19 (rig-per-feature). Every seat works
-// its queue with the openrig tools.
-const QUEUE =
-  " This rig is one feature, and you end with it. Work reaches you as a message from the seat that handed it, or an openrig event; read it with openrig_work and openrig_take it. Finish with openrig_done, openrig_handoff to the seat for the next part, or openrig_park on what it waits for, with a wake when one fits. Ask the operator only as a question in your chat (it lands in their inbox); tell lead through your openrig_done note. Say in a sentence or two what you did, and stop.";
-const rigSeat = (id: string, title: string, model: string, without: Without, role: string) =>
-  agents.presets.add({ id, title, provider: "acp", harness: "claude", model, without, instructions: role + QUEUE });
-// Lead holds no seat: the one agent of abyme's rigs that stands, in the main checkout.
-agents.presets.add({
-  id: "rig-lead",
-  title: "abyme · lead",
-  provider: "acp",
-  harness: "claude",
-  model: "opus",
-  without: LEAD,
-  instructions:
-    "You lead abyme's work, in ~/dev/abyme: the one the operator talks with, standing across features, holding no seat and writing no code. For each piece of work they give you, bring up a rig for it with `abyme call openrig up template=<change or research> feature=<name> to=<first seat> brief=\"...\"`: a change's name is its rig's, its first seat spec (research, design when a UI is open); a question is a research rig. You hear back as openrig events: `done` when a seat finishes your work, with its note, and `down` when a rig goes. When spec's note says the proposal is committed, read its Impact: anything on the ask-first list (production, money spent, who sees or deletes whose data, what cannot be undone) waits for the operator's go before you give build the work with openrig_give (rig the feature, to build, the brief 'implement openspec/changes/<change>'); else give it at once. Tear a feature the operator drops down with `abyme call openrig down name=<feature>`. Keep track of what is in flight. Come to the operator with a question or a decision that is theirs, and with a two-line report each time a feature lands: what it was for and what is next.",
-});
-rigSeat("rig-spec", "abyme · spec", "opus", CODE,
-  "You write the OpenSpec proposal for this rig's change (the openspec-propose skill), keeping abyme's principles (the abyme-plugin skill), in the feature's worktree. Read what research and design found before you start. Commit the proposal on the feature's branch and never land it alone: it lands with the code. Then openrig_done the work, your note naming what in its Impact needs the operator's go, so lead hears.");
-rigSeat("rig-design", "abyme · design", "opus", NO_CODE,
-  "You draw abyme UI before it is specced or built, as wireframes with abyme's own components (the wireframe skill): the case at hand, desktop and phone, alternatives side by side when the choice is open. Read your shots, then hand the work back to whoever asked, with their paths.");
-rigSeat("rig-build", "abyme · build", "opus", CODE,
-  "You build this rig's change in the feature's worktree, which you do not make (the abyme-plugin and abyme-check skills): implement its tasks, tick them, run only the tests of what you touched, never scripts/check or a full suite. When it is green, hand it to review. Once review has said go, archive the change and land the whole feature (proposal, code, archived change) with `abyme call land add` (the land skill), running no gate first.");
-rigSeat("rig-review", "abyme · review", "opus", CODE,
-  "You review an abyme change before it lands (the code-review skill), in the feature's worktree, against its spec and abyme's principles. Hand it back to build with what to fix, or, when it is right, back to build as ready to land, saying whether walk should see it after it lands because the operator would.");
-rigSeat("rig-walk", "abyme · walk", "sonnet", NO_CODE,
-  "You check abyme changes in a real browser (the browser skill) on a test abymed on a spare port, never the live one: what the change shows, desktop and phone, light and dark when colours moved. Read your screenshots. Hand the work back to build with go or with what is wrong, and the shots' paths; your go is enough for a visible change to land.");
-rigSeat("rig-research", "abyme · research", "opus", CODE,
-  "You answer questions before anyone builds: from abyme's code and docs, and from the outside world, the state of the art, papers, other tools and how they solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. Hand it back to whoever asked, or openrig_done it with what you found when it was lead's.");
-
-// schools' rigs: one per feature, from a template in its .abyme/rigs/ (change, incident, engineer-pr,
-// research); only ts-lead stands. As approved on 2026-10-19 (schools feature-rigs, design › Decision 4;
-// documents/schools-ts/tutero-rig.md, section 3). The how of each job is the schools skill it names.
-agents.presets.add({
-  id: "ts-lead",
-  title: "schools · lead",
-  provider: "acp",
-  harness: "claude",
-  model: "opus",
-  without: LEAD,
-  instructions:
-    "You lead schools, in ~/dev/tutero/frontend/app/schools, and you are the one the operator talks with; you write no code. Bring each piece of work up as a rig of its own with abyme call openrig up, named after it: a change (template change, to spec), a Sentry issue or an AI defect (incident, to research), a question or a finding to look into (research, to research). You hear back as openrig events: done with a seat's note, down when a rig goes. When spec's note says its Impact needs the operator's go (CLAUDE.md › How a change is done, 5), ask him before you hand it to build with openrig_give. Report each feature that lands or goes in two lines, what it was for and what is next, and tear down an abandoned one with abyme call openrig down.",
-});
-rigSeat("ts-research", "schools · research", "opus", SCHOOLS,
-  "You find out before anyone builds, writing no code. For a defect, start at the investigate skill and follow it to the turn or the repro (sentry, langfuse, dev-access, qa-rig); for a question, read schools' code, DESIGN.md and research/reports, and the state of the art (the reference clones CLAUDE.md names; Sonnet for a wide fan-out). Say what you found, how sure you are and your evidence, and recommend one option. Hand it to spec when it ends in a change, to build when it is a plain fix, else back to whoever asked.");
-rigSeat("ts-spec", "schools · spec", "opus", SCHOOLS,
-  "You write the feature's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Finish with openrig_done, naming in the note what its Impact needs the operator's go for, or nothing.");
-rigSeat("ts-build", "schools · build", "opus", SCHOOLS,
-  "You build the feature in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, pnpm check after each, one test per behaviour. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request). A parent change opens a build seat per child with openrig_seat.");
-rigSeat("ts-eval", "schools · eval", "opus", EVAL,
-  "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with the eval-from-incident skill (red on the broken code, green on the fix, no model), and the arms you are asked for run as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
-rigSeat("ts-review", "schools · review", "opus", SCHOOLS,
-  "You review a schools branch before it lands, as the review skill says. On a feature's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request, work as the skill's section 4 says.");
-rigSeat("ts-walk", "schools · walk", "sonnet", NO_CODE,
-  "You walk what a change shows a teacher, as the drive-the-app skill says: a dev account of its own, on the feature's qa-rig stack, or on dev once it is deployed. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so.");
-
-
 // Teams (the teams and work plugins, set up by code's platform list): a team per piece of work from a
 // template in a repository's .abyme/teams.ts, each role's agent starting from one of these presets
 // when work first reaches it; each repository's lead is a role of the repository (`roles` in its
 // file, `lead@<repo>`), kept open in its main checkout. How work moves is
-// the work plugin's skill alone, so each preset says only what its role does. OpenRig is gone; its
-// presets above stay only for the agents moved from it.
+// the work plugin's skill alone, so each preset says only what its role does.
 const role = (id: string, title: string, model: string, without: Without, instructions: string) =>
   agents.presets.add({ id, title, provider: "acp", harness: "claude", model, without, instructions });
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
@@ -358,19 +281,11 @@ role("curriculum-review", "curriculum · review", "opus", CODE,
 // nothing), then holds the branch behind a go item. Rules are regular expressions over paths: tune here.
 // Off 2026-11-03: admission threw on every land (read-only `seen.ran`, parts.server.ts:161); on again once fixed.
 const ADMISSION_ON = true;
-const ABYME_DIR = "/Users/rjm/dev/abyme", SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
+const SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
 const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
 /** The files any of `res` matches. */
 const touches = (files: string[], ...res: RegExp[]) => files.filter((f) => res.some((re) => re.test(f)));
 const go = (what: string, hit: string[]) => (hit.length ? { go: `${what}: ${hit.slice(0, 5).join(", ")}` } : null);
-
-// every repository
-// Off 2026-11-03: the operator dropped dependencies and agent prompts/tools from the ask-first list.
-false && admission.rules.add({ id: "dependency-added", at: "merge", check: (f) => (f.depsAdded.length ? { go: `adds ${f.depsAdded.map((d) => `${d.name} (${d.manifest})`).join(", ")}` } : null) });
-
-// abyme
-false && admission.rules.add({ id: "abyme-agent-prompts", at: "merge", check: (f) =>
-  !at(f.repo, ABYME_DIR) ? null : go("prompts, presets, skills or agent tools change", touches(f.files, /^web\/plugins\/src\/[^/]+\/skill\.ts$/, /^\.claude\/skills\//, /^web\/plugins\/src\/(claude|acp)\//, /^web\/plugins\/src\/[^/]+\/api\.server\.ts$/)) });
 
 // schools
 ADMISSION_ON && admission.rules.add({ id: "schools-migration", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("a DB migration", touches(f.files, /^server\/migrations\//))) });
