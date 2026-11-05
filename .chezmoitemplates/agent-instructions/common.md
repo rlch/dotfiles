@@ -120,6 +120,9 @@ told you belongs back in that skill so the next run does not hit the same gap.
   Mac with `safaridriver -p <port>` and a WebDriver session of `{"platformName": "iOS",
   "browserName": "safari"}` (W3C touch actions, JS in the page for timings), never a Safari or
   Web Inspector window on the Mac; `xcrun devicectl list devices` shows whether it is connected.
-  Close the session and stop the driver when done.
+  Close the session and stop the driver when done. Against a gateway, never pair through its device
+  ask (a WebDriver session has no cookies, so each run asks the operator and leaves a junk device):
+  mint a key with `abyme devices add <run>`, set it with WebDriver Add Cookie (`abyme_device`), and
+  revoke it at the end (abyme's docs/phone.md).
 - Name an agent in a message as a link the operator can click: `abyme:agent/<role@team or id>`
   (`abyme:agent/lead@edit-log`), never a bare `lead@edit-log`.
