@@ -82,9 +82,11 @@ GOAL_GB=${JANITOR_GOAL_GB:-400}
 # ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
 ABYME_WORKTREES="$HOME/.local/share/abyme/worktrees"
 # ~/.local/state/abyme/land: land's warm checkouts; never pruned, cleaned or removed.
-# ~/.local/share/abyme/land is its old folder: exempt until its checkouts are removed.
+# ~/.local/state/abyme/warm: abyme's warm donors (the plugin `warm`), each repository's checkout whose
+# target/ a new worktree is cloned from: cleaning it would make every new worktree build cold.
+# ~/.local/share/abyme/land is land's old folder: exempt until its checkouts are removed.
 # JANITOR_LAND_CHECKOUTS is a colon-separated list (the test's).
-IFS=: read -ra LAND_CHECKOUTS <<<"${JANITOR_LAND_CHECKOUTS:-$HOME/.local/state/abyme/land:$HOME/.local/share/abyme/land}"
+IFS=: read -ra LAND_CHECKOUTS <<<"${JANITOR_LAND_CHECKOUTS:-$HOME/.local/state/abyme/land:$HOME/.local/state/abyme/warm:$HOME/.local/share/abyme/land}"
 is_land() { local r; for r in "${LAND_CHECKOUTS[@]}"; do [[ "$1" == "$r"/* ]] && return 0; done; return 1; }
 ROOTS=("$ABYME_WORKTREES" "$HOME/.herdr/worktrees" "$HOME/dev" "/private/tmp/claude-$(id -u)")
 
