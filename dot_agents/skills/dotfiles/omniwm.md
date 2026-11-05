@@ -22,6 +22,9 @@
   with the Developer ID, checks it, uninstalls the cask if present, swaps `/Applications/OmniWM.app`
   (keeping the previous one in `~/.local/state/omniwm-fork`), links `omniwmctl` and writes its fish
   completion. The first switch from the cask asks for Accessibility and Input Monitoring again.
+  The fork stays for `edgeOutset` and `niri.partialColumnPreview` (settings.toml uses both; the
+  cask's strict schema rejects them). abyme stopped calling window reveal (abyme 85993b637), so
+  its IPC commit (38513a08) can go at the next rebase.
 - **OmniWM workspaces: two on letters, eight on numbers** (operator, 2026-11-02; ⌥a folded into
   ⌥1, 2026-11-03): ten Niri workspaces. On letters: 1 `web` (Firefox, `⌥w`), 2 `comms` (Slack,
   Gather, Telegram, `⌥m`); `⌥⇧` + the letter moves a window there. 3 `abyme` is `⌥1`, abyme.app's
