@@ -19,6 +19,7 @@ import town from "@abyme/town";
 import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
+import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
@@ -42,6 +43,9 @@ coding.setup();
 // GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
 // Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
 webhooks.setup({}, { secrets: { WEBHOOKS_KEY: abyme.env.ABYME_WEBHOOKS_KEY } });
+// Each new worktree of a repository whose .abyme/warm.ts opts in starts from a warm donor's build
+// output (abyme change warm-worktree-builds): its donor under ~/.local/state/abyme/warm, capped at 20 GB.
+warm.setup();
 // Agent town, bevy-ts's first game, in play mode as the `town` view (operator, 2026-10-23). Its engine
 // runs only while the view is open: about half a core and 700 MB.
 town.setup({ folder: "/Users/rjm/dev/agent-town" });
