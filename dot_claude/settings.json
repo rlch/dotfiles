@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5
           }
         ]
@@ -56,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/pretool.sh",
+            "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/pretool.sh",
             "timeout": 10
           }
         ]
@@ -68,12 +68,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/improvement-capture.py",
+            "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/improvement-capture.py",
             "timeout": 15
           },
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/lsp-cleanup-hook.sh"
+            "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/lsp-cleanup-hook.sh"
           }
         ]
       }
@@ -94,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5
           }
         ]
@@ -104,7 +104,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
+            "command": "[ -n \"$ABYME_AGENT\" ] || bash '/Users/rjm/.claude/hooks/herdr-agent-state.sh' session",
             "timeout": 10
           }
         ]
@@ -116,7 +116,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -127,7 +127,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/herdr-title.sh",
+            "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/herdr-title.sh",
             "timeout": 10,
             "async": true
           }
@@ -139,7 +139,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -151,7 +151,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -163,7 +163,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -175,7 +175,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
@@ -187,7 +187,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
+            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
             "timeout": 5,
             "async": true
           }
