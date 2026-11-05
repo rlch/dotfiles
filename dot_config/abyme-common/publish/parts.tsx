@@ -6,7 +6,7 @@ import notifications from "@abyme/notifications/optional";
 import { Button } from "@abyme/ui/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@abyme/ui/components/ui/dialog";
 import { useState } from "react";
-import type { Prepared } from "./api.ts";
+import type { Prepared } from "./api.server.ts";
 
 /** The export being asked about; the command sets it. */
 export const asking = createStore<Prepared | null>(null);
@@ -19,7 +19,7 @@ export function Confirm() {
     if (!p || busy) return;
     setBusy(true);
     try {
-      await publish.server.publish(p.id);
+      await publish.server.publish({ path: p.path });
     } catch (e) {
       notifications?.notify({ level: "error", title: `${p.title} was not published`, body: (e as Error).message });
     }
@@ -28,7 +28,7 @@ export function Confirm() {
   };
   return (
     <Dialog open={!!p} onOpenChange={(open) => !open && dismiss()}>
-      <DialogContent className="sm:max-w-md" data-publish-confirm={p?.id}>
+      <DialogContent className="sm:max-w-md" data-publish-confirm={p?.path}>
         <DialogHeader>
           <DialogTitle>Publish {p?.title} to the web?</DialogTitle>
           <DialogDescription>

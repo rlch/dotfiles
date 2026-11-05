@@ -1,14 +1,17 @@
 // publish, in abymed: a document as a page on the artifacts site. abyme's export writes the
-// document into a staging folder; once the operator says yes on the page, the folder goes to the artifacts
+// document into a staging folder; once the operator says yes on the page (or an agent's `share`,
+// which asks nobody), the folder goes to the artifacts
 // repository's artifacts/<slug>/ (a folder with an index.html ships as is) and `artifact publish`
 // commits, pushes and waits for the deploy, which takes minutes, so a job runs on its own and pages
 // follow it in `state()`.
 import abyme from "@abyme/plugin";
+import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
+import { implement } from "@abyme/schema";
 import options from "./options";
-import type { Job, Prepared, Publish, State } from "./api";
+import { publish, type Job, type Prepared, type State } from "./api.server";
 
 const o = abyme.with(options).plugin.options;
 const ROOT = o.root.replace(/^~(?=\/|$)/, fs?.home ?? "~");
@@ -66,19 +69,22 @@ async function artifact(args: string[]): Promise<string[]> {
   return lines;
 }
 
-/** Runs a job for the document `id` (its path) on its own; `state()` says how it goes. */
+/** Runs a job for the document `id` (its path) on its own; `state()` says how it goes. Answers
+ * its slug at once, and `done`, which settles with the job: its URL, or its error. */
 function run(id: string, action: Job["action"], slug: string, work: () => Promise<string | undefined>) {
   if (state.getState().jobs[id]?.state === "running") throw new Error(`${id} is being ${state.getState().jobs[id]!.action}ed already`);
   const since = Date.now();
   setJob(id, { action, slug, since, state: "running" });
-  void work().then(
-    (url) => setJob(id, { action, slug, since, state: "done", url }),
+  const done = work().then(
+    (url) => (setJob(id, { action, slug, since, state: "done", ...(url && { url }) }), url),
     (e: Error) => {
       abyme.log.warn(`${action} ${id}: ${e.message}`);
       setJob(id, { action, slug, since, state: "failed", error: e.message });
+      throw e;
     },
   );
-  return { slug };
+  done.catch(() => {});
+  return { slug, done };
 }
 
 /** The control plane's files, where the artifacts repository is; refused where there are none. */
@@ -94,54 +100,75 @@ function processes() {
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const api = {
-  async prepare(id: string) {
-    const slug = await slugFor(id);
-    const dir = `${STAGE}/${slug}`;
-    if (await files().stat(dir)) await files().remove(dir);
-    const out = await documents.export({ path: id, dir });
-    const title = (JSON.parse((await files().read(`${dir}/document.json`)) ?? "{}") as { title?: string }).title || id;
-    // The viewer names its page as it loads; the site's lists read the file's own title.
-    const html = (await files().read(`${dir}/index.html`)) ?? "";
-    await files().write(`${dir}/index.html`, html.replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`));
-    const p: Prepared = {
-      id,
-      title,
-      slug,
-      url: `${o.url.replace(/\/+$/, "")}/${slug}/`,
-      files: ["index.html and assets/: the viewer", "document.json: the document", ...out.files],
-      again: !!state.getState().published[id],
-    };
-    staged.set(id, { ...p, dir });
-    return p;
-  },
-  async publish(id: string) {
-    const p = staged.get(id);
-    if (!p) throw new Error(`${id} has no export waiting: publish it again`);
-    return run(id, "publish", p.slug, async () => {
-      staged.delete(id);
-      const target = `${ROOT}/artifacts/${p.slug}`;
-      if (await files().stat(target)) await files().remove(target);
-      await files().mkdir(`${ROOT}/artifacts`);
-      await files().copy(p.dir, target);
-      await files().remove(p.dir);
-      const lines = await artifact(["publish", "-m", `feat(artifacts): publish ${p.title}`, p.slug]);
-      const url = lines.filter((l) => /^https?:\/\//.test(l.trim())).pop()?.trim();
-      if (!url) throw new Error(`${o.command} publish printed no URL`);
-      setPublished(id, { slug: p.slug, url, at: Date.now() });
-      return url;
-    });
-  },
-  async unpublish(id: string) {
-    const had = state.getState().published[id];
-    if (!had) throw new Error(`${id} is not published`);
-    return run(id, "unpublish", had.slug, async () => {
-      await artifact(["rm", had.slug]);
-      setPublished(id, null);
-      return undefined;
-    });
-  },
-  state: () => state,
-};
+async function prepare({ path: id }: { path: string }): Promise<Prepared> {
+  const slug = await slugFor(id);
+  const dir = `${STAGE}/${slug}`;
+  if (await files().stat(dir)) await files().remove(dir);
+  const out = await documents.export({ path: id, dir });
+  const title = (JSON.parse((await files().read(`${dir}/document.json`)) ?? "{}") as { title?: string }).title || id;
+  // The viewer names its page as it loads; the site's lists read the file's own title.
+  const html = (await files().read(`${dir}/index.html`)) ?? "";
+  await files().write(`${dir}/index.html`, html.replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`));
+  const p: Prepared = {
+    path: id,
+    title,
+    slug,
+    url: `${o.url.replace(/\/+$/, "")}/${slug}/`,
+    files: ["index.html and assets/: the viewer", "document.json: the document", ...out.files],
+    again: !!state.getState().published[id],
+  };
+  staged.set(id, { ...p, dir });
+  return p;
+}
 
-export default api satisfies Publish;
+/** Publishes what `prepare` staged for `id`: the job, under way. */
+function start(id: string) {
+  const p = staged.get(id);
+  if (!p) throw new Error(`${id} has no export waiting: publish it again`);
+  return run(id, "publish", p.slug, async () => {
+    staged.delete(id);
+    const target = `${ROOT}/artifacts/${p.slug}`;
+    if (await files().stat(target)) await files().remove(target);
+    await files().mkdir(`${ROOT}/artifacts`);
+    await files().copy(p.dir, target);
+    await files().remove(p.dir);
+    const lines = await artifact(["publish", "-m", `feat(artifacts): publish ${p.title}`, p.slug]);
+    const url = lines.filter((l) => /^https?:\/\//.test(l.trim())).pop()?.trim();
+    if (!url) throw new Error(`${o.command} publish printed no URL`);
+    setPublished(id, { slug: p.slug, url, at: Date.now() });
+    return url;
+  });
+}
+
+async function unpublish({ path: id }: { path: string }) {
+  const had = state.getState().published[id];
+  if (!had) throw new Error(`${id} is not published`);
+  const { slug } = run(id, "unpublish", had.slug, async () => {
+    await artifact(["rm", had.slug]);
+    setPublished(id, null);
+    return undefined;
+  });
+  return { slug };
+}
+
+// An agent's one call: no confirm (operator, 2026-11-05, "Agent publishes alone"); what it
+// publishes is in `state().published`, which the page's Unpublish covers, and the page tells its end.
+async function share({ path }: { path: string }) {
+  await prepare({ path });
+  const { slug, done } = start(path);
+  const url = await done;
+  if (!url) throw new Error(`${path} published with no URL`);
+  return { slug, url };
+}
+
+const SKILL = `Publish a document to the web: \`abyme call publish share path=<abs .md>\`. It publishes at once, with no confirm, waits for the deploy (minutes) and answers the URL. The operator can take it down from the document's menu (Unpublish), or \`abyme call publish unpublish path=<abs .md>\`.
+`;
+agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
+
+export default implement(publish, {
+  prepare,
+  publish: async ({ path }) => ({ slug: start(path).slug }),
+  unpublish,
+  share,
+  state: () => state,
+});
