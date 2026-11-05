@@ -87,13 +87,14 @@ told you belongs back in that skill so the next run does not hit the same gap.
 - **Never `git stash`** (hook-enforced): `refs/stash` is one ref shared by every
   worktree and agent. Park work in a commit instead, and revert only specific
   unauthorized paths. Never `--no-verify` either.
-- **Finished and green means landed.** The session that did the work lands its
-  own branch with `abyme call land add`, then ends its turn and acts on land's
-  event (the `land` skill says how; the repository's `.abyme/land.ts`, or the
-  operator's `land.ts`, says how it lands). It runs no full gate first: when the
-  repository's file names a `check`, it runs on the batch, scoped to what changed;
-  it runs what the repository's own instructions name before `land add`. It does not park the
-  branch and wait for "merge". The ask-first list above is the exception.
+- **Finished means landed; tests are opt-in** (operator, 2026-11-05). The session
+  that did the work lands its own branch with `abyme call land add`, then ends its
+  turn and acts on land's event (the `land` skill says how; the repository's
+  `.abyme/land.ts`, or the operator's `land.ts`, says how it lands). It runs no
+  gate or suite first: it runs a specific test only when it judges that one worth
+  it, and when the repository's file names a `check`, that runs on the batch,
+  scoped to what changed. It does not park the branch and wait for "merge". The
+  ask-first list above is the exception.
 - Use isolated worktrees for parallel edit agents. Never let one agent's
   cleanup revert or overwrite another agent's work.
 
