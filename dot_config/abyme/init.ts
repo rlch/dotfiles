@@ -8,18 +8,14 @@ import abyme from "@abyme/plugin";
 import coding from "./coding";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
-import land from "@abyme/land";
 import agents from "@abyme/agents";
-import rail from "@abyme/rail";
 import layoutPanes from "@abyme/layout-panes";
 import voice from "@abyme/voice";
 import mistral from "@abyme/mistral";
 import chatCompletions from "@abyme/chat-completions";
-import canvas from "@abyme/canvas";
 import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
-import teams from "@abyme/teams";
 import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
@@ -34,12 +30,12 @@ abyme.server({ name: "Coding", color: "blue", icon: "code" });
 common();
 addTriggers();
 
-// The code app without its title bar (coding.ts): every group and code's own plugins (pull requests,
-// line review, a space per worktree). A member's own line (common's theme and vim, the lines below)
-// stands in place of the app's setup of it, before or after this line.
+// The code app without its title bar (coding.ts). code.given carries the general part: the rail
+// (Agents, Records, Explorer, Settings), land's fix preset, teams, canvas, its role presets and team
+// templates (abyme change code-app-matches-coding). What follows is this profile's own. A member's own
+// line (common's theme and vim, the lines below) stands whole in place of the app's setup of it, so
+// layout-panes, voice and load restate code's options beside their own.
 coding.setup();
-teams.setup();
-land.setup({ fix: "fix" });
 // GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
 // Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
 webhooks.setup({}, { secrets: { WEBHOOKS_KEY: abyme.env.ABYME_WEBHOOKS_KEY } });
@@ -87,18 +83,12 @@ chatCompletions.setup({
   },
 });
 conversation.setup({ voiceModel: "deepseek-flash" });
-canvas.setup({});
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
 // golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
 // whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
 // themselves (operator, 2026-11-03). Every clone carries those logins.
 tart.setup({
   goldens: { "golden-ui": { description: "UI review: ChatGPT, Claude, Linear, Notion, Godot, Unity; Firefox holds the operator's logins" } },
-});
-// Off the rail and the left dock: spaces, pull requests, VMs, usage and triggers, by the palette and
-// their keys still; they become records lenses (operator, 2026-11-04).
-rail.setup({
-  items: ["agents", "records-view.records", "explorer", "settings.settings"],
 });
 // The terminal in Ghostty's size, cell height, cursor and padding here; its font is the mono font.
 terminal.setup({ size: 15, cellHeight: "10%", cursor: "bar", paddingX: 6, paddingY: 4 });
@@ -168,7 +158,7 @@ const lead = (id: string, title: string, model: string, instructions: string) =>
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
 // reaches it, from no instructions of its own (its role line and the work skill say enough).
 agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus", without: LEAD });
-// land's fix agents (land.setup below): one started when a full run finds a repository's base red
+// land's fix agents (code.given's land.fix): one started when a full run finds a repository's base red
 // and nobody else is on it, its brief saying what. Opus, no repository's role (operator, 2026-10-23).
 agents.presets.add({ id: "fix", title: "Fix", provider: "acp", harness: "claude", model: "opus", without: CODE });
 // Workers and Cloudflare deploy work, in whichever repository it is (operator, 2026-10-25): the one
