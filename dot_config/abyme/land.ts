@@ -16,4 +16,9 @@ export default {
   // Straight to main, unchecked: tests are opt-in (operator, 2026-11-05). A push to main deploys
   // the cloud (its deploy.yml). ~/dev/parley is a second clone of it.
   "rlch/unspoke": {},
+  // The operator's own repos with no .abyme: rebased onto main and pushed, no check. Tests are
+  // opt-in (operator, 2026-11-05): nothing runs them before landing.
+  "rlch/trading": {},
+  "rlch/cockpit": {},
+  "rlch/artifacts": {},
 } satisfies LandFiles;
