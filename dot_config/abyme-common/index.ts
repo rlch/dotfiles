@@ -37,7 +37,7 @@ export function common() {
   // session loads. The variable wins over the setting `autoMemoryEnabled`; a terminal's `claude`
   // keeps its memory. A running agent keeps what it loaded until it is next started or resumed.
   agents.prepare.add({ prepare: (l) => (l.kind === "claude" ? { env: { CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1" } } : {}) });
-  // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com, asked first (publish/).
+  // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com; agents call `publish share path=…`, no confirm (publish/).
   publish.setup();
   // Sentry is off (operator, 2026-10-22): 25 issues filed, none fixed from it. Uncomment to turn it back on.
   // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
