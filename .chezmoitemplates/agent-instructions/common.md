@@ -115,5 +115,11 @@ told you belongs back in that skill so the next run does not hit the same gap.
   iPad (`scripts/ios install`), as docs/phone.md says (operator, 2026-11-05). An iOS simulator or
   Android emulator only when the device can't be reached, or for an automated run the device
   can't do; then it takes a heavy-run slot and is shut down and deleted when the run ends.
+- **The iPad plugged into the Mac is set up for automation**: Safari's Web Inspector, Remote
+  Automation and UI Automation are on (operator, 2026-11-05). Drive Safari on it headless from the
+  Mac with `safaridriver -p <port>` and a WebDriver session of `{"platformName": "iOS",
+  "browserName": "safari"}` (W3C touch actions, JS in the page for timings), never a Safari or
+  Web Inspector window on the Mac; `xcrun devicectl list devices` shows whether it is connected.
+  Close the session and stop the driver when done.
 - Name an agent in a message as a link the operator can click: `abyme:agent/<role@team or id>`
   (`abyme:agent/lead@edit-log`), never a bare `lead@edit-log`.
