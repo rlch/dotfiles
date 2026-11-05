@@ -22,6 +22,7 @@ import wm from "@abyme/wm";
 import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
+import bans from "./bans";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -29,6 +30,8 @@ import addTriggers from "./triggers";
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
 common();
 addTriggers();
+// The operator's own bans beside abyme's guard: no edit of a chezmoi-deployed file, no Haiku sub-agent (bans/).
+bans.setup();
 
 // The code app without its title bar (coding.ts). code.given carries the general part: the rail
 // (Agents, Records, Explorer, Settings), land's fix preset, teams, canvas, its role presets and team
