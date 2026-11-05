@@ -34,6 +34,8 @@ records.setup({ rehome: true });
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
+// The phone and iPad keep this address; the gateway routes it to Coding over Tailscale.
+abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 common();
 addTriggers();
 // The operator's own bans beside abyme's guard: no edit of a chezmoi-deployed file, no Haiku sub-agent (bans/).
