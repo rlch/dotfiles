@@ -72,9 +72,5 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 - A long-running server, watcher, build or test run is an abyme process (`abyme
   call processes start name=<name>`, from the repo's `.abyme/processes.ts`),
   never your shell. End your turn; abyme tells you when it exits.
-- Never test on the live abyme (port 4477, `~/.config/abyme`,
-  `~/.local/state/abyme`).
 - Nothing you run appears on my screen: headless or a tart VM, or say what is
   unverified.
-- A phone or tablet change is tested on my own Android phone and iPad first, as
-  abyme's docs/phone.md says (operator, 2026-11-05).
