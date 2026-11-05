@@ -43,11 +43,14 @@ const tokenService = (slug: string) => `abyme-accounts-${slug}`;
 const ignoredSlugs = () => (abyme.store.get("ignored") ?? []) as string[];
 
 /** Every setup-token in the keychain, `main` first then by name, and when each was made: listed
- * from the keychain's attributes (`security dump-keychain`, never a secret), at most once a
- * second. The one owner of which accounts there are and when their tokens end. */
+ * from the keychain's attributes (`security dump-keychain`, never a secret), at most once every
+ * 30 s. It was once a second, and agents' change events (debounced 2 s) ran it ~25 times a minute
+ * (keychain-poll, 2026-11-05). This plugin's own add and revoke clear it; a token added by hand
+ * shows by the next 30 s tick. The one owner of which accounts there are and when their tokens end. */
 let listed: { at: number; tokens: { slug: string; made: number | null }[] } | null = null;
+const LISTED_FOR = 30_000;
 async function keychainTokens(): Promise<{ slug: string; made: number | null }[]> {
-  if (listed && Date.now() - listed.at < 1_000) return listed.tokens;
+  if (listed && Date.now() - listed.at < LISTED_FOR) return listed.tokens;
   const r = await processes().run(o.security, { args: ["dump-keychain"] });
   const tokens = r.code === 0 ? tokensListed(r.stdout) : [];
   tokens.sort((a, b) => (a.slug === "main" ? -1 : b.slug === "main" ? 1 : a.slug.localeCompare(b.slug)));
