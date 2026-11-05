@@ -9,7 +9,7 @@
 // `security -i` on stdin).
 import abyme from "@abyme/plugin";
 import type { Json } from "@abyme/server";
-import agents from "@abyme/agents";
+import agents from "@abyme/agents/optional";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
@@ -95,7 +95,7 @@ let picked: { key: string; at: number; agent: string | null }[] = [];
 /** abyme's agents as `agents.index` joins them: the account each is on and what its harness last said
  * of that account's usage. */
 type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
-const joined = async (): Promise<Joined[]> => Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
+const joined = async (): Promise<Joined[]> => !agents ? [] : Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
 /** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
 async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
@@ -360,7 +360,7 @@ async function lastCall(id: string, cwd: string, session: string, all: Joined[])
 
 // ---- the hook every abyme launch passes through ----
 
-const prepare: Parameters<typeof agents.prepare.add>[0] = {
+const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
   async prepare(l) {
     if (l.kind !== "claude") return {};
     const model = await modelOf(l);
@@ -392,9 +392,10 @@ const prepare: Parameters<typeof agents.prepare.add>[0] = {
   },
 };
 
-// Only with a machine: without its keychain there is no account to pick or show.
+// Only with a machine: without its keychain there is no account to pick or show. Without agents
+// (bevy) there is no launch to answer: the accounts and their quotas still show.
 if (fs && process) {
-  agents.prepare.add(prepare);
+  agents?.prepare.add(prepare);
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
   // A token added or taken out of the keychain by hand shows within half a minute, agents working or
   // not (vatsal was in `tokens` and not in the view, 2026-10-26). A listing changes nothing it shows
@@ -425,7 +426,7 @@ async function takeUsage() {
 }
 // An agent's list changes many times a second while agents work: once a moment at most.
 let showing: ReturnType<typeof setTimeout> | null = null;
-if (fs && process)
+if (fs && process && agents)
   agents.items.on("change", () => {
     showing ??= setTimeout(() => {
       showing = null;
@@ -626,7 +627,7 @@ export default {
     if (r.code !== 0) throw new Error(`no setup-token for ${a.slug} in the keychain`);
     listed = null;
     const on = (await agentsByAccount(true)).get(a.slug) ?? [];
-    if (on.length) await agents.close({ ids: on.map((x) => x.id) }).catch((e: unknown) => abyme.log.warn(`revoke ${a.slug}: closing its agents:`, (e as Error).message));
+    if (on.length && agents) await agents.close({ ids: on.map((x) => x.id) }).catch((e: unknown) => abyme.log.warn(`revoke ${a.slug}: closing its agents:`, (e as Error).message));
     shown = "";
     await show();
     return { slug: a.slug, closed: on.map((x) => x.name), text: `${a.slug}'s token is out of the keychain${on.length ? ` and ${on.length} agent(s) on it closed` : ""}; revoke it at https://claude.ai/settings/claude-code too` };

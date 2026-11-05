@@ -5,7 +5,7 @@
 // token goes to the keychain. "Add copied Claude setup-token…" keeps one made elsewhere.
 import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
-import agents from "@abyme/agents";
+import agents from "@abyme/agents/optional";
 import chat from "@abyme/chat/inventory";
 import { createStore } from "@abyme/client";
 import commands from "@abyme/commands/inventory";
@@ -40,12 +40,13 @@ function follow() {
 abyme.effect(() => seen.on("change", follow));
 follow();
 
-agents.fields.add({ id: "accounts.account", title: "Account", options, default: BY_QUOTA });
+// A profile without agents (bevy) has no New agent to add a field to, and no agent to pin.
+agents?.fields.add({ id: "accounts.account", title: "Account", options, default: BY_QUOTA });
 
 /** The agent a menu was opened on, if abyme knows it. */
 const agentOf = (target?: { all: Record<string, unknown> }): string | null => {
   const id = String(target?.all.agent ?? "");
-  return agents.store.getState().agents[id] ? id : null;
+  return agents?.store.getState().agents[id] ? id : null;
 };
 
 async function choose(agent: string) {
@@ -70,7 +71,7 @@ commands.add({
   },
 });
 chat.slash.add({ name: "login", harness: "claude", description: "Choose the account this agent runs on", action: ({ agent }) => (agent ? void choose(agent) : "pass") });
-menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
+menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents?.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
 /** A setup-token for the account: its authorize page opened, the token to the keychain once the
  * operator clicks Authorize there. Off this Mac, Claude shows a code instead, which an agent gives
  * the waiting setup-token (`abyme call accounts code slug=<s> code=<code>`). */
