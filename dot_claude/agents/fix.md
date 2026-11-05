@@ -9,9 +9,9 @@ You are fixing one thing somebody has already ruled on. The brief names the file
 quotes the rule; you are not here to rediscover either.
 
 - Read the named files in one turn. Grep only for what the brief could not name.
-- Make the change, then run the brief's **one** verification line. Never `pnpm check`
-  or a gate suite — CI runs those. If the gate is still red after a second run, stop
+- Make the change, then run the brief's **one** verification line, if it gives one. Never
+  `pnpm check` or a gate suite. If the gate is still red after a second run, stop
   and report the failure as a finding; do not run it a third time.
-- Commit by path with the message the brief gives. Never `git add -A`, never stash,
-  never push.
+- Commit by path with the message the brief gives, never `git add -A`, and land it as
+  the `land` skill says.
 - Report in three lines: the SHA, what changed, what you flagged.

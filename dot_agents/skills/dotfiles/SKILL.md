@@ -12,231 +12,101 @@ description: >-
 
 # Dotfiles
 
-The user's personal macOS dotfiles live in `~/dev/dotfiles` (chezmoi-managed,
-GitHub: rlch/dotfiles). Everything under `~/.config/`, `~/.claude/`, the
-home-rooted dotfiles (`.gitconfig`, `.hermes`, etc.), `Brewfile*`, and the
-install scripts is rendered/copied from there. Two machines share it — an
-MBP (M5 Max) and a Mac mini — diverging on a single `role` value.
+The operator's macOS dotfiles live in `~/dev/dotfiles` (chezmoi, GitHub `rlch/dotfiles`, public).
+Everything under `~/.config/`, `~/.claude/`, `~/.agents/`, the home-rooted dotfiles, `Brewfile*`
+and the install scripts deploys from there. Read the repo's `CLAUDE.md` first: it holds the
+invariants (stack, keymaps, multi-host, the init.ts parse-check). This skill holds the how-to.
 
-This skill encodes the workflow so config edits don't get silently reverted
-by `chezmoi apply`, and so new code matches the user's existing idioms
-without needing him to re-explain.
+## Edit source, then apply
 
-## Core rule: edit source, then apply
+1. Find the source under `~/dev/dotfiles/` (`chezmoi source-path <target>`, or the prefixes
+   below). For a deployed skill or other link, resolve it with `realpath` first; if `chezmoi
+   source-path <realpath>` reports a managed source, edit that, else edit the real source directly.
+2. Edit it, in the voice of what is near it: look at 2-3 analogous entries first (`rg -n
+   '<pattern>' dot_config/ dot_claude/`) and match their comments, naming and where the "why" goes.
+3. `chezmoi apply` (or scoped: `chezmoi apply ~/.config/fish`).
+4. Reload the live process:
+   - fish: `exec fish` (or a new pane).
+   - herdr: `herdr server reload-config`.
+   - OmniWM: `chezmoi apply ~/.config/omniwm/settings.toml` (diff first, omniwm.md); it reloads
+     the file itself.
+   - Karabiner: picks it up itself.
+   - Ghostty: ⌘⇧, (keybinds need it).
+   - abyme (`dot_config/abyme/`): parse-check with `npx -y esbuild` before applying; abymed
+     reloads, then `curl -s localhost:4477/api/config` shows `problems` and `threw`.
+   - Claude Code `settings.json`: next turn or restart, by setting. OpenCode: restart it.
+5. Commit and push when stable: `type(scope): subject`.
 
-**Always edit files under `~/dev/dotfiles/`. Never edit `~/.config/*`,
-`~/.claude/*`, or any other deployed copy directly.** Chezmoi will overwrite
-them on the next `apply`. The flow is:
-
-1. Locate the source file under `~/dev/dotfiles/` (see prefix mapping below).
-2. Edit it.
-3. Run `chezmoi apply` (or scope it to a path: `chezmoi apply ~/.config/fish`).
-4. For tools with a running daemon, **also reload them** so the change takes
-   effect in the live process — the source isn't enough on its own:
-   - fish: `exec fish` in the relevant shell (or just open a new pane).
-   - herdr: `herdr server reload-config` (config.toml changes).
-   - OmniWM: live-reloads `settings.toml` on save; its Settings window rewrites
-     the file, so deploy with `chezmoi apply --force ~/.config/omniwm/settings.toml`
-     and `chezmoi re-add` a change made there. `omniwmctl` drives it (IPC on).
-   - karabiner: picks up changes automatically.
-   - ghostty: reload with `cmd+shift+,`; keybind changes are not live until then.
-   - claude code / `~/.claude/settings.json`: takes effect on next prompt
-     turn or restart depending on the setting.
-   - opencode config, commands, and skills: restart OpenCode.
-5. Commit + push when stable. Conventional commits with scope
-   (`fix(fish): …`, `feat(claude): …`); see the user's git workflow rules.
-
-**Don't end a task assuming the user will `chezmoi apply` later.** If you've
-edited anything under `~/dev/dotfiles/`, run apply yourself before reporting
-done — otherwise nothing you wrote is in effect, and any "verification" you
-do is verifying the source copy, not the live one.
+Don't end a task assuming the operator will apply later.
 
 ### When `chezmoi apply` blocks on drift
 
-If `apply` complains "X has changed since chezmoi last wrote it" and asks
-for an interactive prompt, it's because something deployed (often a
-generated artifact like a `.pyc` or a tool's runtime-rewritten config like
-`k9s/config.yaml`) has drifted from source. Two clean fixes:
+"X has changed since chezmoi last wrote it" means a deployed file drifted (a tool rewrote it, or a
+build artifact). Either apply just your path (`chezmoi apply ~/.config/fish/config.fish`), or, when
+the drift is the operator's own, `chezmoi re-add <target>`; `--force <target>` only when the source
+already keeps it. A build artifact (`__pycache__`, a regenerated lockfile) goes in
+`.chezmoiignore`. A file with a modify script (OmniWM) can't be re-added: copy the change in by hand.
 
-- **Apply just the path you changed**: `chezmoi apply ~/.config/fish/config.fish`
-  — bypasses prompts from unrelated drift. If that target itself drifted, inspect
-  `chezmoi diff`; use `chezmoi re-add` for intentional deployed-side changes, or
-  `chezmoi apply --force <target>` only when source already preserves them.
-- **Re-add the drift back to source** if it's user-authored: `chezmoi
-  re-add ~/.config/foo/bar`.
+## Prefixes
 
-If it's a build artifact (`__pycache__`, lockfiles regenerated by tools),
-add it to `.chezmoiignore` so it stops drifting.
+| In the repo                      | Deploys as              | Example |
+| :------------------------------- | :---------------------- | :------ |
+| `dot_foo`                        | `~/.foo`                | `dot_claude/` → `~/.claude/` |
+| `executable_foo`                 | `foo`, mode 755         | `dot_claude/executable_pretool.sh` |
+| `private_dot_foo`                | `~/.foo`, mode 600      | `private_dot_gitconfig` |
+| `symlink_foo.tmpl`               | a link to its content   | `dot_claude/skills/symlink_rjm.tmpl` |
+| `modify_foo.tmpl`                | `foo`, rewritten from the live copy | `dot_config/omniwm/modify_settings.toml.tmpl` |
+| `foo.tmpl`                       | a Go template, rendered | `.chezmoi.toml.tmpl` |
+| `run_onchange_*.sh.tmpl`         | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |
 
-## Prefix conventions
+Agent instructions: a rule for every client goes in `.chezmoitemplates/agent-instructions/common.md`,
+a Claude-only one in `dot_claude/CLAUDE.md.tmpl`, an OpenCode-only one in
+`dot_config/opencode/AGENTS.md.tmpl` (agents.md). "This repo's CLAUDE.md" is `~/dev/dotfiles/CLAUDE.md`,
+not deployed; another project's CLAUDE.md is not a dotfiles edit.
 
-Chezmoi uses filename prefixes to control how files deploy. **Don't try to
-rename them away** — they're functional, not stylistic.
+## Multi-host
 
-| Prefix in repo                 | Deploys as              | Example |
-| :----------------------------- | :---------------------- | :------ |
-| `dot_foo`                      | `~/.foo`                | `dot_claude/` → `~/.claude/` |
-| `dot_config/foo/`              | `~/.config/foo/`        | `dot_config/fish/config.fish` → `~/.config/fish/config.fish` |
-| `executable_foo`               | `~/foo` mode 755        | `dot_local/bin/executable_slack-api` |
-| `private_dot_foo`              | `~/.foo` mode 600       | `private_dot_gitconfig` |
-| `foo.tmpl`                     | rendered as Go template | `.chezmoi.toml.tmpl` |
-| `run_onchange_install-x.sh.tmpl` | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |
+Ask whether a change applies on both machines. If not, encode it in source: `foo.tmpl` with
+`{{ if eq .role "mini" }}`, a templated `.chezmoiignore` entry, or `Brewfile.heavy`. Never skip it
+on the deploy side.
 
-So if the user says "edit my fish config", that's
-`~/dev/dotfiles/dot_config/fish/config.fish` (not `~/.config/fish/config.fish`).
-"Edit my Claude settings" is `~/dev/dotfiles/dot_claude/settings.json`.
+## Adding a tool
 
-### Agent instructions - shared core plus client wrappers
+1. Add it to `Brewfile` (or `Brewfile.heavy` if heavy-hardware-only). Ask before installing.
+2. Config under `dot_config/<tool>/` (or `dot_<tool>/` for home-rooted).
+3. `chezmoi apply`: the install script hashes the Brewfiles, so it reruns on a change.
+4. `brew bundle check --file=Brewfile`.
 
-Global agent policy is rendered from one shared template plus client-specific
-wrappers. Put a rule in the shared core unless it truly depends on one client.
+A tool needing its own installer (cargo, curl|sh) gets a
+`.chezmoiscripts/run_onchange_install-<tool>.sh.tmpl` modelled on the existing ones (skip if the
+version matches, log why, gate on `chezmoi.os == darwin`).
 
-| User says                                           | File to edit |
-| :-------------------------------------------------- | :----------- |
-| "edit my agent instructions", cross-client rule | `~/dev/dotfiles/.chezmoitemplates/agent-instructions/common.md` |
-| "edit my CLAUDE.md", Claude-specific rule | `~/dev/dotfiles/dot_claude/CLAUDE.md.tmpl` → `~/.claude/CLAUDE.md` |
-| "edit my OpenCode AGENTS.md", OpenCode-specific rule | `~/dev/dotfiles/dot_config/opencode/AGENTS.md.tmpl` → `~/.config/opencode/AGENTS.md` |
-| "the project CLAUDE.md", "the dotfiles CLAUDE.md", "this repo's CLAUDE.md" | `~/dev/dotfiles/CLAUDE.md` (in-tree, not deployed) |
-| "the CLAUDE.md for project X"                       | `<project-X>/CLAUDE.md` — *not* a dotfiles edit, this skill doesn't apply |
-
-When scope is unclear, prefer the shared template so Claude and OpenCode retain
-the same user policy.
-
-## Multi-host: mbp vs mini
-
-The repo serves two machines via one `role` value, persisted to
-`~/.config/chezmoi/chezmoi.toml`:
-
-```toml
-[data]
-    role = "mbp"          # or "mini"
-    heavyHardware = true  # derived; true iff role == "mbp"
-```
-
-To diverge a single file across hosts:
-- Rename `foo` → `foo.tmpl`, then use `{{ if eq .role "mini" }}` blocks.
-- To skip a file entirely on one host, add a templated entry to
-  `.chezmoiignore`.
-- Heavy-only packages (like Ollama) go in `Brewfile.heavy`, gated on
-  `heavyHardware`.
-
-When making a change, ask yourself: should this apply on both machines? If
-no, the divergence pattern above is the answer — don't manually skip on the
-deploy side, encode it in source.
-
-## Locked-in stack choices
-
-The user has already evaluated these. **Don't re-litigate without checking
-in first.**
-
-| Concern        | Tool                                                |
-| :------------- | :-------------------------------------------------- |
-| Manager        | chezmoi                                             |
-| Shell          | fish 4.x + fisher                                   |
-| Terminal       | Ghostty (auto-launches herdr)                       |
-| Multiplexer    | herdr (daily driver)                                |
-| Window manager | OmniWM (no yabai/skhd)                              |
-| Status bar     | macOS default (sketchybar/jankyborders rejected)    |
-| Editor         | Neovim + LazyVim base — **no AI plugins**, pure editor |
-| Prompt         | starship                                            |
-| Git TUI        | lazygit                                             |
-| AI CLIs        | Claude Code + OpenCode + Codex CLI + Hermes Agent   |
-| Local LLM      | Ollama (heavyHardware only)                         |
-| Containers     | OrbStack                                            |
-| Secrets        | 1Password CLI                                       |
-| Browser split  | Firefox (daily) + Chrome (secondary) + Brave (Gather PWA only) |
-| Notes          | Obsidian                                            |
-| Launcher       | Raycast                                             |
-
-Specifically rejected, don't propose: yabai, skhd, sketchybar,
-jankyborders, floating/dropdown Ghostty, AI nvim plugins, fish
-auto-attaching a multiplexer on startup, merging Chrome+Firefox roles.
-**tmux was fully removed (2026-07-01)** — don't re-suggest it as the answer
-to multiplexing or re-introduce its config/packages/fish helpers.
-
-## Preserve existing keymaps
-
-The user has muscle memory in: OmniWM (option layer, see CLAUDE.md), herdr (vim-style modal),
-nvim/LazyVim, fish abbreviations, tridactyl, karabiner. **Cosmetic refactors
-are fine; keybind changes are not** unless explicitly asked.
-
-In particular:
-- **herdr keymap is canonical** (daily driver since 2026-07-01) — config at
-  `dot_config/herdr/config.toml`, a matched pair with the ghostty `⌘`-forwarding
-  block (`dot_config/ghostty/config`); edit the two files together. herdr runs
-  in Ghostty (auto-launched via `command = fish -l -C herdr`); its `⌘` chords
-  only reach it because ghostty forwards them as CSI-u super sequences. The
-  keymap is a vim-style modal layout: `⌃hjkl` focus panes, `⌘` chords for
-  create/nav (`⌘T`/`⌘N` new, `⌘D`/`⌘⇧D` split, `⌘HL`/`⌘KJ` nav, `⌘W` close pane),
-  `⌃S` sub-prefix (workspace ops fold onto it), `⌃\` copy mode. Each ctrl-letter
-  prefix steals that key globally — don't "fix" that. Full detail lives in the
-  dotfiles CLAUDE.md "Conventions / invariants".
-- Ghostty `super+digit_N` defaults need `cmd+digit_N` to override
-  (character form `cmd+one` doesn't shadow the goto_tab default).
-
-## Research existing idioms before writing
-
-Before writing new config, **search the repo for existing analogous
-patterns** and match them. The user has a consistent style (long header
-comments explaining *why*, scope-tagged commit messages, conditional
-binds with explanation). New code should look like it belongs.
-
-Concrete recipe:
-1. `cd ~/dev/dotfiles`.
-2. `rg -n '<the-tool-or-pattern>'` across `dot_config/`, `dot_claude/`,
-   etc. — e.g. for a new fish function, look at existing functions in
-   `dot_config/fish/functions/`. For a new herdr binding, scan
-   `dot_config/herdr/config.toml` for a similar entry and match its comment style.
-3. Read 2–3 nearby examples to absorb: comment density, naming, where the
-   "why" goes (almost always inline above the line).
-4. Then write your change in the same voice.
-
-## Adding a new tool
-
-1. Add to `Brewfile` (or `Brewfile.heavy` if heavy-hardware-only).
-2. Create the config dir under `dot_config/<tool>/` (or `dot_<tool>/` for
-   home-rooted).
-3. Run `chezmoi apply`. The install script
-   (`.chezmoiscripts/run_onchange_install-packages.sh.tmpl`) hashes the
-   Brewfile content, so it auto-reruns when the Brewfile changes.
-4. Verify: `brew bundle check --file=Brewfile`.
-
-If the tool needs a custom installer (cargo, curl|sh, etc.), add a
-`.chezmoiscripts/run_onchange_install-<tool>.sh.tmpl` modeled on the
-existing ones — they all share idempotency boilerplate (skip if version
-matches, log the install reason, gate on `chezmoi.os == darwin`).
-
-## `.chezmoiignore`
-
-Files in the repo that should *not* deploy go here. Already ignored:
-`Brewfile` and `Brewfile.heavy` (consumed only by the install script,
-not deployed to `~`), lazy.nvim's `lazy-lock.json` writes, etc. If you
-add a build artifact or generated file to the repo, add it here too —
-otherwise `chezmoi apply` will try to deploy it.
-
-## Common tasks cheat-sheet
+## Cheat sheet
 
 ```sh
-chezmoi diff                          # preview pending changes
-chezmoi apply                         # deploy
-chezmoi apply ~/.config/fish/config.fish  # scope to a single path
-chezmoi cd                            # cd into source dir (= ~/dev/dotfiles)
-chezmoi edit ~/.config/foo/bar        # open the source for a deployed file in $EDITOR
-chezmoi re-add ~/.config/foo/bar      # absorb deployed-side changes back into source
-brew bundle check --file=Brewfile     # verify base bundle satisfied
-brew bundle check --file=Brewfile.heavy  # verify heavy bundle satisfied
-git -C ~/dev/dotfiles status          # see what's staged for commit
+chezmoi diff                              # preview (redact secrets before showing it)
+chezmoi apply ~/.config/fish/config.fish  # scoped deploy
+chezmoi source-path ~/.config/foo/bar     # the source of a deployed file
+chezmoi re-add ~/.config/foo/bar          # absorb a deployed-side change
+chezmoi managed | grep foo                # is it managed?
+brew bundle check --file=Brewfile.heavy
 ```
 
-## When to ask vs. just do
+## When to ask
 
-The user is in auto mode often, and prefers action over planning for
-routine config edits. Do ask before:
-- Changing keybindings the user actively uses.
-- Re-evaluating a locked-in stack choice (yabai vs OmniWM, etc.).
-- Adding a heavy package to the *base* Brewfile (vs Brewfile.heavy).
-- Anything that affects the mini host you can't test locally.
+Ask before changing keybindings in use, re-opening a locked-in stack choice, adding a heavy
+package to the base Brewfile, or anything on the mini you can't test here. Everything else (a fish
+function, a non-conflicting herdr binding, an OmniWM rule, a Claude hook, a starship segment):
+research the pattern and ship it.
 
-For everything else — adding a fish function, a herdr binding that
-doesn't conflict, a new OmniWM app rule, a Claude Code hook, a starship
-segment — research the pattern and ship it.
+## Per-tool notes
+
+Read the one for the tool before touching it, beside this file:
+
+- `herdr.md`: canonical keymap, worktrees, UI chrome.
+- `omniwm.md`: settings.toml's modify script, the fork and its update, workspaces and the option layer.
+- `ghostty.md`: no inline comments; the ⌘ forwarding pair with herdr.
+- `karabiner.md`: it rewrites its own json.
+- `agents.md`: shared agent instructions, skills, Claude hooks, abyme's config.
+- `nerd-fonts.md`: three-byte glyphs vanish from an Edit or Write.
+- `obsidian.md`: the shared config across vaults; adding a vault.

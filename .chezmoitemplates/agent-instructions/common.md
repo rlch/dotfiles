@@ -9,9 +9,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   instead of having one.
 - One quote from a doc, only if the quote decides something. Stacking citations
   to sound grounded is bloat.
-- No bold or headers for emphasis in plain prose. In abyme, numbers, a
-  comparison or a choice are structure I need: show them in a ```openui
-  block (a stat, a chart, a table, buttons for a decision).
+- No bold or headers for emphasis in plain prose.
 - Recommendation is one line. I'll ask if I want the reasoning.
 - Never write a paragraph where a sentence works, or a sentence where a word
   works.
@@ -37,93 +35,44 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   question.
 - **Told to match another tool, read its source first** (clone it into
   `~/dev/refs`) and cite file:line before calling anything impossible.
-- **In a design discussion with me, keep speccing**: start fix agents only once
-  I am confident it is all specced.
-- **End every report with the next step:** what you are doing next, or the one
-  thing you need from me.
+- **End every report with what you do next.** An action of mine is a work item
+  given to `operator`, never a closing line.
 - These are refused by a hook (`~/.claude/guard.py`), under every permission
   mode: `git stash`, `--no-verify`, force-pushing `main`/`master`,
   `playwright-cli close-all`/`kill-all`, `pkill`/`killall` (kill only PIDs you
   started), `find`/`fd`/`du`/`rg`/`grep -r` (or Grep/Glob) over `/` or the home folder (search the
   folder you mean, or `mdfind -name`), editing a chezmoi-deployed file, and a Haiku subagent. Do not look for a way round it; say what you needed.
 
-# Dotfiles
+# Dotfiles and skills
 
-When editing anything under `~/.config/`, `~/.claude/`, `~/.agents/`,
-`~/.local/`, or `~/dev/dotfiles/`, read `~/dev/dotfiles/CLAUDE.md` before
-making changes. It is the source-of-truth guide for the chezmoi flow: edit the
-source in `~/dev/dotfiles`, never a deployed copy, and run `chezmoi apply`
-after every edit.
+- Config under `~` (`~/.config`, `~/.claude`, `~/.agents`, `~/.local`) is
+  chezmoi's, from `~/dev/dotfiles`: the `dotfiles` skill says how.
+- When one of my skills under `~/dev/skills/` (or a dotfiles one) is wrong, stale
+  or makes you dig, fix it at its source before you finish, minimally and in its
+  voice, and report one line per skill. Read-only bundled skills: say the gap.
 
-# Skills - keep them correct
+# Git
 
-When one of my own skills under `~/dev/skills/` is wrong, stale, incomplete,
-or makes you dig, guess, or work around it, fix the skill at its source before
-you finish the task. Anything you had to discover that the skill should have
-told you belongs back in that skill so the next run does not hit the same gap.
-
-- Resolve deployed skills with `realpath` before editing. If `chezmoi
-  source-path <realpath>` reports a managed source, edit that source and apply
-  it; otherwise edit the real source directly.
-- Keep repairs minimal and in the skill's existing voice. Do not rewrite a
-  skill wholesale to fix one gap.
-- Do not edit read-only bundled skills. Surface the gap instead, and capture a
-  durable project or global instruction when appropriate.
-- Report one line per skill repaired.
-
-# Git Workflow
-
-- Use conventional commits with a meaningful scope: `type(scope): subject`.
-  Subjects are imperative, lowercase, and have no trailing period.
-- Rebase, never merge. Pull with `--rebase`; do not create merge commits.
-- For review fixups, stage the fixes and use `git ab` (`git absorb
-  --and-rebase`), or `git abm <base>` for a deep stack.
-- PRs are squash-merged. The PR title becomes the squashed conventional commit.
-- Force-push is allowed on personal branches, never on `main` or `master`.
-- **`git push` needs no approval, from anywhere: push when the work is ready** (operator,
-  2026-09-30). A worktree, including a Claude worktree, pushes its own branch. Never force-push
-  `main`/`master` (hook-enforced), and pushing a branch nobody asked you to create
-  is still out of scope.
-- **Never `git stash`** (hook-enforced): `refs/stash` is one ref shared by every
-  worktree and agent. Park work in a commit instead, and revert only specific
-  unauthorized paths. Never `--no-verify` either.
-- **Finished means landed; tests are opt-in** (operator, 2026-11-05). The session
-  that did the work lands its own branch with `abyme call land add`, then ends its
-  turn and acts on land's event (the `land` skill says how; the repository's
-  `.abyme/land.ts`, or the operator's `land.ts`, says how it lands). It runs no
-  gate or suite first: it runs a specific test only when it judges that one worth
-  it, and when the repository's file names a `check`, that runs on the batch,
-  scoped to what changed. It does not park the branch and wait for "merge". The
-  ask-first list above is the exception.
-- Use isolated worktrees for parallel edit agents. Never let one agent's
-  cleanup revert or overwrite another agent's work.
+- Conventional commits, `type(scope): subject`, imperative, lowercase, no
+  period. Rebase, never merge. PRs are squash-merged; the title is the commit.
+- **`git push` needs no approval, from anywhere** (operator, 2026-09-30); never a
+  branch nobody asked for. Force-push only a personal branch.
+- **Finished means landed; tests are opt-in** (operator, 2026-11-05): land with
+  `abyme call land add` (the `land` skill), no gate or suite first; run a specific
+  test only when you judge it worth it.
+- Parallel edit agents get isolated worktrees; never revert another agent's work.
 
 # abyme
 
-- abyme is where agents and their work live, and that work runs in the background; its skills and
-  tools say how. From your shell it is `abyme call <service> <function> key=value` (`key:=<json>`
-  for JSON); exit 3 means abyme is not running.
-- A long-running server, watcher, build or test run is an abyme process, never your shell: `abyme
-  call processes start name=<name>`, a name in the repo's `.abyme/processes.ts` (`export default {
-  dev: { cmd: "pnpm dev" } } satisfies ProcessFile`). Never wait on one: end your turn, and abyme
-  tells you when it exits.
-- Never test on the live abyme (port 4477, `~/.config/abyme`, `~/.local/state/abyme`): a test
-  abymed has its own port and state folder, or you say what is unverified.
-- Nothing you run appears on the operator's screen (no app window, Finder window or dev abyme on
-  the host): run it headless or in a tart VM (the `tart` skill), or say what is unverified.
-- **Test a phone or tablet change on the operator's own devices first**, never jumping to a
-  simulator: their Android phone over adb (`scripts/android install`, `ANDROID_SERIAL=<serial>` to pick one) and their
-  iPad (`scripts/ios install`), as docs/phone.md says (operator, 2026-11-05). An iOS simulator or
-  Android emulator only when the device can't be reached, or for an automated run the device
-  can't do; then it takes a heavy-run slot and is shut down and deleted when the run ends.
-- **The iPad plugged into the Mac is set up for automation**: Safari's Web Inspector, Remote
-  Automation and UI Automation are on (operator, 2026-11-05). Drive Safari on it headless from the
-  Mac with `safaridriver -p <port>` and a WebDriver session of `{"platformName": "iOS",
-  "browserName": "safari"}` (W3C touch actions, JS in the page for timings), never a Safari or
-  Web Inspector window on the Mac; `xcrun devicectl list devices` shows whether it is connected.
-  Close the session and stop the driver when done. Against a gateway, never pair through its device
-  ask (a WebDriver session has no cookies, so each run asks the operator and leaves a junk device):
-  mint a key with `abyme devices add <run>`, set it with WebDriver Add Cookie (`abyme_device`), and
-  revoke it at the end (abyme's docs/phone.md).
-- Name an agent in a message as a link the operator can click: `abyme:agent/<role@team or id>`
-  (`abyme:agent/lead@edit-log`), never a bare `lead@edit-log`.
+- abyme is where agents and their work live; its skills and tools say how. From
+  a shell, `abyme call <service> <function> key=value` (`key:=<json>`); exit 3
+  means it is not running.
+- A long-running server, watcher, build or test run is an abyme process (`abyme
+  call processes start name=<name>`, from the repo's `.abyme/processes.ts`),
+  never your shell. End your turn; abyme tells you when it exits.
+- Never test on the live abyme (port 4477, `~/.config/abyme`,
+  `~/.local/state/abyme`).
+- Nothing you run appears on my screen: headless or a tart VM, or say what is
+  unverified.
+- A phone or tablet change is tested on my own Android phone and iPad first, as
+  abyme's docs/phone.md says (operator, 2026-11-05).
