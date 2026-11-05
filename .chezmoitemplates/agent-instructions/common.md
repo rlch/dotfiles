@@ -110,5 +110,10 @@ told you belongs back in that skill so the next run does not hit the same gap.
   abymed has its own port and state folder, or you say what is unverified.
 - Nothing you run appears on the operator's screen (no app window, Finder window or dev abyme on
   the host): run it headless or in a tart VM (the `tart` skill), or say what is unverified.
+- **Test a phone or tablet change on the operator's own devices first**, never jumping to a
+  simulator: their Android phone over adb (`scripts/android install`, `PHONE=<serial>`) and their
+  iPad (`scripts/ios install`), as docs/phone.md says (operator, 2026-11-05). An iOS simulator or
+  Android emulator only when the device can't be reached, or for an automated run the device
+  can't do; then it takes a heavy-run slot and is shut down and deleted when the run ends.
 - Name an agent in a message as a link the operator can click: `abyme:agent/<role@team or id>`
   (`abyme:agent/lead@edit-log`), never a bare `lead@edit-log`.
