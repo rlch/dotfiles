@@ -78,7 +78,7 @@ CLEAN_H=${JANITOR_CLEAN_HOURS:-12}
 LANDED_H=${JANITOR_LANDED_HOURS:-24}
 FLOOR_GB=${JANITOR_FLOOR_GB:-200}
 GOAL_GB=${JANITOR_GOAL_GB:-400}
-# ~/.herdr/worktrees: herdr's worktrees, for their build output until the last is gone.
+# ~/.herdr/worktrees: worktrees from before abyme (herdr is retired, 2026-11-05), swept until the last is gone.
 # ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
 ABYME_WORKTREES="$HOME/.local/share/abyme/worktrees"
 # ~/.local/state/abyme/land: land's warm checkouts; never pruned, cleaned or removed.
@@ -129,7 +129,7 @@ never_touch() { # $1 = command
   [[ "$exe" == */claude/versions/* || "$exe" == *orbstack* || "$exe" == *docker* ]] && return 0
   [[ "$exe" == "$HOME"/actions-runner* || "${rest%% *}" == "$HOME"/actions-runner* ]] && return 0
   case "${exe##*/}" in
-    mosh-server|abymed|herdr|claude|sccache|launchd*|docker*|com.docker.*|orbstack*|OrbStack*|ollama|Ollama|Runner.*) return 0 ;;
+    mosh-server|abymed|claude|sccache|launchd*|docker*|com.docker.*|orbstack*|OrbStack*|ollama|Ollama|Runner.*) return 0 ;;
   esac
   return 1
 }
