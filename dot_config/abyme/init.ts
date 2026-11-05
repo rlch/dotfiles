@@ -24,8 +24,13 @@ import { common } from "../abyme-common/index.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
 import bans from "./bans";
+import records from "@abyme/records";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
+
+// Home old rows by their kind's rule at each start (owner-by-name, 2026-11-05): the Mac's 515
+// rows homed by its node id before homes.
+records.setup({ rehome: true });
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
