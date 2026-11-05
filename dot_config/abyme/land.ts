@@ -21,4 +21,6 @@ export default {
   "rlch/trading": {},
   "rlch/cockpit": {},
   "rlch/artifacts": {},
+  "rlch/sonzai": {},
+  "rlch/sonzai-streaming": {},
 } satisfies LandFiles;
