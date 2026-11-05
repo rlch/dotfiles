@@ -207,6 +207,8 @@ const AccountStatusSchema = z.object({ phase: z.enum(["open", "capped", "spent"]
 /** How long a change of a login's windows, agents or staleness alone waits to be written, in ms. */
 const ACCOUNT_LATER_MS = 5 * 60_000;
 const accountRecords = records.define("Account", {
+  // Read from this Mac's keychain and its agents: each machine's node writes its own.
+  home: "machine",
   spec: AccountSpecSchema,
   status: AccountStatusSchema,
   columns: { STATE: (r) => r.status.phase, AGENTS: (r) => r.status.agents },
