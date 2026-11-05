@@ -13,4 +13,7 @@ export default {
   // A push to main is an apply (its CLAUDE.md, CI applies): squash-merged pull requests, applied
   // and planned to no changes from a laptop first (operator, 2026-11-04).
   "abyme-studio/iac": { mode: "pr" },
+  // Straight to main, unchecked: tests are opt-in (operator, 2026-11-05). A push to main deploys
+  // the cloud (its deploy.yml). ~/dev/parley is a second clone of it.
+  "rlch/unspoke": {},
 } satisfies LandFiles;
