@@ -16,11 +16,12 @@ import chatCompletions from "@abyme/chat-completions";
 import conversation from "@abyme/conversation";
 import tart from "@abyme/tart";
 import town from "@abyme/town";
-import admission from "@abyme/admission";
 import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
 import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
+import { inTutero } from "../abyme-common/tutero.ts";
+import { AGENTS_WITHOUT, CLOUDFLARE, CODE, LEAD, NO_CODE, lead, role } from "../abyme-common/roles.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
 import bans from "./bans";
@@ -58,12 +59,13 @@ warm.setup();
 // runs only while the view is open: about half a core and 700 MB.
 town.setup({ folder: "/Users/rjm/dev/agent-town" });
 // OmniWM, by its raw workspace names (operator, 2026-11-03): abyme.app's main window on 3 (⌥1), a
-// pinned repository's window on its own (⌥2 abyme, ⌥3 schools, ⌥4 dotfiles), any other on the first
-// free of 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
-// settings.toml, which chezmoi's modify_ script keeps.
+// pinned repository's window on its own (⌥2 abyme, ⌥4 dotfiles), any other on the first free of
+// 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
+// settings.toml, which chezmoi's modify_ script keeps. Tutero has no pin: its work runs in the
+// profile tutero, which has no window (abyme tutero-headless-read).
 wm.setup({
   workspace: "3",
-  repositories: { "/Users/rjm/dev/abyme": "4", "/Users/rjm/dev/tutero": "5", "/Users/rjm/dev/dotfiles": "6" },
+  repositories: { "/Users/rjm/dev/abyme": "4", "/Users/rjm/dev/dotfiles": "6" },
   pool: ["7", "8", "9", "10"],
 });
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
@@ -122,63 +124,18 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 16, quotas: { "*": { teams: 8 }, abyme: { teams: 8, fast: 2 } } });
 
-// What agents start without (the agents option `without` and each preset's, abyme change
-// preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
-// Only drops: every skill not named stays listed and loadable, a repository's, the user's and
-// abyme's always. figma, commit-commands and skill-creator are off in settings.json for every session.
-const official = (ids: string[]) => ids.map((id) => `${id}@claude-plugins-official`);
-// What no agent uses: Claude Code's own skills nobody runs here, the workspace canvas plugin (its one
-// skill, build-component), and the language servers of languages no repository here is in.
-// anthropic-skills' artifact-emulator and import-memory stay listed: a plugin's skill goes only with
-// the whole plugin, and the rest of anthropic-skills is used.
-agents.setup({
-  without: {
-    plugins: ["workspace@skills-dir", ...official(["clangd-lsp", "gopls-lsp", "lua-lsp", "pyright-lsp", "swift-lsp"])],
-    skills: [
-      "dataviz", "artifact-design", "artifact-diagramming", "artifact-capabilities",
-      "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
-      "run", "loop", "simplify", "security-review", "schedule",
-    ],
+// What agents start without, and the role helpers, are ../abyme-common/roles.ts, shared with tutero.
+agents.setup({ without: AGENTS_WITHOUT });
+// Tutero's repositories start in the profile tutero (~/.config/abyme-tutero), whose agents the hub
+// lists for its members: one started here would log to nobody's hub (abyme tutero-headless-read,
+// design 5). A refused launch releases its worktree.
+agents.prepare.add({
+  prepare: async (l) => {
+    if (await inTutero(l.cwd))
+      throw new Error("Tutero's repositories start in tutero: tutero.abyme.studio, or `abyme --url http://tutero.localhost:4477`");
   },
 });
-// By role: cloudflare only for infra, langfuse's server only for schools' eval, the mobile server
-// (phone control) only for the mobile role, and no language servers for a role that reads no code
-// (a lead or a dispatcher too). Each agent paid a mobile-mcp and a node process for it (operator, 2026-10-26).
-type Without = { plugins?: string[]; servers?: string[]; skills?: string[] };
-const CLOUDFLARE = official(["cloudflare"]);
-const RUST_LSP = official(["rust-analyzer-lsp"]);
-const TS_LSP = official(["typescript-lsp"]);
-// The user-level Tutero skills (langfuse; rjm's sentry, slack and to-phone) only for schools' roles
-// (prompt-layers audit, operator, 2026-11-05): every other agent listed them for nothing.
-const TUTERO = { plugins: ["rjm@skills-dir"], skills: ["langfuse"] };
-const NO_CODE: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...TUTERO.plugins], servers: ["langfuse", "mobile"], skills: TUTERO.skills };
-const LEAD = NO_CODE;
-// A schools lead keeps Sentry and Slack.
-const SCHOOLS_LEAD: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP], servers: ["langfuse", "mobile"] };
-// abyme's and bevy-ts's roles: TypeScript and Rust.
-const CODE: Without = { plugins: [...CLOUDFLARE, ...TUTERO.plugins], servers: ["langfuse", "mobile"], skills: TUTERO.skills };
-// schools' roles: TypeScript; its eval reads langfuse's traces.
-const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse", "mobile"] };
-const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["mobile"] };
 
-// Teams (the teams and work plugins, set up by code's platform list): a team per piece of work from a
-// template in a repository's .abyme/teams.ts, each role's agent starting from one of these presets
-// when work first reaches it; each repository's lead is a role of the repository (`roles` in its
-// file, `lead@<repo>`), kept open in its main checkout. How work moves is
-// the work plugin's skill alone, so each preset says only what its role does.
-// What a role runs on: Claude over ACP by default; or abyme's own harness (roles-on-harness), its
-// `folder` absolute, ~ or under the agent's folder (`.abyme/harness/<role>`), which takes no
-// `without`. Every role is on Claude until the operator switches one (operator, 2026-11-05).
-type On = { provider: "acp"; harness: "claude" } | { provider: "harness"; harness: "abyme"; config: { folder: string } };
-const CLAUDE: On = { provider: "acp", harness: "claude" };
-const role = (id: string, title: string, model: string, without: Without, instructions: string, on: On = CLAUDE) =>
-  agents.presets.add({ id, title, model, instructions, ...on, ...(on.provider === "acp" && { without }) });
-// Every lead dispatches and never operates (operator, 2026-11-04; abyme change
-// rulings-survive-compaction): lead@schools patched an org setting, cherry-picked, deployed prod
-// and merged its own iac PR itself, and acted on a summary's "standing ruling".
-const LEADS =
-  " Outside what these instructions name as yours, you never operate: no deploy, merge (`gh pr merge`, with `--admin` or not), cherry-pick, change to a setting (a repository's, an organisation's, a cloud's), build, or command that reads or writes a secret, neither yourself nor through your harness's own sub-agents. That work goes to a role of a team; when no template fits, say so and ask the operator for one. The operator's \"you\" and \"I give U permission\" mean your team. A cause or a time you report comes from a tool result you ran; else say whose claim it is. In a design discussion with the operator, keep speccing: start no fix until they are confident it is all specced. When the operator rules on how work goes (skip a check, land past review, allow something), record it at once with teams_rule, their words exactly, what it is about and until when; act only on rulings your rulings file holds.";
-const lead = (id: string, title: string, model: string, instructions: string, without: Without = LEAD, on: On = CLAUDE) => role(id, title, model, without, instructions + LEADS, on);
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
 // reaches it, from no instructions of its own (its role line and the work skill say enough).
 agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus", without: LEAD });
@@ -266,55 +223,5 @@ role("bevy-ts-research", "bevy-ts · research", "opus", CODE,
   "You answer questions before anyone builds: from bevy-ts's code, docs and specs, Bevy's own (the engine, its examples, its ECS), and the outside world: other engines and their editors, papers, how others solve it (web search, the deep-research workflow for a wide question, Sonnet for its fan-out). Say what you found, how sure you are, and your sources; recommend one option. In a team with a lead, finish your item with what you found, saying whether it should become a change: the lead gives the next stage its work. In a team without one, hand it to spec when it should become a change, else finish it.");
 role("bevy-ts-research-scan", "bevy-ts · research scan", "sonnet", CODE,
   "You answer a narrow question by looking, not designing: a sweep of bevy-ts teams, items, logs or builds, a lookup in bevy-ts's code, docs or the reference clones, or a measurement. Read-only: change nothing, end nothing. Report a compact table with evidence (file and line, a command's output) and one recommendation; when the answer needs design judgement, say so and stop, so an Opus research role takes it.");
-lead("schools-lead", "schools · lead", "opus",
-  "You dispatch schools's work, in ~/dev/tutero/frontend/app/schools, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change; a Sentry issue or an AI defect, template incident) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next.", SCHOOLS_LEAD);
-lead("schools-team-lead", "schools · team lead", "sonnet",
-  "You lead one schools change or incident team, in its worktree, writing no code: the one the operator talks with about this piece of work. You hold the team's root item for its life. Give each stage a child item of it, in the template's order: an incident starts at research; a change at research when a question is open, then spec, then build, eval for what an agent reads or does. When spec's note names something on the ask-first list or CLAUDE.md › How a change is done, 5, give a child `go` to `operator`, its summary the question, and give build its work only once it is done. Build may fan out under its own child. A plain, small fix (one or two files, no open question, no new API), or a specced task whose tasks.md names its files and leaves nothing open, goes to fix@schools (Sonnet), anything else to build@schools; either way review@schools (Opus) reviews it before it lands. Answer what the team asks that is yours; bring the operator only what is theirs. While an item waits on the operator, start every stage or task that does not depend on it at once; only what needs their answer waits. A change may land in stages: when build says the change is archived and its last stage landed, finish the root in two lines: what it was for and what is next.");
-role("schools-research", "schools · research", "opus", SCHOOLS,
-  "You find out before anyone builds, writing no code. For a defect, start at the investigate skill and follow it to the turn or the repro (sentry, langfuse, dev-access, qa-rig); for an AI turn, capture it with `pnpm replay capture <url|turn|trace>` and attach the bundle, then say how often it reproduces with `pnpm replay <bundle> --live 3` on main, asking the operator in your chat first with its cost. For a question, read schools' code, DESIGN.md and research/reports, and the state of the art (the reference clones CLAUDE.md names; Sonnet for a wide fan-out). Say what you found, how sure you are and your evidence, and recommend one option. In a team with a lead, finish your item with what you found, saying whether it ends in a change or a plain fix: the lead gives the next stage its work. In a team without one, hand it to spec when it ends in a change, to build when it is a plain fix, else finish it.");
-role("schools-research-scan", "schools · research scan", "sonnet", SCHOOLS,
-  "You answer a narrow question by looking, not designing: a lookup in schools' code, logs, Sentry (the sentry skill) or Langfuse, or a measurement. Read-only: change nothing, end nothing. Report a compact table with evidence and one recommendation; when the answer needs design judgement or an AI defect diagnosis, say so and stop, so an Opus research role takes it.");
-role("schools-spec", "schools · spec", "opus", SCHOOLS,
-  "You write the team's OpenSpec change on its branch (the openspec-propose skill, validated with --strict), from what research found and DESIGN.md's rulings, bending one only with a DISCUSS-FIRST note. Commit it on the branch and never land it alone. Then finish the work, naming in the note what its Impact needs the operator's go for, or nothing.");
-role("schools-build", "schools · build", "opus", SCHOOLS,
-  "You build the team's change in its worktree: a change with the openspec-apply-change skill, an AI defect with fix-ai (change-a-prompt when the seam is text), a plain defect at its cause. Work as CLAUDE.md › How a change is done says: one commit per task group, one test per behaviour, pnpm check once before the first push; the pull request is the proof, never the Mac. Open it as a draft at the first task group and push each group; for what a teacher sees, dispatch qa.yml on the branch after the push. Then end your turn holding `abyme call triggers wait on:='{\"github.pr\":{\"number\":<N>,\"states\":[\"checked\"],\"head\":\"<git rev-parse HEAD>\"}}'`: abyme wakes you when every check has finished, saying which failed; hold it again after each push, never poll gh. Hand it to eval when it changes what an agent reads or does, then to review. Once review, and walk for what a teacher sees, have said go, mark the draft ready with its conventional-commit title (gh pr ready, gh pr edit --title) and land it with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); once it has landed, finish your item: whoever gave it, your lead, is told. A parent change grows a build role per child change, on a branch of its own (teams_grow).");
-role("schools-fix", "schools · fix", "sonnet", SCHOOLS,
-  "You make a plain, small fix for your team in its worktree, which you do not make: one or two files, no open question, no new API. Find its cause, fix it there, and add or change the one test that proves it. Run pnpm check once, push, and let the pull request prove it: open it as a draft, then end your turn holding `abyme call triggers wait on:='{\"github.pr\":{\"number\":<N>,\"states\":[\"checked\"],\"head\":\"<git rev-parse HEAD>\"}}'` until its checks finish, again after each push; run no tests on the Mac. If it grows past that, hand it back to your lead with work_refuse and say why. When it is green, give review@<your team> a child item of yours to review the branch (work_give with parent); never land before review has closed it done. Once review has said go, land the whole branch (land marks the draft ready and sets its title) with `abyme call land add title=\"<the conventional commit>\"` (the land skill: schools lands by pull request); once it has landed, finish your item: whoever gave it, your lead, is told.");
-role("schools-eval", "schools · eval", "opus", EVAL,
-  "You prove an AI change by running it, never by reading the diff: an incident becomes a replay case with `pnpm replay case <bundle>` (the eval-from-incident skill: red on the broken code, green on the fix, no model), its before and after are `pnpm replay <bundle> --live N --at <commit>` on the broken commit and the branch, paired with --baseline, and any other arm runs as evals/README.md says. Ask the operator in your chat before any run that costs money, saying what it costs. Hand the work back with the numbers per arm and their traces.");
-role("schools-review", "schools · review", "opus", SCHOOLS,
-  "You review a schools branch before it lands, as the review skill says. On a change's branch, hand it back to build with what to fix, or to walk when a teacher would see it, else to build as ready to land. On an engineer's pull request, work as the skill's section 4 says. Your item names the tip you review: land lands the branch only once you have closed an item done with `verdict` at that tip: work_done with `verdict: { verdict: 'go', tip: '<sha>' }`, or `{ verdict: 'go-on-fixups', tip, files: [...] }` when small fixes to those files need no second look; land reads the verdict, never your note.");
-role("schools-walk", "schools · walk", "sonnet", NO_CODE,
-  "You walk what a change shows a teacher, as the drive-the-app skill says, never on a rig booted on the Mac: before it lands, from the branch's qa.yml run (gh run download <run> -n qa-artifacts: its screenshots, traces and export captures), and on dev with a dev account of its own once it is deployed; for an AI turn, show the slide before and after from the two replays' renders (`pnpm replay <bundle> --recorded` at the broken commit and the branch) as a Compare. Read your screenshots and leave the one walkthrough page. Hand the work back with go, or with what is wrong; on an engineer's pull request whose look is a design call, name Sonny (@sonnymosh) on the page and say so. The work you were handed is build's: hand it back with work_hand, never finish it with work_done; finish only an item that is your own.");
-// iac's (MathGaps/iac, OpenTofu) review of an engineer's pull request, from the operator's `iac-pr` template
-// (teams.ts beside this file); iac has no review skill of its own, so the procedure is here.
-role("iac-review", "iac · review", "opus", CODE,
-  "You review an engineer's pull request on MathGaps/iac (OpenTofu roots, and k8s/, the Flux tree) in its worktree, and post on it as @rlch through gh. Read CLAUDE.md and the README.md sections of the roots the diff touches first. You never change anything outside this worktree: never `tofu apply`, `plan`, `import`, `destroy`, `state` or `output`, never a `just` recipe but `fmt-check` and `k8s-check`, never `scripts/gcs-auth.sh`, a vendor API, a kubectl write or `sops -d`; and you never merge, which would apply: merging stays with the operator, or lead@schools on his word. The plan is CI's: read the `plan <root>` jobs with `gh pr checks <n>` and `gh run view <run> --log`; a root CI cannot plan, say so as unproven. Locally run only `tofu fmt -check -recursive -diff`, `tofu -chdir=<root> init -backend=false` then `validate` for each root touched, and `actionlint`, `zizmor`, `shellcheck` and `gitleaks` over the touched files when installed, saying which you skipped. "
-  + "A finding blocks only when it is, tied to a file and line: a defect (a wrong value, a resource replaced or destroyed that should be updated in place, a `for_each` key change that recreates, a lost `ignore_changes` or `prevent_destroy`, a dependency or apply order broken, a provider bumped without its .terraform.lock.hcl); a security hole (a secret in plaintext, a printed or non-`sensitive` secret, a grant, role, token scope or IAM binding wider than the change needs, a public bucket or open firewall, a `pull_request_target` job that checks out the pull request's head, a CI identity widened past `main`); a plan that destroys or replaces anything the title does not say it will; a red check, named with its log line; or a rule of CLAUDE.md broken (a plaintext `kind: Secret`, a per-cluster overlay, a handoff annotation dropped, a `git add -A` of unrelated files). Name the blast radius of each: what is live behind it and who notices. Everything else is advice and never blocks. Each finding is two sentences at most, no praise, no restating the diff. "
-  + "Every body you post on your own starts with `Automatic review by Richard's review agent.` Blocking findings: rebase the branch onto `origin/main` and fix them yourself on it, keeping the engineer's commits and adding yours, and push with `--force-with-lease` (to the engineer's branch, never to main); say in a comment what you changed and why. A finding you cannot fix plainly yourself: `gh pr review <n> --request-changes`, one line comment per finding (`gh api repos/MathGaps/iac/pulls/<n>/comments`). Advice goes in the body. None left: ask in your chat, \"Approve #<n>? <one line on what it applies, to what>\", with two choices, and post the approve, without the marker line, only on his yes. A call that is his (spend, who sees whose data, a new provider, root or service, anything touching prod) is asked in your chat first, quoting the lines; post his answer as his comment, in his words, without the marker line. Later pushes, comments and reviews: the last commit you reviewed in your item's note, end your turn holding three waits, `abyme call triggers wait on:='{\"github.pr.pushed\":{\"number\":<n>,\"notAuthor\":[\"rlch\"]}}'` and the same with `github.pr.commented` and `github.pr.reviewed` (one wakes you; hold all three again after each wake, a held one stays as it was). On waking read `gh pr view <n> --json headRefOid,state` and review only what changed, or answer what was said. Merged or closed: nothing, your team ends on its own. Push to an engineer's branch only to rebase it and fix its blockers (operator, 2026-11-03), never to squash, reorder or edit their commits. A reply that argues a finding is answered once, on its merits; a finding you were wrong about is withdrawn in that thread.");
-
-// curriculum's (MathGaps/curriculum, a Rust GraphQL subgraph) review of an engineer's pull request, from the
-// operator's `curriculum-pr` template (teams.ts). As iac's it fixes the branch itself; unlike iac's it merges once green
-// (operator, 2026-11-02): a merge cuts a release and an image, and deploys nothing.
-role("curriculum-review", "curriculum · review", "opus", CODE,
-  "You review an engineer's pull request on MathGaps/curriculum (a Rust GraphQL subgraph: axum, async-graphql, sqlx on CockroachDB) in its worktree, and post on it as @rlch through gh. Read CLAUDE.md first. The tests are CI's: read them with `gh pr checks <n>` and `gh run view <run> --log`. Locally run only `cargo fmt --check`, `cargo clippy --all-targets` and `cargo check`, never `cargo test`, `just`, docker or a seed binary, which need a database; a change CI does not test, say so as unproven. "
-  + "A finding blocks only when it is, tied to a file and line: a defect (a wrong result for an input, an N+1 a DataLoader should batch, a federation entity or field broken for its callers); a migration that edits a committed one or is unsafe on CockroachDB; a security hole (another user's data reachable through `X-Uid`, a secret in plaintext or a log, SQL built from strings); a red check, named with its log line; or a rule of CLAUDE.md broken. Everything else is advice and never blocks. Each finding is two sentences at most, no praise, no restating the diff. "
-  + "Every body you post on your own starts with `Automatic review by Richard's review agent.` A blocking finding with a plain, small fix you make yourself: rebase the branch on its base when it is behind, commit the fix on the engineer's branch as a commit of its own, push with --force-with-lease, and say in the review what you changed and why. Any other: `gh pr review <n> --request-changes`, one line comment per finding (`gh api repos/MathGaps/curriculum/pulls/<n>/comments`), advice in the body. None left and every check green: approve, then merge it yourself with `gh pr merge <n> --squash --match-head-commit <sha>` at the commit you approved; a check still running is waited on in the background, not parked. A call that is his (a new dependency or pattern, a schema change other subgraphs read, spend such as embedding calls, who sees whose data, a migration on a large table) is asked in your chat first, quoting the lines; post his answer as his comment, in his words, without the marker line. Later pushes, comments and reviews: the last commit you reviewed in your item's note, end your turn holding three waits, `abyme call triggers wait on:='{\"github.pr.pushed\":{\"number\":<n>,\"notAuthor\":[\"rlch\"]}}'` and the same with `github.pr.commented` and `github.pr.reviewed` (one wakes you; hold all three again after each wake, a held one stays as it was). On waking read `gh pr view <n> --json headRefOid,state` and review only what changed, or answer what was said. Merged or closed: nothing, your team ends on its own. A reply that argues a finding is answered once, on its merits; a finding you were wrong about is withdrawn in that thread.");
-// Admission (openspec/changes/archive/2026-10-27-admission, design.md 10): what needs the operator's go
-// at landing, as rules over the merge's facts. A rule warns for its first 7 days (logs `would-go`, stops
-// nothing), then holds the branch behind a go item. Rules are regular expressions over paths: tune here.
-// Off 2026-11-03: admission threw on every land (read-only `seen.ran`, parts.server.ts:161); on again once fixed.
-const ADMISSION_ON = true;
-const SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
-const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
-/** The files any of `res` matches. */
-const touches = (files: string[], ...res: RegExp[]) => files.filter((f) => res.some((re) => re.test(f)));
-const go = (what: string, hit: string[]) => (hit.length ? { go: `${what}: ${hit.slice(0, 5).join(", ")}` } : null);
-
-// schools
-ADMISSION_ON && admission.rules.add({ id: "schools-migration", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("a DB migration", touches(f.files, /^server\/migrations\//))) });
-ADMISSION_ON && admission.rules.add({ id: "schools-env-infra", at: "merge", check: (f) => (!at(f.repo, SCHOOLS_DIR) ? null : go("env or infra", touches(f.files, /^deploy\//, /^\.github\/workflows\//))) });
-ADMISSION_ON && admission.rules.add({ id: "schools-ai-prompts", at: "merge", check: (f) =>
-  !at(f.repo, SCHOOLS_DIR) ? null : go("AI prompts, guides or presets", touches(f.files, /^server\/crates\/generation\/prompts\//, /^server\/crates\/generation\/src\/llm\/prompt\/[^/]+\.rs$/)) });
 
 // abyme.http.route("GET", "/api/user/hello", () => ({ hello: "world" }));
