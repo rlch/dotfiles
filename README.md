@@ -44,12 +44,10 @@ not the deployed copies in `~` — the next `chezmoi apply` will overwrite them.
 | Prompt         | starship                                            |
 | History        | atuin                                               |
 | Versions       | mise (node, python, go, bun)                        |
-| Git TUI        | lazygit                                             |
 | Containers     | OrbStack                                            |
 | AI CLI         | Claude Code                                         |
 | Local LLM      | Ollama (heavy hardware)                             |
 | Browser        | Firefox + tridactyl                                 |
-| Notes          | Obsidian                                            |
 | Launcher       | Raycast                                             |
 | Secrets        | 1Password CLI                                       |
 

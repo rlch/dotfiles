@@ -34,10 +34,8 @@ dot_config/homepage/
 dot_config/searxng/
 dot_config/nats-server/
 Library/LaunchAgents/
-dot_config/gh-dash/
 dot_config/ollama/
 dot_config/fish/functions/mini-mount.fish
 dot_config/fish/functions/mini-umount.fish
-dot_config/fish/functions/modality.fish
 dot_config/fish/functions/subflow.fish
 dot_local/bin/executable_inbox-zero

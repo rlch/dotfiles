@@ -1,9 +1,4 @@
 function k --wraps kubectl --description 'kubectl, with $LOCAL_NAMESPACE auto-injection (knl to set, knl -c to clear)'
-    if test (count $argv) -eq 0
-        k9s
-        return
-    end
-
     set -l override 0
     for arg in $argv
         if test "$arg" = -n -o "$arg" = --namespace

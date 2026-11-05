@@ -110,7 +110,7 @@ workspaceSwipeFingerCount = 4
 
 [hiddenBar]
 enabled = false
-hiddenBundleIDs = ["dev.abyme.app", "com.1password.1password", "com.henrikruscon.Alcove", "com.lwouis.alt-tab-macos", "com.openai.codex", "io.github.clash-verge-rev.clash-verge-rev", "com.anthropic.claudefordesktop", "com.openai.sky.CUAService", "com.figma.Desktop", "org.mozilla.firefox", "com.mitchellh.ghostty", "com.google.drivefs", "org.pqrs.Karabiner-Menu", "com.nuebling.mac-mouse-fix", "com.moomoo.mm.mac.au", "com.marcoluthi.Annotate-Input", "com.malwarebytes.mbam.frontend.agent", "notion.id", "com.oplus.devicespace", "com.electron.ollama", "com.parallels.desktop.console", "dev.kdrag0n.MacVirt", "ch.protonvpn.mac", "com.raycast.macos", "com.apple.ScriptMonitor", "cc.ffitch.shottr", "com.tinyspeck.slackmacgap", "com.superduper.superwhisper", "io.tailscale.ipn.macsys", "com.tdesktop.Telegram"]
+hiddenBundleIDs = ["dev.abyme.app", "com.1password.1password", "com.henrikruscon.Alcove", "com.lwouis.alt-tab-macos", "io.github.clash-verge-rev.clash-verge-rev", "com.anthropic.claudefordesktop", "com.openai.sky.CUAService", "com.figma.Desktop", "org.mozilla.firefox", "com.mitchellh.ghostty", "com.google.drivefs", "org.pqrs.Karabiner-Menu", "com.nuebling.mac-mouse-fix", "com.moomoo.mm.mac.au", "com.marcoluthi.Annotate-Input", "com.malwarebytes.mbam.frontend.agent", "notion.id", "com.oplus.devicespace", "com.electron.ollama", "com.parallels.desktop.console", "dev.kdrag0n.MacVirt", "ch.protonvpn.mac", "com.raycast.macos", "com.apple.ScriptMonitor", "cc.ffitch.shottr", "com.tinyspeck.slackmacgap", "com.superduper.superwhisper", "io.tailscale.ipn.macsys", "com.tdesktop.Telegram"]
 rehideIntervalSeconds = 5.0
 
 [island]
@@ -306,12 +306,6 @@ id = "418C29F3-3A3E-54AB-98AD-2DDD81D22C4F"
 initialContainerPrimarySpan = 0.5
 
 [[appRules]]
-bundleId = "com.openai.codex"
-id = "6A31F08A-4051-4354-B439-42F4C71894A3"
-minHeight = 600.0
-minWidth = 800.0
-
-[[appRules]]
 bundleId = "com.eltima.cmd1.pro.mas"
 id = "4BA546DA-2875-4BEF-B13F-1539E833B1A0"
 minHeight = 550.0
@@ -387,11 +381,6 @@ minWidth = 660.0
 [[appRules]]
 bundleId = "com.apple.finder"
 id = "09C34CEB-01AA-539D-913A-4992548920DB"
-layout = "float"
-
-[[appRules]]
-bundleId = "com.neovide.neovide"
-id = "59CDEE8E-DEB2-54C7-BCEA-D0A1A3AAD2A3"
 layout = "float"
 
 [[appRules]]

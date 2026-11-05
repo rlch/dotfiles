@@ -38,12 +38,10 @@ set -x CARGO_HOME $HOME/.cargo
 # `-L .../libpq/lib` linked nothing and only polluted the fingerprint. Any
 # project that genuinely needs a link path puts it in its own .cargo/config.toml.
 
-# gh enhance — bubbletint theme id (https://lrstanley.github.io/bubbletint/).
-set -x ENHANCE_THEME catppuccin_mocha
 
 
 # Point SSH_AUTH_SOCK at 1Password's agent so non-OpenSSH clients (Go-based
-# tools like upterm, terraform, gcloud, yazi VFS, etc.) find the keys. The
+# tools like terraform, gcloud, etc.) find the keys. The
 # `ssh` binary itself reads `IdentityAgent` from ~/.ssh/config and ignores
 # this var, so OpenSSH behaviour is unchanged.
 set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
@@ -60,14 +58,7 @@ set -gx CLAUDE_CODE_NO_FLICKER 1
 # in whatever repo the agent stands in. chromium-clone-sweep prunes the dir.
 set -gx PLAYWRIGHT_MCP_CONFIG "$HOME/.config/playwright-cli/config.json"
 
-# Headroom — local LLM context-compression proxy. Persistent Docker container
-# managed by the Docker-native `headroom install` wrapper.
-set -gx HEADROOM_PORT     8787
-set -gx HEADROOM_HOST     127.0.0.1
-set -gx HEADROOM_MODE     token
-set -gx HEADROOM_BACKEND  anthropic
 set -gx LANGFUSE_BASE_URL https://langfuse.tutero.dev   # self-hosted; keys via `langfuse-env`
-#t set -gx ANTHROPIC_BASE_URL http://127.0.0.1:8787
 
 # Java — brew's openjdk is keg-only and invisible to /usr/libexec/java_home.
 # JAVA_HOME lets JVM tools (maestro for Android UI flows, Gradle for Android
@@ -105,13 +96,10 @@ abbr wr  wrangler
 abbr tp  telepresence
 abbr h   helm
 abbr mk  minikube
-abbr kk  k9s
 abbr tf  terraform
 abbr gw  worktree-tui
-abbr cld 'cl --dangerously-skip-permissions'
 abbr n   pnpm
 abbr frb flutter_rust_bridge_codegen
-abbr ai  cl
 abbr iz  inbox-zero
 
 # Git (rebase-heavy; gp routes through the per-push approval hook)
@@ -123,9 +111,7 @@ abbr grc 'git rebase --continue'
 abbr gra 'git rebase --abort'
 
 # CLI utilities
-abbr f   yazi
 abbr j   just
-abbr bt  btop
 abbr we  watchexec
 abbr cgc cargo-gc
 abbr ct  'cargo nextest run'        # cargo test alias is blocked by built-in shadowing (cargo#10049)
@@ -145,7 +131,7 @@ alias frc  "flutter run -d chrome"
 alias frcc "flutter run -d chrome --web-header=Cross-Origin-Opener-Policy=same-origin --web-header=Cross-Origin-Embedder-Policy=require-corp"
 
 # Docker compose
-alias dcub "docker compose up --build -d && lazydocker"
+alias dcub "docker compose up --build -d"
 alias dcd  "docker compose down"
 
 # Misc

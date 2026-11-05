@@ -18,8 +18,7 @@ if command -v npm >/dev/null 2>&1; then
   # Globals consumed by Claude Code: status line, the browser CLIs (the
   # `browser` skill: `playwright-cli`, and `chrome-devtools` from the
   # chrome-devtools-mcp package — run on demand, never an MCP server at
-  # session start), and the ACP wrapper that lets non-Claude clients (obsidian-agent-client, Zed,
-  # etc.) drive Claude Code as a stdio JSON-RPC agent.
+  # session start), and the ACP wrapper that lets non-Claude clients (Zed etc.) drive Claude Code as a stdio JSON-RPC agent.
   npm install -g \
     ccstatusline \
     chrome-devtools-mcp@latest \

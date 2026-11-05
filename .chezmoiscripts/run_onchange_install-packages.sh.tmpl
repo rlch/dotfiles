@@ -14,8 +14,8 @@ set -euo pipefail
 # Trust third-party taps so brew bundle doesn't refuse to load their formulae/casks.
 # brew trust is idempotent — safe to run on every apply.
 brew trust hudochenkov/sshpass \
-    macos-fuse-t/cask nats-io/nats-tools nikitabobko/tap \
-    owenthereal/upterm umputun/apps 2>/dev/null || true
+    macos-fuse-t/cask nats-io/nats-tools \
+    umputun/apps 2>/dev/null || true
 
 brew bundle install --file={{ .chezmoi.sourceDir }}/Brewfile
 

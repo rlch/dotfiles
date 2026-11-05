@@ -35,12 +35,11 @@ not style: don't rename them away.
 .chezmoi.toml.tmpl     → ~/.config/chezmoi/chezmoi.toml on init (the role prompt)
 .chezmoiignore.tmpl    → files NOT to deploy (templated by role; Brewfiles are here)
 .chezmoiscripts/       → run-on-change install hooks
-.chezmoitemplates/     → shared partials (agent-instructions/, obsidian-shared/)
+.chezmoitemplates/     → shared partials (agent-instructions/)
 Brewfile, Brewfile.heavy → packages (heavy only when heavyHardware)
 dot_claude/            → ~/.claude/ (settings.json, hooks: pretool.sh → guard.py)
 dot_agents/skills/     → ~/.agents/skills/ (this repo's skill, with the per-tool notes)
-dot_config/            → ~/.config/ (abyme, omniwm, fish, ghostty, k9s, …)
-Knowledge/dot_obsidian/, dev/trading/ → Obsidian vault configs
+dot_config/            → ~/.config/ (abyme, omniwm, fish, ghostty, …)
 ```
 
 ## Multi-host
@@ -64,13 +63,11 @@ Locked-in choices (don't re-litigate without checking with the user):
 | IDE            | abyme, the only one (operator, 2026-11-05)          |
 | Window manager | OmniWM                                              |
 | Prompt         | starship                                            |
-| Git TUI        | lazygit                                             |
 | AI CLI         | Claude Code                                         |
 | Local LLM      | Ollama (heavy hardware only)                        |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
 | Browser        | Firefox (daily) + Chrome (secondary) + Brave (Gather PWA only, off Chrome's process tree) |
-| Notes          | Obsidian                                            |
 | Launcher       | Raycast                                             |
 
 ## Invariants
@@ -78,8 +75,6 @@ Locked-in choices (don't re-litigate without checking with the user):
 - **Preserve existing keymaps when porting.** The user has muscle memory in OmniWM (option
   layer), fish abbreviations and tridactyl. Cosmetic refactors
   fine; keybind changes are not.
-- k9s `config.yaml` is global prefs only, not cluster state: k9s rewrites cluster sections at
-  runtime, and keeping them in source stale-clusters the Mac mini.
 
 ## Per-tool notes
 
@@ -91,4 +86,3 @@ Read the one for a tool before touching it (in `dot_agents/skills/dotfiles/`, de
 - `karabiner.md`: it rewrites its own json.
 - `agents.md`: shared agent instructions and skills, Claude hooks, abyme's config.
 - `nerd-fonts.md`: three-byte glyphs vanish from an Edit.
-- `obsidian.md`: one shared config across vaults.

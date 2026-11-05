@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Langfuse for agents: the langfuse/skills Agent Skill + the Langfuse MCP server
 # on the self-hosted instance (langfuse.tutero.dev), registered USER-scope in
-# EVERY Claude account dir (~/.claude and ~/.claude-<slug>), the same idiom as
-# claude-trust-path — `.claude.json` (mcpServers) is per-account, unlike
-# settings/skills which clodcurrent symlinks.
+# EVERY Claude account dir (~/.claude and ~/.claude-<slug>): `.claude.json`
+# (mcpServers) is per-account.
 #
 # Skill: lives in ~/.agents/skills/langfuse (universal dir, like `dotfiles`);
 # ~/.claude/skills/langfuse is a chezmoi symlink to it. Installed once here by

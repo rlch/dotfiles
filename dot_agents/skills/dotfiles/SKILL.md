@@ -2,7 +2,7 @@
 name: dotfiles
 description: >-
   Edit the user's chezmoi-managed macOS dotfiles in ~/dev/dotfiles. Use whenever
-  changing fish, Ghostty, OmniWM, Starship, lazygit, k9s,
+  changing fish, Ghostty, OmniWM, Starship,
   Claude, Karabiner, Homebrew, ~/.config, ~/.claude, or another
   home-rooted configuration; also use when installing a tool, bootstrapping a
   machine, or making a setting persist. Always edit the source repository, run
@@ -106,4 +106,3 @@ Read the one for the tool before touching it, beside this file:
 - `karabiner.md`: it rewrites its own json.
 - `agents.md`: shared agent instructions, skills, Claude hooks, abyme's config.
 - `nerd-fonts.md`: three-byte glyphs vanish from an Edit or Write.
-- `obsidian.md`: the shared config across vaults; adding a vault.

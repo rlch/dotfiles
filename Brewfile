@@ -22,11 +22,11 @@ cask "ghostty"
 cask "termius"
 
 # === Shell ===
-brew "bash"        # newer Bash for installers that need 4.3+ (Headroom Docker-native)
+brew "bash"        # newer Bash for installers that need 4.3+
 brew "fish"
 
 # === Fonts ===
-# Nerd Font flavor — adds icon glyphs needed by lazygit, yazi, etc.
+# Nerd Font flavor — icon glyphs for starship and eza.
 cask "font-jetbrains-mono-nerd-font"
 
 # === Prompt + shell history + tool versions ===
@@ -65,11 +65,8 @@ brew "ocrmypdf"    # OCR scanned evidence so it's searchable and greppable
 # Disk / process / system
 brew "dust"        # du, but tree-shaped
 brew "procs"       # ps, but readable
-brew "btop"        # interactive system monitor
-brew "yazi"        # async TUI file manager
-brew "glow"        # terminal markdown renderer (yazi previewer via piper plugin)
 
-# Mount remote SSH hosts as local folders (sidesteps yazi's still-rough VFS).
+# Mount remote SSH hosts as local folders.
 # fuse-t is a kext-less FUSE replacement; fuse-t-sshfs is the sshfs binary
 # built against it. Used by the `mini-mount`/`mini-umount` fish functions.
 tap "macos-fuse-t/cask"
@@ -112,8 +109,6 @@ brew "node"
 brew "go"
 brew "python@3.13"
 brew "uv"          # fast Python package/venv manager (pip + virtualenv replacement)
-# uv-managed Python CLIs (euporie, etc.) install via
-# .chezmoiscripts/run_onchange_post-install-uv-tools.sh — not on homebrew-core.
 
 
 # === Android device automation ===
@@ -160,10 +155,6 @@ brew "xh"          # friendlier curl / httpie alternative
 tap "hudochenkov/sshpass"
 brew "hudochenkov/sshpass/sshpass"
 
-# upterm — instant terminal sharing (pair-programming / remote help over SSH
-# tunnel). Shipped as a cask despite being a CLI binary.
-tap "owenthereal/upterm"
-cask "owenthereal/upterm/upterm"
 
 # === WPA auditing (own/authorized networks) ===
 # Mac is the CRACKING station only — capture (monitor mode + injection) needs
@@ -173,17 +164,12 @@ cask "owenthereal/upterm/upterm"
 brew "hashcat"     # GPU password recovery; WPA2/PMKID is mode 22000 (Metal backend on macOS)
 brew "hcxtools"    # hcxpcapngtool: convert captured .pcapng → hashcat .hc22000
 
-# === Git / Docker TUIs ===
-brew "lazygit"
-brew "lazydocker"
+# === Git ===
 brew "git-absorb"  # auto-slot `git add -p`'d review fixes into the right ancestor commit (`git absorb --and-rebase`)
 brew "difftastic"  # structural/syntax-aware diff, invoked on demand as `git dft` (delta stays the pager)
 
 # === GitHub + macOS app stores ===
 brew "gh"          # GitHub CLI
-# gh extensions (gh-dash, gh-enhance) are installed by
-# .chezmoiscripts/run_onchange_post-install-gh-extensions.sh.tmpl — neither
-# ships on homebrew-core. Invoke as `gh dash` and `gh enhance`.
 brew "mas"         # Mac App Store CLI (lets MAS apps live in this Brewfile)
 
 # === Containers ===
@@ -216,8 +202,6 @@ brew "apify-cli"
 
 # === AI dev tooling ===
 brew "ast-grep"    # structural code search (`sg`)
-brew "gemini-cli"  # Google's Gemini CLI
-brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
 brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
 
 # === 3D / video / animation ===
@@ -267,7 +251,6 @@ brew "dfu-util"
 
 # === Apps ===
 cask "firefox"
-cask "obsidian"
 # Brave hosts Gather (and any other PWAs) so their lifetime is decoupled
 # from Chrome's — Chrome PWAs share Chrome's process tree, so Cmd-Q on
 # Chrome kills them. Brave is Chromium so the PWA UX is identical; it is

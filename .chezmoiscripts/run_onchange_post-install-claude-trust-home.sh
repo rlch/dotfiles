@@ -4,19 +4,15 @@
 # files in this folder?" dialog.
 #
 # Why it lives here: trust is stored per-account in ~/.claude*/.claude.json under
-# projects["<path>"].hasTrustDialogAccepted. clodcurrent's `ensure` symlinks the
-# SHARED config (settings.json, CLAUDE.md, hooks, skills) into each account dir,
-# but NOT .claude.json — that file is rewritten live per session, so it can't be
-# shared. This codifies in dotfiles what used to be poked into each config by
+# projects["<path>"].hasTrustDialogAccepted, a file rewritten live per session. This codifies in dotfiles what used to be poked into each config by
 # hand per-worktree (annoying, fragile, and blocked by the auto-permission
 # classifier as an ad-hoc security-gate edit).
 #
 # CORRECTION (2026-09-04): trust is inherited down the tree ONLY up to the cwd's
 # git toplevel (cli.js FF/BF walk with LL(cwd) as the boundary). So the $HOME
 # entry below covers non-git folders only; every git worktree, submodule or
-# clone needs an entry for ITS OWN toplevel. `cl` now writes that per launch via
-# ~/.local/bin/claude-trust-path (dot_local/bin). This script keeps the two
-# jobs it can do: trust $HOME for non-repo dirs, and repair explicit distrust.
+# clone needs an entry for ITS OWN toplevel. This script keeps the two jobs it
+# can do: trust $HOME for non-repo dirs, and repair explicit distrust.
 #
 # TWO halves, both needed:
 #   1. Trust $HOME itself (non-git folders under ~ inherit it).
@@ -30,9 +26,8 @@
 # common case -> zero writes -> never clobbers a live session's config). Runs on
 # any host (the glob just finds ~/.claude on a single-account mini).
 #
-# After onboarding a NEW account (`clodcurrent import-cswap`) its config starts
-# empty and would prompt on its first worktree -- re-run `chezmoi apply` (or edit
-# this file) to trust $HOME in it too.
+# A new account's config starts empty and would prompt on its first worktree --
+# re-run `chezmoi apply` (or edit this file) to trust $HOME in it too.
 
 set -euo pipefail
 

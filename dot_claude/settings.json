@@ -36,17 +36,6 @@
   "model": "claude-opus-5-5[1m]",
   "enableAllProjectMcpServers": true,
   "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Agent|Grep|Glob",
@@ -65,107 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/improvement-capture.py",
-            "timeout": 15
-          },
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
             "command": "[ -n \"$ABYME_AGENT\" ] || ~/.claude/lsp-cleanup-hook.sh"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "StopFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$ABYME_AGENT\" ] || /Users/rjm/.local/share/uv/tools/ccgram/bin/python -m ccgram.main hook",
-            "timeout": 5,
-            "async": true
           }
         ]
       }
