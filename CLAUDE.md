@@ -62,8 +62,8 @@ Locked-in choices (don't re-litigate without checking with the user):
 | Shell          | fish 4.x + fisher                                   |
 | Terminal       | Ghostty (auto-launches herdr; theme/font from Ghostty config) |
 | Multiplexer    | herdr (daily driver; workspaces/tabs/panes)         |
-| Window manager | OmniWM (replaced aerospace 2026-11-02; no yabai/skhd) |
-| Status bar     | macOS default (sketchybar/jankyborders rejected)    |
+| IDE            | abyme, the only one (operator, 2026-11-05)          |
+| Window manager | OmniWM                                              |
 | Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
 | Prompt         | starship                                            |
 | Git TUI        | lazygit                                             |
@@ -80,9 +80,6 @@ Locked-in choices (don't re-litigate without checking with the user):
 - **Preserve existing keymaps when porting.** The user has muscle memory in OmniWM (option
   layer), herdr (vim-style modal), nvim, fish abbreviations and tridactyl. Cosmetic refactors
   fine; keybind changes are not.
-- Multiplexing is herdr; don't propose tmux or cmux (both removed, 2026-07-01), or fish
-  auto-attaching a multiplexer.
-- No floating/dropdown Ghostty. Tried, rejected.
 - k9s `config.yaml` is global prefs only, not cluster state: k9s rewrites cluster sections at
   runtime, and keeping them in source stale-clusters the Mac mini.
 
