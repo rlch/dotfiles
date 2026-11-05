@@ -32,7 +32,7 @@ if command -v npm >/dev/null 2>&1 && npm ls -g --depth=0 @playwright/mcp >/dev/n
   npm uninstall -g @playwright/mcp >/dev/null 2>&1 || true
 fi
 rm -rf "$HOME/.agents/skills/chrome-devtools-axi"
-for d in "$HOME"/.claude*/skills/chrome-devtools-axi "$HOME/.config/opencode/skills/chrome-devtools-axi"; do
+for d in "$HOME"/.claude*/skills/chrome-devtools-axi; do
   [[ -L "$d" ]] && rm -f "$d"
 done
 echo "browser-mcp: no browser MCP server is registered; the browser skill drives the CLIs"

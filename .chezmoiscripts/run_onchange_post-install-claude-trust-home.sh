@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Ensure Claude Code trusts everything under $HOME in every account config, so
-# fresh ~/.herdr/worktrees/<repo>/<slug> checkouts (the opsx-worktree skill,
-# ⌃s ⇧g) and ordinary ~/dev repos never hang on the first-run "Do you trust the
+# fresh worktree checkouts and ordinary ~/dev repos never hang on the first-run "Do you trust the
 # files in this folder?" dialog.
 #
 # Why it lives here: trust is stored per-account in ~/.claude*/.claude.json under

@@ -5,3 +5,15 @@
 .local/state/browser-headed
 .config/fish/functions/chrome-debug.fish
 .config/fish/functions/flutter-web.fish
+.config/herdr/config.toml
+.config/herdfile/config.toml
+.config/nvim
+.claude/herdr-title.sh
+.local/bin/herdr-port
+.config/fish/conf.d/herdr_tab_title.fish
+.config/fish/functions/co.fish
+.config/fish/functions/cod.fish
+.agents/skills/dotfiles/herdr.md
+.config/opencode/AGENTS.md
+.config/opencode/skills
+.local/bin/setup-blender-codex

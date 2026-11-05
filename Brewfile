@@ -86,21 +86,10 @@ brew "d2"
 # asciinema-player (e.g. in a web TerminalScene component).
 brew "asciinema"
 
-# === Editor ===
-brew "neovim"
-cask "neovide-app"          # GPU Neovim GUI. Opens code/text files via its OWN
-                            # Info.plist associations — do NOT add a duti script to
-                            # force broad filetypes: setting the html/web handlers
-                            # cascaded Neovide into the default *browser* slot and
-                            # hijacked Slack/url opens (2026-06-25). Kept minimal.
+# === Editor tooling ===
 brew "duti"                 # macOS default-app (LaunchServices) handler management,
                             # used ad-hoc (e.g. reset web types back to Firefox).
-brew "lua-language-server"  # Lua LSP — used by LazyVim's own config
-brew "stylua"               # Lua formatter — paired with lua-language-server
-brew "luarocks"             # Lua package manager — needed by some nvim plugins
-brew "tree-sitter"          # library used by some treesitter parsers' install hooks
-brew "tree-sitter-cli"      # `tree-sitter` CLI binary (separate formula)
-brew "rust-analyzer"        # Rust LSP for nvim
+brew "rust-analyzer"        # Rust LSP for Claude Code's rust-analyzer-lsp plugin
 brew "rustup"               # Rust toolchain manager (rustc, cargo)
 brew "wasm-pack"            # Rust→WASM build/bundle tool
 # Cargo subcommands consumed by Rust projects.
@@ -118,8 +107,7 @@ brew "sccache"              # shared compile cache: the schools gates wrap their
                             # (see ~/.cargo/config.toml, incremental).
 
 # === Language runtimes ===
-# Available globally so mason.nvim (in nvim) can install LSPs/formatters that
-# rely on `npm`, `go`, or python>=3.10. Per-project versions still come from mise.
+# Global defaults; per-project versions come from mise.
 brew "node"
 brew "go"
 brew "python@3.13"
@@ -227,15 +215,9 @@ brew "opentofu"
 brew "apify-cli"
 
 # === AI dev tooling ===
-cask "codex"       # OpenAI's coding agent CLI
-# OpenCode — terminal AI coding agent. Host for the oh-my-openagent (OMO)
-# multi-agent harness, installed by post-install-omo.sh against your Claude
-# Max subscription. Launched inside herdr.
-brew "opencode"
-brew "ast-grep"    # structural code search (`sg`) — OMO's ast-grep skill depends on it
+brew "ast-grep"    # structural code search (`sg`)
 brew "gemini-cli"  # Google's Gemini CLI
 brew "ccusage"     # token-spend telemetry for Claude Code session JSONL logs
-brew "herdr"       # terminal workspace manager for AI agents (claude/codex/hermes integrations; nested under tmux)
 brew "hf"          # HuggingFace Hub CLI — model/weights downloads + auth (Flux, InfiniteYou, etc. for the local ComfyUI island)
 
 # === 3D / video / animation ===

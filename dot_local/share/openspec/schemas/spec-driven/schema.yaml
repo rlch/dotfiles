@@ -181,9 +181,7 @@ apply:
        an earlier task's output, belong to the SAME unit and run sequentially
        within it. Only genuinely independent units run in parallel.
     3. Delegate each independent unit to a teammate — spawn one via your
-       Agent/Task tool with a distinct name per unit. For visible oversight you
-       can run each teammate as its own herdr split/tab
-       (`herdr agent start <name> -- claude "…"`) and watch it in the sidebar.
+       Agent/Task tool with a distinct name per unit.
        Keep ~3-4 teammates active at once; queue the rest.
     4. Each teammate implements its unit on the shared working tree, runs the
        build/tests covering its files, and reports back with evidence.

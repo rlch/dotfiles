@@ -10,7 +10,3 @@
 # Open Ollama.app once to grant permissions, then see ~/.config/ollama/notes.md
 # for env vars and model pulls.
 cask "ollama-app"
-# Hermes Agent (NousResearch) is Python and ships its own installer that
-# provisions uv / Python 3.11 / Node 22 — not on brew. Installed by
-# .chezmoiscripts/run_onchange_install-hermes.sh.tmpl on this host.
-# Config: dot_hermes/config.yaml.tmpl (cloud-primary, ollama optional).

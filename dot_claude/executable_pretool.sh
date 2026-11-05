@@ -1,6 +1,6 @@
 #!/bin/bash
 # The one PreToolUse hook (2026-11-04). Every Bash call spawned guard.py,
-# rtk's hook and herdr's state hook in parallel, ~11 processes and ~1.5 s of wall
+# rtk's hook and a multiplexer's state hook in parallel, ~11 processes and ~1.5 s of wall
 # under load (waste-hunt); python's start alone is 1-1.6 s at load 200-400.
 #
 # A Bash call that cannot trip guard.py passes at once, with no python. Anything

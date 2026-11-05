@@ -19,7 +19,6 @@ function docsdev --description "Run this repo's Fumadocs docs-site dev server (.
         echo "docsdev: installing deps in $dir …"
         npm install
     end
-    # workflow: ⌘D to split a pane (herdr), then run `docsdev` in it.
     npm run dev $argv
     popd >/dev/null
 end

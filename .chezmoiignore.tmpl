@@ -10,15 +10,6 @@ LICENSE
 **/__pycache__
 **/*.pyc
 
-# LazyVim mutates this file (news markers etc.); extras are declared in
-# lua/config/init.lua instead, so chezmoi has no reason to track it.
-.config/nvim/lazyvim.json
-
-# lazy.nvim writes its lockfile directly to the dotfiles source tree (see
-# `lockfile = ...` in lua/config/init.lua) so chezmoi must not deploy or
-# round-trip the live target.
-.config/nvim/lazy-lock.json
-
 # OpenD (moomoo trading gateway) + nats-server (JetStream bus) + abymed only run on
 # the mbp; on a non-mbp host they'd loop on missing binaries. Skip them there.
 {{ if ne .role "mbp" -}}

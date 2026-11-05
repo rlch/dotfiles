@@ -23,10 +23,6 @@ fish_add_path -g \
     $HOME/fvm/default/bin   # fvm's globally-selected Flutter — populated by `fvm global <ver>`
 
 # --- Env --------------------------------------------------------------------
-set -x EDITOR    nvim
-set -x VISUAL    nvim
-set -x GIT_EDITOR nvim
-set -x MANPAGER  'nvim +Man!'
 set -x XDG_CONFIG_HOME $HOME/.config
 
 # Go
@@ -56,12 +52,6 @@ set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t
 # virtualized scrollback). Equivalent to `/tui fullscreen`, but persistent
 # across sessions. https://code.claude.com/docs/en/env-vars
 set -gx CLAUDE_CODE_NO_FLICKER 1
-
-# OpenCode — consume only its native, chezmoi-managed skill root. OpenCode also
-# scans ~/.claude/skills and ~/.agents/skills by default; disabling both avoids
-# duplicate names selecting another client's implementation nondeterministically.
-set -gx OPENCODE_DISABLE_CLAUDE_CODE_SKILLS 1
-set -gx OPENCODE_DISABLE_EXTERNAL_SKILLS 1
 
 # playwright-cli (the `browser` skill) — one config for every agent, every
 # account, every cwd: headless, MacAppCodeSignClone off (a
@@ -117,7 +107,6 @@ abbr h   helm
 abbr mk  minikube
 abbr kk  k9s
 abbr tf  terraform
-abbr v   "fg &>/dev/null || nvim"
 abbr gw  worktree-tui
 abbr cld 'cl --dangerously-skip-permissions'
 abbr n   pnpm
@@ -148,11 +137,6 @@ abbr cze  'chezmoi edit -a'
 abbr czcd 'chezmoi cd'
 abbr czre 'chezmoi re-add'
 
-# Edit configs (open the chezmoi source in nvim — apply via `cz` after).
-abbr efish 'nvim ~/dev/dotfiles/dot_config/fish/config.fish'
-abbr envim 'nvim ~/dev/dotfiles/dot_config/nvim'
-abbr edot  'cd ~/dev/dotfiles && nvim'
-
 # Flutter helpers
 alias fpg  "flutter pub get"
 alias fc   "flutter clean"
@@ -167,7 +151,6 @@ alias dcd  "docker compose down"
 # Misc
 alias intel "arch -x86_64"
 alias dn    "say done"
-alias vo    "nvim +\":setlocal filetype=log | setlocal buftype=nofile\" -"
 alias cbo   "tee /dev/tty | cb"
 alias sfish "source ~/.config/fish/config.fish"
 

@@ -50,7 +50,7 @@ rules = [
   # Folders
   { mime = "inode/directory", use = ["edit", "open", "reveal"] },
 
-  # Text-ish (let nvim handle them)
+  # Text-ish (open in $EDITOR)
   { mime = "text/*",                 use = ["edit", "reveal"] },
   { mime = "*/{xml,javascript,wine-extension-ini,json}", use = ["edit", "reveal"] },
 

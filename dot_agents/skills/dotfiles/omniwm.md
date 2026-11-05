@@ -31,9 +31,8 @@
   columns. The labels are the repository's name while abyme holds one there (`wm.setup` in
   init.ts). Pinned (operator, 2026-11-03): ⌥2 abyme, ⌥3 schools (~/dev/tutero), ⌥4 dotfiles; ⌥5-8
   go to any other repository, first free. Displays by each workspace's `monitorAssignment` (all
-  fall back to the one display there is). Option is the window layer (ctrl = herdr panes, cmd =
-  herdr tabs/workspaces): `⌥hl` column, `⌥jk` window or next/previous workspace, `⌥⇧hjkl` move,
+  fall back to the one display there is). Option is the window layer: `⌥hl` column, `⌥jk` window or next/previous workspace, `⌥⇧hjkl` move,
   `⌥r` width preset, `⌥f` full width, `⌥c` center, `⌥[`/`⌥]` into/out of column, `⌥,` tabbed, `⌥s`
   the chat scratchpad (`⌥⇧s` adds a window: membership ends when OmniWM restarts), `⌥⇧o`
-  overview. Not `⌃⌥hjkl`: herdr swaps panes there. A window open before a rule change moves with
+  overview. A window open before a rule change moves with
   `omniwmctl rule apply --pid <pid>`.

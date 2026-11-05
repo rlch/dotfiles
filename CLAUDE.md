@@ -39,7 +39,7 @@ not style: don't rename them away.
 Brewfile, Brewfile.heavy → packages (heavy only when heavyHardware)
 dot_claude/            → ~/.claude/ (settings.json, hooks: pretool.sh → guard.py)
 dot_agents/skills/     → ~/.agents/skills/ (this repo's skill, with the per-tool notes)
-dot_config/            → ~/.config/ (abyme, omniwm, fish, ghostty, herdr, k9s, …)
+dot_config/            → ~/.config/ (abyme, omniwm, fish, ghostty, k9s, …)
 Knowledge/dot_obsidian/, dev/trading/ → Obsidian vault configs
 ```
 
@@ -60,14 +60,12 @@ Locked-in choices (don't re-litigate without checking with the user):
 | -------------- | --------------------------------------------------- |
 | Manager        | chezmoi                                             |
 | Shell          | fish 4.x + fisher                                   |
-| Terminal       | Ghostty (auto-launches herdr; theme/font from Ghostty config) |
-| Multiplexer    | herdr (daily driver; workspaces/tabs/panes)         |
+| Terminal       | Ghostty (plain fish; theme/font from Ghostty config) |
 | IDE            | abyme, the only one (operator, 2026-11-05)          |
 | Window manager | OmniWM                                              |
-| Editor         | Neovim + LazyVim base (**no AI plugins** — pure editor) |
 | Prompt         | starship                                            |
 | Git TUI        | lazygit                                             |
-| AI CLIs        | Claude Code + OpenCode + Codex CLI + Hermes Agent   |
+| AI CLI         | Claude Code                                         |
 | Local LLM      | Ollama (heavy hardware only)                        |
 | Containers     | OrbStack                                            |
 | Secrets        | 1Password CLI                                       |
@@ -78,7 +76,7 @@ Locked-in choices (don't re-litigate without checking with the user):
 ## Invariants
 
 - **Preserve existing keymaps when porting.** The user has muscle memory in OmniWM (option
-  layer), herdr (vim-style modal), nvim, fish abbreviations and tridactyl. Cosmetic refactors
+  layer), fish abbreviations and tridactyl. Cosmetic refactors
   fine; keybind changes are not.
 - k9s `config.yaml` is global prefs only, not cluster state: k9s rewrites cluster sections at
   runtime, and keeping them in source stale-clusters the Mac mini.
@@ -88,7 +86,6 @@ Locked-in choices (don't re-litigate without checking with the user):
 Read the one for a tool before touching it (in `dot_agents/skills/dotfiles/`, deployed to
 `~/.agents/skills/dotfiles/`):
 
-- `herdr.md`: the canonical keymap, worktrees, UI chrome; a matched pair with Ghostty's ⌘ block.
 - `omniwm.md`: settings.toml's modify script, the fork, the workspace layout and option layer.
 - `ghostty.md`: no inline comments, reloads.
 - `karabiner.md`: it rewrites its own json.

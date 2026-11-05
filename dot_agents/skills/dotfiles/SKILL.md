@@ -2,8 +2,8 @@
 name: dotfiles
 description: >-
   Edit the user's chezmoi-managed macOS dotfiles in ~/dev/dotfiles. Use whenever
-  changing fish, herdr, Ghostty, OmniWM, Neovim, Starship, lazygit, k9s,
-  Claude, OpenCode, Karabiner, Homebrew, ~/.config, ~/.claude, or another
+  changing fish, Ghostty, OmniWM, Starship, lazygit, k9s,
+  Claude, Karabiner, Homebrew, ~/.config, ~/.claude, or another
   home-rooted configuration; also use when installing a tool, bootstrapping a
   machine, or making a setting persist. Always edit the source repository, run
   chezmoi apply, preserve the established stack and keymaps, and inspect similar
@@ -27,14 +27,13 @@ invariants (stack, keymaps, multi-host, the init.ts parse-check). This skill hol
 3. `chezmoi apply` (or scoped: `chezmoi apply ~/.config/fish`).
 4. Reload the live process:
    - fish: `exec fish` (or a new pane).
-   - herdr: `herdr server reload-config`.
    - OmniWM: `chezmoi apply ~/.config/omniwm/settings.toml` (diff first, omniwm.md); it reloads
      the file itself.
    - Karabiner: picks it up itself.
    - Ghostty: ⌘⇧, (keybinds need it).
    - abyme (`dot_config/abyme/`): parse-check with `npx -y esbuild` before applying; abymed
      reloads, then `curl -s localhost:4477/api/config` shows `problems` and `threw`.
-   - Claude Code `settings.json`: next turn or restart, by setting. OpenCode: restart it.
+   - Claude Code `settings.json`: next turn or restart, by setting.
 5. Commit and push when stable: `type(scope): subject`.
 
 Don't end a task assuming the operator will apply later.
@@ -60,8 +59,7 @@ already keeps it. A build artifact (`__pycache__`, a regenerated lockfile) goes 
 | `run_onchange_*.sh.tmpl`         | runs when its hash changes | `.chezmoiscripts/run_onchange_install-packages.sh.tmpl` |
 
 Agent instructions: a rule for every client goes in `.chezmoitemplates/agent-instructions/common.md`,
-a Claude-only one in `dot_claude/CLAUDE.md.tmpl`, an OpenCode-only one in
-`dot_config/opencode/AGENTS.md.tmpl` (agents.md). "This repo's CLAUDE.md" is `~/dev/dotfiles/CLAUDE.md`,
+a Claude-only one in `dot_claude/CLAUDE.md.tmpl` (agents.md). "This repo's CLAUDE.md" is `~/dev/dotfiles/CLAUDE.md`,
 not deployed; another project's CLAUDE.md is not a dotfiles edit.
 
 ## Multi-host
@@ -96,16 +94,15 @@ brew bundle check --file=Brewfile.heavy
 
 Ask before changing keybindings in use, re-opening a locked-in stack choice, adding a heavy
 package to the base Brewfile, or anything on the mini you can't test here. Everything else (a fish
-function, a non-conflicting herdr binding, an OmniWM rule, a Claude hook, a starship segment):
+function, an OmniWM rule, a Claude hook, a starship segment):
 research the pattern and ship it.
 
 ## Per-tool notes
 
 Read the one for the tool before touching it, beside this file:
 
-- `herdr.md`: canonical keymap, worktrees, UI chrome.
 - `omniwm.md`: settings.toml's modify script, the fork and its update, workspaces and the option layer.
-- `ghostty.md`: no inline comments; the ⌘ forwarding pair with herdr.
+- `ghostty.md`: no inline comments, reloads.
 - `karabiner.md`: it rewrites its own json.
 - `agents.md`: shared agent instructions, skills, Claude hooks, abyme's config.
 - `nerd-fonts.md`: three-byte glyphs vanish from an Edit or Write.

@@ -28,8 +28,7 @@ clipboard-trim-trailing-spaces = true
 # Drop OSC 9 / OSC 777 desktop-notification escape sequences. Claude Code's
 # `auto` notif channel, plus any other CLI tool that asks the terminal to
 # pop a macOS banner, route through this — flipping it false short-circuits
-# the lot at the terminal level. herdr's own toasts (ui.toast.delivery =
-# "herdr") stay in-app, so agent-attention cues still surface.
+# the lot at the terminal level.
 desktop-notifications = false
 
 # === SSH terminfo propagation ===
@@ -39,21 +38,6 @@ desktop-notifications = false
 # without the entry render undercurl/italics/colors as garbage.
 shell-integration-features = ssh-env,ssh-terminfo
 
-# === Startup: herdr is the daily-driver multiplexer ===
-# Every Ghostty window loads fish, then execs `herdr` (attach-or-launch the
-# persistent session). Wrapped in `fish -l -C` rather than a bare
-# `command = herdr` on purpose: a bare command would make Ghostty CLOSE the
-# surface the moment herdr exits (default wait-after-command = false), so
-# detaching (⌃s q) would kill the window instead of leaving a shell. With the
-# wrapper, detach drops back into the SAME window as an interactive fish — the
-# "I just need a plain terminal" escape hatch. herdr autostart lives HERE, not
-# in config.fish: fish auto-attaching a multiplexer on startup is a rejected
-# pattern, and this keeps a manually-spawned `fish` a plain shell.
-#
-# Autostart currently DISABLED — new Ghostty windows drop into a plain login
-# fish; attach herdr by hand when wanted. Re-enable by uncommenting the line.
-# command = fish -l -C herdr
-
 # === Keybinds ===
 # alt+backspace → delete word backwards. Without this, Option+Backspace sends
 # nothing useful to TUI apps (Claude Code, bash, readline) — Ghostty's
@@ -61,91 +45,3 @@ shell-integration-features = ssh-env,ssh-terminfo
 # modifier rather than Alt. Surgical bind so Option's other behaviors stay
 # intact (no global macos-option-as-alt).
 keybind = alt+backspace=text:\x1b\x7f
-
-# cmd+1..9 → emit CSI-u with the SUPER modifier so herdr reads ⌘1-9 as an
-# agent jump ([keys.indexed] agents = "cmd" in herdr's config.toml).
-# Modifier 9 = 1 + super(8); codepoints 49..57 = '1'..'9'. ⌃1-9 (tab jump)
-# reaches herdr natively via the kitty protocol, so it needs no keybind here.
-#
-# Trigger spelling matters: Ghostty's default `super+digit_N=goto_tab:N`
-# uses the physical-digit key code, distinct from the character keysym
-# `super+N`. `cmd+one` parses as `super+1` (character form) and leaves the
-# goto_tab default *unshadowed*; `cmd+digit_N` lands on the same trigger
-# and properly overrides it.
-keybind = cmd+digit_1=text:\x1b[49;9u
-keybind = cmd+digit_2=text:\x1b[50;9u
-keybind = cmd+digit_3=text:\x1b[51;9u
-keybind = cmd+digit_4=text:\x1b[52;9u
-keybind = cmd+digit_5=text:\x1b[53;9u
-keybind = cmd+digit_6=text:\x1b[54;9u
-keybind = cmd+digit_7=text:\x1b[55;9u
-keybind = cmd+digit_8=text:\x1b[56;9u
-keybind = cmd+digit_9=text:\x1b[57;9u
-
-# === herdr ⌘-forwarding =================================================
-# herdr runs standalone in Ghostty and leans
-# on ⌘ chords for create/nav (see ~/.config/herdr/config.toml — the two
-# files are a matched pair). macOS hands ⌘ to the app, so Ghostty must be
-# told to forward each chord to the running TUI as a CSI-u *super*
-# sequence: modifier 9 = 1+super, 10 = 1+super+shift. herdr decodes these
-# as ⌘<key>.
-#
-# Scope caveat: these are GLOBAL Ghostty binds — they override Ghostty's
-# own ⌘T/⌘N/⌘W/⌘D (tab/window/split) and macOS ⌘H (hide) for every Ghostty
-# window, not just herdr's. That's intended: this Ghostty is a passive host
-# so herdr (the daily-driver multiplexer) owns multiplexing. A detached /
-# non-herdr shell just ignores the unknown CSI-u — harmless. ⌘C/⌘V/⌘Q are
-# left native.
-# Codepoints: h104 j106 k107 l108 t116 n110 d100 w119 b98 p112 e101 [91 ]93.
-#
-# NB: Ghostty config has NO inline/trailing comments — a `#` after a value is
-# consumed as part of that value. A trailing comment on a `csi:` bind sends the
-# comment text as literal keystrokes (herdr eats the `ESC[…u`, the rest prints
-# to the shell). Annotations therefore live ABOVE each bind, never after it.
-#
-#   cmd+h → previous_tab
-#   cmd+l → next_tab
-#   cmd+k → previous_workspace
-#   cmd+j → next_workspace
-#   cmd+t → new_tab
-#   cmd+n → new_workspace
-#   cmd+d → split_vertical
-#   cmd+shift+d → split_horizontal
-#   cmd+w → close_pane
-#   cmd+b → toggle_sidebar
-#   cmd+p → workspace_picker
-#   cmd+e → resize_mode
-#   cmd+[ → previous_agent      (⌘[, up agent list)
-#   cmd+] → next_agent          (⌘], down agent list)
-keybind = cmd+h=csi:104;9u
-keybind = cmd+l=csi:108;9u
-keybind = cmd+k=csi:107;9u
-keybind = cmd+j=csi:106;9u
-keybind = cmd+t=csi:116;9u
-keybind = cmd+n=csi:110;9u
-keybind = cmd+d=csi:100;9u
-keybind = cmd+shift+d=csi:100;10u
-keybind = cmd+w=csi:119;9u
-keybind = cmd+b=csi:98;9u
-keybind = cmd+p=csi:112;9u
-keybind = cmd+e=csi:101;9u
-# Use character names to shadow Ghostty's built-in cmd+[/] split navigation.
-keybind = cmd+[=csi:91;9u
-keybind = cmd+]=csi:93;9u
-
-# === herdr ⌃⌥-forwarding (pane MOVE) ====================================
-# ⌃⌥hjkl move (swap) the focused pane in a direction — herdr binds them to
-# `herdr pane swap` shell commands (config.toml [[keys.command]]). Unlike
-# ⌃⇧hjkl (which reached herdr natively), Option ISN'T Alt here (no
-# macos-option-as-alt — see the alt+backspace note above), so a native ⌃⌥
-# chord would character-compose instead of sending a clean alt modifier.
-# Force it deterministically: emit CSI-u with modifier 7 = 1+ctrl(4)+alt(2).
-# (Annotations above the binds, not after — see the inline-comment NB above.)
-#   ctrl+alt+h → move pane left   (⌃⌥H)
-#   ctrl+alt+l → move pane right  (⌃⌥L)
-#   ctrl+alt+k → move pane up     (⌃⌥K)
-#   ctrl+alt+j → move pane down   (⌃⌥J)
-keybind = ctrl+alt+h=csi:104;7u
-keybind = ctrl+alt+l=csi:108;7u
-keybind = ctrl+alt+k=csi:107;7u
-keybind = ctrl+alt+j=csi:106;7u

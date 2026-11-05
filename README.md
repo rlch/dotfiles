@@ -39,15 +39,14 @@ not the deployed copies in `~` — the next `chezmoi apply` will overwrite them.
 | Manager        | chezmoi                                             |
 | Shell          | fish 4 + fisher                                     |
 | Terminal       | Ghostty                                             |
-| Multiplexer    | herdr                                               |
 | Window manager | OmniWM                                              |
-| Editor         | Neovim (LazyVim base, no AI plugins)                |
+| IDE            | abyme                                               |
 | Prompt         | starship                                            |
 | History        | atuin                                               |
 | Versions       | mise (node, python, go, bun)                        |
 | Git TUI        | lazygit                                             |
 | Containers     | OrbStack                                            |
-| AI CLIs        | Claude Code, Codex, Hermes Agent (heavy hardware)   |
+| AI CLI         | Claude Code                                         |
 | Local LLM      | Ollama (heavy hardware)                             |
 | Browser        | Firefox + tridactyl                                 |
 | Notes          | Obsidian                                            |

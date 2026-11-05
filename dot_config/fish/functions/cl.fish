@@ -24,8 +24,6 @@ function cl --wraps claude --description 'clodcurrent: launch best free account;
     # ~/.claude/projects (clodcurrent ensure), so memory and conversations are
     # one per project whichever account runs. Everything in $args passes
     # straight through.
-    # herdr detects and tracks the claude agent on its own (integration hook), so
-    # there's no launcher wrapper to route through — just run it.
     if command -q clodcurrent
         clodcurrent $args
         return
