@@ -20,10 +20,12 @@ import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
 import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
-import { inTutero } from "../abyme-common/tutero.ts";
+import { TUTERO_MOVED, inTutero } from "../abyme-common/tutero.ts";
+import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { AGENTS_WITHOUT, CLOUDFLARE, CODE, LEAD, NO_CODE, lead, role } from "../abyme-common/roles.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
+import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
 import bans from "./bans";
 import records from "@abyme/records";
 
@@ -40,6 +42,7 @@ abyme.server({ name: "Coding", color: "blue", icon: "code" });
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 common();
 addTriggers();
+if (!TUTERO_MOVED) addTuteroTriggers();
 // The operator's own bans beside abyme's guard: no edit of a chezmoi-deployed file, no Haiku sub-agent (bans/).
 bans.setup();
 
@@ -59,13 +62,13 @@ warm.setup();
 // runs only while the view is open: about half a core and 700 MB.
 town.setup({ folder: "/Users/rjm/dev/agent-town" });
 // OmniWM, by its raw workspace names (operator, 2026-11-03): abyme.app's main window on 3 (⌥1), a
-// pinned repository's window on its own (⌥2 abyme, ⌥4 dotfiles), any other on the first free of
-// 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
-// settings.toml, which chezmoi's modify_ script keeps. Tutero has no pin: its work runs in the
-// profile tutero, which has no window (abyme tutero-headless-read).
+// pinned repository's window on its own (⌥2 abyme, ⌥3 schools, ⌥4 dotfiles), any other on the first
+// free of 7-10 (⌥5-8). A claimed workspace is labelled with the repository's name in OmniWM's
+// settings.toml, which chezmoi's modify_ script keeps. Tutero's pin goes when its move to the profile
+// tutero is done whole (TUTERO_MOVED).
 wm.setup({
   workspace: "3",
-  repositories: { "/Users/rjm/dev/abyme": "4", "/Users/rjm/dev/dotfiles": "6" },
+  repositories: { "/Users/rjm/dev/abyme": "4", ...(!TUTERO_MOVED && { "/Users/rjm/dev/tutero": "5" }), "/Users/rjm/dev/dotfiles": "6" },
   pool: ["7", "8", "9", "10"],
 });
 // The rail, top to bottom: the code app's list without Search, Source control, Ports, Tasks
@@ -131,10 +134,14 @@ agents.setup({ without: AGENTS_WITHOUT });
 // design 5). A refused launch releases its worktree.
 agents.prepare.add({
   prepare: async (l) => {
-    if (await inTutero(l.cwd))
+    if (TUTERO_MOVED && (await inTutero(l.cwd)))
       throw new Error("Tutero's repositories start in tutero: tutero.abyme.studio, or `abyme --url http://tutero.localhost:4477`");
   },
 });
+
+// Tutero's presets and admission rules, shared with the profile tutero (../abyme-common/tutero-roles.ts):
+// coding runs Tutero's work until the move is done whole (TUTERO_MOVED in ../abyme-common/tutero.ts).
+tuteroRoles();
 
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
 // reaches it, from no instructions of its own (its role line and the work skill say enough).

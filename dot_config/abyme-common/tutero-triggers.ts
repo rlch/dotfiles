@@ -1,5 +1,6 @@
-// Tutero's triggers (the triggers plugin's `items`): the profile tutero's, moved from coding's (abyme
-// tutero-headless-read, design 6). They run on this Mac only. A repository's `.abyme/triggers.ts`
+// Tutero's triggers (the triggers plugin's `items`), in one profile alone so none fires twice: coding's
+// until the move to the profile tutero is done whole, then tutero's (TUTERO_MOVED in ./tutero.ts;
+// abyme tutero-headless-read, design 6). They run on this Mac only. A repository's `.abyme/triggers.ts`
 // fires on every machine that checks it out; these never leave here.
 // Each is rooted at a repository's main checkout: its source is read and its call run there.
 

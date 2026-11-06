@@ -6,6 +6,12 @@
 // started, and would see none for good (a cold test abymed, 2026-11-05).
 import git from "@abyme/git";
 
+/** Whether Tutero's move to the profile tutero is done whole. False: coding's start guard is off and
+ * coding runs Tutero's work too (its presets, templates and land rows are tutero-roles.ts, shared).
+ * The move flips it to true, which turns coding's refusal of ~/dev/tutero back on. Tutero's own
+ * guard never reads it. */
+export const TUTERO_MOVED = false;
+
 /** Tutero's repositories, each a checkout under it. */
 export const TUTERO_DIR = "/Users/rjm/dev/tutero";
 
