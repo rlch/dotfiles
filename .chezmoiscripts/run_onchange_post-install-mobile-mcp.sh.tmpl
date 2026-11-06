@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# The mobile MCP server (phone control), pinned and installed once: `npx …@latest` made npm ask
+# the registry at every agent start (32 at once after the 2026-11-06 wake, load 159). Bump VERSION
+# by hand; a change reruns this script.
+{{- if eq .chezmoi.os "darwin" }}
+set -euo pipefail
+VERSION=1.0.16
+command -v npm >/dev/null 2>&1 || { echo "mobile-mcp: npm not on PATH; skipping"; exit 0; }
+pkg="$(npm root -g)/@mobilenext/mobile-mcp/package.json"
+have=$([ -f "$pkg" ] && node -p "require('$pkg').version" 2>/dev/null || true)
+if [ "$have" != "$VERSION" ]; then
+  echo "mobile-mcp: installing $VERSION (was: ${have:-none})"
+  npm install -g "@mobilenext/mobile-mcp@$VERSION"
+fi
+bin="$(npm prefix -g)/bin/mcp-server-mobile"
+[ -x "$bin" ] || { echo "mobile-mcp: $bin missing" >&2; exit 1; }
+command -v claude >/dev/null 2>&1 || { echo "mobile-mcp: claude not on PATH; not registered"; exit 0; }
+# The default config (~/.claude.json) beside each account's own.
+claude mcp remove -s user mobile >/dev/null 2>&1 || true
+claude mcp add -s user mobile -- "$bin" >/dev/null 2>&1 && echo "mobile-mcp: registered in ~/.claude.json"
+for dir in "$HOME/.claude" "$HOME"/.claude-*; do
+  case "$dir" in *-swap-backup) continue ;; esac
+  [ -f "$dir/.claude.json" ] || continue
+  CLAUDE_CONFIG_DIR="$dir" claude mcp remove -s user mobile >/dev/null 2>&1 || true
+  if CLAUDE_CONFIG_DIR="$dir" claude mcp add -s user mobile -- "$bin" >/dev/null 2>&1; then
+    echo "mobile-mcp: registered in $(basename "$dir")"
+  else
+    echo "mobile-mcp: registration FAILED in $(basename "$dir")" >&2
+  fi
+done
+{{- end }}

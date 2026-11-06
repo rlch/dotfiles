@@ -117,7 +117,7 @@ brew "uv"          # fast Python package/venv manager (pip + virtualenv replacem
 # tailnet IP works from anywhere. maestro = declarative YAML UI flows over adb;
 # scrcpy = live screen mirror so you can watch/take over while an agent drives.
 # The mobile MCP server is registered separately via
-# `claude mcp add -s user mobile -- npx -y @mobilenext/mobile-mcp@latest`.
+# .chezmoiscripts/run_onchange_post-install-mobile-mcp.sh.tmpl, pinned (never npx @latest).
 cask "android-platform-tools"
 # Building Android apps (schools apps/mobile, Tauri): the SDK (sdkmanager,
 # platforms, build-tools, emulator) and the NDK. Gradle wants JDK 17 or 21,
