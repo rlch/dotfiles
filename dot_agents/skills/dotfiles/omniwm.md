@@ -24,7 +24,8 @@
   completion. The first switch from the cask asks for Accessibility and Input Monitoring again.
   The fork stays for `edgeOutset` and `niri.partialColumnPreview` (settings.toml uses both; the
   cask's strict schema rejects them). abyme stopped calling window reveal (abyme 85993b637), so
-  its IPC commit (38513a08) can go at the next rebase.
+  its IPC commit (38513a08) can go at the next rebase. It also carries `passthroughBundleIDs` (PR #1, 511adc29):
+  ⌥H/J/K/L/S/F/R pass through to abyme.app, which hands focus back at its edge (wm-edge-keys).
 - **OmniWM workspaces: two on letters, eight on numbers** (operator, 2026-11-02; ⌥a folded into
   ⌥1, 2026-11-03): ten Niri workspaces. On letters: 1 `web` (Firefox, `⌥w`), 2 `comms` (Slack,
   Gather, Telegram, `⌥m`); `⌥⇧` + the letter moves a window there. 3 `abyme` is `⌥1`, abyme.app's
