@@ -16,7 +16,7 @@ import { parseSave, SAVE } from "./format";
 import { Ring } from "./ring.ts";
 import { replay, type Batch, type Head, type Read, type Save } from "./api.server.ts";
 
-const o = abyme.with(options).plugin.options;
+const o = abyme.with(options).cell.options;
 const DIR = fs ? (o.dir || `${fs.stateDir}/replays`).replace(/^~(?=\/|$)/, fs.home) : "";
 /** A stylesheet shorter than this stays where it is. */
 const CSS_AT = 1024;

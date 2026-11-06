@@ -15,4 +15,4 @@ plugins at the same versions; delete it and ranges are resolved afresh.
 
 Your editor types both files from abyme's contracts: tsconfig.server.json and tsconfig.page.json
 each extend one of abyme's (web/types/ in its source), and tsconfig.json names the two. A folder of
-yours that is a plugin is typed by its own contract.ts (docs/plugins.md, The registry).
+yours that is a plugin is typed by its own contract.ts (docs/cells.md, The registry).

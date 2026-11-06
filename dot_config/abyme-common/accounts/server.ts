@@ -20,7 +20,7 @@ import options from "./options";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
-const o = abyme.with(options).plugin.options;
+const o = abyme.with(options).cell.options;
 const HOME = o.home || fs?.home || "";
 
 /** The control plane's files: the plugin's scratch and the model settings a launch reads. */

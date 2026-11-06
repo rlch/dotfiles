@@ -42,7 +42,7 @@ export function common() {
   // Sentry is off (operator, 2026-10-22): 25 issues filed, none fixed from it. Uncomment to turn it back on.
   // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
   // sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
-  // Where agents are listed in Spaces, first answer wins (docs/plugins.md, Spaces): after-land's
+  // Where agents are listed in Spaces, first answer wins (docs/cells.md, Spaces): after-land's
   // fix agents in "Fixes", and an idle agent whose branch is on main folded away in "Done".
   spaces.rules.add({ id: "fixes", place: (a) => (a.name.startsWith("fix-") ? { group: "Fixes" } : undefined) });
   spaces.rules.add({ id: "done", place: (a) => (a.status === "idle" && a.merged ? { group: "Done", folded: true } : undefined) });

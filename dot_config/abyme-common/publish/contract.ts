@@ -1,5 +1,5 @@
 // `import publish from "./publish"` in init.ts, and `@abyme/publish` anywhere: its entry in
-// abyme's registry (docs/plugins.md, The registry).
+// abyme's registry (docs/cells.md, The registry).
 import type { Handle } from "@abyme/cell";
 import type options from "./options.ts";
 import type { Publish } from "./api.server.ts";

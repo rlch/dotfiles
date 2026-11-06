@@ -1,4 +1,4 @@
-// `import bans from "./bans"` in init.ts: its entry in abyme's registry (docs/plugins.md, The
+// `import bans from "./bans"` in init.ts: its entry in abyme's registry (docs/cells.md, The
 // registry). Types alone; it has no service.
 import type { Handle } from "@abyme/cell";
 import type options from "./options.ts";
