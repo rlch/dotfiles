@@ -64,7 +64,7 @@ if (o.onError) {
     for (const f of cells.faults.getState()) {
       if (seen.has(f.id)) continue;
       seen.add(f.id);
-      soon(`fault ${f.plugin} ${f.kind}: ${f.error?.message ?? f.what}`, f.error?.stack);
+      soon(`fault ${f.cell} ${f.kind}: ${f.error?.message ?? f.what}`, f.error?.stack);
     }
   });
   abyme.effect(() => () => {
