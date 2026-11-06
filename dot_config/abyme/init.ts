@@ -116,11 +116,10 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 // Turns on an account wait only once it is capped, not at 80% of a window: an idle account is waste
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
-// Machine teams 40 (was the default 25): CPU sat ~40-60% idle with teams queued (more-teams, 2026-11-03).
+// Machine teams 16, each repository 8, abyme's quick teams 2: down from 40 and 20 after a load of
+// 159 on 18 cores (operator, 2026-11-06: "maybe decrease teams budget").
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
-// Teams at once per repository, every repository's quota ("*"): 20, so teams run in parallel; the
-// machine budget of 40 busy teams across repositories guards the Mac.
-load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 40, quotas: { "*": { teams: 20 } } });
+load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 16, quotas: { "*": { teams: 8 }, abyme: { teams: 8, fast: 2 } } });
 
 // What agents start without (the agents option `without` and each preset's, abyme change
 // preset-loads; operator, 2026-10-25), so a role stops carrying the user config it has no use for.
