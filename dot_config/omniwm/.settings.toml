@@ -421,6 +421,7 @@ layout = "float"
 [[hotkeys]]
 binding = "Option+S"
 id = "toggleScratchpad.1"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+Shift+S"
@@ -665,6 +666,7 @@ id = "switchWorkspace.previous"
 [[hotkeys]]
 binding = "Option+H"
 id = "focus.left"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
@@ -677,6 +679,7 @@ id = "focus.up"
 [[hotkeys]]
 binding = "Option+L"
 id = "focus.right"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
@@ -709,10 +712,12 @@ id = "focusWindowUpOrBottom"
 [[hotkeys]]
 binding = "Option+J"
 id = "focusWindowOrWorkspaceDown"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+K"
 id = "focusWindowOrWorkspaceUp"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+C"
@@ -1041,6 +1046,7 @@ id = "cycleWindowSecondarySpanBackward"
 [[hotkeys]]
 binding = "Option+F"
 id = "toggleContainerFullPrimarySpan"
+passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
