@@ -4,7 +4,7 @@
 // repository's artifacts/<slug>/ (a folder with an index.html ships as is) and `artifact publish`
 // commits, pushes and waits for the deploy, which takes minutes, so a job runs on its own and pages
 // follow it in `state()`.
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
 import fs from "@abyme/fs/optional";

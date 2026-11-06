@@ -1,6 +1,6 @@
 // `import accounts from "./accounts"` in init.ts, and `@abyme/accounts` anywhere: its entry in
 // abyme's registry (docs/plugins.md, The registry).
-import type { Handle } from "@abyme/plugin";
+import type { Handle } from "@abyme/cell";
 import type options from "./options.ts";
 import type { AccountSpec, AccountStatus } from "./kind.ts";
 

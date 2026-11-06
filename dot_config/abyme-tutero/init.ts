@@ -12,7 +12,7 @@
 // tutero`, this folder's moved parts back into ../abyme, and the hub's peer key `mac` revoked;
 // tutero's records stay on the hub.
 
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import code from "@abyme/code";
 import records from "@abyme/records";
 import load from "@abyme/load";

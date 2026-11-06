@@ -4,7 +4,7 @@
 // abymeds). What one profile alone needs stays in its own init.ts: which built-ins run is each
 // profile's (coding the code app, knowledge its own list).
 
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import agents from "@abyme/agents/inventory";
 import theme from "@abyme/theme";
 import vim from "@abyme/vim";

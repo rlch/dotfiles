@@ -7,7 +7,7 @@
 // Tokens: read from the keychain for one launch and never kept: not in the store, a value a page
 // follows, a log line, an error, an answer or a command's arguments (a new one goes to
 // `security -i` on stdin).
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import type { Json } from "@abyme/server";
 import agents from "@abyme/agents/optional";
 import fs from "@abyme/fs/optional";

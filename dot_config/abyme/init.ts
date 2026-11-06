@@ -1,10 +1,10 @@
 // Runs inside abymed, once, before it listens; again whenever you save it or a file it imports.
-// It says what runs: `x.setup(options)` turns a plugin on. Its scope is `@abyme/plugin`, as in any
-// plugin. See docs/abymed.md, "Your config".
+// It says what runs: `x.setup(options)` turns a cell on. Its scope is `@abyme/cell`, as in any
+// cell. See docs/abymed.md, "Your config".
 //
 // The coding profile, coding.localhost:4477 at the gateway. What every profile shares is ../abyme-common.
 
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import coding from "./coding";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";

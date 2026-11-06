@@ -6,7 +6,7 @@
 // inlines (abyme's own, the same in every full snapshot) is held once and the event holds
 // `replay-css:<sha256>` in its place; a save's head carries the ones its events name, so a save is
 // whole on its own (format.ts puts them back). abymed restarting starts every recording empty.
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import { implement } from "@abyme/schema";
 import { HttpError, respond } from "@abyme/server";
 import fs from "@abyme/fs/optional";

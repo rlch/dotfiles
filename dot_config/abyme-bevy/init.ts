@@ -6,7 +6,7 @@
 // launchd job: it runs while it is used (`abymed ~/.config/abyme-bevy` until abyme starts profiles
 // on demand). What every profile shares is ../abyme-common.
 
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import bevy from "@abyme/bevy";
 import { common } from "../abyme-common";
 

@@ -4,7 +4,7 @@
 // but a save. "Save replay" (leader shift+r, the last `clip` minutes), "Save replay of the last
 // <keep> minutes", any uncaught error, rejection or fault, a stall, and an agent's
 // `abyme call replay save` write one, which agents read with replay_read and the view Replays plays.
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import replay from "@abyme/replay";
 import { restParam } from "@abyme/client";
 import commands from "@abyme/commands/inventory";

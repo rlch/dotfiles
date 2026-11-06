@@ -1,7 +1,7 @@
 // The operator's own bans, beside abyme's guard (guard.bans, guard.search), as hooks on every
 // agent's calls: the two of ~/.claude/guard.py the guard does not carry (abyme change
 // hook-substrate; operator's global rules). Plain `claude` outside abyme keeps guard.py.
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import hooks from "@abyme/hooks/inventory";
 import fs from "@abyme/fs/optional";
 import process from "@abyme/process/optional";
