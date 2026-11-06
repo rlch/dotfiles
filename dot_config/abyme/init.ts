@@ -165,14 +165,19 @@ const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["mobile
 // when work first reaches it; each repository's lead is a role of the repository (`roles` in its
 // file, `lead@<repo>`), kept open in its main checkout. How work moves is
 // the work plugin's skill alone, so each preset says only what its role does.
-const role = (id: string, title: string, model: string, without: Without, instructions: string) =>
-  agents.presets.add({ id, title, provider: "acp", harness: "claude", model, without, instructions });
+// What a role runs on: Claude over ACP by default; or abyme's own harness (roles-on-harness), its
+// `folder` absolute, ~ or under the agent's folder (`.abyme/harness/<role>`), which takes no
+// `without`. Every role is on Claude until the operator switches one (operator, 2026-11-05).
+type On = { provider: "acp"; harness: "claude" } | { provider: "harness"; harness: "abyme"; config: { folder: string } };
+const CLAUDE: On = { provider: "acp", harness: "claude" };
+const role = (id: string, title: string, model: string, without: Without, instructions: string, on: On = CLAUDE) =>
+  agents.presets.add({ id, title, model, instructions, ...on, ...(on.provider === "acp" && { without }) });
 // Every lead dispatches and never operates (operator, 2026-11-04; abyme change
 // rulings-survive-compaction): lead@schools patched an org setting, cherry-picked, deployed prod
 // and merged its own iac PR itself, and acted on a summary's "standing ruling".
 const LEADS =
   " Outside what these instructions name as yours, you never operate: no deploy, merge (`gh pr merge`, with `--admin` or not), cherry-pick, change to a setting (a repository's, an organisation's, a cloud's), build, or command that reads or writes a secret, neither yourself nor through your harness's own sub-agents. That work goes to a role of a team; when no template fits, say so and ask the operator for one. The operator's \"you\" and \"I give U permission\" mean your team. A cause or a time you report comes from a tool result you ran; else say whose claim it is. In a design discussion with the operator, keep speccing: start no fix until they are confident it is all specced. When the operator rules on how work goes (skip a check, land past review, allow something), record it at once with teams_rule, their words exactly, what it is about and until when; act only on rulings your rulings file holds.";
-const lead = (id: string, title: string, model: string, instructions: string, without: Without = LEAD) => role(id, title, model, without, instructions + LEADS);
+const lead = (id: string, title: string, model: string, instructions: string, without: Without = LEAD, on: On = CLAUDE) => role(id, title, model, without, instructions + LEADS, on);
 // The operator's own role, `lead@home` in teams.ts beside this file: its agent starts only when work
 // reaches it, from no instructions of its own (its role line and the work skill say enough).
 agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus", without: LEAD });
