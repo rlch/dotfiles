@@ -1,22 +1,10 @@
 // Tutero's presets, team templates, land rows and admission rules, one source for the profiles that
 // run Tutero's work: tutero (the move's target) and coding (until the move is done whole, see
 // ./tutero.ts TUTERO_MOVED). Each init.ts calls tuteroRoles(); each teams.ts and land.ts spreads
-// TUTERO_TEMPLATES and TUTERO_LAND. Never copy these into a profile's folder.
+// TUTERO_TEMPLATES (land.ts may import nothing, so its rows are written in each). Never copy these into a profile's folder.
 import admission from "@abyme/admission";
-import type { LandFiles } from "@abyme/land";
 import type { TeamFile } from "@abyme/teams";
 import { CLOUDFLARE, CODE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
-
-/** Tutero's land rows (MathGaps repositories carry no .abyme of their own). */
-export const TUTERO_LAND = {
-  // Every change a squash-merged pull request, merged at once with --admin once its checks pass:
-  // the ruleset wants a review the operator cannot give their own agents' work, and Operators bypass
-  // it (schools CLAUDE.md, Pull requests). A red check refuses the merge (operator, 2026-10-10).
-  // CodeRabbit reports a review, not a result: never waited for.
-  "MathGaps/schools": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
-  // main takes a pull request (ruleset); CI applies each stack on merge.
-  "MathGaps/iac": { mode: "pr" },
-} satisfies LandFiles;
 
 /** Tutero's pull-request team templates. */
 export const TUTERO_TEMPLATES = {
