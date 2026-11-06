@@ -46,7 +46,7 @@ agents?.fields.add({ id: "accounts.account", title: "Account", options, default:
 /** The agent a menu was opened on, if abyme knows it. */
 const agentOf = (target?: { all: Record<string, unknown> }): string | null => {
   const id = String(target?.all.agent ?? "");
-  return agents?.store.getState().agents[id] ? id : null;
+  return agents?.records.get(id) ? id : null;
 };
 
 async function choose(agent: string) {
@@ -71,7 +71,7 @@ commands.add({
   },
 });
 chat.slash.add({ name: "login", harness: "claude", description: "Choose the account this agent runs on", action: ({ agent }) => (agent ? void choose(agent) : "pass") });
-menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents?.store.getState().agents[agentOf(t)!]?.kind ?? "claude") === "claude" });
+menus.add({ kind: "agent", command: "accounts.pin", group: "agent", order: 40, when: (t) => agentOf(t) !== null && (agents?.records.get(agentOf(t)!)?.kind ?? "claude") === "claude" });
 /** A setup-token for the account: its authorize page opened, the token to the keychain once the
  * operator clicks Authorize there. Off this Mac, Claude shows a code instead, which an agent gives
  * the waiting setup-token (`abyme call accounts code slug=<s> code=<code>`). */
