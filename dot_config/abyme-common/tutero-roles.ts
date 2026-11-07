@@ -4,7 +4,7 @@
 // TUTERO_TEMPLATES (land.ts may import nothing, so its rows are written in each). Never copy these into a profile's folder.
 import admission from "@abyme/admission";
 import type { TeamFile } from "@abyme/teams";
-import { CLOUDFLARE, CODE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
+import { CLOUDFLARE, CODE, LANGFUSE, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
 
 /** Tutero's pull-request team templates. */
 export const TUTERO_TEMPLATES = {
@@ -31,10 +31,10 @@ export const TUTERO_TEMPLATES = {
 export function tuteroRoles(): void {
   // schools', iac's and curriculum's presets, moved from coding's init.ts.
   // A schools lead keeps Sentry and Slack.
-  const SCHOOLS_LEAD: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP], servers: ["langfuse", "mobile"] };
+  const SCHOOLS_LEAD: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...LANGFUSE, ...MOBILE];
   // schools' roles: TypeScript; its eval reads langfuse's traces.
-  const SCHOOLS: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["langfuse", "mobile"] };
-  const EVAL: Without = { plugins: [...CLOUDFLARE, ...RUST_LSP], servers: ["mobile"] };
+  const SCHOOLS: Without = [...CLOUDFLARE, ...RUST_LSP, ...LANGFUSE, ...MOBILE];
+  const EVAL: Without = [...CLOUDFLARE, ...RUST_LSP, ...MOBILE];
 
   lead("schools-lead", "schools · lead", "opus",
     "You dispatch schools's work, in ~/dev/tutero/frontend/app/schools, writing no code. For each piece of work the operator gives you, bring up a team of its own with teams_up, named after it, its brief given to its lead (a change, template change; a Sentry issue or an AI defect, template incident) or to its first role (a question, template research, to research). A team's lead runs it from there: you do not read its Impact or give its stages work. You are told when a lead finishes its root or a team ends. Answer what is in flight from teams' list, take down a team the operator drops with teams_down, and report each team that lands in two lines: what it was for and what is next.", SCHOOLS_LEAD);

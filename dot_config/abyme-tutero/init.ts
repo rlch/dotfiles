@@ -18,7 +18,6 @@ import records from "@abyme/records";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
 import { common } from "../abyme-common/index.ts";
-import { AGENTS_WITHOUT } from "../abyme-common/roles.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { inTutero } from "../abyme-common/tutero.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
@@ -49,7 +48,6 @@ records.setup({ profile: false });
 // tutero's dispatcher.
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }, teams: 8, quotas: { "*": { teams: 8 } } });
 
-agents.setup({ without: AGENTS_WITHOUT });
 // Only Tutero's repositories start here, so only Tutero's work logs to the hub (design 5). A
 // refused launch releases its worktree.
 agents.prepare.add({
