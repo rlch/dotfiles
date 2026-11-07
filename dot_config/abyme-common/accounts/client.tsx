@@ -3,7 +3,7 @@
 // `/login` in a Claude agent's composer opens the same picker. "Sign in to Claude account…" makes
 // an account's setup-token: its authorize page opens, and once the operator clicks Authorize the
 // token goes to the keychain. "Add copied Claude setup-token…" keeps one made elsewhere.
-import abyme from "@abyme/cell";
+import abyme from "@abyme/plugin";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents/optional";
 import chat from "@abyme/chat/inventory";

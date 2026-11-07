@@ -1,4 +1,4 @@
-// The server half's API, defined once (docs/cells/defining-an-api.md): each function takes one
+// The server half's API, defined once (docs/plugins/defining-an-api.md): each function takes one
 // object, as `abyme call publish <fn> path=<abs .md>`, a page and a half pass it. Pages import its
 // types alone.
 import { api, fn, store, z, type Api } from "@abyme/schema";

@@ -5,9 +5,9 @@
 // own state (~/.local/state/abyme-knowledge), agents and processes; the gateway starts it when it
 // is opened (`abyme profiles add`). What every profile shares is ../abyme-common.
 
-import abyme from "@abyme/cell";
+import abyme from "@abyme/plugin";
 import learn from "@abyme/learn";
-import cellApi from "@abyme/cell-api";
+import pluginApi from "@abyme/plugin-api";
 import designSystem from "@abyme/design-system";
 import codemirror from "@abyme/codemirror";
 import react from "@abyme/react";
@@ -28,7 +28,7 @@ import menus from "@abyme/menus";
 import gestures from "@abyme/gestures";
 import notifications from "@abyme/notifications";
 import settings from "@abyme/settings";
-import cellManager from "@abyme/cell-manager";
+import pluginManager from "@abyme/plugin-manager";
 import catppuccin from "@abyme/catppuccin";
 import dracula from "@abyme/dracula";
 import everforest from "@abyme/everforest";
@@ -97,7 +97,7 @@ common();
 // terminals, language servers or worktrees). Each line is its own setup; a plugin a kept one
 // imports must be here too.
 // The libraries every view draws with.
-cellApi.setup();
+pluginApi.setup();
 designSystem.setup();
 codemirror.setup();
 react.setup();
@@ -123,7 +123,7 @@ gestures.setup();
 // Telling me things, Settings, what runs, and the colours (every scheme, as each device chose one).
 notifications.setup();
 settings.setup();
-cellManager.setup();
+pluginManager.setup();
 catppuccin.setup();
 dracula.setup();
 everforest.setup();

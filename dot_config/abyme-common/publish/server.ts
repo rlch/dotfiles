@@ -4,7 +4,7 @@
 // repository's artifacts/<slug>/ (a folder with an index.html ships as is) and `artifact publish`
 // commits, pushes and waits for the deploy, which takes minutes, so a job runs on its own and pages
 // follow it in `state()`.
-import abyme from "@abyme/cell";
+import abyme from "@abyme/plugin";
 import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
 import fs from "@abyme/fs/optional";
@@ -13,7 +13,7 @@ import { implement } from "@abyme/schema";
 import options from "./options";
 import { publish, type Job, type Prepared, type State } from "./api.server";
 
-const o = abyme.with(options).cell.options;
+const o = abyme.with(options).plugin.options;
 const ROOT = o.root.replace(/^~(?=\/|$)/, fs?.home ?? "~");
 const STAGE = `${(abyme.env.TMPDIR ?? "/tmp").replace(/\/+$/, "")}/abyme-publish`;
 const RUN_MS = 20 * 60_000;
