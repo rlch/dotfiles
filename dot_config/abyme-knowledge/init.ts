@@ -19,7 +19,6 @@ import layoutPanes from "@abyme/layout-panes";
 import rail from "@abyme/rail";
 import titlebar from "@abyme/titlebar";
 import desktop from "@abyme/desktop";
-import status from "@abyme/status";
 import spaces from "@abyme/spaces";
 import loading from "@abyme/loading";
 import commands from "@abyme/commands";
@@ -113,7 +112,6 @@ layoutPanes.setup({ strip: "many", placement: { "settings.list": { dock: "left",
 rail.setup({ items: ["town", "learn.library", "learn.study", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
-status.setup();
 spaces.setup();
 loading.setup();
 // Driving it: commands, keys, quick open, menus, gestures (vim is common's).
