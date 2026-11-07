@@ -5,19 +5,19 @@
 // <keep> minutes", any uncaught error, rejection or fault, a stall, and an agent's
 // `abyme call replay save` write one, which agents read with replay_read and the view Replays plays.
 // A chat's scroll goes in beside it, with abyme.app's wheel events and paint (scroll.ts).
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import replay from "@abyme/replay";
 import { restParam } from "@abyme/client";
 import commands from "@abyme/commands/inventory";
 import keys from "@abyme/keys/inventory";
 import views from "@abyme/views/inventory";
 import layout from "@abyme/layout";
-import plugins from "@abyme/plugins";
+import cells from "@abyme/cells";
 import notifications from "@abyme/notifications/optional";
 import options from "./options.ts";
 import { mark, PAGE, recording } from "./parts.tsx";
 
-const o = abyme.with(options).plugin.options;
+const o = abyme.with(options).cell.options;
 let rec: ReturnType<typeof recording> | null = null;
 let stopped = false;
 // After the page has drawn, so it costs the load nothing.
@@ -60,12 +60,12 @@ if (o.onError) {
   const rejected = (e: PromiseRejectionEvent) => soon(e.reason instanceof Error ? e.reason.message : String(e.reason), e.reason instanceof Error ? e.reason.stack : undefined);
   window.addEventListener("error", uncaught);
   window.addEventListener("unhandledrejection", rejected);
-  const seen = new Set(plugins.faults.getState().map((f) => f.id));
-  const off = plugins.faults.on("change", () => {
-    for (const f of plugins.faults.getState()) {
+  const seen = new Set(cells.faults.getState().map((f) => f.id));
+  const off = cells.faults.on("change", () => {
+    for (const f of cells.faults.getState()) {
       if (seen.has(f.id)) continue;
       seen.add(f.id);
-      soon(`fault ${f.plugin} ${f.kind}: ${f.error?.message ?? f.what}`, f.error?.stack);
+      soon(`fault ${f.cell} ${f.kind}: ${f.error?.message ?? f.what}`, f.error?.stack);
     }
   });
   abyme.effect(() => () => {

@@ -2,7 +2,7 @@
 // and on a document's menus (its tab, its page's blocks, its view and its row). Publishing here asks first, naming the URL and what the
 // export holds; the job then runs in abymed, the status bar says so, and its end is a notice with the
 // URL and Copy URL.
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import publish from "@abyme/publish";
 import type { MenuTarget } from "@abyme/client";
 import commands from "@abyme/commands/inventory";

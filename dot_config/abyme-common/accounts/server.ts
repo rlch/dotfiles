@@ -7,7 +7,7 @@
 // Tokens: read from the keychain for one launch and never kept: not in the store, a value a page
 // follows, a log line, an error, an answer or a command's arguments (a new one goes to
 // `security -i` on stdin).
-import abyme from "@abyme/plugin";
+import abyme from "@abyme/cell";
 import type { Json } from "@abyme/server";
 import agents from "@abyme/agents/optional";
 import fs from "@abyme/fs/optional";
@@ -20,7 +20,7 @@ import options from "./options";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
-const o = abyme.with(options).plugin.options;
+const o = abyme.with(options).cell.options;
 const HOME = o.home || fs?.home || "";
 
 /** The control plane's files: the plugin's scratch and the model settings a launch reads. */

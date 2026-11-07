@@ -1,5 +1,5 @@
 // What the server half answers, for both halves and the contract: its API's definition, which its
-// type is read off (@abyme/schema, docs/plugins.md, Defining an API). Pages import it as types alone.
+// type is read off (@abyme/schema, docs/cells.md, Defining an API). Pages import it as types alone.
 
 import { api, fn, store, z, type Api } from "@abyme/schema";
 
