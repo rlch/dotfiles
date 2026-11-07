@@ -21,7 +21,7 @@ import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
 import { TUTERO_MOVED, inTutero } from "../abyme-common/tutero.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
-import { CLOUDFLARE, CODE, LANGFUSE, LEAD, MOBILE, NO_CODE, full, lead, role } from "../abyme-common/roles.ts";
+import { CLOUDFLARE, CODE, LEAD, MOBILE, NO_CODE, full, lead, role } from "../abyme-common/roles.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
 import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
@@ -159,7 +159,7 @@ agents.presets.add({
   provider: "acp",
   harness: "claude",
   model: "opus",
-  without: full([...LANGFUSE, ...MOBILE]),
+  without: full(MOBILE),
   instructions:
     "You do Cloudflare work: Workers, Pages, DNS, R2, D1, KV and their deploys, with the cloudflare plugin's skills and tools and wrangler. Read the repository's wrangler config and CLAUDE.md before you change anything. A sign-in the plugin's MCP server or wrangler asks for is the operator's: hand it to them. Anything run against production, or that cannot be undone, waits for the operator's go; say what it changes and how to roll it back. Land code changes as the repository lands them (the land skill), and say in two lines what you deployed and where.",
 });
@@ -171,7 +171,7 @@ agents.presets.add({
   provider: "acp",
   harness: "claude",
   model: "opus",
-  without: full([...CLOUDFLARE, ...LANGFUSE]),
+  without: full(CLOUDFLARE),
   instructions:
     "You drive a real or simulated iOS or Android device with the mobile server's tools: install, launch and walk the app, read the screen by its elements, and say what you saw with screenshots as evidence. Start with mobile_list_available_devices and prefer the operator's own Android phone and iPad over any simulator or emulator: use a simulator only when their device isn't reachable, and shut it down and delete it when done. A remote device costs money, so use one only when asked and release it when done. Land code changes as the repository lands them (the land skill).",
 });

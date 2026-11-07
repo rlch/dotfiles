@@ -4,7 +4,7 @@
 // TUTERO_TEMPLATES (land.ts may import nothing, so its rows are written in each). Never copy these into a profile's folder.
 import admission from "@abyme/admission";
 import type { TeamFile } from "@abyme/teams";
-import { CLOUDFLARE, CODE, LANGFUSE, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
+import { CLOUDFLARE, CODE, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
 
 /** Tutero's pull-request team templates. */
 export const TUTERO_TEMPLATES = {
@@ -31,9 +31,9 @@ export const TUTERO_TEMPLATES = {
 export function tuteroRoles(): void {
   // schools', iac's and curriculum's presets, moved from coding's init.ts.
   // A schools lead keeps Sentry and Slack.
-  const SCHOOLS_LEAD: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...LANGFUSE, ...MOBILE];
+  const SCHOOLS_LEAD: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...MOBILE];
   // schools' roles: TypeScript; its eval reads langfuse's traces.
-  const SCHOOLS: Without = [...CLOUDFLARE, ...RUST_LSP, ...LANGFUSE, ...MOBILE];
+  const SCHOOLS: Without = [...CLOUDFLARE, ...RUST_LSP, ...MOBILE];
   const EVAL: Without = [...CLOUDFLARE, ...RUST_LSP, ...MOBILE];
 
   lead("schools-lead", "schools · lead", "opus",

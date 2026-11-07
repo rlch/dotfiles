@@ -22,29 +22,28 @@ const skill = (names: string[]): Without => names.map((n) => `skill:${n}`);
 export const AGENTS_WITHOUT: Without = [
   ...plugin(["workspace@skills-dir", ...official(["clangd-lsp", "gopls-lsp", "lua-lsp", "pyright-lsp", "swift-lsp"])]),
   ...skill([
-    "dataviz", "artifact-design", "artifact-diagramming", "artifact-capabilities",
-    "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
-    "run", "loop", "simplify", "security-review", "schedule",
+    "dataviz", "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
+    "run", "loop", "simplify", "security-review",
   ]),
 ];
 /** A Claude role's whole list: every agent's, then its own. */
 export const full = (w: Without): Without => [...new Set([...AGENTS_WITHOUT, ...w])];
 
-// By role: cloudflare only for infra, langfuse's server only for schools' eval, the mobile server
+// By role: cloudflare only for infra (langfuse's server is a project server of ~/dev/tutero alone, so
+// a preset cannot name it, without-by-adapter 7.2), the mobile server
 // (phone control) only for the mobile role, and no language servers for a role that reads no code
 // (a lead or a dispatcher too). Each agent paid a mobile-mcp and a node process for it (operator, 2026-10-26).
 export const CLOUDFLARE = plugin(official(["cloudflare"]));
 export const RUST_LSP = plugin(official(["rust-analyzer-lsp"]));
 export const TS_LSP = plugin(official(["typescript-lsp"]));
-export const LANGFUSE = server(["langfuse"]);
 export const MOBILE = server(["mobile"]);
 // The user-level Tutero skills (langfuse; rjm's sentry, slack and to-phone) only for schools' roles
 // (prompt-layers audit, operator, 2026-11-05): every other agent listed them for nothing.
 export const TUTERO: Without = [...plugin(["rjm@skills-dir"]), ...skill(["langfuse"])];
-export const NO_CODE: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...TUTERO, ...LANGFUSE, ...MOBILE];
+export const NO_CODE: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...TUTERO, ...MOBILE];
 export const LEAD = NO_CODE;
 // abyme's and bevy-ts's roles: TypeScript and Rust.
-export const CODE: Without = [...CLOUDFLARE, ...TUTERO, ...LANGFUSE, ...MOBILE];
+export const CODE: Without = [...CLOUDFLARE, ...TUTERO, ...MOBILE];
 
 // Teams (the teams and work plugins, set up by code's platform list): a team per piece of work from a
 // template in a repository's .abyme/teams.ts, each role's agent starting from one of these presets
