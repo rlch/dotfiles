@@ -5,7 +5,6 @@
 // The coding profile, coding.localhost:4477 at the gateway. What every profile shares is ../abyme-common.
 
 import abyme from "@abyme/cell";
-import coding from "./coding";
 import terminal from "@abyme/terminal";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
@@ -51,6 +50,9 @@ bans.setup();
 // templates (abyme change code-app-matches-coding). What follows is this profile's own. A member's own
 // line (common's theme and vim, the lines below) stands whole in place of the app's setup of it, so
 // layout-panes, voice and load restate code's options beside their own.
+// Name the installed client in common() before loading the app: the first boot can then
+// retry against that client even when the executable cannot find one beside itself.
+const { default: coding } = await import("./coding");
 coding.setup();
 // GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
 // Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
