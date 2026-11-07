@@ -5,6 +5,7 @@ import layout from "@abyme/layout";
 import terminal from "@abyme/terminal/optional";
 import { record, type RecordEvent } from "./vendor/record.js";
 import { Presence } from "./here.ts";
+import { scrolls } from "./scroll.ts";
 
 /** This page, while it is loaded: a reload is another page. */
 export const PAGE = crypto.randomUUID();
@@ -20,7 +21,7 @@ export function label(): string {
 
 /** A moment worth finding in a replay (an error, a save), put in the recording as a custom event
  * the view marks; nothing while the page is not recording. */
-export function mark(tag: "replay.error" | "replay.save" | "replay.stall" | "replay.checkout", payload: Record<string, unknown>) {
+export function mark(tag: string, payload: Record<string, unknown>) {
   if (recordingNow) record.addCustomEvent(tag, payload);
 }
 let recordingNow = false;
@@ -48,8 +49,9 @@ const idle = (f: () => void, timeout: number) => (typeof requestIdleCallback ===
  * visible and focused (here.ts), or a long animation frame that long where the browser reports them, is a stall
  * (`onStall`). A terminal draws on a canvas in a worker, which rrweb records blank: each visible
  * one's output and size go in beside it as custom events (`replay.terminal`), its whole screen
- * again at each checkout so a replay from there has it. Answers how to stop it, and to send what
- * is pending now (before a save).
+ * again at each checkout so a replay from there has it. A chat's scroll goes in beside it too, with
+ * abyme.app's wheel events and paint (scroll.ts). Answers how to stop it, and to send what is
+ * pending now (before a save).
  */
 export function recording(o: { checkout: number; terminals: boolean; stall: number; onStall(ms: number): void }): { stop(): void; flush(): void } {
   let batches: { checkout: boolean; events: RecordEvent[] }[] = [];
@@ -92,6 +94,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     collectFonts: false,
   });
   recordingNow = true;
+  const chats = scrolls(mark);
 
   // Checkouts wait for the operator to leave the page alone.
   let input = 0;
@@ -139,6 +142,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     const late = now - tick - SEND_MS;
     tick = now;
     if (here.tick()) stalled(late, "timer");
+    chats.tick();
     send();
     if (!checkingOut && now - checked >= o.checkout && now - input >= QUIET_MS) {
       checkingOut = true;
@@ -192,6 +196,7 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     offShells?.dispose();
     for (const t of followed.values()) t.off.dispose();
     followed.clear();
+    chats.stop();
     recordingNow = false;
     stopRecord?.();
     clearInterval(timer);

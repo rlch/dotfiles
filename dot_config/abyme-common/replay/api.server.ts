@@ -12,7 +12,8 @@ export const SaveSchema = z.object({ name: z.string(), path: z.string(), at: z.n
 
 /** What a save holds, once read: `events` is a slice of them. Terminal output is in `events` too,
  * as rrweb custom events tagged `replay.terminal` (`data.payload`: `{ source, id, data?, reset?, at?, exit? }`,
- * `data` base64 bytes as the terminal drew them). `count` is every event in the save. */
+ * `data` base64 bytes as the terminal drew them); a chat's scroll as `replay.scroll`, `replay.scrollWrite`,
+ * `replay.resize`, `replay.wheel` and `replay.paint` (scroll.ts says each). `count` is every event in the save. */
 export const ReadSchema = z.object({
   name: z.string(),
   path: z.string(),
@@ -47,7 +48,7 @@ export const replay = api({
   }),
   read: fn({
     description:
-      "A recording's rrweb events, with its page, label and why it was saved. rrweb types: 2 full snapshot, 3 incremental (data.source 0 mutation, 1 mousemove, 2 click/mouse, 3 scroll, 4 viewport resize, 5 input), 4 meta, 5 custom (`replay.terminal`: a terminal's output, base64, and its size). Page through with from/limit; filter with types.",
+      "A recording's rrweb events, with its page, label and why it was saved. rrweb types: 2 full snapshot, 3 incremental (data.source 0 mutation, 1 mousemove, 2 click/mouse, 3 scroll, 4 viewport resize, 5 input), 4 meta, 5 custom (`replay.terminal`: a terminal's output, base64, and its size; `replay.scroll`, `replay.scrollWrite` (with its caller's frames), `replay.resize`, `replay.wheel` (abyme.app's wheel events, with phase and momentum) and `replay.paint` (at a pointerdown in a chat, the DOM's scrollTop beside the scroll of what abyme.app paints): a chat's scroll, scroll.ts). Page through with from/limit; filter with types.",
     args: z.object({
       name: z.string().describe("A name from replay_saves."),
       from: z.number().describe("First event index (0).").optional(),
