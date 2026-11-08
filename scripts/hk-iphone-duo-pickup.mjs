@@ -8,7 +8,8 @@
  * HTTP 541 (Apple's 404) even inside a real browser (2026-11-04); its status is logged each run, so the day it
  * comes back shows. The last result is kept in ~/.local/state/hk-iphone-duo/last.json. A store newly offering
  * the watched part is told once, as an abyme notice (every page, and the phone while the operator is idle) and a
- * macOS notification.
+ * macOS notification. Every run appends one line to history.jsonl beside it (when, the watched part's stores, what
+ * was told), so an alert can be checked afterwards.
  *
  * Exits non-zero when Apple cannot be read or answers in a shape it does not know: never a silent "unavailable".
  *
@@ -17,7 +18,7 @@
  *   node scripts/hk-iphone-duo-pickup.mjs --test-notify   one notice marked TEST, nothing read or kept
  */
 import { execFile } from 'node:child_process';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -27,6 +28,7 @@ const PICKUP = 'https://www.apple.com/hk/shop/retail/pickup-message';
 const PAGE_FULFILMENT = 'https://www.apple.com/hk/shop/fulfillment-messages';
 const STATE_DIR = join(homedir(), '.local/state/hk-iphone-duo');
 const STATE = join(STATE_DIR, 'last.json');
+const HISTORY = join(STATE_DIR, 'history.jsonl');
 const KEY = 'hk-iphone-duo';
 
 /** Every HK iPhone Duo part, as its own pickup answer titles it (read 2026-11-04). */
@@ -173,15 +175,18 @@ async function main() {
 
   if (argv.includes('--dry')) return console.log(JSON.stringify({ available: nowAvail, fresh }));
 
+  let told = null;
   if (fresh.length) {
     const models = [...new Set(fresh.map((a) => `iPhone Duo ${PARTS[a.part]} (${a.part})`))].join(', ');
     const where = [...new Set(nowAvail.map((a) => `Apple ${stores[a.store].name}`))].join(', ');
     const title = `iPhone Duo pickup open in HK: ${models}`;
     const body = `${models} can be reserved for pickup at ${where}. Buy: ${BUY}`;
     await notify(KEY, title, body);
+    told = body;
     console.log(`told: ${body}`);
   } else if (!nowAvail.length && was.size) {
     await abyme('notifications', 'clear', { key: KEY });
+    told = 'cleared';
     console.log('no longer available anywhere: cleared the notice');
   } else {
     console.log(nowAvail.length ? 'available, already told' : 'not available for pickup at any HK store');
@@ -190,6 +195,10 @@ async function main() {
   await mkdir(STATE_DIR, { recursive: true });
   await writeFile(`${STATE}.tmp`, JSON.stringify({ checked: now, page, stores }, null, 2));
   await rename(`${STATE}.tmp`, STATE);
+  const watched = Object.fromEntries(
+    Object.entries(stores).map(([n, s]) => [n, WATCH.map((p) => s.parts[p].quote).join('; ')]),
+  );
+  await appendFile(HISTORY, `${JSON.stringify({ checked: now, available: nowAvail, told, watched })}\n`);
 }
 
 main().catch((e) => {
