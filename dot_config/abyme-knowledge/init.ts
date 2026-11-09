@@ -71,6 +71,7 @@ import push from "@abyme/push";
 import share from "@abyme/share";
 import browser from "@abyme/browser";
 import triggers from "@abyme/triggers";
+import machines from "@abyme/machines";
 import profiles from "@abyme/profiles";
 import packages from "@abyme/packages";
 import problems from "@abyme/problems";
@@ -170,6 +171,8 @@ push.setup();
 share.setup();
 browser.setup();
 triggers.setup();
+// Which machine each page runs on: texts and packages ask it (every page names a machine).
+machines.setup();
 // What keeps this profile in use, which the gateway reads before it suspends it.
 profiles.setup();
 packages.setup();
