@@ -11,6 +11,7 @@ import cellApi from "@abyme/cell-api";
 import designSystem from "@abyme/design-system";
 import codemirror from "@abyme/codemirror";
 import react from "@abyme/react";
+import intl from "@abyme/intl";
 import connection from "@abyme/connection";
 import state from "@abyme/state";
 import storage from "@abyme/storage";
@@ -103,6 +104,7 @@ designSystem.setup();
 codemirror.setup();
 react.setup();
 // The link to abymed, state every device shares, and what one device keeps.
+intl.setup();
 connection.setup();
 state.setup();
 storage.setup();
