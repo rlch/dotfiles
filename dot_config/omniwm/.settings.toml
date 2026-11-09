@@ -223,6 +223,27 @@ gridRow = 0
 monitorDisplayUUID = "FB3D6EE8-A5AB-4131-ADC8-47C14CFABDAD"
 monitorName = "MeowDisplay — iPad"
 
+[[routing.arrangements]]
+id = "CB2EB7EC-3BBE-4926-862F-0540BF0CDFEA"
+
+[[routing.arrangements.monitors]]
+gridColumn = 1
+gridRow = 0
+monitorDisplayUUID = "427AEA48-93F4-4418-8CC1-8C86EAC81586"
+monitorName = "DELL S2721DGF"
+
+[[routing.arrangements.monitors]]
+gridColumn = 2
+gridRow = 0
+monitorDisplayUUID = "37D8832A-2D66-02CA-B9F7-8F30A301B230"
+monitorName = "Built-in Retina Display"
+
+[[routing.arrangements.monitors]]
+gridColumn = 0
+gridRow = 0
+monitorDisplayUUID = "C88BDABC-0A6D-43A7-88B7-F32A6FBB0095"
+monitorName = "HP 25x"
+
 [scratchpads]
 
 [scratchpads.labels]
@@ -421,7 +442,6 @@ layout = "float"
 [[hotkeys]]
 binding = "Option+S"
 id = "toggleScratchpad.1"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+Shift+S"
@@ -666,7 +686,6 @@ id = "switchWorkspace.previous"
 [[hotkeys]]
 binding = "Option+H"
 id = "focus.left"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
@@ -679,7 +698,6 @@ id = "focus.up"
 [[hotkeys]]
 binding = "Option+L"
 id = "focus.right"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
@@ -712,12 +730,10 @@ id = "focusWindowUpOrBottom"
 [[hotkeys]]
 binding = "Option+J"
 id = "focusWindowOrWorkspaceDown"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+K"
 id = "focusWindowOrWorkspaceUp"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+C"
@@ -1022,7 +1038,6 @@ id = "moveColumnToIndex.9"
 [[hotkeys]]
 binding = "Option+R"
 id = "cycleSizeForward"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Option+Shift+R"
@@ -1047,7 +1062,6 @@ id = "cycleWindowSecondarySpanBackward"
 [[hotkeys]]
 binding = "Option+F"
 id = "toggleContainerFullPrimarySpan"
-passthroughBundleIDs = ["dev.abyme.app"]
 
 [[hotkeys]]
 binding = "Unassigned"
@@ -1288,7 +1302,11 @@ layoutType = "niri"
 name = "1"
 
 [workspaces.monitorAssignment]
-type = "main"
+type = "specificDisplay"
+
+[workspaces.monitorAssignment.output]
+displayUUID = "C88BDABC-0A6D-43A7-88B7-F32A6FBB0095"
+name = "HP 25x"
 
 [[workspaces]]
 displayName = "comms"
@@ -1300,8 +1318,8 @@ name = "2"
 type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
-displayUUID = "FB3D6EE8-A5AB-4131-ADC8-47C14CFABDAD"
-name = "MeowDisplay — iPad"
+displayUUID = "37D8832A-2D66-02CA-B9F7-8F30A301B230"
+name = "Built-in Retina Display"
 
 [[workspaces]]
 displayName = "abyme"
