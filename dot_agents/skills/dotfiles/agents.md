@@ -15,4 +15,4 @@ A shared core plus Claude's wrapper.
   removed 2026-11-04). Run `guard.py --selftest` after editing either. Every hook command starts
   `[ -n "$ABYME_AGENT" ] ||`: inside abyme, its guard and the bans plugin enforce the bans.
 - abyme's config: `dot_config/abyme/init.ts` (parse-check it with `npx -y esbuild` before every
-  apply, then check `curl -s localhost:4477/api/config` for problems and `threw`).
+  apply, then check `curl -s http://coding.localhost:4477/api/config` (a profile by name: `knowledge.`, `tutero.`, `bevy.`) for problems and `threw`).
