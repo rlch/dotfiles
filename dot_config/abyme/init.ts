@@ -77,11 +77,13 @@ wm.setup({
 // (operator, 2026-10-21), Output, Problems and Terminals, which open as tabs (2026-10-22); their views, commands and keys stay.
 // One dock, the left, switched by the rail: no right or bottom dock (operator, 2026-10-22); their
 // views open in main as tabs. This line stands whole over the code app's placement, so it names
-// the views kept in the left dock: off the rail, Search to Tasks stay there for their keys.
+// the views kept in the left dock: off the rail, Search to Tasks stay there for their keys. Records
+// is the code app's left-dock section; left out here it opened in main (2026-11-09).
 layoutPanes.setup({
   docks: { left: "rail" },
   placement: {
-    agents: { dock: "left", order: 10 }, explorer: { dock: "left", order: 20 },
+    agents: { dock: "left", order: 10 }, "records-view.records": { dock: "left", order: 15 },
+    explorer: { dock: "left", order: 20 },
     search: { dock: "left", order: 25 }, git: { dock: "left", order: 30 },
     ports: { dock: "left", order: 36 }, tasks: { dock: "left", order: 38 },
     "settings.list": { dock: "left", order: 90 },
