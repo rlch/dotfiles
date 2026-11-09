@@ -45,7 +45,7 @@ abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 // A slice of the profile tutero, by its hub (abyme agents-across-abymes, live step c; the
 // operator's go, shared-agents-live/go-hub-init-sharing): its records read here, its writes sent there.
 // Paired: the peer key is in the state folder's peers/tutero.key. Peers are read at start alone.
-abyme.server({ peers: { tutero: "https://tutero.abyme.studio" } });
+abyme.server({ peers: { tutero: "https://tutero.abyme.dev" } });
 sync.setup({ slices: ["tutero"], unwatched: ["~/dev/tutero"] });
 common();
 addTriggers();
