@@ -10,9 +10,8 @@
 import abyme from "@abyme/cell";
 import type { Json } from "@abyme/server";
 import agents from "@abyme/agents/optional";
-import fs from "@abyme/fs";
-import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
+import fs from "@abyme/fs/optional";
+import process from "@abyme/process/optional";
 import load from "@abyme/load/optional";
 import records from "@abyme/records";
 import { setCondition, type Condition } from "@abyme/records/condition";
@@ -22,16 +21,18 @@ import { accountId, accountReady, accountStored, accountUrgent, writeAccount } f
 import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).cell.options;
-const HOME = o.home || fs.home;
+const HOME = o.home || fs?.home || "";
 
-// It runs on every machine (abymed refuses a half that imports a capability only as optional), but
-// its functions are not marked `machine`, so they run on the control plane, the operator's Mac,
-// whose keychain holds the tokens; what it adds to others' lists it adds there alone, as before.
-const HERE = abyme.machine === LOCAL;
 /** The control plane's files: the plugin's scratch and the model settings a launch reads. */
-const files = () => fs;
+function files() {
+  if (!fs) throw new Error("no machine provides fs here, to keep Claude's setup-tokens");
+  return fs;
+}
 /** The control plane's processes: the keychain, ps and claude. */
-const processes = () => process;
+function processes() {
+  if (!process) throw new Error("no machine provides process here, to read the keychain");
+  return process;
+}
 const USER = abyme.env.USER ?? "user";
 const PICKED_MS = 60_000;
 
@@ -172,7 +173,7 @@ const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, strin
 /** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on,
  * which load asks for once a minute. */
 let forLoad: ReturnType<typeof loadAccounts> = [];
-if (HERE) load?.readers.add({ id: "accounts", accounts: () => forLoad });
+load?.readers.add({ id: "accounts", accounts: () => forLoad });
 
 /** When each account's setup-token ends (ISO), by slug: a year after the keychain says it was made. */
 async function tokensEnding(): Promise<Record<string, string>> {
@@ -393,9 +394,9 @@ const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
   },
 };
 
-// On the control plane alone: its keychain holds the accounts. Without agents (bevy) there is no
-// launch to answer: the accounts and their quotas still show.
-if (HERE) {
+// Only with a machine: without its keychain there is no account to pick or show. Without agents
+// (bevy) there is no launch to answer: the accounts and their quotas still show.
+if (fs && process) {
   agents?.prepare.add(prepare);
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
   // A token added or taken out of the keychain by hand shows within half a minute, agents working or
@@ -427,7 +428,7 @@ async function takeUsage() {
 }
 // An agent's list changes many times a second while agents work: once a moment at most.
 let showing: ReturnType<typeof setTimeout> | null = null;
-if (HERE && agents)
+if (fs && process && agents)
   agents.items.on("change", () => {
     showing ??= setTimeout(() => {
       showing = null;

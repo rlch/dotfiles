@@ -7,15 +7,14 @@
 import abyme from "@abyme/cell";
 import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
-import fs from "@abyme/fs";
-import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
+import fs from "@abyme/fs/optional";
+import process from "@abyme/process/optional";
 import { implement } from "@abyme/schema";
 import options from "./options";
 import { publish, type Job, type Prepared, type State } from "./api.server";
 
 const o = abyme.with(options).cell.options;
-const ROOT = o.root.replace(/^~(?=\/|$)/, fs.home);
+const ROOT = o.root.replace(/^~(?=\/|$)/, fs?.home ?? "~");
 const STAGE = `${(abyme.env.TMPDIR ?? "/tmp").replace(/\/+$/, "")}/abyme-publish`;
 const RUN_MS = 20 * 60_000;
 
@@ -88,13 +87,16 @@ function run(id: string, action: Job["action"], slug: string, work: () => Promis
   return { slug, done };
 }
 
-// It runs on every machine (abymed refuses a half that imports a capability only as optional), but
-// its functions are not marked `machine`, so they run on the control plane, the operator's Mac, where
-// the artifacts repository is; the skill is added there alone, one copy as before.
-/** The control plane's files, where the artifacts repository is. */
-const files = () => fs;
+/** The control plane's files, where the artifacts repository is; refused where there are none. */
+function files() {
+  if (!fs) throw new Error("no machine provides fs here, to publish a document");
+  return fs;
+}
 /** The control plane's processes, to run the artifact CLI. */
-const processes = () => process;
+function processes() {
+  if (!process) throw new Error(`no machine provides process here, to run ${o.command}`);
+  return process;
+}
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -161,7 +163,7 @@ async function share({ path }: { path: string }) {
 
 const SKILL = `Publish a document to the web: \`abyme call publish share path=<abs .md>\`. It publishes at once, with no confirm, waits for the deploy (minutes) and answers the URL. The operator can take it down from the document's menu (Unpublish), or \`abyme call publish unpublish path=<abs .md>\`.
 `;
-if (abyme.machine === LOCAL) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
+agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
 
 export default implement(publish, {
   prepare,
