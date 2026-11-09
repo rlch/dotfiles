@@ -1,0 +1,4 @@
+# Raycast File Search skips everything under ~/.local: abyme's worktrees, builds and state churn
+# here (fseventsd at 97% CPU, 2026-11-09). Hidden folders are skipped by default; this holds even
+# when Include Hidden Files is on.
+*
