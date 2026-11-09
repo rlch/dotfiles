@@ -102,14 +102,16 @@ chatCompletions.setup({
 conversation.setup({ voiceModel: "deepseek-flash" });
 // GPT-6.1 Sol on the harness, priced so the evals' score cap counts it (OpenAI's model page, read
 // 2026-11-10: $2 in, $0.10 cached, $10 out per million). Its key is schools-ts's QA curriculum key,
-// in the keychain (abyme-openai), never here (operator, 2026-11-10).
+// in the keychain (abyme-openai), never here (operator, 2026-11-10). Its window is cut to Flash's
+// 128k, though OpenAI's is 1.05M: the evals cut a transcript to the window, so both judges read the
+// same cut, and a run costs about $0.25, not $2 (calibration's estimate was $106 at 1.05M).
 harness.setup({
   models: {
     "openai/gpt-6.1-sol": {
       name: "GPT-6.1 Sol",
       api: "openai-responses",
       base: "https://api.openai.com/v1",
-      window: 1_050_000,
+      window: 128_000,
       maxTokens: 64_000,
       reasoning: true,
       images: true,
