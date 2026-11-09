@@ -27,6 +27,8 @@ import addTriggers from "./triggers";
 import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
 import bans from "./bans";
 import records from "@abyme/records";
+import harness from "@abyme/harness";
+import evals from "@abyme/evals";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -98,6 +100,26 @@ chatCompletions.setup({
   },
 });
 conversation.setup({ voiceModel: "deepseek-flash" });
+// GPT-6.1 Sol on the harness, priced so the evals' score cap counts it (OpenAI's model page, read
+// 2026-11-10: $2 in, $0.10 cached, $10 out per million). Its key is schools-ts's QA curriculum key,
+// in the keychain (abyme-openai), never here (operator, 2026-11-10).
+harness.setup({
+  models: {
+    "openai/gpt-6.1-sol": {
+      name: "GPT-6.1 Sol",
+      api: "openai-responses",
+      base: "https://api.openai.com/v1",
+      window: 1_050_000,
+      maxTokens: 64_000,
+      reasoning: true,
+      images: true,
+      cost: { input: 2, cacheRead: 0.1, cacheWrite: 2, output: 10 },
+    },
+  },
+});
+// Every closed item scored for kinds of failure: Flash judges the kinds a calibration routes to it,
+// GPT-6.1 Sol the rest and the calibration's reference, within the $10 a week cap (operator, 2026-11-10).
+evals.setup({ score: true, scoreJudge: "deepseek/deepseek-flash", scoreReference: "openai/gpt-6.1-sol" });
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
 // golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
 // whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
