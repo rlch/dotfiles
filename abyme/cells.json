@@ -7,7 +7,7 @@
     "code": {},
     // The tools code leaves out, and line review.
     "tasks": {}, "ports": {}, "bevy-engine": {}, "search": {}, "problems": {}, "output": {},
-    "references": {}, "profiles": {}, "openspec": {}, "context-map": {}, "review": {},
+    "references": {}, "busy": {}, "openspec": {}, "context-map": {}, "review": {},
     // The colourschemes.
     "catppuccin": {}, "dracula": {}, "everforest": {}, "github-theme": {}, "gruvbox": {},
     "kanagawa": {}, "nord": {}, "one-dark": {}, "rose-pine": {}, "solarized": {}, "tokyo-night": {}

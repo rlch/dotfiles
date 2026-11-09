@@ -74,6 +74,7 @@ import browser from "@abyme/browser";
 import triggers from "@abyme/triggers";
 import machines from "@abyme/machines";
 import profiles from "@abyme/profiles";
+import busy from "@abyme/busy";
 import packages from "@abyme/packages";
 import problems from "@abyme/problems";
 import learnRules from "@abyme/learn-rules";
@@ -175,8 +176,10 @@ browser.setup();
 triggers.setup();
 // Which machine each page runs on: texts and packages ask it (every page names a machine).
 machines.setup();
-// What keeps this profile in use, which the gateway reads before it suspends it.
+// The profiles you can reach, and the switcher in the rail.
 profiles.setup();
+// What keeps this profile in use, which the gateway reads before it suspends it.
+busy.setup();
 packages.setup();
 
 // Learning (docs/learning.md): ~/Knowledge's notes, each claimed by a subject in its subjects/
