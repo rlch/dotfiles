@@ -92,3 +92,15 @@ test("a stylesheet is held once, and goes with its last segment", () => {
   assert.deepEqual(r.take("a", 0)!.css, {});
   assert.equal(r.size, 2 * (line(3).length + line(4).length + 2));
 });
+
+test("the next sweep is due when an open segment would close or a closed one age out, none while empty", () => {
+  const r = new Ring({ keepMs: 15 * MIN, memory: 1e9 });
+  assert.equal(r.next(), null);
+  r.append("a", "x", true, [line(1)], [], 0, 1000);
+  assert.equal(r.next(), 1000 + GONE_MS + 1);
+  r.sweep(r.next()!);
+  assert.equal(r.next(), 1000 + 15 * MIN + 1);
+  r.sweep(r.next()!);
+  assert.equal(r.pages.size, 0);
+  assert.equal(r.next(), null);
+});

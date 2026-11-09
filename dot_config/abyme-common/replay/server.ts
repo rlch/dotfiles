@@ -75,8 +75,17 @@ function outline(e: { type: number; data: any }): { hash: string; text: string }
   return found;
 }
 
-// The half's engine stops with the plugin, and its timer with it.
-setInterval(() => ring.sweep(Date.now()), 60_000);
+// One timer, for the ring's next sweep, set again whenever it changes; none while it holds nothing.
+// Set after setup, it keeps the half awake while a recording is held, which only memory holds; it
+// ends with the run, as a half's timers do.
+let timer: ReturnType<typeof setTimeout> | undefined;
+const swept = (sweep = true) => {
+  clearTimeout(timer);
+  timer = undefined;
+  if (sweep) ring.sweep(Date.now());
+  const at = ring.next();
+  if (at !== null) timer = setTimeout(swept, Math.max(0, at - Date.now()));
+};
 // What an earlier version kept on disk as it recorded (its ring and its stylesheets) goes once.
 if (abyme.machine === LOCAL) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
 
@@ -137,6 +146,7 @@ const api = {
     });
     const at = (events[0] as { timestamp?: number }).timestamp ?? Date.now();
     ring.append(page, label, checkout, lines, sheets, at, Date.now());
+    swept(false);
   },
 
   async save({ page, reason, minutes = CLIP }: { page?: string; reason: string; minutes?: number }): Promise<Save | Save[] | null> {

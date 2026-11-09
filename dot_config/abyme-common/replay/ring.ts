@@ -68,6 +68,19 @@ export class Ring {
     this.cap();
   }
 
+  /** When `sweep` next has something to do: a page's open segment closing `GONE_MS` after it last
+   * sent, or a page's oldest closed one ageing out past keep. Null while nothing is held. */
+  next(): number | null {
+    let at: number | null = null;
+    for (const p of this.pages.values()) {
+      const open = p.segments.at(-1);
+      if (open && open.end === null) at = Math.min(at ?? Infinity, p.last + GONE_MS + 1);
+      const first = p.segments[0];
+      if (first && first.end !== null) at = Math.min(at ?? Infinity, first.end + this.o.keepMs + 1);
+    }
+    return at;
+  }
+
   /** While past `memory`: the oldest closed segment of any page goes, never a page's last. */
   private cap() {
     while (this.size > this.o.memory) {
