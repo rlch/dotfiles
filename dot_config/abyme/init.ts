@@ -27,29 +27,6 @@ import addTriggers from "./triggers";
 import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
 import bans from "./bans";
 import records from "@abyme/records";
-import code from "@abyme/code";
-import tasks from "@abyme/tasks";
-import ports from "@abyme/ports";
-import bevyEngine from "@abyme/bevy-engine";
-import search from "@abyme/search";
-import problems from "@abyme/problems";
-import output from "@abyme/output";
-import references from "@abyme/references";
-import profiles from "@abyme/profiles";
-import openspec from "@abyme/openspec";
-import contextMap from "@abyme/context-map";
-import review from "@abyme/review";
-import catppuccin from "@abyme/catppuccin";
-import dracula from "@abyme/dracula";
-import everforest from "@abyme/everforest";
-import githubTheme from "@abyme/github-theme";
-import gruvbox from "@abyme/gruvbox";
-import kanagawa from "@abyme/kanagawa";
-import nord from "@abyme/nord";
-import oneDark from "@abyme/one-dark";
-import rosePine from "@abyme/rose-pine";
-import solarized from "@abyme/solarized";
-import tokyoNight from "@abyme/tokyo-night";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -68,14 +45,6 @@ if (!TUTERO_MOVED) addTuteroTriggers();
 // The operator's own bans beside abyme's guard: no edit of a chezmoi-deployed file, no Haiku sub-agent (bans/).
 bans.setup();
 
-// The code app, which leaves out the title bar and lsp, and what this profile runs beside it: the
-// tools code leaves out, line review and the colourschemes (town has its own line below). A
-// member's own line (common's theme and vim, the lines below) stands whole in place of code's setup
-// of it, so layout-panes, voice and load restate code's options beside their own. These lines
-// move to cells.json once abyme reads it (abyme change cells-json).
-code.setup();
-for (const cell of [tasks, ports, bevyEngine, search, problems, output, references, profiles, openspec, contextMap, review]) cell.setup();
-for (const theme of [catppuccin, dracula, everforest, githubTheme, gruvbox, kanagawa, nord, oneDark, rosePine, solarized, tokyoNight]) theme.setup();
 // GitHub's webhooks for the repositories triggers name, through the relay at abyme.studio: the
 // Mac's gateway holds its socket (gateway.json front), so a push, comment or review wakes at once.
 webhooks.setup({}, { secrets: { WEBHOOKS_KEY: abyme.env.ABYME_WEBHOOKS_KEY } });
