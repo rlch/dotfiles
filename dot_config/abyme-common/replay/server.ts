@@ -9,15 +9,16 @@
 import abyme from "@abyme/cell";
 import { implement } from "@abyme/schema";
 import { HttpError, respond } from "@abyme/server";
-import fs from "@abyme/fs/optional";
-import process from "@abyme/process/optional";
+import fs from "@abyme/fs";
+import process from "@abyme/process";
+import { LOCAL } from "@abyme/machines/label";
 import options from "./options";
 import { parseSave, SAVE } from "./format";
 import { Ring } from "./ring.ts";
 import { replay, type Batch, type Head, type Read, type Save } from "./api.server.ts";
 
 const o = abyme.with(options).cell.options;
-const DIR = fs ? (o.dir || `${fs.stateDir}/replays`).replace(/^~(?=\/|$)/, fs.home) : "";
+const DIR = (o.dir || `${fs.stateDir}/replays`).replace(/^~(?=\/|$)/, fs.home);
 /** A stylesheet shorter than this stays where it is. */
 const CSS_AT = 1024;
 const KEEP = Math.max(1, o.keep);
@@ -34,16 +35,13 @@ const asked = abyme.value(0);
 /** When each page was last saved for an error or a stall. */
 const gapped = new Map<string, number>();
 
-/** The control plane's files, where saves are; refused where there are none. */
-function files() {
-  if (!fs) throw new Error("no machine provides fs here, to write a save");
-  return fs;
-}
+// It runs on every machine (abymed refuses a half that imports a capability only as optional), but
+// its functions are not marked `machine`, so pages record to and save on the control plane, the
+// operator's Mac, as before; a node's copy keeps nothing.
+/** The control plane's files, where saves are. */
+const files = () => fs;
 /** The control plane's processes, to run gzip. */
-function processes() {
-  if (!process) throw new Error("no machine provides process here, to run gzip");
-  return process;
-}
+const processes = () => process;
 
 async function gzip(args: string[]) {
   const r = await processes().run("/usr/bin/gzip", { args, timeoutMs: 120_000 });
@@ -80,7 +78,7 @@ function outline(e: { type: number; data: any }): { hash: string; text: string }
 // The half's engine stops with the plugin, and its timer with it.
 setInterval(() => ring.sweep(Date.now()), 60_000);
 // What an earlier version kept on disk as it recorded (its ring and its stylesheets) goes once.
-if (fs) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
+if (abyme.machine === LOCAL) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
 
 async function list(): Promise<Save[]> {
   const saves: Save[] = [];
