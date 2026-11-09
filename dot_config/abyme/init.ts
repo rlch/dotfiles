@@ -26,6 +26,7 @@ import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
 import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
 import bans from "./bans";
+import sync from "@abyme/sync";
 import records from "@abyme/records";
 import harness from "@abyme/harness";
 import evals from "@abyme/evals";
@@ -41,6 +42,11 @@ records.setup({ rehome: true, held: ["richards-macbook-pro-3971"] });
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
 // The phone and iPad keep this address; the gateway routes it to Coding over Tailscale.
 abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
+// A slice of the profile tutero, by its hub (abyme agents-across-abymes, live step c; the
+// operator's go, shared-agents-live/go-hub-init-sharing): its records read here, its writes sent there.
+// Paired: the peer key is in the state folder's peers/tutero.key. Peers are read at start alone.
+abyme.server({ peers: { tutero: "https://tutero.abyme.studio" } });
+sync.setup({ slices: ["tutero"], unwatched: ["~/dev/tutero"] });
 common();
 addTriggers();
 if (!TUTERO_MOVED) addTuteroTriggers();
