@@ -58,3 +58,4 @@ dev/trading/.obsidian/themes/Catppuccin
 .config/gh-dash/config.yml
 .config/fish/functions/modality.fish
 .config/abyme-tutero/triggers.ts
+.config/abyme/coding.ts
