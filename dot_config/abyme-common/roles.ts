@@ -22,7 +22,7 @@ const skill = (names: string[]): Without => names.map((n) => `skill:${n}`);
 export const AGENTS_WITHOUT: Without = [
   ...plugin(["workspace@skills-dir", ...official(["clangd-lsp", "gopls-lsp", "lua-lsp", "pyright-lsp", "swift-lsp"])]),
   ...skill([
-    "dataviz", "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
+    "update-config", "keybindings-help", "fewer-permission-prompts", "find-skills", "plugin-authoring", "init",
     "run", "loop", "simplify", "security-review",
   ]),
 ];
