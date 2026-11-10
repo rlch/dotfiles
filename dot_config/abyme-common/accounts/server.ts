@@ -12,7 +12,6 @@ import type { Json } from "@abyme/server";
 import agents from "@abyme/agents/optional";
 import fs from "@abyme/fs";
 import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
 import load from "@abyme/load/optional";
 import records from "@abyme/records";
 import recordLists from "@abyme/records/inventory";
@@ -29,7 +28,7 @@ const HOME = o.home || fs.home;
 // It runs on every machine (abymed refuses a half that imports a capability only as optional), but
 // its functions are not marked `machine`, so they run on the control plane, the operator's Mac,
 // whose keychain holds the tokens; what it adds to others' lists it adds there alone, as before.
-const HERE = abyme.machine === LOCAL;
+const HERE = abyme.machine === abyme.machines.own().id;
 /** The control plane's files: the plugin's scratch and the model settings a launch reads. */
 const files = () => fs;
 /** The control plane's processes: the keychain, ps and claude. */
