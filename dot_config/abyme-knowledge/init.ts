@@ -110,9 +110,9 @@ connection.setup();
 state.setup();
 storage.setup();
 // The frame: the layout, the rail, the title bar and status bar, and the app's window.
-// A learning app, not an IDE: the left dock keeps only Settings' list; the strip shows only with tabs to switch.
+// A learning app, not an IDE: the left dock keeps only Settings' list.
 shell.setup({ look: "tab", preview: true });
-layoutPanes.setup({ strip: "many", placement: { "settings.list": { dock: "left", order: 90 } } });
+layoutPanes.setup({ placement: { "settings.list": { dock: "left", order: 90 } } });
 rail.setup({ items: ["town", "learn.library", "learn.study", "settings.settings"] });
 titlebar.setup();
 desktop.setup();
