@@ -12,6 +12,11 @@ import git from "@abyme/git";
  * guard never reads it. */
 export const TUTERO_MOVED = true;
 
+/** Whether tutero may start a new lead@schools. False while the schools move is paused (lead@abyme,
+ * until machine-identity's fix): coding's lead@schools stays the live one, and the hub's takeover
+ * items would otherwise start a second here. Tutero's guard reads it; true resumes the move. */
+export const SCHOOLS_LEAD_IN_TUTERO = false;
+
 /** Tutero's repositories, each a checkout under it. */
 export const TUTERO_DIR = "/Users/rjm/dev/tutero";
 

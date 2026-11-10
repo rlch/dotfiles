@@ -21,7 +21,7 @@ import { common } from "../abyme-common/index.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { inTutero } from "../abyme-common/tutero.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
-import { TUTERO_MOVED } from "../abyme-common/tutero.ts";
+import { SCHOOLS_LEAD_IN_TUTERO, TUTERO_MOVED } from "../abyme-common/tutero.ts";
 import bans from "../abyme/bans";
 
 abyme.server({ port: 4484, stateDir: "~/.local/state/abyme-tutero" });
@@ -56,6 +56,13 @@ agents.prepare.add({
   prepare: async (l) => {
     if (!l.probe && !(await inTutero(l.cwd)))
       throw new Error("Only Tutero's repositories (~/dev/tutero) start in tutero: start this in coding");
+    // No new lead@schools while the move is paused (SCHOOLS_LEAD_IN_TUTERO): a resume, a probe, the
+    // schools teams and the triggers' agents still start. Its name is on its record, not the launch;
+    // a failed lookup lets it start rather than strand every new agent here.
+    if (!SCHOOLS_LEAD_IN_TUTERO && !l.resume && !l.probe && l.agent) {
+      const one = (await agents.agent({ agent: l.agent }).catch(() => null)) as { name?: string } | null;
+      if (one?.name === "lead@schools") throw new Error("lead@schools runs in coding while the schools move is paused");
+    }
   },
 });
 
