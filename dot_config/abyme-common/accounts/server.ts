@@ -15,11 +15,13 @@ import process from "@abyme/process";
 import { LOCAL } from "@abyme/machines/label";
 import load from "@abyme/load/optional";
 import records from "@abyme/records";
+import recordLists from "@abyme/records/inventory";
+import { informer } from "@abyme/records/informer";
 import { setCondition, type Condition } from "@abyme/records/condition";
 import { z } from "@abyme/schema";
 import options from "./options";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
-import { resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { onAccounts, resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).cell.options;
 const HOME = o.home || fs.home;
@@ -42,14 +44,14 @@ const tokenService = (slug: string) => `abyme-accounts-${slug}`;
 const ignoredSlugs = () => (abyme.store.get("ignored") ?? []) as string[];
 
 /** Every setup-token in the keychain, `main` first then by name, and when each was made: listed
- * from the keychain's attributes (`security dump-keychain`, never a secret), at most once every
- * 30 s. It was once a second, and agents' change events (debounced 2 s) ran it ~25 times a minute
- * (keychain-poll, 2026-11-05). This plugin's own add and revoke clear it; a token added by hand
- * shows by the next 30 s tick. The one owner of which accounts there are and when their tokens end. */
+ * from the keychain's attributes (`security dump-keychain`, never a secret) only when asked: a
+ * launch's pick, a call of this cell's, its own add, mint and revoke (`fresh`). What it shows on an
+ * agent's change reads the last listing: it once listed every 30 s, and on agents' change events ~25
+ * times a minute (keychain-poll, 2026-11-05). A token added by hand shows at the next launch or call.
+ * The one owner of which accounts there are and when their tokens end. */
 let listed: { at: number; tokens: { slug: string; made: number | null }[] } | null = null;
-const LISTED_FOR = 30_000;
-async function keychainTokens(): Promise<{ slug: string; made: number | null }[]> {
-  if (listed && Date.now() - listed.at < LISTED_FOR) return listed.tokens;
+async function keychainTokens(fresh = false): Promise<{ slug: string; made: number | null }[]> {
+  if (listed && !fresh) return listed.tokens;
   const r = await processes().run(o.security, { args: ["dump-keychain"] });
   const tokens = r.code === 0 ? tokensListed(r.stdout) : [];
   tokens.sort((a, b) => (a.slug === "main" ? -1 : b.slug === "main" ? 1 : a.slug.localeCompare(b.slug)));
@@ -58,9 +60,9 @@ async function keychainTokens(): Promise<{ slug: string; made: number | null }[]
 }
 
 /** The accounts a pick may take: a token each, none the operator ignores. Each is its own login. */
-async function discover(): Promise<Account[]> {
+async function discover(fresh = false): Promise<Account[]> {
   const off = new Set(ignoredSlugs());
-  return (await keychainTokens()).filter((t) => !off.has(t.slug)).map((t) => ({ slug: t.slug, key: t.slug }));
+  return (await keychainTokens(fresh)).filter((t) => !off.has(t.slug)).map((t) => ({ slug: t.slug, key: t.slug }));
 }
 
 /** A setup-token into the keychain as account `slug`'s, replacing any: on `security -i`'s stdin,
@@ -91,19 +93,22 @@ const readsNow = (all: Account[]) => new Map(all.flatMap((a) => (reads()[a.key] 
 /** Picks of the last minute, by login and agent: busy from the moment they are made. */
 let picked: { key: string; at: number; agent: string | null }[] = [];
 
+/** abyme's agents as their Agent records say them: who is busy or open on which account, read with
+ * no call; a change of one is what `show` runs on. */
+const agentRecords = HERE && agents ? informer({ id: "accounts.agents", kind: "Agent", fields: ["status.account", "status.busy", "status.closed", "status.usage_at"] }) : null;
+if (agentRecords) recordLists.informers.add(agentRecords.item);
+
 /** abyme's agents as `agents.index` joins them: the account each is on and what its harness last said
- * of that account's usage. */
+ * of that account's usage. Asked only when an agent's usage was said anew, or a launch needs it. */
 type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
 const joined = async (): Promise<Joined[]> => !agents ? [] : Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
 /** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
 async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
   const out = new Map<string, { id: string; name: string }[]>();
-  for (const x of await joined()) {
-    if (!x.account || !(open ? !x.closed : x.busy)) continue;
-    out.set(x.account, [...(out.get(x.account) ?? []), { id: x.id, name: x.name ?? x.id }]);
-  }
-  return out;
+  if (!agentRecords) return out;
+  await agentRecords.synced();
+  return onAccounts(agentRecords.list(), open);
 }
 
 /** How many agents are busy on each login, by key: those agents says, and the picks of the last
@@ -169,10 +174,17 @@ function markSpent(slug: string, why: string, said?: { window: "five" | "seven";
  * Who runs where is `agents()`. */
 const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string> }>({ accounts: [], tokens: {} });
 
-/** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on,
- * which load asks for once a minute. */
-let forLoad: ReturnType<typeof loadAccounts> = [];
-if (HERE) load?.readers.add({ id: "accounts", accounts: () => forLoad });
+/** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on, as
+ * load's item (`load.readers`), added again when they change: load calls nothing. */
+let forLoad: { item: { dispose(): void }; json: string } | null = null;
+function tellLoad(accounts: ReturnType<typeof loadAccounts>) {
+  if (!HERE || !load) return;
+  const json = JSON.stringify(accounts);
+  if (forLoad?.json === json) return;
+  const was = forLoad;
+  forLoad = { item: load.readers.add({ id: "accounts", accounts }), json };
+  was?.item.dispose();
+}
 
 /** When each account's setup-token ends (ISO), by slug: a year after the keychain says it was made. */
 async function tokensEnding(): Promise<Record<string, string>> {
@@ -194,7 +206,7 @@ async function show() {
   if (json === shown) return;
   shown = json;
   view.set(next);
-  forLoad = loadAccounts(next.accounts);
+  tellLoad(loadAccounts(next.accounts));
   const at = Date.now();
   for (const a of next.accounts) readies.set(accountId(a), setCondition(readies.get(accountId(a)) ?? [], accountReady(a), at));
   markAccounts();
@@ -289,7 +301,7 @@ const BY_QUOTA = "auto";
  * stays on while warm (`warm`). */
 function pick(model: string | null, how: { pinned?: string; count?: boolean; agent?: string; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
-    const all = await discover();
+    const all = await discover(true);
     if (!all.length) throw new Error("no Claude account has a setup-token (`abyme call accounts token slug=<s>`)");
     const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
     const busy = await busyCounts(all);
@@ -398,10 +410,6 @@ const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
 if (HERE) {
   agents?.prepare.add(prepare);
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
-  // A token added or taken out of the keychain by hand shows within half a minute, agents working or
-  // not (vatsal was in `tokens` and not in the view, 2026-10-26). A listing changes nothing it shows
-  // sends nothing.
-  setInterval(() => void show().catch(() => {}), 30_000);
 }
 
 /** The last push taken of each login (ms): one heard again changes nothing. */
@@ -425,15 +433,19 @@ async function takeUsage() {
     for (const r of next.rejected) markSpent(slug, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }
-// An agent's list changes many times a second while agents work: once a moment at most.
+// An agent's account, busy, closed or usage said: once a moment at most. Its usage is read from
+// agents' index only when an agent's `usage_at` moved.
 let showing: ReturnType<typeof setTimeout> | null = null;
-if (HERE && agents)
-  agents.items.on("change", () => {
+let usageSaid = false;
+if (HERE && agentRecords)
+  agentRecords.on((h) => {
+    const at = (r: typeof h.record) => (r?.status as { usage_at?: string | null } | undefined)?.usage_at ?? null;
+    if (h.record && at(h.record) !== null && at(h.record) !== at(h.was)) usageSaid = true;
     showing ??= setTimeout(() => {
       showing = null;
-      void takeUsage()
-        .then(show)
-        .catch((e) => abyme.log.warn("usage push:", (e as Error).message));
+      const took = usageSaid ? takeUsage() : Promise.resolve();
+      usageSaid = false;
+      void took.then(show).catch((e) => abyme.log.warn("usage push:", (e as Error).message));
     }, 2_000);
   });
 
@@ -586,7 +598,7 @@ export default {
    * off. On demand only. */
   async refresh(a: { slug?: string } = {}) {
     const slugs = a?.slug ? [a.slug] : toRefresh(view.getState().accounts, Date.now());
-    const known = new Set((await keychainTokens()).map((t) => t.slug));
+    const known = new Set((await keychainTokens(true)).map((t) => t.slug));
     const out = [];
     for (const slug of slugs) out.push(known.has(slug) ? await refreshOne(slug).catch((e: Error) => ({ slug, five: null, seven: null, capped: false, error: e.message })) : { slug, five: null, seven: null, capped: false, error: "no such account" });
     shown = "";
@@ -611,14 +623,14 @@ export default {
    * (Australia/Melbourne)"), else as any limit. */
   async limited(a: { slug: string; why: string }) {
     slugOf(a, "limited");
-    if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+    if (!(await keychainTokens(true)).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
     markSpent(a.slug, a.why);
     shown = "";
     await show();
     return { slug: a.slug, until: spentUntil(a.slug) };
   },
   /** When each account's setup-token ends, by slug: a year after it was made. */
-  tokens: () => tokensEnding(),
+  tokens: async () => (await keychainTokens(true), tokensEnding()),
   /** `abyme call accounts revoke slug=…`: that account's token out of the keychain and its agents'
    * harnesses closed, so nothing runs on it; Claude keeps the token valid until it is revoked at
    * claude.ai/settings/claude-code, which the answer says. */
@@ -651,7 +663,7 @@ export default {
     const now = { ...pins() };
     if (a.slug === null) now[a.agent] = BY_QUOTA;
     else {
-      if (!(await discover()).some((x) => x.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+      if (!(await discover(true)).some((x) => x.slug === a.slug)) throw new Error(`no account ${a.slug}`);
       now[a.agent] = a.slug;
     }
     abyme.store.set("pins", now);
@@ -662,7 +674,7 @@ export default {
   /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it. */
   async ignore(a: { slug: string; on?: boolean }) {
     slugOf(a, "ignore");
-    if (!(await keychainTokens()).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+    if (!(await keychainTokens(true)).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
     const off = new Set(ignoredSlugs());
     if (a.on === false) off.delete(a.slug);
     else off.add(a.slug);

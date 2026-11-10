@@ -2,7 +2,7 @@
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount, type AccountRecords } from "./kind.ts";
-import { keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { onAccounts, keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -26,6 +26,18 @@ const picks = (rows: Row[], f: Family | null = null) => {
 };
 const cases: [string, () => void | Promise<void>][] = [];
 const test = (name: string, f: () => void | Promise<void>) => cases.push([name, f]);
+
+// server.ts's agents per account, from Agent records (no call to agents)
+test("agents per account: busy ones, or with open every one not closed", () => {
+  const recs = [
+    { id: "a", name: "lead", status: { account: "main", busy: true, closed: null } },
+    { id: "b", name: null, status: { account: "main", busy: false, closed: null } },
+    { id: "c", name: "old", status: { account: "hsone", busy: false, closed: { at: "x" } } },
+    { id: "d", name: "x", status: { account: null, busy: true, closed: null } },
+  ];
+  assert.deepEqual([...onAccounts(recs)], [["main", [{ id: "a", name: "lead" }]]]);
+  assert.deepEqual([...onAccounts(recs, true)], [["main", [{ id: "a", name: "lead" }, { id: "b", name: "b" }]]]);
+});
 
 // usage.rs
 test("expiring soon outscores same usage with time left", () => assert.ok(score(weekly(10, 1), NOW) > score(weekly(10, 6), NOW)));

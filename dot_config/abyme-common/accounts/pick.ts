@@ -515,3 +515,15 @@ export function unified(out: string, at: string): Pushed[] {
   }
   return last;
 }
+
+/** abyme's agents per account, from their Agent records: busy as agents says it, the one rule; with
+ * `open`, every agent not closed. */
+export function onAccounts(records: readonly { id: string; name?: string | null; status: unknown }[], open = false): Map<string, { id: string; name: string }[]> {
+  const out = new Map<string, { id: string; name: string }[]>();
+  for (const r of records) {
+    const x = r.status as { account?: string | null; busy?: boolean; closed?: unknown };
+    if (!x.account || !(open ? x.closed == null : x.busy)) continue;
+    out.set(x.account, [...(out.get(x.account) ?? []), { id: r.id, name: r.name ?? r.id }]);
+  }
+  return out;
+}
