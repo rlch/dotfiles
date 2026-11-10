@@ -128,6 +128,9 @@ brew "openjdk@21"
 tap "mobile-dev-inc/tap"
 brew "mobile-dev-inc/tap/maestro"
 brew "scrcpy"
+# Grants iOS Simulator permissions (notifications) for abyme's iOS walks.
+tap "wix/brew"
+brew "wix/brew/applesimutils"
 
 # === Project + dev workflow ===
 brew "just"        # command runner, Make alternative
