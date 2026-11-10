@@ -388,6 +388,8 @@ async function lastCall(id: string, cwd: string, session: string, all: Joined[])
 const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
   async prepare(l) {
     if (l.kind !== "claude") return {};
+    if (l.machine !== abyme.machines.own().id) return {};
+    if (!HERE) throw new Error("accounts cannot attach credentials: this launch's machine does not match the account selector's machine");
     const model = await modelOf(l);
     // The agent's pin: the menu's, else what New agent's Account field picked, which is kept as
     // the agent's pin so the menu shows it and can take it off ("auto").
@@ -419,8 +421,10 @@ const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
 
 // On the control plane alone: its keychain holds the accounts. Without agents (bevy) there is no
 // launch to answer: the accounts and their quotas still show.
+// Keep the hook registered even if machine identity is unavailable or changes: an owner's
+// local launch must refuse rather than silently use Claude's unrelated saved login.
+agents?.prepare.add(prepare);
 if (HERE) {
-  agents?.prepare.add(prepare);
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
 }
 

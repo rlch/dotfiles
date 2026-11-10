@@ -3,6 +3,16 @@
 The operator's own plugin, on `agents.prepare`. Not abyme's, and unrelated to `cl` / `clodcurrent`
 in a terminal, which stay as they are, on their own account folders.
 
+The launch hook runs on the control plane by comparing `abyme.machine` with
+`abyme.machines.own().id`. `local` is an input label, never a runtime machine identity.
+`python3 scripts/check-abyme-account-launch.py <abyme-checkout>` exercises the real
+`agents.prepared` path on an isolated server with a fake keychain: a machine-ID launch
+must receive its account and secret, and a missing secret must refuse the launch.
+It never reads the operator's keychain or starts a model turn.
+The hook stays registered even when the cell cannot identify itself as the control plane.
+A local Claude launch then refuses with an account-selector error; it never silently
+falls through to Claude's separate saved login. Launches for other machines pass through.
+
 ## Accounts are setup-tokens (resource-budgets 5.4, 2026-10-24)
 
 - An account is a setup-token in the keychain, `abyme-accounts-<slug>` (account `$USER`), made by
