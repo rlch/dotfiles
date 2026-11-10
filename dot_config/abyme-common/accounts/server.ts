@@ -197,14 +197,14 @@ const readies = new Map<string, Condition[]>();
 
 /** A window resets, or a spent mark ends, with no agent moving: the rows are shown again then, so
  * load hears an account uncapped (and `load.room` wakes the turns waiting on it). One timer, the
- * earliest reset's; a show replaces it. */
-let waking: { at: number; timer: ReturnType<typeof setTimeout> } | null = null;
+ * earliest reset's (`abyme.later`, which wakes a sleeping half then, and its setup shows them);
+ * a show replaces it. */
+let waking: { at: number; cancel: () => void } | null = null;
 function wakeAt(at: number | null) {
   if (waking?.at === at) return;
-  if (waking) clearTimeout(waking.timer);
-  waking = at === null ? null : { at, timer: setTimeout(() => { waking = null; void show().catch((e) => abyme.log.warn("accounts at a reset:", (e as Error).message)); }, Math.min(at - Date.now() + 1_000, 2 ** 31 - 1)) };
+  waking?.cancel();
+  waking = at === null ? null : { at, cancel: abyme.later(Math.min(Math.max(0, at - Date.now()) + 1_000, 2 ** 31 - 1), () => { waking = null; void show().catch((e) => abyme.log.warn("accounts at a reset:", (e as Error).message)); }) };
 }
-abyme.effect(() => () => { if (waking) clearTimeout(waking.timer); waking = null; });
 
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
