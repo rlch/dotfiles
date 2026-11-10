@@ -34,9 +34,9 @@ import evals from "@abyme/evals";
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
 // Home old rows by their kind's rule at each start (owner-by-name, 2026-11-05): the Mac's 515
-// rows homed by its node id before homes. The Mac's old machine names map to its id by
-// records.formerly (machine-identity), so no `held` is set.
-records.setup({ rehome: true });
+// rows homed by its node id before homes. `held`: the Mac's old machine name, so its 178 teams stay
+// this node's (work-mine-empty, 2026-11-06).
+records.setup({ rehome: true, held: ["richards-macbook-pro-3971"] });
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
