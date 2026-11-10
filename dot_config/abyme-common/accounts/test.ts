@@ -2,7 +2,7 @@
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount, type AccountRecords } from "./kind.ts";
-import { onAccounts, keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
+import { nextReset, onAccounts, keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
 const inDays = (d: number) => new Date(NOW + d * 86_400_000).toISOString();
@@ -321,6 +321,27 @@ test("a spent mark is the row's spent, and load's cap until it ends", () => {
   const [none] = rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map(), new Map([["hsone", { until, window: null }]]));
   assert.deepEqual(loadAccounts([none!])[0]!.windows.map((x) => x.capped), [true, false]);
   assert.deepEqual(loadAccounts(rowsSeen([{ slug: "hsone", key: "hsone" }], reads, new Map()))[0]!.windows.map((x) => x.capped), [false, false]);
+});
+
+// A capped account with no agent moving: the cell shows its rows again at the earliest reset ahead,
+// a window's or a spent mark's, and then load hears it uncapped (expirePast zeroes the window).
+test("the next reset: the earliest ahead, a window's or a spent mark's, none past", () => {
+  const now = Date.parse("2026-10-25T10:00:00Z");
+  const soon = new Date(now + 5 * 60_000).toISOString();
+  const row = { slugs: ["hsone"], five: 100, seven: 40, fiveResets: soon, sevenResets: "2026-10-29T02:00:00.000Z", windows: [], capped: true, binding: "five" as const, back: null, spent: null, read: null, agents: 0 };
+  const capped = loadAccounts([row]);
+  assert.equal(capped[0]!.windows[0]!.capped, true);
+  assert.equal(nextReset(capped, now), now + 5 * 60_000);
+  // Past it, nothing ahead of that reset is it; the week's is next.
+  assert.equal(nextReset(capped, now + 6 * 60_000), Date.parse("2026-10-29T02:00:00.000Z"));
+  // A spent mark's end is a reset too.
+  const until = now + 2 * 60_000;
+  assert.equal(nextReset(loadAccounts([{ ...row, five: 10, spent: { until: new Date(until).toISOString(), window: "five" as const } }]), now), until);
+  assert.equal(nextReset(loadAccounts([{ ...row, fiveResets: null, sevenResets: null }]), now), null);
+  // The read past its reset: the five hours zeroed, so load's row is no longer capped.
+  const read = expirePast({ five_hour: { utilization: 100, resets_at: soon } }, now + 6 * 60_000) as { five_hour: { utilization: number } };
+  assert.equal(read.five_hour.utilization, 0);
+  assert.equal(loadAccounts([{ ...row, five: read.five_hour.utilization, capped: false, binding: null }])[0]!.windows[0]!.capped, false);
 });
 
 // The reset a refusal names, in its own zone: the next such time.

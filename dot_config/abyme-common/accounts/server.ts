@@ -21,7 +21,7 @@ import { setCondition, type Condition } from "@abyme/records/condition";
 import { z } from "@abyme/schema";
 import options from "./options";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
-import { onAccounts, resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
+import { nextReset, onAccounts, resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).cell.options;
 const HOME = o.home || fs.home;
@@ -195,6 +195,17 @@ async function tokensEnding(): Promise<Record<string, string>> {
 // capped or spent, `since` when that changed.
 const readies = new Map<string, Condition[]>();
 
+/** A window resets, or a spent mark ends, with no agent moving: the rows are shown again then, so
+ * load hears an account uncapped (and `load.room` wakes the turns waiting on it). One timer, the
+ * earliest reset's; a show replaces it. */
+let waking: { at: number; timer: ReturnType<typeof setTimeout> } | null = null;
+function wakeAt(at: number | null) {
+  if (waking?.at === at) return;
+  if (waking) clearTimeout(waking.timer);
+  waking = at === null ? null : { at, timer: setTimeout(() => { waking = null; void show().catch((e) => abyme.log.warn("accounts at a reset:", (e as Error).message)); }, Math.min(at - Date.now() + 1_000, 2 ** 31 - 1)) };
+}
+abyme.effect(() => () => { if (waking) clearTimeout(waking.timer); waking = null; });
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
 async function show() {
@@ -202,11 +213,13 @@ async function show() {
   const on = await agentsByAccount();
   const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
   const next = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding() };
+  const told = loadAccounts(next.accounts);
+  wakeAt(nextReset(told, Date.now()));
   const json = JSON.stringify(next);
   if (json === shown) return;
   shown = json;
   view.set(next);
-  tellLoad(loadAccounts(next.accounts));
+  tellLoad(told);
   const at = Date.now();
   for (const a of next.accounts) readies.set(accountId(a), setCondition(readies.get(accountId(a)) ?? [], accountReady(a), at));
   markAccounts();

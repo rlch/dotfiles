@@ -399,6 +399,13 @@ export function loadAccounts(rows: readonly AccountSeen[]): LoadAccount[] {
   }));
 }
 
+/** The earliest reset after `now` among load's accounts (a window's, or a spent mark's end), or
+ * null: the rows change then with no agent moving, so the cell shows them again at that time. */
+export function nextReset(accounts: readonly LoadAccount[], now: number): number | null {
+  const ahead = accounts.flatMap((a) => a.windows.flatMap((w) => (w.resets !== null && w.resets > now ? [w.resets] : [])));
+  return ahead.length ? Math.min(...ahead) : null;
+}
+
 /** A reset time to the minute: abymeds sharing a read answer it a second apart. */
 export const minute = (t: string | null): string | null => {
   const at = t ? Date.parse(t) : NaN;

@@ -85,7 +85,7 @@ in a terminal, which stay as they are, on their own account folders.
   `capped` (a window its read has at 100, or a spent mark: a refusal the account itself gave, until
   it resets), `binding` (`five` or `seven`), `back`, `stale` (its read older than 30 min), `spent`
   (`{ until, window }` while a turn's limit keeps it out of picks), `read` (when the numbers were
-  pushed), `agents` (busy on it). The status bar reads it; load's Resources read its rows as the cell's `load.readers` item, `{ id, accounts }`, added again when they change.
+  pushed), `agents` (busy on it). The status bar reads it; load's Resources read its rows as the cell's `load.readers` item, `{ id, accounts }`, added again when they change. They change on an agent's account, busy, closed or usage, a launch, a call, and at the earliest reset ahead (a window's, or a spent mark's end): one timer, so a capped account reaches load uncapped with no agent moving.
 - **Which account an agent is on**: the agent's `account`; `abyme call accounts agents`.
 
 ## Pins and the agent's row
