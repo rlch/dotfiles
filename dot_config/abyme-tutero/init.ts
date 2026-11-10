@@ -49,10 +49,12 @@ records.setup({ profile: false });
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }, teams: 8, quotas: { "*": { teams: 8 } } });
 
 // Only Tutero's repositories start here, so only Tutero's work logs to the hub (design 5). A
-// refused launch releases its worktree.
+// refused launch releases its worktree. A probe starts nothing: it reads a harness's choices from
+// no repository, and refusing it left every preset without its list, so no team or role started
+// (2026-11-10).
 agents.prepare.add({
   prepare: async (l) => {
-    if (!(await inTutero(l.cwd)))
+    if (!l.probe && !(await inTutero(l.cwd)))
       throw new Error("Only Tutero's repositories (~/dev/tutero) start in tutero: start this in coding");
   },
 });
