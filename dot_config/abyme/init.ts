@@ -30,6 +30,7 @@ import sync from "@abyme/sync";
 import records from "@abyme/records";
 import harness from "@abyme/harness";
 import evals from "@abyme/evals";
+import machines from "@abyme/machines";
 
 // abyme.server({ port: 4477, bind: ["127.0.0.1"] });
 
@@ -152,6 +153,9 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 // 159 on 18 cores (operator, 2026-11-06: "maybe decrease teams budget").
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 16, quotas: { "*": { teams: 8 }, abyme: { teams: 8, fast: 2 } } });
+// The Hetzner check node check-1 runs checks and nothing else: land's full run needs `check`, so it
+// waits for check-1 and never runs on the laptop (main-stays-green E.2; check-1 is not up yet).
+machines.setup({ labels: { "check-1": { check: 1 } }, taints: { "check-1": "named" } });
 
 // What agents start without, and the role helpers, are ../abyme-common/roles.ts, shared with tutero:
 // each preset's `without` carries every agent's list (`full`), as no agents option does now.
