@@ -59,7 +59,8 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   branch nobody asked for. Force-push only a personal branch.
 - **Finished means landed; tests are opt-in** (operator, 2026-11-05): land with
   `abyme call land add` (the `land` skill), no gate or suite first; run a specific
-  test only when you judge it worth it.
+  test only when you judge it worth it. Scheduled full runs on the check node, off
+  the laptop, are allowed (operator, 2026-11-10).
 - Parallel edit agents get isolated worktrees, made under
   `~/.local/share/abyme/worktrees/<repo>/<branch>` (abyme's), never `~/.herdr` or
   beside the repo; never revert another agent's work.
