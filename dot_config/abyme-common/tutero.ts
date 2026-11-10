@@ -10,7 +10,7 @@ import git from "@abyme/git";
  * coding runs Tutero's work too (its presets, templates and land rows are tutero-roles.ts, shared).
  * The move flips it to true, which turns coding's refusal of ~/dev/tutero back on. Tutero's own
  * guard never reads it. */
-export const TUTERO_MOVED = false;
+export const TUTERO_MOVED = true;
 
 /** Tutero's repositories, each a checkout under it. */
 export const TUTERO_DIR = "/Users/rjm/dev/tutero";
