@@ -127,9 +127,9 @@ harness.setup({
     },
   },
 });
-// Every closed item scored for kinds of failure: Flash judges the kinds a calibration routes to it,
-// GPT-6.1 Sol the rest and the calibration's reference, within the $10 a week cap (operator, 2026-11-10).
-evals.setup({ score: true, scoreJudge: "deepseek/deepseek-flash", scoreReference: "openai/gpt-6.1-sol" });
+// Every closed item scored for kinds of failure by the scorers in scorers.ts beside this file (its
+// judge names Flash and GPT-6.1 Sol, operator, 2026-11-10), within the one weekly cap over them all.
+evals.setup({ score: true });
 // tart VMs: the VMs view and each VM's screen live (change vm-view); this Mac's alone.
 // golden-ui: ChatGPT, Claude, Godot, Unity Hub, Linear, Notion and Firefox, with the operator's
 // whole Firefox profile (its passwords, cookies and Google sessions) copied in, so agents sign in
