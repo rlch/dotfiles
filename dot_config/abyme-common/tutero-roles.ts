@@ -1,31 +1,10 @@
 // Tutero's presets, team templates, land rows and admission rules, one source for the profiles that
 // run Tutero's work: tutero (the move's target) and coding (until the move is done whole, see
-// ./tutero.ts TUTERO_MOVED). Each init.ts calls tuteroRoles(); each teams.ts and land.ts spreads
-// TUTERO_TEMPLATES (land.ts may import nothing, so its rows are written in each). Never copy these into a profile's folder.
+// ./tutero.ts TUTERO_MOVED). Each init.ts calls tuteroRoles(). A profile's teams.ts and land.ts may
+// import nothing (abyme runs each from its text alone), so their templates and rows are written in
+// tutero's own. Never copy these presets into a profile's folder.
 import admission from "@abyme/admission";
-import type { TeamFile } from "@abyme/teams";
 import { CLOUDFLARE, CODE, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
-
-/** Tutero's pull-request team templates. */
-export const TUTERO_TEMPLATES = {
-  // An engineer's MathGaps/iac pull request, on its branch: review posts on it as @rlch (the iac-review
-  // preset), ending when it merges or closes. Named for iac: a template here serves every repository
-  // without one of its name. No walk: Terraform has nothing for a teacher to see.
-  "iac-pr": {
-    title: "Pull requests",
-    instructions: "One team is one pull request, on its branch; you end with it.",
-    ends: { "github.pr": { number: "{number}", states: ["merged", "closed"] } },
-    groups: [{ title: "Review", roles: { review: "iac-review" } }],
-  },
-  // An engineer's MathGaps/curriculum pull request, as iac-pr: review (the curriculum-review preset) posts as
-  // @rlch, fixes and merges it, ending when it merges or closes. No walk: a GraphQL subgraph shows a teacher nothing.
-  "curriculum-pr": {
-    title: "Pull requests",
-    instructions: "One team is one pull request, on its branch; you end with it.",
-    ends: { "github.pr": { number: "{number}", states: ["merged", "closed"] } },
-    groups: [{ title: "Review", roles: { review: "curriculum-review" } }],
-  },
-} satisfies NonNullable<TeamFile["templates"]>;
 
 /** Registers schools', iac's and curriculum's presets and the schools admission rules. */
 export function tuteroRoles(): void {
