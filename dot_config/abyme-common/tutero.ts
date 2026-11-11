@@ -12,10 +12,10 @@ import git from "@abyme/git";
  * guard never reads it. */
 export const TUTERO_MOVED = true;
 
-/** Whether tutero may start a new lead@schools. False while the schools move is paused (lead@abyme,
- * until machine-identity's fix): coding's lead@schools stays the live one, and the hub's takeover
- * items would otherwise start a second here. Tutero's guard reads it; true resumes the move. */
-export const SCHOOLS_LEAD_IN_TUTERO = false;
+/** Whether tutero may start a new lead@schools. False paused the schools move (lead@abyme, until
+ * machine-identity's fix): coding's lead@schools stayed the live one. True since machine-identity
+ * stage 1 went live (4eff72e95, 2026-11-11): the hub's takeover items start it here. */
+export const SCHOOLS_LEAD_IN_TUTERO = true;
 
 /** Tutero's repositories, each a checkout under it. */
 export const TUTERO_DIR = "/Users/rjm/dev/tutero";
