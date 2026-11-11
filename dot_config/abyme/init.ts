@@ -155,7 +155,9 @@ replay.setup({ clip: 0.5, checkout: 30_000 }, { when: { device: ["desktop", "tab
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 16, quotas: { "*": { teams: 8 }, abyme: { teams: 8, fast: 2 } } });
 // The Hetzner check node check-1 runs checks and nothing else: land's full run needs `check`, so it
 // waits for check-1 and never runs on the laptop (main-stays-green E.2; check-1 is not up yet).
-machines.setup({ labels: { "check-1": { check: 1 } }, taints: { "check-1": "named" } });
+// The Mac holds one VM at a time: two at once took it to a load of ~970 (2026-11-06). This replaces
+// `vms: 1` in abyme's `.abyme/load.ts`.
+machines.setup({ labels: { "check-1": { check: 1 } }, taints: { "check-1": "named" }, slots: { "richards-macbook-pro-8970": { vm: 1 } } });
 
 // What agents start without, and the role helpers, are ../abyme-common/roles.ts, shared with tutero:
 // each preset's `without` carries every agent's list (`full`), as no agents option does now.
