@@ -29,7 +29,8 @@ async function sourceOf(path: string): Promise<string | null> {
   return r.code === 0 ? r.stdout.trim() || null : null;
 }
 
-if (abyme.machine === LOCAL) {
+// The kernel names a machine by its id: `local` resolves to the control plane's.
+if (abyme.machine === abyme.machines.resolve(LOCAL)) {
   // Editing a chezmoi-deployed file: the next `chezmoi apply` overwrites it.
   hooks.items.add({
     id: "bans.chezmoi-deployed",
