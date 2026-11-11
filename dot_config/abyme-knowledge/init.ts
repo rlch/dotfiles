@@ -72,6 +72,7 @@ import push from "@abyme/push";
 import share from "@abyme/share";
 import browser from "@abyme/browser";
 import triggers from "@abyme/triggers";
+import records from "@abyme/records";
 import machines from "@abyme/machines";
 import profiles from "@abyme/profiles";
 import busy from "@abyme/busy";
@@ -174,6 +175,8 @@ push.setup();
 share.setup();
 browser.setup();
 triggers.setup();
+// Records reads each repository's .abyme/triggers.ts (records-declare): without it they go unread.
+records.setup();
 // Which machine each page runs on: texts and packages ask it (every page names a machine).
 machines.setup();
 // The profiles you can reach, and the switcher in the rail.
