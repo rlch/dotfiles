@@ -27,9 +27,9 @@ import bans from "../abyme/bans";
 abyme.server({ port: 4484, stateDir: "~/.local/state/abyme-tutero" });
 // The profile as the phone lists it under this Mac: the hub's name, colour and icon.
 abyme.server({ name: "Tutero", color: "purple", icon: "briefcase" });
-// An owner's peer of the hub, over the tailnet (`tailscale serve` on linode-8's 4443, in front of
+// An owner's peer of the hub, over the tailnet (`tailscale serve` on tutero-hub's 4443, in front of
 // its gateway), allowed there as `mac`.
-abyme.server({ peerName: "mac", peers: { hub: "https://richard.tail21822e.ts.net:4443" } });
+abyme.server({ peerName: "mac", peers: { hub: "https://tutero-hub.tail21822e.ts.net:4443" } });
 common();
 // Coding fires them until the move is done whole: a lead@schools here would be a second one.
 if (TUTERO_MOVED) addTriggers();
