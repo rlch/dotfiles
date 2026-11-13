@@ -24,7 +24,7 @@ const CSS_AT = 1024;
 const KEEP = Math.max(1, o.keep);
 const CLIP = Math.max(0.25, Math.min(o.clip, KEEP));
 const SAVES = Math.max(1, Math.floor(o.saves));
-/** Error and stall saves of one page, at most one in this long. */
+/** Error, stall and switch saves of one page, at most one in this long. */
 const GAP_MS = 60_000;
 /** How long an agent's save waits for the pages to send what they hold. */
 const FLUSH_MS = 1000;
@@ -101,16 +101,18 @@ async function list(): Promise<Save[]> {
 }
 
 /** Why a save was written, as its name says. */
-const why = (reason: string) => (reason.startsWith("error") ? "error" : reason.startsWith("stall") ? "stall" : reason.startsWith("agent") ? "agent" : "key");
+const why = (reason: string) => (reason.startsWith("error") ? "error" : reason.startsWith("stall") ? "stall" : reason.startsWith("switch") ? "switch" : reason.startsWith("agent") ? "agent" : "key");
+/** The saves of one page that share its once-a-minute limit. */
+const gappedWhy = (w: string) => w === "error" || w === "stall" || w === "switch";
 
-/** Writes one page's save: null when it holds nothing, or saved for an error or a stall under a minute ago. */
+/** Writes one page's save: null when it holds nothing, or saved for an error, a stall or a switch under a minute ago. */
 async function saveOne(page: string, reason: string, minutes: number, w = why(reason)): Promise<Save | null> {
   const now = Date.now();
-  if ((w === "error" || w === "stall") && now - (gapped.get(page) ?? 0) < GAP_MS) return null;
+  if (gappedWhy(w) && now - (gapped.get(page) ?? 0) < GAP_MS) return null;
   const span = Math.max(0.25, Math.min(minutes, KEEP));
   const taken = ring.take(page, now - span * 60_000);
   if (!taken) return null;
-  if (w === "error" || w === "stall") gapped.set(page, now);
+  if (gappedWhy(w)) gapped.set(page, now);
   // The name says when, where and why, so a list of saves needs no file opened.
   const base = `${stamp(now)}_${clean(taken.label)}_${w}_${clean(page).slice(0, 8)}`;
   const path = `${DIR}/${base}.jsonl.gz`;

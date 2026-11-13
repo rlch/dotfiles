@@ -2,7 +2,7 @@
 // interaction path (its work in slices after paint, checkouts and sends at idle), and abymed keeps
 // the last `keep` minutes in its memory; nothing leaves the machine, and nothing is written to disk
 // but a save. "Save replay" (leader shift+r, the last `clip` minutes), "Save replay of the last
-// <keep> minutes", any uncaught error, rejection or fault, a stall, and an agent's
+// <keep> minutes", any uncaught error, rejection or fault, a stall, a slow chat switch, and an agent's
 // `abyme call replay save` write one, which agents read with replay_read and the view Replays plays.
 // A chat's scroll goes in beside it, with abyme.app's wheel events and paint (scroll.ts).
 import abyme from "@abyme/cell";
@@ -14,6 +14,7 @@ import views from "@abyme/views/inventory";
 import layout from "@abyme/layout";
 import cells from "@abyme/cells";
 import notifications from "@abyme/notifications/optional";
+import perf from "@abyme/perf/optional";
 import options from "./options.ts";
 import { mark, PAGE, recording } from "./parts.tsx";
 
@@ -45,6 +46,20 @@ async function save(reason: string, minutes?: number) {
 // A save of every page (an agent's) asks each to send what it holds first.
 const offAsked = replay.server.asked().on("change", () => rec?.flush());
 abyme.effect(() => () => offAsked.dispose());
+
+// A chat switch drawn `switch` ms or more after its press (perf's `switch` measure); what follows it is
+// part of it, as for a stall.
+if (perf && o.switch > 0) {
+  const heard = perf.listeners.add({
+    id: "replay.switch",
+    hear: (m) => {
+      // Read as a string: an abyme before agent-switch-lag has no `switch` kind, and sends none.
+      const kind: string = m.kind;
+      if (kind === "switch" && m.ms >= o.switch) setTimeout(() => void save(`switch: ${Math.round(m.ms)} ms`).catch(() => {}), 1500);
+    },
+  });
+  abyme.effect(() => () => heard.dispose());
+}
 
 if (o.onError) {
   // What follows an error is part of it: the save waits a moment for it.
