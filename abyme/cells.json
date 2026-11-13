@@ -5,6 +5,9 @@
     // The code app, which leaves out the title bar and lsp. A line of init.ts (common's theme
     // and vim, layout-panes, voice, load, town) stands whole in place of code's setup of it.
     "code": {},
+    // Hetzner servers for node pools: its token is the login Keychain item abyme-hetzner, account
+    // HCLOUD_TOKEN (the node-pools team, operator: "Yes, the team handles the token and the setup").
+    "hetzner": { "sshKey": "rjm-macbook-pro" },
     // The tools code leaves out, and line review.
     "tasks": {}, "ports": {}, "bevy-engine": {}, "search": {}, "problems": {}, "output": {},
     "references": {}, "busy": {}, "openspec": {}, "context-map": {}, "review": {},
