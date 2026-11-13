@@ -150,9 +150,10 @@ replay.setup({ clip: 0.5, checkout: 120_000 }, { when: { device: ["desktop", "ta
 // (operator, 2026-10-26).
 // An agent's turn is a model call, not a build: it never waits on the machine's cores.
 // Machine teams 16, each repository 8, abyme's quick teams 2: down from 40 and 20 after a load of
-// 159 on 18 cores (operator, 2026-11-06: "maybe decrease teams budget").
+// 159 on 18 cores (operator, 2026-11-06: "maybe decrease teams budget"). Schools 16 and the machine 24
+// (operator, 2026-11-13: "increase team capcity for schools by 8").
 // Health items (throughput, idle account, disk, load, …) go to lead@abyme, not the operator (operator, 2026-10-26).
-load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 16, quotas: { "*": { teams: 8 }, abyme: { teams: 8, fast: 2 } } });
+load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@abyme" }, teams: 24, quotas: { "*": { teams: 8 }, schools: { teams: 16 }, abyme: { teams: 8, fast: 2 } } });
 // The Hetzner check node check-1 runs checks and nothing else: land's full run needs `check`, so it
 // waits for check-1 and never runs on the laptop (main-stays-green E.2; check-1 is not up yet).
 // The Mac holds one VM at a time: two at once took it to a load of ~970 (2026-11-06). This replaces
