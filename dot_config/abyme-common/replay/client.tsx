@@ -45,7 +45,13 @@ async function save(reason: string, minutes?: number) {
 }
 // A save of every page (an agent's) asks each to send what it holds first.
 const offAsked = replay.server.asked().on("change", () => rec?.flush());
-abyme.effect(() => () => offAsked.dispose());
+// abymed's recording starts empty when its half does, and drops a page's batches until its next full
+// snapshot: a restart asks every page for one now.
+const offStarted = replay.server.started().on("change", () => rec?.snapshot());
+abyme.effect(() => () => {
+  offAsked.dispose();
+  offStarted.dispose();
+});
 
 // A chat switch drawn `switch` ms or more after its press (perf's `switch` measure); what follows it is
 // part of it, as for a stall.

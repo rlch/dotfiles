@@ -32,6 +32,8 @@ const FLUSH_MS = 1000;
 const ring = new Ring({ keepMs: KEEP * 60_000, memory: Math.max(1024 * 1024, o.memory) });
 /** Bumped to ask every page to send what it holds now (an agent's save). */
 const asked = abyme.value(0);
+/** When this half started: a page sees it change and sends a full snapshot at once, so a save in the first minutes has one to start at. */
+const started = abyme.value(Date.now());
 /** When each page was last saved for an error or a stall. */
 const gapped = new Map<string, number>();
 
@@ -134,6 +136,7 @@ async function saveOne(page: string, reason: string, minutes: number, w = why(re
 
 const api = {
   asked: () => asked,
+  started: () => started,
 
   push({ page, label, checkout, events }: Batch) {
     if (!events.length) return;

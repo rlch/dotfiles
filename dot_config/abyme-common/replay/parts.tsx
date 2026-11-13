@@ -53,7 +53,7 @@ const idle = (f: () => void, timeout: number) => (typeof requestIdleCallback ===
  * abyme.app's wheel events and paint (scroll.ts). Answers how to stop it, and to send what is
  * pending now (before a save).
  */
-export function recording(o: { checkout: number; terminals: boolean; stall: number; onStall(ms: number): void }): { stop(): void; flush(): void } {
+export function recording(o: { checkout: number; terminals: boolean; stall: number; onStall(ms: number): void }): { stop(): void; flush(): void; snapshot(): void } {
   let batches: { checkout: boolean; events: RecordEvent[] }[] = [];
   const flush = () => {
     const out = batches.filter((b) => b.events.length);
@@ -114,6 +114,17 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
       const r = (x: number) => Math.round(x * 10) / 10;
       mark("replay.checkout", { ms: r(st.ms), work: r(st.work), longest: r(st.longest) });
       send();
+    });
+  };
+
+  // A full snapshot now, whatever the operator is doing, and sent at once: abymed asks for one when it starts.
+  const snapshot = () => {
+    if (!recordingNow || checkingOut) return;
+    checkingOut = true;
+    void record.takeFullSnapshot(true).then(() => {
+      checkingOut = false;
+      checked = performance.now();
+      flush();
     });
   };
 
@@ -207,5 +218,5 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     window.removeEventListener("keydown", touched, { capture: true });
     flush();
   };
-  return { stop, flush };
+  return { stop, flush, snapshot };
 }

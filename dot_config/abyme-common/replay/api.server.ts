@@ -39,6 +39,7 @@ export const replay = api({
     value: z.union([SaveSchema, z.array(SaveSchema)]).nullable(),
   }),
   asked: store({ description: "A count abymed bumps to ask every page to send what it holds now, before a save of every page.", value: z.number() }),
+  started: store({ description: "When this server half started, in ms: a page that sees it change takes a full snapshot at once, since abymed's recording starts empty and drops a page's batches until its next one.", value: z.number() }),
   saves: fn({
     description:
       "The operator's UI recordings of abyme pages (rrweb), newest first: name, path, time, size. A save is gzipped JSON lines (`gunzip -c <path>`: its head, then an rrweb event a line; a stylesheet in an event is `replay-css:<sha256>`, its text in the head's `css`; replay_read puts them back), from a full snapshot up to when it was saved: the last 10 minutes by default, up to the option `keep` (15). One is written when the operator saves one, when a page has an uncaught error or a stall, and on an agent's request.",
