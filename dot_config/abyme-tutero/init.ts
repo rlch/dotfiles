@@ -17,6 +17,7 @@ import code from "@abyme/code";
 import records from "@abyme/records";
 import load from "@abyme/load";
 import agents from "@abyme/agents";
+import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { inTutero } from "../abyme-common/tutero.ts";
@@ -38,6 +39,9 @@ bans.setup();
 
 // The code app: agents, teams, git, land. No window draws it here; the hub's page shows its agents.
 code.setup();
+// Each new worktree of a repository whose .abyme/warm.ts opts in (schools, #2062) starts from a warm
+// donor's build output, as coding's: its donor under ~/.local/state/abyme-tutero/warm, capped at 20 GB.
+warm.setup();
 // NOT the profile's node: the hub is. It owns tutero's work, teams, members, shares and land queue,
 // so a member's write is taken while this Mac sleeps. Two nodes saying `profile` refuse every one of
 // those writes until one turns it off, so this line stays (owner-by-name's rollout rule).
