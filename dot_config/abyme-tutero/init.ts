@@ -54,7 +54,7 @@ load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }
 // (2026-11-10).
 agents.prepare.add({
   prepare: async (l) => {
-    if (!l.probe && !(await inTutero(l.cwd)))
+    if (!l.probe && !(await inTutero(l.cwd, l.machine)))
       throw new Error("Only Tutero's repositories (~/dev/tutero) start in tutero: start this in coding");
     // No new lead@schools while the move is paused (SCHOOLS_LEAD_IN_TUTERO): a resume, a probe, the
     // schools teams and the triggers' agents still start. Its name is on its record, not the launch;

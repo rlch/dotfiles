@@ -169,7 +169,7 @@ machines.setup({ gateway: "https://auth.abyme.dev", labels: { "check-1": { check
 // is stranded when its session is lost (2026-11-10). A failed lookup lets it through.
 agents.prepare.add({
   prepare: async (l) => {
-    if (!TUTERO_MOVED || l.resume || l.probe || !(await inTutero(l.cwd))) return;
+    if (!TUTERO_MOVED || l.resume || l.probe || !(await inTutero(l.cwd, l.machine))) return;
     const one = l.agent ? ((await agents.agent({ agent: l.agent }).catch(() => undefined)) as { completion_seq?: number } | null | undefined) : null;
     if (one === undefined || (one?.completion_seq ?? 0) > 0) return;
     throw new Error("Tutero's repositories start in tutero: tutero.abyme.studio, or `abyme --url http://tutero.localhost:4477`");
