@@ -15,6 +15,7 @@ import abyme from "@abyme/cell";
 import code from "@abyme/code";
 import records from "@abyme/records";
 import load from "@abyme/load";
+import warm from "@abyme/warm";
 import { CODEX, type On } from "../abyme-common/roles.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
@@ -33,6 +34,9 @@ abyme.server({ peerName: "tutero-agents", peers: { hub: "https://tutero-hub.tail
 
 // The code app: agents, teams, git, land. No window draws it; the hub's page shows its agents.
 code.setup();
+// Each new worktree of a repository whose .abyme/warm.ts opts in (schools, #2062) starts from a warm
+// donor's build output, as coding's: its donor under ~/.local/state/abyme-tutero/warm, capped at 20 GB.
+warm.setup();
 // NOT the profile's node: the hub is, as for the Mac's tutero. Two nodes saying `profile` refuse
 // every write of tutero's work until one turns it off.
 records.setup({ profile: false });
