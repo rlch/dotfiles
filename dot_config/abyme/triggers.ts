@@ -8,14 +8,4 @@ import triggers from "@abyme/triggers";
 /** Adds them: init.ts calls it on the Mac alone. */
 export default function addTriggers(): void {
   const DOTFILES = "/Users/rjm/dev/dotfiles";
-
-  // iPhone Duo 512GB Star White pickup at a Melbourne Apple Store, every two hours: a script, no model (the process
-  // `mel-iphone-duo` of dotfiles' .abyme/processes.ts, scripts/mel-iphone-duo-pickup.mjs). It tells the operator
-  // once when a store opens it and buys nothing (operator, 2026-11-04; Melbourne, not Hong Kong, 2026-11-17).
-  triggers.items.add({
-    name: "mel-iphone-duo",
-    root: DOTFILES,
-    on: { cron: "0 */2 * * *" },
-    run: { processes: "start", args: { name: "mel-iphone-duo", dir: DOTFILES } },
-  });
 }
