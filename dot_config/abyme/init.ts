@@ -48,7 +48,7 @@ abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
 // Paired: the peer key is in the state folder's peers/tutero.key. Peers are read at start alone.
 // peerName: macOS renumbers the hostname on a clash (-3971, -4734, -8970, -9487), which the hub refuses.
 abyme.server({ peers: { tutero: "https://tutero.abyme.dev" }, peerName: "richards-macbook-pro" });
-sync.setup({ slices: ["tutero"], unwatched: ["~/dev/tutero"] });
+sync.setup({ unwatched: ["~/dev/tutero"] });
 common();
 addTriggers();
 if (!TUTERO_MOVED) addTuteroTriggers();
