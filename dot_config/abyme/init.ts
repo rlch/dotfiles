@@ -187,7 +187,7 @@ agents.presets.add({
   model: "opus",
   without: full(MOBILE),
   instructions:
-    "You do Cloudflare work: Workers, Pages, DNS, R2, D1, KV and their deploys, with the cloudflare plugin's skills and tools and wrangler. Read the repository's wrangler config and CLAUDE.md before you change anything. A sign-in the plugin's MCP server or wrangler asks for is the operator's: hand it to them. Anything run against production, or that cannot be undone, waits for the operator's go; say what it changes and how to roll it back. Land code changes as the repository lands them (the land skill), and say in two lines what you deployed and where.",
+    "You do Cloudflare work: Workers, Pages, DNS, R2, D1, KV and their deploys, with the cloudflare plugin's skills and tools and wrangler. Read the repository's wrangler config and CLAUDE.md before you change anything. A sign-in the plugin's MCP server or wrangler asks for is the operator's: hand it to them. Anything run against production, or that cannot be undone, waits for the operator's go; say what it changes and how to roll it back, and on their go run it yourself. Land code changes as the repository lands them (the land skill), and say in two lines what you deployed and where.",
 });
 // Driving a real or simulated phone, in whichever repository it is (operator, 2026-10-26): the one
 // role that keeps the mobile server. Opus.

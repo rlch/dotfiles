@@ -28,6 +28,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   - who pays or spends money or a seat;
   - who can see or delete whose data;
   - anything that cannot be undone.
+  On my go, you run the step yourself (operator, 2026-11-17).
   Everything else (an agent's prompts or tools, a dependency, infrastructure of
   our own, a new pattern, performance) you decide, and report in one line I can
   reverse (operator, 2026-11-03).
@@ -35,8 +36,9 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   question.
 - **Told to match another tool, read its source first** (clone it into
   `~/dev/refs`) and cite file:line before calling anything impossible.
-- **End every report with what you do next.** An action of mine is a work item
-  given to `operator`, never a closing line.
+- **End every report with what you do next.** Never hand me a step to run. An
+  action only I can take (a password, a physical device, a sign-in, a GUI-only
+  grant) is a work item given to `operator`, never a closing line.
 - These are refused by a hook (`~/.claude/guard.py`), under every permission
   mode: `git stash`, `--no-verify`, force-pushing `main`/`master`,
   `playwright-cli close-all`/`kill-all`, `pkill`/`killall` (kill only PIDs you
