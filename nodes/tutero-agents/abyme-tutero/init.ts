@@ -20,7 +20,8 @@ import addTriggers from "../abyme-common/tutero-triggers.ts";
 // Tutero's repositories, cloned with the fine-grained MathGaps token (design, Credentials).
 const TUTERO_DIR = "/home/tutero/dev/tutero";
 
-abyme.server({ port: 4484, stateDir: "~/.local/state/abyme-tutero", clientDir: "~/.local/share/abyme/client" });
+// Installed as the hub is (abyme scripts/tutero-hub/README.md): binaries in ~/.local/share/abyme-peer/bin.
+abyme.server({ port: 4484, stateDir: "~/.local/state/abyme-tutero", clientDir: "~/.local/share/abyme-peer/client" });
 // The profile as the phone lists it: the hub's name, colour and icon.
 abyme.server({ name: "Tutero", color: "purple", icon: "briefcase" });
 // Its address on the tailnet (`tailscale serve --https=4443` in front of its gateway), and an owner's
