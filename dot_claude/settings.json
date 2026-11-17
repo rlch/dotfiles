@@ -34,6 +34,9 @@
     ]
   },
   "model": "claude-opus-5-5[1m]",
+  "modelPicker": {
+    "options": [{ "model": "claude-fable-5-2" }]
+  },
   "enableAllProjectMcpServers": true,
   "hooks": {
     "PreToolUse": [
