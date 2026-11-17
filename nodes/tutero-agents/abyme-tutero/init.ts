@@ -16,6 +16,7 @@ import code from "@abyme/code";
 import records from "@abyme/records";
 import load from "@abyme/load";
 import warm from "@abyme/warm";
+import triggers from "@abyme/triggers";
 import { CODEX, type On } from "../abyme-common/roles.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
@@ -76,3 +77,10 @@ tuteroRoles(ON, MODELS, TUTERO_DIR);
 // pull request. The move (tutero-agents-node 4.1) flips this in the same step the Mac's stops.
 const NODE_TRIGGERS = true;
 if (NODE_TRIGGERS) addTriggers(TUTERO_DIR, { ...ON, config: { ...ON.config, model: SMALL } });
+
+// Only Tutero's repositories' triggers and teams files are read here (abyme triggers-owned-repos): an
+// agent of the profile in ~/dev/abyme on the Mac made the Mac's tutero run abyme's own triggers. A
+// root is a main checkout, so a prefix says it; inTutero is the Mac's ~/dev/tutero, never this node's.
+// `?.`: an abymed before triggers.owns has none, and the line must not break this init.
+const ours = (root: string) => root === TUTERO_DIR || root.startsWith(`${TUTERO_DIR}/`);
+triggers.owns?.add({ id: "tutero", owns: ({ root }) => ours(root) });
