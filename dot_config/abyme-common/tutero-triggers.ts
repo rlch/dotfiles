@@ -1,16 +1,19 @@
 // Tutero's triggers (the triggers plugin's `items`), in one profile alone so none fires twice: coding's
 // until the move to the profile tutero is done whole, then tutero's (TUTERO_MOVED in ./tutero.ts;
-// abyme tutero-headless-read, design 6). They run on this Mac only. A repository's `.abyme/triggers.ts`
-// fires on every machine that checks it out; these never leave here.
+// abyme tutero-headless-read, design 6). They run on one machine only, the Mac or the node
+// tutero-agents. A repository's `.abyme/triggers.ts` fires on every machine that checks it out; these
+// never leave the one.
 // Each is rooted at a repository's main checkout: its source is read and its call run there.
 
 import triggers from "@abyme/triggers";
+import { TUTERO_DIR } from "./tutero.ts";
 
-/** Adds them: init.ts calls it on the Mac alone. */
-export default function addTriggers(): void {
-  const SCHOOLS = "/Users/rjm/dev/tutero/frontend/app/schools";
-  const IAC = "/Users/rjm/dev/tutero/infrastructure/iac";
-  const CURRICULUM = "/Users/rjm/dev/tutero/backend/app/curriculum";
+/** Adds them, rooted at the repositories under `dir`: the Mac's ~/dev/tutero, or the node
+ * tutero-agents' (abyme change tutero-agents-node). */
+export default function addTriggers(dir: string = TUTERO_DIR): void {
+  const SCHOOLS = `${dir}/frontend/app/schools`;
+  const IAC = `${dir}/infrastructure/iac`;
+  const CURRICULUM = `${dir}/backend/app/curriculum`;
   // Whose pull requests no review team is brought up for: the operator's own, and bots' (GitHub's GraphQL login,
   // without `app/`; release-please opens its PRs as github-actions).
   const NOT_REVIEWED = ["rlch", "tutero-bot", "github-actions", "dependabot", "release-please", "renovate"];

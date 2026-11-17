@@ -4,10 +4,18 @@
 // import nothing (abyme runs each from its text alone), so their templates and rows are written in
 // tutero's own. Never copy these presets into a profile's folder.
 import admission from "@abyme/admission";
-import { CLOUDFLARE, CODE, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead, role, type Without } from "./roles.ts";
+import { CLAUDE, CLOUDFLARE, CODE, LEAD, MOBILE, NO_CODE, RUST_LSP, TS_LSP, lead as leadOn, role as roleOn, type On, type Without } from "./roles.ts";
+import { TUTERO_DIR } from "./tutero.ts";
 
-/** Registers schools', iac's and curriculum's presets and the schools admission rules. */
-export function tuteroRoles(): void {
+/** Registers schools', iac's and curriculum's presets and the schools admission rules, each preset on
+ * `on`: Claude for coding and the Mac, Codex for the node tutero-agents (abyme change
+ * tutero-agents-node). `models` gives a role's model by preset id, in place of its Claude one here: a
+ * Codex preset needs Codex's ids. `dir` is where Tutero's repositories are checked out on the machine. */
+export function tuteroRoles(on: On = CLAUDE, models: Partial<Record<string, string>> = {}, dir: string = TUTERO_DIR): void {
+  const role = (id: string, title: string, model: string, without: Without, instructions: string) =>
+    roleOn(id, title, models[id] ?? model, without, instructions, on);
+  const lead = (id: string, title: string, model: string, instructions: string, without: Without = LEAD) =>
+    leadOn(id, title, models[id] ?? model, instructions, without, on);
   // schools', iac's and curriculum's presets, moved from coding's init.ts.
   // A schools lead keeps Sentry and Slack.
   const SCHOOLS_LEAD: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...MOBILE];
@@ -57,7 +65,7 @@ export function tuteroRoles(): void {
   // deploys nothing) and prompt/tests.rs (1) no longer ask for a go.
   // Off 2026-11-03: admission threw on every land (read-only `seen.ran`, parts.server.ts:161); on again once fixed.
   const ADMISSION_ON = true;
-  const SCHOOLS_DIR = "/Users/rjm/dev/tutero/frontend/app/schools";
+  const SCHOOLS_DIR = `${dir}/frontend/app/schools`;
   const at = (repo: string, dir: string) => repo.replace(/\/+$/, "") === dir;
   /** The files any of `res` matches. */
   const touches = (files: string[], ...res: RegExp[]) => files.filter((f) => res.some((re) => re.test(f)));
