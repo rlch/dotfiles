@@ -38,8 +38,11 @@ records.setup({ profile: false });
 // (design). Health items go to lead@schools, tutero's dispatcher.
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }, teams: 4, quotas: { "*": { teams: 4 } } });
 
-// Tutero's triggers, here whenever this config runs: the Mac's tutero has ended first (design, Order).
-addTriggers(TUTERO_DIR);
+// Tutero's triggers, off until the move: this tutero is up before it (Codex sign-in, agents.models,
+// clones) while the Mac's tutero still fires them, and two profiles firing them bring up two teams per
+// pull request. The move (tutero-agents-node 4.1) flips this in the same step the Mac's stops.
+const NODE_TRIGGERS = false;
+if (NODE_TRIGGERS) addTriggers(TUTERO_DIR);
 
 // schools', iac's and curriculum's presets on Codex. The model ids are placeholders until they are read
 // on the node with `agents.models` (tutero-agents-node 2.4): a start on one is refused until then.
