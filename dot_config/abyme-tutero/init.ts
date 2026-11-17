@@ -21,8 +21,7 @@ import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { inTutero } from "../abyme-common/tutero.ts";
-import addTriggers from "../abyme-common/tutero-triggers.ts";
-import { SCHOOLS_LEAD_IN_TUTERO, TUTERO_MOVED } from "../abyme-common/tutero.ts";
+import { SCHOOLS_LEAD_IN_TUTERO } from "../abyme-common/tutero.ts";
 import bans from "../abyme/bans";
 
 abyme.server({ port: 4484, stateDir: "~/.local/state/abyme-tutero" });
@@ -32,8 +31,9 @@ abyme.server({ name: "Tutero", color: "purple", icon: "briefcase" });
 // its gateway), allowed there as `mac`.
 abyme.server({ peerName: "mac", peers: { hub: "https://tutero-hub.tail21822e.ts.net:4443" } });
 common();
-// Coding fires them until the move is done whole: a lead@schools here would be a second one.
-if (TUTERO_MOVED) addTriggers();
+// Tutero's triggers run on the node tutero-agents now (abyme change tutero-agents-node, 4.1), never
+// here as well: two profiles firing them bring up two teams per pull request. Before the node, coding
+// fired them until the move was done whole, then this profile (TUTERO_MOVED).
 // The operator's own bans beside abyme's guard, as coding's (../abyme/bans).
 bans.setup();
 

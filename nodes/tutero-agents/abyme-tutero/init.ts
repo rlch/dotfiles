@@ -68,5 +68,5 @@ tuteroRoles(ON, MODELS, TUTERO_DIR);
 // Tutero's triggers, off until the move: this tutero is up before it (Codex sign-in, agents.models,
 // clones) while the Mac's tutero still fires them, and two profiles firing them bring up two teams per
 // pull request. The move (tutero-agents-node 4.1) flips this in the same step the Mac's stops.
-const NODE_TRIGGERS = false;
+const NODE_TRIGGERS = true;
 if (NODE_TRIGGERS) addTriggers(TUTERO_DIR, { ...ON, config: { ...ON.config, model: SMALL } });
