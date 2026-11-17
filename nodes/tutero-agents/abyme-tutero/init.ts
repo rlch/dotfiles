@@ -1,13 +1,15 @@
+// The node tutero-agents' config: its ~/.config/abyme-tutero, the one profile tutero, which runs
+// nowhere else since the Mac's was removed (tutero-agents-node 6.1, 2026-11-17).
+//
 // The profile tutero on tutero-agents, a Hetzner CCX33 (abyme change tutero-agents-node): Tutero's
 // agents, teams and triggers, off the Mac, on Codex over the operator's Codex account (operator,
 // 2026-11-17: "use my codex account instead of claude for the eu server"). It is the one abymed there,
 // tutero's alone, so nothing of coding: an owner's peer of the hub (tutero-hub) as the Mac's tutero was,
 // the hub showing its agents to tutero's members. The user `tutero`, home /home/tutero.
 //
-// Not chezmoi's: this host is not chezmoi-managed. ../render.sh writes this folder and the parts of
-// ../../../dot_config/abyme-common it imports into one folder, copied to the node's ~/.config by abyme
-// call. The Mac's tutero (../../../dot_config/abyme-tutero) runs Tutero's triggers until it ends; the
-// two never run at once (tutero-agents-node 4.1, Order).
+// Not chezmoi's: this host is not chezmoi-managed. ../render.sh writes this folder (init.ts, teams.ts,
+// land.ts) and the parts of ../../../dot_config/abyme-common it imports into one folder, copied to the
+// node's ~/.config by abyme call.
 
 import abyme from "@abyme/cell";
 import code from "@abyme/code";

@@ -1,5 +1,6 @@
 // What every profile's agents start without, and the helpers that add a role's preset (agents.presets),
-// shared by coding (../abyme/init.ts) and tutero (../abyme-tutero/init.ts) so the two never drift.
+// shared by coding (../abyme/init.ts) and the node tutero-agents' tutero (nodes/tutero-agents in the
+// dotfiles) so the two never drift.
 
 import agents from "@abyme/agents";
 

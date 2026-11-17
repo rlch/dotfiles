@@ -1,6 +1,6 @@
 // How repositories that carry no .abyme of their own land (the land plugin, `abyme call land add`),
 // by their origin. A repository's own .abyme/land.ts wins; one named in both is refused. A land.ts
-// may import nothing but types, so Tutero's rows are written here and in ../abyme-tutero/land.ts.
+// may import nothing but types, so Tutero's rows are written here and in the node tutero-agents' land.ts (nodes/tutero-agents).
 import type { LandFiles } from "@abyme/land";
 
 export default {

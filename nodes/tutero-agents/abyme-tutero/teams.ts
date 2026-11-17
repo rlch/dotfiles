@@ -1,4 +1,4 @@
-// Tutero's team templates (the teams plugin), the profile tutero's, beside each repository's
+// Tutero's team templates (the teams plugin), the node tutero-agents' profile tutero's, beside each repository's
 // .abyme/teams.ts: a repository's template wins over one here of its name. iac (MathGaps/iac) and
 // curriculum (MathGaps/curriculum) have no .abyme of their own: their pull-request templates live here.
 // Written out, not imported: abyme runs this file from its text alone, so an import of
