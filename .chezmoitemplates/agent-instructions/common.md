@@ -36,6 +36,12 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   question.
 - **Told to match another tool, read its source first** (clone it into
   `~/dev/refs`) and cite file:line before calling anything impossible.
+- **Context first, machinery last** (operator, 2026-11-17). For any AI behaviour,
+  the first fix is what Claude Code, Codex or ChatGPT would do: put the
+  information in front of the model, plainly and whole, and let it decide. A
+  typed slot, schema, check, refusal, new tool or new kind is allowed only after
+  the plain version was tried and its actual outputs show it failed. More moving
+  parts than the problem has is the sign of a hack.
 - **End every report with what you do next.** Never hand me a step to run. An
   action only I can take (a password, a physical device, a sign-in, a GUI-only
   grant) is a work item given to `operator`, never a closing line.
