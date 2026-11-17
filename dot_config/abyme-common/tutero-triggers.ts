@@ -8,9 +8,12 @@
 import triggers from "@abyme/triggers";
 import { TUTERO_DIR } from "./tutero.ts";
 
+/** What a trigger's own agent (sentry-watch's) starts on: Claude Sonnet on the Mac. */
+export type Watcher = { provider: "acp"; harness?: string; config: Record<string, string> };
+
 /** Adds them, rooted at the repositories under `dir`: the Mac's ~/dev/tutero, or the node
- * tutero-agents' (abyme change tutero-agents-node). */
-export default function addTriggers(dir: string = TUTERO_DIR): void {
+ * tutero-agents' (abyme change tutero-agents-node), whose `watcher` is Codex. */
+export default function addTriggers(dir: string = TUTERO_DIR, watcher: Watcher = { provider: "acp", config: { model: "sonnet" } }): void {
   const SCHOOLS = `${dir}/frontend/app/schools`;
   const IAC = `${dir}/infrastructure/iac`;
   const CURRICULUM = `${dir}/backend/app/curriculum`;
@@ -29,7 +32,7 @@ export default function addTriggers(dir: string = TUTERO_DIR): void {
     on: { cron: "0 9,15 * * MON-FRI" },
     run: {
       agents: "start",
-      args: { provider: "acp", config: { model: "sonnet" }, dir: SCHOOLS, brief: "Read .claude/skills/sentry/WATCH.md and follow it." },
+      args: { ...watcher, dir: SCHOOLS, brief: "Read .claude/skills/sentry/WATCH.md and follow it." },
     },
   });
 

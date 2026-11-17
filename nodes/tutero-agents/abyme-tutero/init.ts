@@ -13,7 +13,7 @@ import abyme from "@abyme/cell";
 import code from "@abyme/code";
 import records from "@abyme/records";
 import load from "@abyme/load";
-import { CODEX } from "../abyme-common/roles.ts";
+import { CODEX, type On } from "../abyme-common/roles.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
 
@@ -38,28 +38,35 @@ records.setup({ profile: false });
 // (design). Health items go to lead@schools, tutero's dispatcher.
 load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }, teams: 4, quotas: { "*": { teams: 4 } } });
 
+// Codex runs in full access, as the Mac's Claude agents run unprompted: its default, read-only, writes
+// nothing, and its asking presets would park every git push and gh call on an approval nobody gives
+// on a headless node. The node is Tutero's alone (design).
+const ON = { ...CODEX, config: { mode: "full-access" } } satisfies On;
+
+// schools', iac's and curriculum's presets on Codex, the models read off the node with
+// agents.choices (codex-acp 0.19.1, 2026-11-17): the Opus roles on gpt-6-astra ("Frontier
+// intelligence for the most demanding work"), the Sonnet roles on gpt-6.1-sol, Codex's default
+// ("Latest workhorse model for coding and everyday work").
+const LARGE = "gpt-6-astra";
+const SMALL = "gpt-6.1-sol";
+const MODELS: Record<string, string> = {
+  "schools-lead": LARGE,
+  "schools-team-lead": SMALL,
+  "schools-research": LARGE,
+  "schools-research-scan": SMALL,
+  "schools-spec": LARGE,
+  "schools-build": LARGE,
+  "schools-fix": SMALL,
+  "schools-eval": LARGE,
+  "schools-review": LARGE,
+  "schools-walk": SMALL,
+  "iac-review": LARGE,
+  "curriculum-review": LARGE,
+};
+tuteroRoles(ON, MODELS, TUTERO_DIR);
+
 // Tutero's triggers, off until the move: this tutero is up before it (Codex sign-in, agents.models,
 // clones) while the Mac's tutero still fires them, and two profiles firing them bring up two teams per
 // pull request. The move (tutero-agents-node 4.1) flips this in the same step the Mac's stops.
 const NODE_TRIGGERS = false;
-if (NODE_TRIGGERS) addTriggers(TUTERO_DIR);
-
-// schools', iac's and curriculum's presets on Codex. The model ids are placeholders until they are read
-// on the node with `agents.models` (tutero-agents-node 2.4): a start on one is refused until then.
-const CODEX_MODEL = "codex-model-tbd";
-const CODEX_MODEL_SMALL = "codex-model-small-tbd";
-const MODELS: Record<string, string> = {
-  "schools-lead": CODEX_MODEL,
-  "schools-team-lead": CODEX_MODEL_SMALL,
-  "schools-research": CODEX_MODEL,
-  "schools-research-scan": CODEX_MODEL_SMALL,
-  "schools-spec": CODEX_MODEL,
-  "schools-build": CODEX_MODEL,
-  "schools-fix": CODEX_MODEL_SMALL,
-  "schools-eval": CODEX_MODEL,
-  "schools-review": CODEX_MODEL,
-  "schools-walk": CODEX_MODEL_SMALL,
-  "iac-review": CODEX_MODEL,
-  "curriculum-review": CODEX_MODEL,
-};
-tuteroRoles(CODEX, MODELS, TUTERO_DIR);
+if (NODE_TRIGGERS) addTriggers(TUTERO_DIR, { ...ON, config: { ...ON.config, model: SMALL } });

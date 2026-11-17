@@ -57,18 +57,18 @@ export const CODE: Without = [...CLOUDFLARE, ...TUTERO, ...MOBILE];
 // Every role is on Claude until the operator switches one (operator, 2026-11-05).
 export type On =
   | { provider: "acp"; harness: "claude" }
-  | { provider: "acp"; harness: "codex" }
+  | { provider: "acp"; harness: "codex"; config?: Record<string, string> }
   | { provider: "harness"; harness: "abyme"; config: { folder: string } };
 export const CLAUDE: On = { provider: "acp", harness: "claude" };
 export const CODEX: On = { provider: "acp", harness: "codex" };
 // A `without` is checked whole against its harness's own list, an id it does not list refused at start
 // (abyme web/cells/src/agents/parts.server.ts, withoutChecked). So only a Claude preset takes the
-// Claude lists (AGENTS_WITHOUT, plugins, skills); Codex's lists only `server:<name>`, so a Codex preset
-// keeps a role list's `server:` ids alone, and those only once they are read off the node with
-// `agents.loads({ preset })` (tutero-agents-node 2.4): until then none.
-export const CODEX_SERVERS: ReadonlySet<string> = new Set<string>();
+// Claude lists (AGENTS_WITHOUT, plugins, skills). Codex lists only `server:<name>`: on the node
+// tutero-agents that is `server:codex_apps` alone (read with agents.loads, 2026-11-17), Codex's apps
+// (ChatGPT's connectors), which no role uses, so every Codex preset goes without them.
+export const CODEX_WITHOUT: Without = ["server:codex_apps"];
 const withoutFor = (on: On, w: Without): Without =>
-  on.harness === "claude" ? full(w) : on.harness === "codex" ? w.filter((id) => CODEX_SERVERS.has(id)) : [];
+  on.harness === "claude" ? full(w) : on.harness === "codex" ? CODEX_WITHOUT : [];
 export const role = (id: string, title: string, model: string, without: Without, instructions: string, on: On = CLAUDE) =>
   agents.presets.add({ id, title, model, instructions, ...on, without: withoutFor(on, without) });
 // Every lead dispatches and never operates (operator, 2026-11-04; abyme change
