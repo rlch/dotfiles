@@ -19,7 +19,7 @@ import webhooks from "@abyme/webhooks";
 import wm from "@abyme/wm";
 import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
-import { TUTERO_MOVED, inTutero } from "../abyme-common/tutero.ts";
+import { TUTERO_MOVED } from "../abyme-common/tutero.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import { CLOUDFLARE, CODE, LEAD, MOBILE, NO_CODE, full, lead, role } from "../abyme-common/roles.ts";
 import replay from "../abyme-common/replay";
@@ -162,19 +162,8 @@ machines.setup({ gateway: "https://auth.abyme.dev", labels: { "check-1": { check
 
 // What agents start without, and the role helpers, are ../abyme-common/roles.ts, shared with tutero:
 // each preset's `without` carries every agent's list (`full`), as no agents option does now.
-// Tutero's repositories start in the profile tutero (~/.config/abyme-tutero), whose agents the hub
-// lists for its members: one started here would log to nobody's hub (abyme tutero-headless-read,
-// design 5). A refused launch releases its worktree. Only a brand-new agent is refused: one that
-// has had a turn here (its record's completion_seq) stays, session or not, or coding's lead@schools
-// is stranded when its session is lost (2026-11-10). A failed lookup lets it through.
-agents.prepare.add({
-  prepare: async (l) => {
-    if (!TUTERO_MOVED || l.resume || l.probe || !(await inTutero(l.cwd, l.machine))) return;
-    const one = l.agent ? ((await agents.agent({ agent: l.agent }).catch(() => undefined)) as { completion_seq?: number } | null | undefined) : null;
-    if (one === undefined || (one?.completion_seq ?? 0) > 0) return;
-    throw new Error("Tutero's repositories start in tutero: tutero.abyme.studio, or `abyme --url http://tutero.localhost:4477`");
-  },
-});
+// No start guard for Tutero's repositories here: they start in coding as well as tutero (operator,
+// 2026-11-17: "get rid of that refusal shit").
 
 // Tutero's presets and admission rules, shared with the profile tutero (../abyme-common/tutero-roles.ts):
 // coding runs Tutero's work until the move is done whole (TUTERO_MOVED in ../abyme-common/tutero.ts).
