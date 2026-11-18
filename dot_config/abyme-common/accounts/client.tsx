@@ -193,7 +193,11 @@ function loginsOf(v: unknown): readonly Login[] | undefined {
   return out;
 }
 
+// `page` (settings-accounts 5): its block's title opens Claude's page of pins. Spread in, so an abyme
+// whose LoginsService has no `page` yet still checks.
+const withPage = { page: { kind: "claude" } } as unknown as Partial<LoginsService>;
 const claude: LoginsService = {
+  ...withPage,
   id: "accounts.claude",
   title: "Claude",
   icon: ClaudeIcon,

@@ -256,6 +256,17 @@ const readyShown = (cs: readonly Condition[] | undefined): ReadyShown | null => 
   return c ? { status: c.status, reason: c.reason, message: c.message ?? null } : null;
 };
 
+/** Why login `slug` is not working, in words, or null: its token refused or its setup-token ended.
+ * A limit is not a broken login. */
+function brokenWhy(slug: string): string | null {
+  const seen = view.getState().accounts.find((a) => a.slugs.includes(slug));
+  const c = seen ? readies.get(accountId(seen))?.find((x) => x.type === "Ready") : undefined;
+  if (c?.status !== "False") return null;
+  if (c.reason === "Unauthorized") return "was refused";
+  if (c.reason === "Expired") return "has an ended setup-token";
+  return null;
+}
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
 async function show() {
@@ -373,9 +384,20 @@ const BY_QUOTA = "auto";
 
 /** `last`: the account an agent taken up again last ran on and when its last call was, which it
  * stays on while warm (`warm`). */
-function pick(model: string | null, how: { pinned?: string; count?: boolean; agent?: string; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
+function pick(model: string | null, how: { named?: string; pinned?: string; count?: boolean; agent?: string; last?: { slug: string; at: number } | null } = {}): Promise<{ account: Account; why: string }> {
   return serial(async () => {
     const all = await discover(true);
+    // Named by its launch (a preset's or a start's `account`, or a pin in Settings → Accounts): that
+    // account or none, never another. A limit does not stop it; a broken login does.
+    if (how.named) {
+      const named = all.find((a) => a.slug === how.named);
+      if (!named) throw new Error(`${how.named} has no setup-token in the keychain: sign it in in Settings → Accounts, or pick another on Claude's page`);
+      await show();
+      const ready = brokenWhy(how.named);
+      if (ready) throw new Error(`${how.named} ${ready}: sign it in again in Settings → Accounts, or pick another on Claude's page`);
+      if (how.count) picked.push({ key: named.key, at: Date.now(), agent: how.agent ?? null });
+      return { account: named, why: "named by its launch" };
+    }
     if (!all.length) throw new Error("no Claude account has a setup-token (`abyme call accounts token slug=<s>`)");
     const pinned = how.pinned && how.pinned !== BY_QUOTA ? how.pinned : undefined;
     const busy = await busyCounts(all);
@@ -471,7 +493,10 @@ const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
     // Taken up again: within the hour of its last call it stays on the account that call ran on,
     // where its prompt cache is, unless that account is spent or out of limit (design.md, Warm).
     const last = l.resume && l.agent && !l.probe ? await lastCall(l.agent, l.cwd, l.resume, all) : null;
-    const { account, why } = await pick(model, { pinned, count: !l.probe, agent: l.agent, last });
+    // The account its launch names (`claude/<slug>`, settings-accounts 5): above the agent's pin and the pick by quota.
+    const said = (l as { account?: string | null }).account;
+    const named = said?.startsWith("claude/") ? said.slice("claude/".length) : undefined;
+    const { account, why } = await pick(model, { named, pinned, count: !l.probe, agent: l.agent, last });
     const token = await tokenOf(account.slug);
     if (!token) throw new Error(`${account.slug}: its setup-token is not in the keychain`);
     abyme.log.info(`${l.probe ? "choices" : l.limited ? "after a limit" : l.resume ? "resume" : "launch"} ${l.agent ?? ""} ${l.cwd}: ${account.slug} (${why})`);
