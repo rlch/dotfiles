@@ -384,6 +384,9 @@ test("an account is not Ready while spent or capped, with when it is back", () =
   assert.deepEqual(accountReady(seen), { type: "Ready", status: "False", reason: "Capped", message: "capped until 2026-10-27T01:00", observedBy: "accounts" });
   assert.equal(accountReady({ ...seen, spent: { until: "2026-10-26T22:00", window: null } }).reason, "Spent");
   assert.equal(accountReady({ ...seen, capped: false }).status, "True");
+  assert.equal(accountReady({ ...seen, spent: { until: "2027-10-26T22:00", window: null, why: "main's token was refused" } }).reason, "Unauthorized");
+  assert.equal(accountReady({ ...seen, capped: false }, "2026-10-01T00:00:00.000Z", Date.parse("2026-10-02T00:00:00Z")).reason, "Expired");
+  assert.equal(accountReady({ ...seen, capped: false }, "2027-10-01T00:00:00.000Z", Date.parse("2026-10-02T00:00:00Z")).status, "True");
   const r = accountStored(seen, []);
   assert.equal(accountId(seen), "hsone");
   assert.deepEqual(r.spec, { slugs: ["hsone"] });

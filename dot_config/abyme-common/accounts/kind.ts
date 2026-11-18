@@ -4,11 +4,14 @@ import type { Condition } from "@abyme/records/condition";
 import type { Written } from "@abyme/records/stored";
 import type { AccountSeen } from "./pick.ts";
 
-/** A login's `Ready`, as accounts observes it: False while it is capped (reason `Capped`) or a
- * turn's limit keeps it out of picks (reason `Spent`), each with when it is back; True otherwise. */
-export function accountReady(a: AccountSeen): Omit<Condition, "since"> {
+/** A login's `Ready`, as accounts observes it: False while its token was refused (reason
+ * `Unauthorized`, until a fresh token or a turn let through), its setup-token has ended (`ends`, reason
+ * `Expired`), it is capped (reason `Capped`) or a turn's limit keeps it out of picks (reason `Spent`),
+ * each saying why; True otherwise. */
+export function accountReady(a: AccountSeen, ends: string | null = null, now = Date.now()): Omit<Condition, "since"> {
   const no = (reason: string, message: string) => ({ type: "Ready", status: "False" as const, reason, message, observedBy: "accounts" });
   if (a.spent?.why) return no("Unauthorized", a.spent.why);
+  if (ends && Date.parse(ends) <= now) return no("Expired", `${a.slugs[0] ?? "its"} setup-token ended ${ends.slice(0, 16)}: make a new one`);
   if (a.spent) return no("Spent", `spent until ${a.spent.until}`);
   if (a.capped) return no("Capped", a.back ? `capped until ${a.back}` : "capped");
   return { type: "Ready", status: "True", reason: "Ready", observedBy: "accounts" };

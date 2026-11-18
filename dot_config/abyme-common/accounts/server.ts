@@ -170,11 +170,23 @@ function markSpent(slug: string, why: string, said?: { window: "five" | "seven";
 /** Account `slug`'s token failed to authenticate (revoked, expired): out of every pick, `Ready`
  * False with `why`, until a refresh's turn is let through (which takes any spent mark off). */
 const AUTH_FAILED = /\b401\b|revoked|expired|authenticat|oauth (access )?token is invalid/i;
-function markUnauthorized(slug: string, why: string) {
-  if (spentMarks()[slug]?.why === why) return;
+function markUnauthorized(slug: string, error: string) {
+  if (spentMarks()[slug]?.why) return;
+  const why = `${slug}'s token was refused at ${new Date().toISOString().slice(0, 16)}Z: ${error}`;
   abyme.store.set("spent", { ...spentMarks(), [slug]: { until: Date.now() + 365 * 24 * 60 * 60_000, window: null, why } });
-  abyme.log.warn(`${slug}: its token failed to authenticate (${why}); out of picks until a refresh is let through`);
+  abyme.log.warn(`${slug}: its token failed to authenticate (${error}); out of picks until a refresh is let through or a fresh token is set`);
 }
+
+/** A fresh token for `slug` (added or minted): a refusal of the old one no longer stands. A limit's
+ * mark stays: it is the account's, not the token's. */
+function clearUnauthorized(slug: string) {
+  const { [slug]: mark, ...rest } = spentMarks();
+  if (mark?.why) abyme.store.set("spent", rest);
+}
+
+/** When login `a`'s setup-token ends: the earliest of its slugs' (`tokens`, by slug), null when none is known. */
+const endsOf = (a: { slugs: string[] }, tokens: Record<string, string>) =>
+  a.slugs.map((s) => tokens[s]).filter(Boolean).sort()[0] ?? null;
 
 /** Drops account `slug`'s ignore entry and spent mark (its token gone); true when it had either. */
 function forget(slug: string): boolean {
@@ -236,12 +248,21 @@ async function show() {
   const told = loadAccounts(next.accounts);
   wakeAt(nextReset(told, Date.now()));
   const json = JSON.stringify(next);
-  if (json === shown) return;
-  shown = json;
-  view.set(next);
-  tellLoad(told);
+  // `Ready` is read each time, not only on a change: a setup-token's end passes with nothing else moving.
   const at = Date.now();
-  for (const a of next.accounts) readies.set(accountId(a), setCondition(readies.get(accountId(a)) ?? [], accountReady(a), at));
+  let moved = false;
+  for (const a of next.accounts) {
+    const was = readies.get(accountId(a)) ?? [];
+    const now = setCondition(was, accountReady(a, endsOf(a, next.tokens), at), at);
+    if (JSON.stringify(now) !== JSON.stringify(was)) moved = true;
+    readies.set(accountId(a), now);
+  }
+  if (json === shown && !moved) return;
+  if (json !== shown) {
+    shown = json;
+    view.set(next);
+    tellLoad(told);
+  }
   markAccounts();
 }
 
@@ -307,7 +328,7 @@ function markAccounts() {
     // Each since as records held it, kept while the login stands as it did.
     for (const r of ours) {
       const a = view.getState().accounts.find((x) => accountId(x) === r.id);
-      if (a) readies.set(r.id, setCondition(r.status.conditions, accountReady(a), Date.now()));
+      if (a) readies.set(r.id, setCondition(r.status.conditions, accountReady(a, endsOf(a, view.getState().tokens ?? {})), Date.now()));
     }
     started = true;
     for (const id of new Set([...marked!, ...ours.map((r) => r.id)])) markAccount(id);
@@ -538,6 +559,7 @@ async function mintToken(slug: string): Promise<{ slug: string; url: string; tex
       const w = await keep(slug, secret);
       if (w.code !== 0) return void abyme.log.warn(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
       abyme.log.info(`${slug}: setup-token made and kept in the keychain`);
+      clearUnauthorized(slug);
       listed = null;
       shown = "";
       await show();
@@ -628,6 +650,7 @@ export default {
     if (w.code !== 0) throw new Error(`${slug}: the keychain refused the setup-token (exit ${w.code})`);
     if (fromMac) await processes().run(o.pbcopy, { args: [], stdin: "" });
     abyme.log.info(`${slug}: setup-token added and kept in the keychain`);
+    clearUnauthorized(slug);
     listed = null;
     shown = "";
     await show();
