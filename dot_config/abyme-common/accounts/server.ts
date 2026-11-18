@@ -49,9 +49,21 @@ const ignoredSlugs = () => (abyme.store.get("ignored") ?? []) as string[];
  * times a minute (keychain-poll, 2026-11-05). A token added by hand shows at the next launch or call.
  * The one owner of which accounts there are and when their tokens end. */
 let listed: { at: number; tokens: { slug: string; made: number | null }[] } | null = null;
+/** No keychain command on this machine (a Linux node): no accounts here, and `security` never tried
+ * again (check-1 warned "cannot start `security`" on each usage push, every 2-4 s, 2026-11-18). */
+let noKeychain = false;
 async function keychainTokens(fresh = false): Promise<{ slug: string; made: number | null }[]> {
-  if (listed && !fresh) return listed.tokens;
-  const r = await processes().run(o.security, { args: ["dump-keychain"] });
+  if (noKeychain || (listed && !fresh)) return listed?.tokens ?? [];
+  let r: { code: number | null; stdout: string };
+  try {
+    r = await processes().run(o.security, { args: ["dump-keychain"] });
+  } catch (e) {
+    if (!/cannot start|ENOENT|No such file/i.test((e as Error).message)) throw e;
+    noKeychain = true;
+    listed = { at: Date.now(), tokens: [] };
+    abyme.log.info(`accounts: no \`${o.security}\` on this machine, so no accounts here`);
+    return [];
+  }
   const tokens = r.code === 0 ? tokensListed(r.stdout) : [];
   tokens.sort((a, b) => (a.slug === "main" ? -1 : b.slug === "main" ? 1 : a.slug.localeCompare(b.slug)));
   listed = { at: Date.now(), tokens };
