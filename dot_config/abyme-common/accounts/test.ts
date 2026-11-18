@@ -2,6 +2,7 @@
 // Kept in the dotfiles source only (.chezmoiignore): `node dot_config/abyme/accounts/test.ts`.
 import assert from "node:assert/strict";
 import { accountId, accountReady, accountStored, accountUrgent, writeAccount, type AccountRecords } from "./kind.ts";
+import { claudeLogins } from "./logins.ts";
 import { nextReset, onAccounts, keychainMade, resetSaid, tokenEnds, tokenFrom, tokensListed, tokenWarns, YEAR_MS, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, score, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type Family, type ModelWindow, type Read, type Row, type Usage } from "./pick.ts";
 
 const NOW = Date.parse("2026-10-10T00:00:00Z");
@@ -455,6 +456,21 @@ test("a login's record is written on its node alone: another node's is left to i
   await writeAccount(h, "m", "main", null, warn);
   await Promise.resolve();
   assert.deepEqual(calls, ["apply theirs", "conditions theirs Ready drop ", "status theirs open"]);
+});
+
+test("Settings → Accounts: refused is failing, ended is expired, a limit is working", () => {
+  const seen = { slugs: ["richard"], five: 10, seven: 42, fiveResets: null, sevenResets: null, windows: [], capped: false, binding: null, back: null, spent: null, read: null, stale: false, agents: 0 };
+  const no = (reason: string, message: string) => ({ status: "False" as const, reason, message });
+  const [vatsal, hsone, richard, main] = claudeLogins({
+    accounts: [{ ...seen, slugs: ["vatsal"] }, { ...seen, slugs: ["hsone"] }, { ...seen, spent: { until: "2026-10-26T22:00", window: "seven" } }, { ...seen, slugs: ["main", "m2"], seven: null }],
+    tokens: { hsone: "2026-10-01T00:00:00.000Z", m2: "2027-03-01T00:00:00.000Z", main: "2027-01-01T00:00:00.000Z" },
+    ready: { vatsal: no("Unauthorized", "vatsal's token was refused at 04:29Z: 401"), hsone: no("Expired", "hsone setup-token ended 2026-10-01T00:00: make a new one"), richard: no("Spent", "spent until 2026-10-26T22:00"), main: null },
+  });
+  assert.deepEqual(vatsal, { id: "vatsal", slug: "vatsal", name: "vatsal", detail: "week 42% used", state: "failing", why: "vatsal's token was refused at 04:29Z: 401" });
+  assert.equal(hsone!.state, "expired");
+  assert.equal(hsone!.detail, "week 42% used · token ends 2026-10-01");
+  assert.deepEqual(richard, { id: "richard", slug: "richard", name: "richard", detail: "weekly limit used up until 2026-10-26 22:00", state: "working" });
+  assert.deepEqual(main, { id: "main", slug: "main", name: "main, m2", detail: "week not read yet · token ends 2027-01-01", state: "working" });
 });
 
 let failed = 0;

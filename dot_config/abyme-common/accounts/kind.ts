@@ -17,6 +17,9 @@ export function accountReady(a: AccountSeen, ends: string | null = null, now = D
   return { type: "Ready", status: "True", reason: "Ready", observedBy: "accounts" };
 }
 
+/** A login's `Ready` in accounts' view, for Settings → Accounts (logins.ts): no `since`. */
+export type ReadyShown = { status: Condition["status"]; reason: string; message: string | null };
+
 /** An `Account`'s spec: the login's slugs. */
 export type AccountSpec = { slugs: string[] };
 /** An `Account`'s status: its phase, windows and agents, and its `Ready`. */

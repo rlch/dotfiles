@@ -19,7 +19,7 @@ import { informer } from "@abyme/records/informer";
 import { setCondition, type Condition } from "@abyme/records/condition";
 import { z } from "@abyme/schema";
 import options from "./options";
-import { accountId, accountReady, accountStored, accountUrgent, writeAccount } from "./kind";
+import { accountId, accountReady, accountStored, accountUrgent, writeAccount, type ReadyShown } from "./kind";
 import { nextReset, onAccounts, resetSaid, stale, tokenEnds, tokenFrom, tokensListed, loadAccounts, best, binding, expirePast, family, lastAnswer, parse, parseModels, rowsSeen, said, takePushes, turnError, unified, warm, windowSaid, WARM_MS, type Account, type AccountSeen, type Kept, type Pushed, type Read, type Row, type Spent } from "./pick";
 
 const o = abyme.with(options).cell.options;
@@ -216,7 +216,7 @@ function forget(slug: string): boolean {
 
 /** Each login's quota and how many agents run on it, and when each account's setup-token ends.
  * Who runs where is `agents()`. */
-const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string> }>({ accounts: [], tokens: {} });
+const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string>; ready?: Record<string, ReadyShown | null> }>({ accounts: [], tokens: {} });
 
 /** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on, as
  * load's item (`load.readers`), added again when they change: load calls nothing. */
@@ -250,25 +250,33 @@ function wakeAt(at: number | null) {
   waking = at === null ? null : { at, cancel: abyme.later(Math.min(Math.max(0, at - Date.now()) + 1_000, 2 ** 31 - 1), () => { waking = null; void show().catch((e) => abyme.log.warn("accounts at a reset:", (e as Error).message)); }) };
 }
 
+/** A login's `Ready` as the view shows it: its status, reason and message, no `since`. */
+const readyShown = (cs: readonly Condition[] | undefined): ReadyShown | null => {
+  const c = cs?.find((x) => x.type === "Ready");
+  return c ? { status: c.status, reason: c.reason, message: c.message ?? null } : null;
+};
+
 /** The last value set, as JSON: a set that changes nothing sends nothing. */
 let shown = "";
 async function show() {
   const all = await discover();
   const on = await agentsByAccount();
   const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
-  const next = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding() };
-  const told = loadAccounts(next.accounts);
+  const seen = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding() };
+  const told = loadAccounts(seen.accounts);
   wakeAt(nextReset(told, Date.now()));
-  const json = JSON.stringify(next);
   // `Ready` is read each time, not only on a change: a setup-token's end passes with nothing else moving.
   const at = Date.now();
   let moved = false;
-  for (const a of next.accounts) {
+  for (const a of seen.accounts) {
     const was = readies.get(accountId(a)) ?? [];
-    const now = setCondition(was, accountReady(a, endsOf(a, next.tokens), at), at);
+    const now = setCondition(was, accountReady(a, endsOf(a, seen.tokens), at), at);
     if (JSON.stringify(now) !== JSON.stringify(was)) moved = true;
     readies.set(accountId(a), now);
   }
+  // Each login's `Ready` in the view too, for its row in Settings → Accounts (client.tsx).
+  const next = { ...seen, ready: Object.fromEntries(seen.accounts.map((a) => [accountId(a), readyShown(readies.get(accountId(a)))])) };
+  const json = JSON.stringify(next);
   if (json === shown && !moved) return;
   if (json !== shown) {
     shown = json;

@@ -2,12 +2,15 @@
 // and "Run on account…" in an agent's menu, which pins the account that agent's resumes run on;
 // `/login` in a Claude agent's composer opens the same picker. "Sign in to Claude account…" makes
 // an account's setup-token: its authorize page opens, and once the operator clicks Authorize the
-// token goes to the keychain. "Add copied Claude setup-token…" keeps one made elsewhere.
+// token goes to the keychain. "Add copied Claude setup-token…" keeps one made elsewhere. On the
+// owner's page, Claude's block of Settings → Accounts: one login per account, a broken one's fix its
+// sign-in again.
 import abyme from "@abyme/cell";
+import cells from "@abyme/cells";
 import accounts from "@abyme/accounts";
 import agents from "@abyme/agents/optional";
 import chat from "@abyme/chat/inventory";
-import { createStore } from "@abyme/client";
+import { createStore, derive, during } from "@abyme/client";
 import commands from "@abyme/commands/inventory";
 import menus from "@abyme/menus/inventory";
 import notifications from "@abyme/notifications";
@@ -15,6 +18,9 @@ import palette from "@abyme/palette";
 import palettes from "@abyme/palette/inventory";
 import status from "@abyme/status/inventory";
 import markdown from "@abyme/markdown/optional";
+import logins from "@abyme/logins/optional";
+import type { Login, LoginsService } from "@abyme/logins/page";
+import { claudeLogins, type LoginsView } from "./logins.ts";
 import type { AccountSeen } from "./pick.ts";
 import { Quota } from "./segment.tsx";
 
@@ -168,3 +174,34 @@ commands.add({
 });
 
 status.segments.add({ id: "accounts.quota", side: "right", order: 32, Component: Quota });
+
+/** Claude's mark, Lucide's `sparkles` (ISC): a user cell cannot import lucide-react. */
+function ClaudeIcon({ className = "size-4 shrink-0" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+    </svg>
+  );
+}
+
+/** The same list while the view is the same: Accounts follows the store by identity. */
+let last: { v: unknown; out: readonly Login[] | undefined } | null = null;
+function loginsOf(v: unknown): readonly Login[] | undefined {
+  if (last?.v === v) return last.out;
+  const out = v ? claudeLogins(v as LoginsView).map(({ slug, ...l }): Login => (l.state === "working" ? l : { ...l, fix: { label: "Sign in again", run: () => void signIn(slug) } })) : undefined;
+  last = { v, out };
+  return out;
+}
+
+const claude: LoginsService = {
+  id: "accounts.claude",
+  title: "Claude",
+  icon: ClaudeIcon,
+  about: "Claude agents, and `cl` in a terminal, run on these accounts, the one with most room first.",
+  order: 10,
+  logins: derive(seen, loginsOf),
+  empty: "No Claude account has a setup-token yet: add one copied from `claude setup-token`.",
+  add: { label: "Add copied setup-token…", run: () => palette.open({ picker: "accounts.add" }) },
+};
+// The owner's alone (accounts' functions are theirs); no role is an abymed with no members.
+if (logins) abyme.effect(() => during(derive(cells.role, (r) => (r ?? "owner") === "owner"), () => logins!.services.add(claude)));
