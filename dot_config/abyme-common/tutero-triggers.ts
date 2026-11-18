@@ -49,11 +49,23 @@ export default function addTriggers(dir: string = TUTERO_DIR, watcher: Watcher =
   // .abyme/processes.ts, scripts/main-red.mjs). Red on a second run, it pauses landing in schools and starts one
   // fix agent; once main is green it ends that pause. Nothing is reverted by itself (operator, 2026-10-29).
   // The fix agent lands by pull request (schools #1354) through the pause it owns (abyme b965151f8).
+  // It runs scripts/main-red.mjs as landed on origin/main, never the shared checkout's HEAD (stale on the node,
+  // and others work from it): from a detached worktree only it owns, moved to origin/main each run (abyme research
+  // node-trigger-runs-landed-code). The fetch moves only origin/main. A folder there that is no worktree of
+  // schools is refused, never overwritten; no `git worktree prune`. An ad hoc process under a new name, since
+  // `main-red` in the checkout's processes.ts would run the old script; processes runs one at a time per name.
   triggers.items.add({
     name: "main-red",
     root: SCHOOLS,
     on: { cron: "*/5 * * * *" },
-    run: { processes: "start", args: { name: "main-red", dir: SCHOOLS } },
+    run: {
+      processes: "start",
+      args: {
+        name: "main-red-landed",
+        dir: SCHOOLS,
+        cmd: 'set -e; git fetch -q origin main; W="$HOME/.cache/abyme-landed/schools"; C=$(git rev-parse --path-format=absolute --git-common-dir); if [ -e "$W" ]; then [ "$(git -C "$W" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" = "$C" ] || { echo "$W is not a worktree of this repository: refusing" >&2; exit 2; }; else git worktree add -q -f --detach "$W" origin/main; fi; git -C "$W" checkout -q --force --detach origin/main; exec node "$W/scripts/main-red.mjs"',
+      },
+    },
   });
 
   // schools' Incident kind's controller: an incident team per record, named after it and owned by it, its lead
