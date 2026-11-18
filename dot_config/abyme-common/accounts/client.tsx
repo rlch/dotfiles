@@ -198,7 +198,7 @@ function loginsOf(v: unknown): readonly Login[] | undefined {
 const withPage = { page: { kind: "claude" } } as unknown as Partial<LoginsService>;
 const claude: LoginsService = {
   ...withPage,
-  id: "accounts.claude",
+  id: "claude",
   title: "Claude",
   icon: ClaudeIcon,
   about: "Claude agents, and `cl` in a terminal, run on these accounts, the one with most room first.",
