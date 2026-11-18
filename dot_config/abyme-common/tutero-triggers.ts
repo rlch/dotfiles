@@ -51,9 +51,11 @@ export default function addTriggers(dir: string = TUTERO_DIR, watcher: Watcher =
   // The fix agent lands by pull request (schools #1354) through the pause it owns (abyme b965151f8).
   // It runs scripts/main-red.mjs as landed on origin/main, never the shared checkout's HEAD (stale on the node,
   // and others work from it): from a detached worktree only it owns, moved to origin/main each run (abyme research
-  // node-trigger-runs-landed-code). The fetch moves only origin/main. A folder there that is no worktree of
-  // schools is refused, never overwritten; no `git worktree prune`. An ad hoc process under a new name, since
-  // `main-red` in the checkout's processes.ts would run the old script; processes runs one at a time per name.
+  // node-trigger-runs-landed-code). The fetch moves only origin/main. It owns the worktree it made: a marker in
+  // that worktree's own git dir, written when it adds it. Anything else at the path (a symlink, the main checkout,
+  // another worktree, an attached HEAD, no marker) is refused, never checked out over; no `git worktree prune`. An ad
+  // hoc process under a new name, since `main-red` in the checkout's processes.ts would run the old script;
+  // processes runs one at a time per name.
   triggers.items.add({
     name: "main-red",
     root: SCHOOLS,
@@ -63,7 +65,27 @@ export default function addTriggers(dir: string = TUTERO_DIR, watcher: Watcher =
       args: {
         name: "main-red-landed",
         dir: SCHOOLS,
-        cmd: 'set -e; git fetch -q origin main; W="$HOME/.cache/abyme-landed/schools"; C=$(git rev-parse --path-format=absolute --git-common-dir); if [ -e "$W" ]; then [ "$(git -C "$W" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" = "$C" ] || { echo "$W is not a worktree of this repository: refusing" >&2; exit 2; }; else git worktree add -q -f --detach "$W" origin/main; fi; git -C "$W" checkout -q --force --detach origin/main; exec node "$W/scripts/main-red.mjs"',
+        cmd: [
+          "set -e",
+          'W="$HOME/.cache/abyme-landed/schools"',
+          'refuse() { echo "$W is not the worktree main-red-landed made: refusing ($1)" >&2; exit 2; }',
+          "git fetch -q origin main",
+          "C=$(git rev-parse --path-format=absolute --git-common-dir)",
+          'if [ -e "$W" ] || [ -L "$W" ]; then',
+          '  [ ! -L "$W" ] && [ -d "$W" ] || refuse "not a plain folder"',
+          '  G=$(git -C "$W" rev-parse --path-format=absolute --git-dir 2>/dev/null) || refuse "no git"',
+          '  [ "$(git -C "$W" rev-parse --path-format=absolute --git-common-dir)" = "$C" ] || refuse "another repository"',
+          '  [ "$G" != "$C" ] || refuse "the main checkout"',
+          '  [ "$(cd "$W" && pwd -P)" = "$(git -C "$W" rev-parse --show-toplevel)" ] || refuse "not its top"',
+          '  [ -f "$G/abyme-landed-owner" ] || refuse "no owner marker"',
+          '  ! git -C "$W" symbolic-ref -q HEAD >/dev/null || refuse "HEAD on a branch"',
+          "else",
+          '  git worktree add -q -f --detach "$W" origin/main',
+          '  touch "$(git -C "$W" rev-parse --path-format=absolute --git-dir)/abyme-landed-owner"',
+          "fi",
+          'git -C "$W" checkout -q --force --detach origin/main',
+          'exec node "$W/scripts/main-red.mjs"',
+        ].join("\n"),
       },
     },
   });
