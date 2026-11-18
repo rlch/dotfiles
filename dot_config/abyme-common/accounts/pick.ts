@@ -336,7 +336,8 @@ export function tokensListed(dump: string): { slug: string; made: number | null 
 /** What a login's last read said: its windows, or why they are unknown. */
 export type Read = { at: number; usage: Usage; windows: ModelWindow[]; said?: { five: number | null; seven: number | null } };
 /** A login out of every pick until `until` (ms), by the window that capped it if known. */
-export type Spent = { until: number; window: Window | null };
+/** `why` is set when the token itself fails (revoked, expired): the mark stands until a refresh is let through. */
+export type Spent = { until: number; window: Window | null; why?: string };
 
 /** One login as pages and `accounts view` see it (design.md). */
 export type AccountSeen = {
@@ -350,7 +351,7 @@ export type AccountSeen = {
   binding: Window | null;
   back: string | null;
   /** Until when a turn's limit keeps it out of picks, and by which window if known; null when none does. */
-  spent: { until: string; window: Window | null } | null;
+  spent: { until: string; window: Window | null; why?: string } | null;
   read: string | null;
   /** Its read is older than STALE_MS: the numbers may no longer stand. */
   stale: boolean;
@@ -438,7 +439,7 @@ export function rowsSeen(accounts: Account[], reads: Map<string, Read>, agentsIn
       capped: !!bound || !!mark,
       binding: bound?.window ?? mark?.window ?? null,
       back: minute(later(bound?.resets ?? null, mark ? new Date(mark.until).toISOString() : null)),
-      spent: mark ? { until: minute(new Date(mark.until).toISOString())!, window: mark.window } : null,
+      spent: mark ? { until: minute(new Date(mark.until).toISOString())!, window: mark.window, ...(mark.why ? { why: mark.why } : {}) } : null,
       read: u ? new Date(u.at).toISOString() : null,
       stale: stale(u?.at, now),
       agents: agentsIn.get(key) ?? 0,

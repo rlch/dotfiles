@@ -8,6 +8,7 @@ import type { AccountSeen } from "./pick.ts";
  * turn's limit keeps it out of picks (reason `Spent`), each with when it is back; True otherwise. */
 export function accountReady(a: AccountSeen): Omit<Condition, "since"> {
   const no = (reason: string, message: string) => ({ type: "Ready", status: "False" as const, reason, message, observedBy: "accounts" });
+  if (a.spent?.why) return no("Unauthorized", a.spent.why);
   if (a.spent) return no("Spent", `spent until ${a.spent.until}`);
   if (a.capped) return no("Capped", a.back ? `capped until ${a.back}` : "capped");
   return { type: "Ready", status: "True", reason: "Ready", observedBy: "accounts" };

@@ -167,6 +167,15 @@ function markSpent(slug: string, why: string, said?: { window: "five" | "seven";
   abyme.log.warn(`${slug}: a turn hit its limit (${why}); spent until ${new Date(until).toISOString()}${bound ? `, by its ${bound.window === "seven" ? "week" : "five hours"}` : ""}`);
 }
 
+/** Account `slug`'s token failed to authenticate (revoked, expired): out of every pick, `Ready`
+ * False with `why`, until a refresh's turn is let through (which takes any spent mark off). */
+const AUTH_FAILED = /\b401\b|revoked|expired|authenticat|oauth (access )?token is invalid/i;
+function markUnauthorized(slug: string, why: string) {
+  if (spentMarks()[slug]?.why === why) return;
+  abyme.store.set("spent", { ...spentMarks(), [slug]: { until: Date.now() + 365 * 24 * 60 * 60_000, window: null, why } });
+  abyme.log.warn(`${slug}: its token failed to authenticate (${why}); out of picks until a refresh is let through`);
+}
+
 // ---- what pages see: no token, no email, no uuid ----
 
 /** Each login's quota and how many agents run on it, and when each account's setup-token ends.
@@ -560,7 +569,11 @@ async function refreshOne(slug: string): Promise<{ slug: string; five: number | 
   await files().mkdir(scratch);
   const r = await processes().run(await claudePath(), { args: REFRESH_ARGS, cwd: scratch, env: { CLAUDE_CODE_OAUTH_TOKEN: token }, timeoutMs: 120_000 });
   const pushes = unified(r.stdout, new Date().toISOString());
-  if (!pushes.length) return { slug, five: null, seven: null, capped: false, error: turnError(r.stdout) ?? `its turn said no limits (exit ${r.code})` };
+  if (!pushes.length) {
+    const said = turnError(r.stdout);
+    if (said && AUTH_FAILED.test(said)) markUnauthorized(slug, said);
+    return { slug, five: null, seven: null, capped: false, error: said ?? `its turn said no limits (exit ${r.code})` };
+  }
   const next = takePushes(reads()[slug], pushes, 0);
   if (next) {
     taken.set(slug, next.at);
