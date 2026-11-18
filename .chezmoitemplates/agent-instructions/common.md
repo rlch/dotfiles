@@ -51,14 +51,6 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   started), `find`/`fd`/`du`/`rg`/`grep -r` (or Grep/Glob) over `/` or the home folder (search the
   folder you mean, or `mdfind -name`), editing a chezmoi-deployed file, and a Haiku subagent. Do not look for a way round it; say what you needed.
 
-# Dotfiles and skills
-
-- Config under `~` (`~/.config`, `~/.claude`, `~/.agents`, `~/.local`) is
-  chezmoi's, from `~/dev/dotfiles`: the `dotfiles` skill says how.
-- When one of my skills under `~/dev/skills/` (or a dotfiles one) is wrong, stale
-  or makes you dig, fix it at its source before you finish, minimally and in its
-  voice, and report one line per skill. Read-only bundled skills: say the gap.
-
 # Git
 
 - Conventional commits, `type(scope): subject`, imperative, lowercase, no
