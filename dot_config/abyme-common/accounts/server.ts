@@ -184,7 +184,10 @@ function markSpent(slug: string, why: string, said?: { window: "five" | "seven";
 const AUTH_FAILED = /\b401\b|revoked|expired|authenticat|oauth (access )?token is invalid/i;
 function markUnauthorized(slug: string, error: string) {
   if (spentMarks()[slug]?.why) return;
-  const why = `${slug}'s token was refused at ${new Date().toISOString().slice(0, 16)}Z: ${error}`;
+  // Plain words for the operator, in local time; the raw error is the log's alone.
+  const now = new Date();
+  const at = `${now.toLocaleDateString("en-AU", { day: "numeric", month: "short" })} at ${now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
+  const why = `Claude turned down ${slug}'s token on ${at}. Sign it in again.`;
   abyme.store.set("spent", { ...spentMarks(), [slug]: { until: Date.now() + 365 * 24 * 60 * 60_000, window: null, why } });
   abyme.log.warn(`${slug}: its token failed to authenticate (${error}); out of picks until a refresh is let through or a fresh token is set`);
 }
