@@ -391,10 +391,10 @@ function pick(model: string | null, how: { named?: string; pinned?: string; coun
     // account or none, never another. A limit does not stop it; a broken login does.
     if (how.named) {
       const named = all.find((a) => a.slug === how.named);
-      if (!named) throw new Error(`${how.named} has no setup-token in the keychain: sign it in in Settings → Accounts, or pick another on Claude's page`);
+      if (!named) throw new Error(`The login ${how.named} has no setup-token in the keychain: sign it in in Settings → Accounts, or pick another on Claude's page`);
       await show();
       const ready = brokenWhy(how.named);
-      if (ready) throw new Error(`${how.named} ${ready}: sign it in again in Settings → Accounts, or pick another on Claude's page`);
+      if (ready) throw new Error(`The login ${how.named} ${ready}: sign it in again in Settings → Accounts, or pick another on Claude's page`);
       if (how.count) picked.push({ key: named.key, at: Date.now(), agent: how.agent ?? null });
       return { account: named, why: "named by its launch" };
     }

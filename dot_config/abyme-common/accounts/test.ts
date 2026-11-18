@@ -468,6 +468,9 @@ test("Settings → Accounts: refused is failing, ended is expired, a limit is wo
   });
   assert.deepEqual(vatsal, { id: "vatsal", slug: "vatsal", name: "vatsal", detail: "week 42% used", state: "failing", why: "vatsal's token was refused at 04:29Z: 401" });
   assert.equal(hsone!.state, "expired");
+  // A refusal's year-long mark is not shown as a cap: its why says what happened.
+  const [refused] = claudeLogins({ accounts: [{ ...seen, capped: true, back: "2027-11-18T11:04", spent: { until: "2027-11-18T11:04", window: null, why: "richard's token was refused" } }], ready: { richard: no("Unauthorized", "richard's token was refused") } });
+  assert.equal(refused!.detail, "week 42% used");
   assert.equal(hsone!.detail, "week 42% used · token ends 2026-10-01");
   assert.deepEqual(richard, { id: "richard", slug: "richard", name: "richard", detail: "weekly limit used up until 2026-10-26 22:00", state: "working" });
   assert.deepEqual(main, { id: "main", slug: "main", name: "main, m2", detail: "week not read yet · token ends 2027-01-01", state: "working" });

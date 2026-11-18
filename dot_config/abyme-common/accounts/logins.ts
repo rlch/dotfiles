@@ -12,7 +12,7 @@ export type ClaudeLogin = { id: string; slug: string; name: string; detail: stri
 /** Its week, or the limit it is out of, and when its setup-token ends. */
 function detailOf(a: AccountSeen, tokens: Record<string, string>): string {
   const limit = a.spent && !a.spent.why ? `${a.spent.window === "five" ? "5-hour" : "weekly"} limit used up until ${a.spent.until.slice(0, 16).replace("T", " ")}` : null;
-  const week = limit ?? (a.capped ? `capped${a.back ? ` until ${a.back.slice(0, 16).replace("T", " ")}` : ""}` : a.seven === null ? "week not read yet" : `week ${Math.round(a.seven)}% used`);
+  const week = limit ?? (a.capped && !a.spent?.why ? `capped${a.back ? ` until ${a.back.slice(0, 16).replace("T", " ")}` : ""}` : a.seven === null ? "week not read yet" : `week ${Math.round(a.seven)}% used`);
   const ends = a.slugs.map((s) => tokens[s]).filter((t): t is string => !!t).sort()[0];
   return ends ? `${week} · token ends ${ends.slice(0, 10)}` : week;
 }
