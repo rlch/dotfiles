@@ -28,6 +28,9 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   - who pays or spends money or a seat;
   - who can see or delete whose data;
   - anything that cannot be undone.
+  - a change to what a user sees or does: a screen, a card, a flow, a step,
+    copy, or anything removed from them (operator, 2026-11-18). Plain bug fixes
+    that restore intended behaviour stay with the team.
   On my go, you run the step yourself (operator, 2026-11-17).
   Everything else (an agent's prompts or tools, a dependency, infrastructure of
   our own, a new pattern, performance) you decide, and report in one line I can
