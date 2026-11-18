@@ -1,0 +1,6 @@
+#!/bin/sh
+# git's commit signer (gpg.ssh.program, ~/.gitconfig): ssh-keygen with the key file on disk and no agent.
+# ssh-keygen -Y sign asks SSH_AUTH_SOCK first even with -f, and 1Password's agent there hangs whenever it
+# is locked or waiting on a prompt, which stalled every agent's commit (2026-11-18).
+unset SSH_AUTH_SOCK
+exec /usr/bin/ssh-keygen "$@"

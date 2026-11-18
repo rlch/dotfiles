@@ -13,8 +13,9 @@
 [gpg]
 	format = ssh
 [gpg "ssh"]
-	; Empty/unset `program` makes git use system `ssh-keygen -Y sign`,
-	; bypassing 1Password's op-ssh-sign and its biometric prompt entirely.
+	; ssh-keygen with SSH_AUTH_SOCK unset (~/.local/bin/git-ssh-sign): the key file signs, never
+	; 1Password's agent, whose locked state hung every commit (2026-11-18).
+	program = git-ssh-sign
 	allowedSignersFile = ~/.config/git/allowed_signers
 
 [commit]
