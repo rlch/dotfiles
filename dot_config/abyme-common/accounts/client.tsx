@@ -187,7 +187,7 @@ function ClaudeIcon({ className = "size-4 shrink-0" }: { className?: string }) {
 /** The same list while the view is the same: Accounts follows the store by identity. */
 let last: { v: unknown; out: readonly Login[] | undefined } | null = null;
 function loginsOf(v: unknown): readonly Login[] | undefined {
-  if (last?.v === v) return last.out;
+  if (last && last.v === v) return last.out;
   const out = v ? claudeLogins(v as LoginsView).map(({ slug, ...l }): Login => (l.state === "working" ? l : { ...l, fix: { label: "Sign in again", run: () => void signIn(slug) } })) : undefined;
   last = { v, out };
   return out;
