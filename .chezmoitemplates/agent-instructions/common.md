@@ -48,11 +48,6 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 - **End every report with what you do next.** Never hand me a step to run. An
   action only I can take (a password, a physical device, a sign-in, a GUI-only
   grant) is a work item given to `operator`, never a closing line.
-- These are refused by a hook (`~/.claude/guard.py`), under every permission
-  mode: `git stash`, `--no-verify`, force-pushing `main`/`master`,
-  `playwright-cli close-all`/`kill-all`, `pkill`/`killall` (kill only PIDs you
-  started), `find`/`fd`/`du`/`rg`/`grep -r` (or Grep/Glob) over `/` or the home folder (search the
-  folder you mean, or `mdfind -name`), editing a chezmoi-deployed file, and a Haiku subagent. Do not look for a way round it; say what you needed.
 
 # Git
 
