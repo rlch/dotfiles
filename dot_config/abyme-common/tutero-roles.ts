@@ -10,12 +10,16 @@ import { TUTERO_DIR } from "./tutero.ts";
 /** Registers schools', iac's and curriculum's presets and the schools admission rules, each preset on
  * `on`: Claude for coding and the Mac, Codex for the node tutero-agents (abyme change
  * tutero-agents-node). `models` gives a role's model by preset id, in place of its Claude one here: a
- * Codex preset needs Codex's ids. `dir` is where Tutero's repositories are checked out on the machine. */
-export function tuteroRoles(on: On = CLAUDE, models: Partial<Record<string, string>> = {}, dir: string = TUTERO_DIR): void {
+ * Codex preset needs Codex's ids. `dir` is where Tutero's repositories are checked out on the machine.
+ * `rules`, appended to every preset's text: the operator's rules (agent-instructions/common.md) on a
+ * machine whose home holds no CLAUDE.md or AGENTS.md of theirs, the node tutero-agents (option C,
+ * abyme:documents/abyme/agent-instructions-bootstrap); on the Mac chezmoi's files give them, so none. */
+export function tuteroRoles(on: On = CLAUDE, models: Partial<Record<string, string>> = {}, dir: string = TUTERO_DIR, rules = ""): void {
+  const tail = rules ? `\n\n${rules}` : "";
   const role = (id: string, title: string, model: string, without: Without, instructions: string) =>
-    roleOn(id, title, models[id] ?? model, without, instructions, on);
+    roleOn(id, title, models[id] ?? model, without, instructions + tail, on);
   const lead = (id: string, title: string, model: string, instructions: string, without: Without = LEAD) =>
-    leadOn(id, title, models[id] ?? model, instructions, without, on);
+    leadOn(id, title, models[id] ?? model, instructions + tail, without, on);
   // schools', iac's and curriculum's presets, moved from coding's init.ts.
   // A schools lead keeps Sentry and Slack.
   const SCHOOLS_LEAD: Without = [...CLOUDFLARE, ...RUST_LSP, ...TS_LSP, ...MOBILE];

@@ -20,6 +20,8 @@ import triggers from "@abyme/triggers";
 import { CODEX, type On } from "../abyme-common/roles.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
 import addTriggers from "../abyme-common/tutero-triggers.ts";
+// The operator's rules, written beside this file by ../render.sh (it is not in this folder's source).
+import { RULES } from "./rules.ts";
 
 // Tutero's repositories, cloned with the fine-grained MathGaps token (design, Credentials).
 const TUTERO_DIR = "/home/tutero/dev/tutero";
@@ -70,7 +72,8 @@ const MODELS: Record<string, string> = {
   "iac-review": LARGE,
   "curriculum-review": LARGE,
 };
-tuteroRoles(ON, MODELS, TUTERO_DIR);
+// Every preset carries the operator's rules: no CLAUDE.md or AGENTS.md of theirs on this host.
+tuteroRoles(ON, MODELS, TUTERO_DIR, RULES);
 
 // Tutero's triggers, off until the move: this tutero is up before it (Codex sign-in, agents.models,
 // clones) while the Mac's tutero still fires them, and two profiles firing them bring up two teams per
