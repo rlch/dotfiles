@@ -176,6 +176,18 @@ function markUnauthorized(slug: string, why: string) {
   abyme.log.warn(`${slug}: its token failed to authenticate (${why}); out of picks until a refresh is let through`);
 }
 
+/** Drops account `slug`'s ignore entry and spent mark (its token gone); true when it had either. */
+function forget(slug: string): boolean {
+  const ignored = ignoredSlugs(), marks = spentMarks();
+  const had = ignored.includes(slug) || slug in marks;
+  if (ignored.includes(slug)) abyme.store.set("ignored", ignored.filter((x) => x !== slug));
+  if (slug in marks) {
+    const { [slug]: _, ...rest } = marks;
+    abyme.store.set("spent", rest);
+  }
+  return had;
+}
+
 // ---- what pages see: no token, no email, no uuid ----
 
 /** Each login's quota and how many agents run on it, and when each account's setup-token ends.
@@ -666,7 +678,13 @@ export default {
   async revoke(a: { slug: string }) {
     slugOf(a, "revoke");
     const r = await processes().run(o.security, { args: ["delete-generic-password", "-s", tokenService(a.slug), "-a", USER] });
-    if (r.code !== 0) throw new Error(`no setup-token for ${a.slug} in the keychain`);
+    // Its ignore entry and spent mark go with it: with no token, `ignore on:=false` can no longer reach them.
+    const left = forget(a.slug);
+    if (r.code !== 0) {
+      if (!left) throw new Error(`no setup-token for ${a.slug} in the keychain`);
+      await show();
+      return { slug: a.slug, closed: [], text: `${a.slug} had no token in the keychain; its ignore entry and spent mark are cleared` };
+    }
     listed = null;
     const on = (await agentsByAccount(true)).get(a.slug) ?? [];
     if (on.length && agents) await agents.close({ ids: on.map((x) => x.id) }).catch((e: unknown) => abyme.log.warn(`revoke ${a.slug}: closing its agents:`, (e as Error).message));
@@ -703,7 +721,7 @@ export default {
   /** `abyme call accounts ignore slug=… [on:=false]`: off the rotation, or back on it. */
   async ignore(a: { slug: string; on?: boolean }) {
     slugOf(a, "ignore");
-    if (!(await keychainTokens(true)).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
+    if (a.on !== false && !(await keychainTokens(true)).some((t) => t.slug === a.slug)) throw new Error(`no account ${a.slug}`);
     const off = new Set(ignoredSlugs());
     if (a.on === false) off.delete(a.slug);
     else off.add(a.slug);

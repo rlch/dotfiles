@@ -77,7 +77,8 @@ falls through to Claude's separate saved login. Launches for other machines pass
 - `tokens()` and the view's `tokens` say when each ends, a year after the keychain says it was
   made; 30 days before, the status bar says "sign in: <slug>".
 - `abyme call accounts revoke slug=<s>` takes the token out of the keychain and closes the agents on
-  it; the answer points at claude.ai/settings/claude-code, where Claude revokes it.
+  it; the answer points at claude.ai/settings/claude-code, where Claude revokes it. Its ignore entry and spent mark go too; on a slug
+  with no token left, revoke clears just those (2026-11-18).
 
 ## Tokens
 
