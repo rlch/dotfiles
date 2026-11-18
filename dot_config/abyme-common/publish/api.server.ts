@@ -4,6 +4,11 @@
 import { api, fn, store, z, type Api } from "@abyme/schema";
 
 const path = z.string().min(1).describe("The document, by its absolute path (a `.md` file)");
+const machine = z
+  .string()
+  .min(1)
+  .describe("The machine the document is on, by id; the operator's own Mac when left out, the only one publish can read an export from")
+  .optional();
 
 /** A document exported and waiting for the operator's yes: where it will be, and what it holds. */
 export const PreparedSchema = z
@@ -42,7 +47,7 @@ const slug = z.object({ slug: z.string() });
 export const publish = api({
   prepare: fn({
     description: "Exports the document into a staging folder and says what publishing it would put where: its title, slug, URL and files. Publishes nothing.",
-    args: z.object({ path }),
+    args: z.object({ path, machine }),
     value: PreparedSchema,
   }),
   publish: fn({
@@ -58,7 +63,7 @@ export const publish = api({
   share: fn({
     description:
       "An agent's one call: exports the document, publishes it on the artifacts site with no confirm, waits for the deploy (minutes) and answers its URL. The operator sees it published and can unpublish it from the document's menu.",
-    args: z.object({ path }),
+    args: z.object({ path, machine }),
     value: z.object({ slug: z.string(), url: z.string() }),
   }),
   state: store({ description: "Published documents and their jobs, by path.", value: StateSchema }),

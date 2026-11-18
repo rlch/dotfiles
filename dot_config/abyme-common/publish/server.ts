@@ -9,7 +9,6 @@ import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
 import fs from "@abyme/fs";
 import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
 import { implement } from "@abyme/schema";
 import options from "./options";
 import { publish, type Job, type Prepared, type State } from "./api.server";
@@ -90,7 +89,8 @@ function run(id: string, action: Job["action"], slug: string, work: () => Promis
 
 // It runs on every machine (abymed refuses a half that imports a capability only as optional), but
 // its functions are not marked `machine`, so they run on the control plane, the operator's Mac, where
-// the artifacts repository is; the skill is added there alone, one copy as before.
+// the artifacts repository is; the skill is added there alone, one copy as before. A half names
+// machines by id: `local` is resolved to the control plane's, never compared as a string.
 /** The control plane's files, where the artifacts repository is. */
 const files = () => fs;
 /** The control plane's processes, to run the artifact CLI. */
@@ -98,11 +98,15 @@ const processes = () => process;
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-async function prepare({ path: id }: { path: string }): Promise<Prepared> {
+async function prepare({ path: id, machine }: { path: string; machine?: string }): Promise<Prepared> {
+  // The export is written on the machine named and read back here: the operator's own Mac, where
+  // the artifacts repository is. A folder on another machine is out of reach.
+  const own = abyme.machines.own().id;
+  if (machine && machine !== own) throw new Error(`publish reads its export on the operator's Mac (${own}), so a document on ${machine} cannot be published: copy it to the Mac first`);
   const slug = await slugFor(id);
   const dir = `${STAGE}/${slug}`;
   if (await files().stat(dir)) await files().remove(dir);
-  const out = await documents.export({ path: id, dir });
+  const out = await documents.export({ machine: own, path: id, dir });
   const title = (JSON.parse((await files().read(`${dir}/document.json`)) ?? "{}") as { title?: string }).title || id;
   // The viewer names its page as it loads; the site's lists read the file's own title.
   const html = (await files().read(`${dir}/index.html`)) ?? "";
@@ -151,8 +155,8 @@ async function unpublish({ path: id }: { path: string }) {
 
 // An agent's one call: no confirm (operator, 2026-11-05, "Agent publishes alone"); what it
 // publishes is in `state().published`, which the page's Unpublish covers, and the page tells its end.
-async function share({ path }: { path: string }) {
-  await prepare({ path });
+async function share({ path, machine }: { path: string; machine?: string }) {
+  await prepare({ path, machine });
   const { slug, done } = start(path);
   const url = await done;
   if (!url) throw new Error(`${path} published with no URL`);
@@ -161,7 +165,7 @@ async function share({ path }: { path: string }) {
 
 const SKILL = `Publish a document to the web: \`abyme call publish share path=<abs .md>\`. It publishes at once, with no confirm, waits for the deploy (minutes) and answers the URL. The operator can take it down from the document's menu (Unpublish), or \`abyme call publish unpublish path=<abs .md>\`.
 `;
-if (abyme.machine === LOCAL) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
+if (abyme.machine === abyme.machines.resolve("local")) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
 
 export default implement(publish, {
   prepare,
