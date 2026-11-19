@@ -170,10 +170,11 @@ const SKILL = `Publish a document to the web, on the operator's go: \`publish sh
 
 1. \`abyme call publish prepare path=<abs .md>\` answers its \`title\`, \`url\` and files. It publishes nothing.
 2. Ask with \`questions_ask\`, then end your turn:
-   - \`question\`: \`Publish <title> to the web at <url>?\`
-   - \`situation\`: who it is for and why it must be public, then "Anyone with the URL can open it, and the URL is guessable." and "Undo: Unpublish on the document's menu takes it down. A copy someone saved stays theirs."
+   - \`question\`: \`Publish “<title>” at <url>?\`
+   - \`situation\`: who it is for and why it must be public, then "Anyone with the URL can open it, and the URL is guessable."
    - \`evidence\`: the document's path.
    - \`call\`: \`{ "service": "publish", "fn": "share", "args": { "path": "<abs .md>", "url": "<url>" } }\`
+   - \`run\`: \`{ "label": "Publish it", "undo": "Unpublish on the document's menu takes it down. A copy someone saved stays theirs." }\`
 3. On Run it publishes, waits for the deploy (minutes), and the item closes with the URL. On Don't nothing is published.
 
 Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
