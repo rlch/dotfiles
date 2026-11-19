@@ -1,9 +1,8 @@
 // publish, in abymed: a document as a page on the artifacts site. abyme's export writes the
-// document into a staging folder; once the operator says yes on the page (or an agent's `share`,
-// which asks nobody), the folder goes to the artifacts
-// repository's artifacts/<slug>/ (a folder with an index.html ships as is) and `artifact publish`
-// commits, pushes and waits for the deploy, which takes minutes, so a job runs on its own and pages
-// follow it in `state()`.
+// document into a staging folder; once the operator says yes (on the page's confirm, or Run on an
+// agent's ask to call `share`), the folder goes to the artifacts repository's artifacts/<slug>/
+// (a folder with an index.html ships as is) and `artifact publish` commits, pushes and waits for
+// the deploy, which takes minutes, so a job runs on its own and pages follow it in `state()`.
 import abyme from "@abyme/cell";
 import agents from "@abyme/agents/optional";
 import documents from "@abyme/documents";
@@ -153,17 +152,31 @@ async function unpublish({ path: id }: { path: string }) {
   return { slug };
 }
 
-// An agent's one call: no confirm (operator, 2026-11-05, "Agent publishes alone"); what it
-// publishes is in `state().published`, which the page's Unpublish covers, and the page tells its end.
-async function share({ path, machine }: { path: string; machine?: string }) {
-  await prepare({ path, machine });
+// The operator's alone (`operator: true`): an agent asks them with questions_ask's `call`, after
+// `prepare` gave the URL, and the card shows that URL, so it must be the one that goes live.
+async function share({ path, machine, url: asked }: { path: string; machine?: string; url: string }) {
+  const p = await prepare({ path, machine });
+  if (p.url !== asked) {
+    staged.delete(path);
+    throw new Error(`\`url\` is ${asked}, but ${path} would be published at ${p.url}: call publish prepare again and ask with that URL`);
+  }
   const { slug, done } = start(path);
   const url = await done;
   if (!url) throw new Error(`${path} published with no URL`);
   return { slug, url };
 }
 
-const SKILL = `Publish a document to the web: \`abyme call publish share path=<abs .md>\`. It publishes at once, with no confirm, waits for the deploy (minutes) and answers the URL. The operator can take it down from the document's menu (Unpublish), or \`abyme call publish unpublish path=<abs .md>\`.
+const SKILL = `Publish a document to the web, on the operator's go: \`publish share\` is theirs alone, so you ask them to run it.
+
+1. \`abyme call publish prepare path=<abs .md>\` answers its \`title\`, \`url\` and files. It publishes nothing.
+2. Ask with \`questions_ask\`, then end your turn:
+   - \`question\`: \`Publish <title> to the web at <url>?\`
+   - \`situation\`: who it is for and why it must be public, then "Anyone with the URL can open it, and the URL is guessable." and "Undo: Unpublish on the document's menu takes it down. A copy someone saved stays theirs."
+   - \`evidence\`: the document's path.
+   - \`call\`: \`{ "service": "publish", "fn": "share", "args": { "path": "<abs .md>", "url": "<url>" } }\`
+3. On Run it publishes, waits for the deploy (minutes), and the item closes with the URL. On Don't nothing is published.
+
+Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
 `;
 if (abyme.machine === abyme.machines.resolve("local")) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
 
