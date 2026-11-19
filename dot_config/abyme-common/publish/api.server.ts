@@ -64,7 +64,7 @@ export const publish = api({
   }),
   share: fn({
     description:
-      "Exports the document and publishes it at `url`, waiting for the deploy (minutes); answers its slug and URL. The operator's alone: an agent asks them to run it with `questions_ask`'s `call`, after `prepare` gave the URL.",
+      "Exports the document and publishes it at `url`, waiting for the deploy (minutes); answers its slug and URL. The operator's alone: an agent asks them to run it with a ```run block in its message, after `prepare` gave the URL.",
     args: z.object({ path, machine, url: z.string().min(1).describe("The URL `prepare` answered, as the operator's card shows it") }),
     operator: true,
     value: z.object({ slug: z.string(), url: z.string() }),

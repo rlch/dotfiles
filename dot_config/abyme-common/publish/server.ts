@@ -152,7 +152,7 @@ async function unpublish({ path: id }: { path: string }) {
   return { slug };
 }
 
-// The operator's alone (`operator: true`): an agent asks them with questions_ask's `call`, after
+// The operator's alone (`operator: true`): an agent asks them with a ```run block in its message, after
 // `prepare` gave the URL, and the card shows that URL, so it must be the one that goes live.
 async function share({ path, machine, url: asked }: { path: string; machine?: string; url: string }) {
   const p = await prepare({ path, machine });
@@ -169,13 +169,11 @@ async function share({ path, machine, url: asked }: { path: string; machine?: st
 const SKILL = `Publish a document to the web, on the operator's go: \`publish share\` is theirs alone, so you ask them to run it.
 
 1. \`abyme call publish prepare path=<abs .md>\` answers its \`title\`, \`url\` and files. It publishes nothing.
-2. Ask with \`questions_ask\`, then end your turn:
-   - \`question\`: \`Publish “<title>” at <url>?\`
-   - \`situation\`: who it is for and why it must be public, then "Anyone with the URL can open it, and the URL is guessable."
-   - \`evidence\`: the document's path.
-   - \`call\`: \`{ "service": "publish", "fn": "share", "args": { "path": "<abs .md>", "url": "<url>" } }\`
-   - \`run\`: \`{ "label": "Publish it", "undo": "Unpublish on the document's menu takes it down. A copy someone saved stays theirs." }\`
-3. On Run it publishes, waits for the deploy (minutes), and the item closes with the URL. On Don't nothing is published.
+2. Ask in your chat, then end your turn: say who it is for, why it must be public, and that anyone with the URL can open it (the URL is guessable). End your message with a run block:
+   \`\`\`run
+   {"service":"publish","fn":"share","args":{"path":"<abs .md>","url":"<url>"},"does":"Publish “<title>” at <url>. Unpublish on the document's menu takes it down."}
+   \`\`\`
+3. On Run it publishes and waits for the deploy (minutes); you are told the URL.
 
 Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
 `;

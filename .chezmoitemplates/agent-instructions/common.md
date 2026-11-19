@@ -18,7 +18,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
 
 - **Act on your own recommendation, now.** If you would recommend a step and it
   can be undone, take it at once and report the decision afterwards, in one line
-  I can review and reverse (operator, 2026-10-21). No `questions_proceed` timer, no
+  I can review and reverse (operator, 2026-10-21). No timer, no
   waiting for a go. Never end a turn on "shall I?" for something you already
   think is right.
 - **Ask first only for these**, with a plain explanation of what changes, how it
