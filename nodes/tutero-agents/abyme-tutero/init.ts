@@ -52,12 +52,12 @@ load.setup({ turns: false, accounts: { slow: 1 }, health: { to: "lead@schools" }
 // on a headless node. The node is Tutero's alone (design).
 const ON = { ...CODEX, config: { mode: "full-access" } } satisfies On;
 
-// schools', iac's and curriculum's presets on Codex, the models read off the node with
-// agents.choices (codex-acp 0.19.1, 2026-11-17): the Opus roles on gpt-6-astra ("Frontier
-// intelligence for the most demanding work"), the Sonnet roles on gpt-6.1-sol, Codex's default
-// ("Latest workhorse model for coding and everyday work").
-const LARGE = "gpt-6-astra";
-const SMALL = "gpt-6.1-sol";
+// schools', iac's and curriculum's presets on Codex, on its 6.2 models (operator, 2026-11-18, relayed by
+// lead@abyme: "we shoudl use 6.2 sol, whatever equiv to opus is"): the Opus roles on gpt-6.2-astra ("Our most
+// capable model for complex coding and professional work"), the Sonnet roles on gpt-6.2-sol ("Fast, go-to model
+// for coding and everyday work"), as Codex's model list described them on 2026-11-18.
+const LARGE = "gpt-6.2-astra";
+const SMALL = "gpt-6.2-sol";
 const MODELS: Record<string, string> = {
   "schools-lead": LARGE,
   "schools-team-lead": SMALL,
