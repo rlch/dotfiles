@@ -26,7 +26,6 @@ export function common() {
   // Vim on the laptop and the iPad, off on the phone: with a soft keyboard its modes cannot be
   // used, and files open read-only in normal mode. A member of every app, so this line stands
   // in place of the app's and is no second setup. An iPad is a tablet with or without its keyboard.
-  // The composer starts in normal mode on both (operator, 2026-10-22): one setup stands per plugin.
   vim.setup({}, { when: { device: ["desktop"] } });
   // No "N asks" in the bottom bar (operator, 2026-11-02): asks show in Needs you and the composer's row.
   status.setup({ hidden: ["agent-list.needs"] });
