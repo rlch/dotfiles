@@ -97,6 +97,8 @@ async function tokenOf(slug: string): Promise<string | null> {
  * token: a new one for the slug forgets it. */
 const orgs = () => (abyme.store.get("orgs") ?? {}) as Record<string, string>;
 function forgetOrg(slug: string) {
+  orgAsked.delete(slug);
+  orgWhy.delete(slug);
   const all = orgs();
   if (!(slug in all)) return;
   const { [slug]: _, ...rest } = all;
@@ -104,6 +106,8 @@ function forgetOrg(slug: string) {
 }
 /** When each slug's org was last asked for and not found, so a failure waits an hour. */
 const orgAsked = new Map<string, number>();
+/** Why each slug's last ask found no org (a status or error, never the token), shown in the view. */
+const orgWhy = new Map<string, string>();
 const ORG_RETRY_MS = 60 * 60_000;
 async function orgOf(slug: string): Promise<string | null> {
   const token = await tokenOf(slug);
@@ -121,12 +125,17 @@ function readOrgs(slugs: readonly string[]) {
     orgAsked.set(slug, Date.now());
     void orgOf(slug)
       .then((uuid) => {
-        if (!uuid) return void abyme.log.warn(`${slug}: Anthropic gave no organization for its setup-token`);
+        if (!uuid) return void (orgWhy.set(slug, "no organization_uuid in the answer"), abyme.log.warn(`${slug}: Anthropic gave no organization for its setup-token`));
         orgAsked.delete(slug);
+        orgWhy.delete(slug);
         abyme.store.set("orgs", { ...orgs(), [slug]: uuid });
         void show().catch((e) => abyme.log.warn("accounts after an org:", (e as Error).message));
       })
-      .catch((e) => abyme.log.warn(`${slug}: reading its organization:`, (e as Error).message));
+      .catch((e) => {
+        orgWhy.set(slug, (e as Error).message);
+        abyme.log.warn(`${slug}: reading its organization:`, (e as Error).message);
+        void show().catch(() => {});
+      });
   }
 }
 
@@ -261,7 +270,7 @@ function forget(slug: string): boolean {
 
 /** Each login's quota and how many agents run on it, and when each account's setup-token ends.
  * Who runs where is `agents()`. */
-const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string>; orgs?: Record<string, string>; ready?: Record<string, ReadyShown | null> }>({ accounts: [], tokens: {} });
+const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string>; orgs?: Record<string, string>; orgsMissing?: Record<string, string>; ready?: Record<string, ReadyShown | null> }>({ accounts: [], tokens: {} });
 
 /** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on, as
  * load's item (`load.readers`), added again when they change: load calls nothing. */
@@ -320,7 +329,7 @@ async function show() {
   const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
   if (HERE) readOrgs(all.map((a) => a.slug));
   const known = orgs();
-  const seen = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding(), orgs: Object.fromEntries(all.flatMap((a) => (known[a.slug] ? [[a.slug, known[a.slug]] as const] : []))) };
+  const seen = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding(), orgsMissing: Object.fromEntries(all.flatMap((a) => (orgWhy.has(a.slug) ? [[a.slug, orgWhy.get(a.slug)!] as const] : []))), orgs: Object.fromEntries(all.flatMap((a) => (known[a.slug] ? [[a.slug, known[a.slug]] as const] : []))) };
   const told = loadAccounts(seen.accounts);
   wakeAt(nextReset(told, Date.now()));
   // `Ready` is read each time, not only on a change: a setup-token's end passes with nothing else moving.
