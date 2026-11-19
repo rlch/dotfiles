@@ -474,6 +474,9 @@ test("Settings → Accounts: refused is failing, ended is expired, a limit is wo
   assert.equal(hsone!.detail, "week 42% used · token ends 2026-10-01");
   assert.deepEqual(richard, { id: "richard", slug: "richard", name: "richard", detail: "weekly limit used up until 2026-10-26 22:00", state: "working" });
   assert.deepEqual(main, { id: "main", slug: "main", name: "main, m2", detail: "week not read yet · token ends 2027-01-01", state: "working" });
+  // Its org, once read, from whichever of its slugs has one: what the terminal's mark joins on.
+  const [withOrg] = claudeLogins({ accounts: [{ ...seen, slugs: ["main", "m2"] }], orgs: { m2: "org-1" } });
+  assert.equal(withOrg!.org, "org-1");
 });
 
 let failed = 0;

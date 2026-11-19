@@ -5,9 +5,11 @@ import type { AccountSeen } from "./pick.ts";
 import type { ReadyShown } from "./kind.ts";
 
 /** What the logins view reads of accounts' view. */
-export type LoginsView = { accounts: AccountSeen[]; tokens?: Record<string, string>; ready?: Record<string, ReadyShown | null> };
+export type LoginsView = { accounts: AccountSeen[]; tokens?: Record<string, string>; orgs?: Record<string, string>; ready?: Record<string, ReadyShown | null> };
 /** A login as Accounts draws it, less its buttons; `slug` the one its fix signs in. */
-export type ClaudeLogin = { id: string; slug: string; name: string; detail: string; state: "working" | "expired" | "failing"; why?: string };
+export type ClaudeLogin = { id: string; slug: string; name: string; detail: string; state: "working" | "expired" | "failing"; why?: string;
+  /** Its organization's uuid, once read: what Accounts joins the terminal's sign-in on (logins.marks). */
+  org?: string };
 
 /** Its week, or the limit it is out of, and when its setup-token ends. */
 function detailOf(a: AccountSeen, tokens: Record<string, string>): string {
@@ -23,6 +25,7 @@ export function claudeLogins(v: LoginsView): ClaudeLogin[] {
     const id = a.slugs[0] ?? "";
     const r = v.ready?.[id];
     const state = r?.status === "False" && r.reason === "Unauthorized" ? "failing" : r?.status === "False" && r.reason === "Expired" ? "expired" : "working";
-    return { id, slug: id, name: a.slugs.join(", "), detail: detailOf(a, v.tokens ?? {}), state, ...(state !== "working" && r?.message ? { why: r.message } : {}) };
+    const org = a.slugs.map((s) => v.orgs?.[s]).find(Boolean);
+    return { id, slug: id, name: a.slugs.join(", "), detail: detailOf(a, v.tokens ?? {}), state, ...(state !== "working" && r?.message ? { why: r.message } : {}), ...(org ? { org } : {}) };
   });
 }

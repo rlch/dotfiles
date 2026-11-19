@@ -78,7 +78,8 @@ async function discover(fresh = false): Promise<Account[]> {
 
 /** A setup-token into the keychain as account `slug`'s, replacing any: on `security -i`'s stdin,
  * never an argument. */
-const keep = (slug: string, secret: string) =>
+const keep = (slug: string, secret: string) => (forgetOrg(slug), keepToken(slug, secret));
+const keepToken = (slug: string, secret: string) =>
   processes().run(o.security, { args: ["-i"], stdin: `add-generic-password -U -s "${tokenService(slug)}" -a "${USER}" -l "abyme accounts: ${slug} setup-token" -w "${secret}"\n` });
 
 /** An account's setup-token, for one launch. */
@@ -86,6 +87,47 @@ async function tokenOf(slug: string): Promise<string | null> {
   const r = await processes().run(o.security, { args: ["find-generic-password", "-s", tokenService(slug), "-a", USER, "-w"] });
   const t = r.code === 0 ? r.stdout.trim() : "";
   return t || null;
+}
+
+// ---- orgs: each login's organization, the one thing a setup-token can read of its account ----
+
+/** Each login's organization uuid, by slug: what Accounts joins the terminal's sign-in on
+ * (accounts-amp-shape 5.5). A setup-token is inference-only, so it can read no profile or email;
+ * `POST /api/oauth/org` is how Claude Code (2.1.327) learns such a token's org. Read once per
+ * token: a new one for the slug forgets it. */
+const orgs = () => (abyme.store.get("orgs") ?? {}) as Record<string, string>;
+function forgetOrg(slug: string) {
+  const all = orgs();
+  if (!(slug in all)) return;
+  const { [slug]: _, ...rest } = all;
+  abyme.store.set("orgs", rest);
+}
+/** When each slug's org was last asked for and not found, so a failure waits an hour. */
+const orgAsked = new Map<string, number>();
+const ORG_RETRY_MS = 60 * 60_000;
+async function orgOf(slug: string): Promise<string | null> {
+  const token = await tokenOf(slug);
+  if (!token) return null;
+  const r = await abyme.net.fetch("https://api.anthropic.com/api/oauth/org", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeoutMs: 10_000 });
+  if (r.status < 200 || r.status >= 300) throw new Error(`HTTP ${r.status}`);
+  const uuid = (JSON.parse(r.body) as { organization_uuid?: unknown } | null)?.organization_uuid;
+  return typeof uuid === "string" && uuid ? uuid : null;
+}
+/** Asks for the org of each of `slugs` not known yet, in the background; shows again once one is. */
+function readOrgs(slugs: readonly string[]) {
+  const known = orgs();
+  for (const slug of slugs) {
+    if (slug in known || Date.now() - (orgAsked.get(slug) ?? -Infinity) < ORG_RETRY_MS) continue;
+    orgAsked.set(slug, Date.now());
+    void orgOf(slug)
+      .then((uuid) => {
+        if (!uuid) return void abyme.log.warn(`${slug}: Anthropic gave no organization for its setup-token`);
+        orgAsked.delete(slug);
+        abyme.store.set("orgs", { ...orgs(), [slug]: uuid });
+        void show().catch((e) => abyme.log.warn("accounts after an org:", (e as Error).message));
+      })
+      .catch((e) => abyme.log.warn(`${slug}: reading its organization:`, (e as Error).message));
+  }
 }
 
 // ---- usage: what each account's agents' harnesses said, each turn ----
@@ -215,11 +257,11 @@ function forget(slug: string): boolean {
   return had;
 }
 
-// ---- what pages see: no token, no email, no uuid ----
+// ---- what pages see: no token, no email, no uuid but its org's ----
 
 /** Each login's quota and how many agents run on it, and when each account's setup-token ends.
  * Who runs where is `agents()`. */
-const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string>; ready?: Record<string, ReadyShown | null> }>({ accounts: [], tokens: {} });
+const view = abyme.value<{ accounts: AccountSeen[]; tokens: Record<string, string>; orgs?: Record<string, string>; ready?: Record<string, ReadyShown | null> }>({ accounts: [], tokens: {} });
 
 /** The same rows as load's accounts (resource-budgets): what Resources shows and turns wait on, as
  * load's item (`load.readers`), added again when they change: load calls nothing. */
@@ -276,7 +318,9 @@ async function show() {
   const all = await discover();
   const on = await agentsByAccount();
   const counts = new Map([...on].map(([slug, xs]) => [slug, xs.length]));
-  const seen = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding() };
+  if (HERE) readOrgs(all.map((a) => a.slug));
+  const known = orgs();
+  const seen = { accounts: rowsSeen(all, readsNow(all), counts, spentNow()), tokens: await tokensEnding(), orgs: Object.fromEntries(all.flatMap((a) => (known[a.slug] ? [[a.slug, known[a.slug]] as const] : []))) };
   const told = loadAccounts(seen.accounts);
   wakeAt(nextReset(told, Date.now()));
   // `Ready` is read each time, not only on a change: a setup-token's end passes with nothing else moving.
@@ -751,6 +795,7 @@ export default {
     const r = await processes().run(o.security, { args: ["delete-generic-password", "-s", tokenService(a.slug), "-a", USER] });
     // Its ignore entry and spent mark go with it: with no token, `ignore on:=false` can no longer reach them.
     const left = forget(a.slug);
+    forgetOrg(a.slug);
     if (r.code !== 0) {
       if (!left) throw new Error(`no setup-token for ${a.slug} in the keychain`);
       await show();
