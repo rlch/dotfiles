@@ -51,9 +51,9 @@ async function takeDown(id: string) {
   }
 }
 
-// A job's end, told by every page open when it ended: one the page saw run, or one an agent's
-// `share` started and ended between two changes the page heard. What had ended before the page
-// first heard the state is not told again.
+// A job's end, told by every page open when it ended: one the page saw run, or a `share` the
+// operator ran on an agent's ask that started and ended between two changes the page heard. What
+// had ended before the page first heard the state is not told again.
 const told = new Set<string>();
 let heard = false;
 function follow() {

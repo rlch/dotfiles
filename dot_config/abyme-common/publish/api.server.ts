@@ -51,8 +51,10 @@ export const publish = api({
     value: PreparedSchema,
   }),
   publish: fn({
-    description: "Publishes what `prepare` staged for the document; answers at once, and `state` follows the job.",
+    description:
+      "Publishes what `prepare` staged for the document; answers at once, and `state` follows the job. The operator's alone, from the page's confirm.",
     args: z.object({ path }),
+    operator: true,
     value: slug,
   }),
   unpublish: fn({
@@ -62,8 +64,9 @@ export const publish = api({
   }),
   share: fn({
     description:
-      "An agent's one call: exports the document, publishes it on the artifacts site with no confirm, waits for the deploy (minutes) and answers its URL. The operator sees it published and can unpublish it from the document's menu.",
-    args: z.object({ path, machine }),
+      "Exports the document and publishes it at `url`, waiting for the deploy (minutes); answers its slug and URL. The operator's alone: an agent asks them to run it with `questions_ask`'s `call`, after `prepare` gave the URL.",
+    args: z.object({ path, machine, url: z.string().min(1).describe("The URL `prepare` answered, as the operator's card shows it") }),
+    operator: true,
     value: z.object({ slug: z.string(), url: z.string() }),
   }),
   state: store({ description: "Published documents and their jobs, by path.", value: StateSchema }),
