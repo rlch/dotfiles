@@ -201,10 +201,10 @@ const claude: LoginsService = {
   id: "claude",
   title: "Claude",
   icon: ClaudeIcon,
-  about: "Claude agents, and `cl` in a terminal, run on these accounts, the one with most room first.",
+  about: "Claude agents, and “cl” in a terminal, run on these accounts, the one with most room first.",
   order: 10,
   logins: derive(seen, loginsOf),
-  empty: "No Claude account has a setup-token yet: add one copied from `claude setup-token`.",
+  empty: "No Claude account has a setup-token yet: add one copied from “claude setup-token”.",
   add: { label: "Add copied setup-token…", run: () => palette.open({ picker: "accounts.add" }) },
 };
 // The owner's alone (accounts' functions are theirs); no role is an abymed with no members.
