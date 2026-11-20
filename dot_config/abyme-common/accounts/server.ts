@@ -29,6 +29,10 @@ const HOME = o.home || fs.home;
 // its functions are not marked `machine`, so they run on the control plane, the operator's Mac,
 // whose keychain holds the tokens; what it adds to others' lists it adds there alone, as before.
 const HERE = abyme.machine === abyme.machines.own().id;
+/** This abymed is the control plane: only it reads usage and writes Account records. A node's
+ * writes are refused (check-1 tried all 8 on each usage push, 2026-11-21). Undefined on an abymed
+ * older than the field (de8b7c587c), which keeps the pass running as before. */
+const PLANE = (abyme as { controlPlane?: boolean }).controlPlane !== false;
 /** The control plane's files: the plugin's scratch and the model settings a launch reads. */
 const files = () => fs;
 /** The control plane's processes: the keychain, ps and claude. */
@@ -567,7 +571,7 @@ const prepare: Parameters<NonNullable<typeof agents>["prepare"]["add"]>[0] = {
 // Keep the hook registered even if machine identity is unavailable or changes: an owner's
 // local launch must refuse rather than silently use Claude's unrelated saved login.
 agents?.prepare.add(prepare);
-if (HERE) {
+if (HERE && PLANE) {
   void show().catch((e) => abyme.log.warn("accounts:", (e as Error).message));
 }
 
@@ -614,7 +618,7 @@ async function takeUsage() {
 // agent alone (`agents.agent`), only when its `usage_at` moved.
 let showing: ReturnType<typeof setTimeout> | null = null;
 let usageSaid = false;
-if (HERE && agentRecords)
+if (HERE && PLANE && agentRecords)
   agentRecords.on((h) => {
     const at = (r: typeof h.record) => (r?.status as { usage_at?: string | null } | undefined)?.usage_at ?? null;
     if (h.record && at(h.record) !== null && at(h.record) !== at(h.was)) {
