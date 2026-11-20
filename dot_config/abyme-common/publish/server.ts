@@ -1,6 +1,6 @@
 // publish, in abymed: a document as a page on the artifacts site. abyme's export writes the
-// document into a staging folder; once the operator says yes (on the page's confirm, or Run on an
-// agent's ask to call `share`), the folder goes to the artifacts repository's artifacts/<slug>/
+// document into a staging folder; once the operator says yes (on the page's confirm, or by running
+// `share` themselves when an agent asks), the folder goes to the artifacts repository's artifacts/<slug>/
 // (a folder with an index.html ships as is) and `artifact publish` commits, pushes and waits for
 // the deploy, which takes minutes, so a job runs on its own and pages follow it in `state()`.
 import abyme from "@abyme/cell";
@@ -152,7 +152,7 @@ async function unpublish({ path: id }: { path: string }) {
   return { slug };
 }
 
-// The operator's alone (`operator: true`): an agent asks them with a ```run block in its message, after
+// The operator's alone (`operator: true`): an agent asks them in its chat to run it themselves, after
 // `prepare` gave the URL, and the card shows that URL, so it must be the one that goes live.
 async function share({ path, machine, url: asked }: { path: string; machine?: string; url: string }) {
   const p = await prepare({ path, machine });
@@ -169,11 +169,8 @@ async function share({ path, machine, url: asked }: { path: string; machine?: st
 const SKILL = `Publish a document to the web, on the operator's go: \`publish share\` is theirs alone, so you ask them to run it.
 
 1. \`abyme call publish prepare path=<abs .md>\` answers its \`title\`, \`url\` and files. It publishes nothing.
-2. Ask in your chat, then end your turn: say who it is for, why it must be public, and that anyone with the URL can open it (the URL is guessable). End your message with a run block:
-   \`\`\`run
-   {"service":"publish","fn":"share","args":{"path":"<abs .md>","url":"<url>"},"does":"Publish “<title>” at <url>. Unpublish on the document's menu takes it down."}
-   \`\`\`
-3. On Run it publishes and waits for the deploy (minutes); you are told the URL.
+2. Ask in your chat, then end your turn: say who it is for, why it must be public, and that anyone with the URL can open it (the URL is guessable). End your message with the exact command for the operator to run, \`abyme call publish share path=<abs .md> url=<url>\`, and what it does: "Publish “<title>” at <url>. Unpublish on the document's menu takes it down."
+3. Once they run it, it publishes and waits for the deploy (minutes), and answers them the URL. Nobody tells you: the operator passes it on, or \`abyme call publish state\` shows it.
 
 Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
 `;
