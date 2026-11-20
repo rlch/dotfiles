@@ -160,8 +160,8 @@ let picked: { key: string; at: number; agent: string | null }[] = [];
 const agentRecords = HERE && agents ? informer({ id: "accounts.agents", kind: "Agent", fields: ["status.account", "status.busy", "status.closed", "status.usage_at"] }) : null;
 if (agentRecords) recordLists.informers.add(agentRecords.item);
 
-/** abyme's agents as `agents.index` joins them: the account each is on and what its harness last said
- * of that account's usage. Asked only when an agent's usage was said anew, or a launch needs it. */
+/** abyme's agents as `agents.index` joins them: the account each is on and what its harness last
+ * said of that account's usage. Asked only when a launch needs it, a resume or one after a limit. */
 type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
 const joined = async (): Promise<Joined[]> => !agents ? [] : Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
@@ -573,12 +573,30 @@ if (HERE) {
 
 /** The last push taken of each login (ms): one heard again changes nothing. */
 const taken = new Map<string, number>();
+/** Each open agent's account and usage as `agents.agent` last answered, by id: an Agent record's
+ * status carries only `usage_at`, so an agent is asked alone when that moves, never the whole index
+ * (2 MB, on every machine; machine-relay-off-tailscale). Seeded once from every open agent with usage. */
+const usageOf = new Map<string, { account: string | null; usage_limits: Pushed[] | null }>();
+const usageMoved = new Set<string>();
+let usageSeeded = false;
 /** What agents' harnesses said of their accounts (`usage_limits`), into each login's read: newer
  * than the read, it wins; `rejected` marks the login spent until that window resets. */
 async function takeUsage() {
   const all = await discover();
+  if (agentRecords && agents) {
+    await agentRecords.synced();
+    const open = new Map(agentRecords.list().filter((r) => (r.status as { closed?: unknown }).closed == null).map((r) => [r.id, r.status as { usage_at?: string | null }] as const));
+    for (const id of usageOf.keys()) if (!open.has(id)) usageOf.delete(id);
+    const ask = usageSeeded ? [...usageMoved].filter((id) => open.has(id)) : [...open].filter(([, st]) => st.usage_at).map(([id]) => id);
+    usageMoved.clear();
+    usageSeeded = true;
+    for (const id of ask) {
+      const a = (await agents.agent({ agent: id }).catch(() => null)) as unknown as { account?: string | null; usage_limits?: Pushed[] | null } | null;
+      if (a) usageOf.set(id, { account: a.account ?? null, usage_limits: a.usage_limits ?? null });
+    }
+  }
   const said = new Map<string, Pushed[]>();
-  for (const x of await joined()) {
+  for (const x of usageOf.values()) {
     if (!x.account || !x.usage_limits?.length || !all.some((a) => a.slug === x.account)) continue;
     said.set(x.account, [...(said.get(x.account) ?? []), ...x.usage_limits]);
   }
@@ -592,14 +610,17 @@ async function takeUsage() {
     for (const r of next.rejected) markSpent(slug, `its harness said its ${r.window === "seven" ? "weekly" : "5-hour"} limit is reached`, r);
   }
 }
-// An agent's account, busy, closed or usage said: once a moment at most. Its usage is read from
-// agents' index only when an agent's `usage_at` moved.
+// An agent's account, busy, closed or usage said: once a moment at most. Its usage is asked of that
+// agent alone (`agents.agent`), only when its `usage_at` moved.
 let showing: ReturnType<typeof setTimeout> | null = null;
 let usageSaid = false;
 if (HERE && agentRecords)
   agentRecords.on((h) => {
     const at = (r: typeof h.record) => (r?.status as { usage_at?: string | null } | undefined)?.usage_at ?? null;
-    if (h.record && at(h.record) !== null && at(h.record) !== at(h.was)) usageSaid = true;
+    if (h.record && at(h.record) !== null && at(h.record) !== at(h.was)) {
+      usageSaid = true;
+      usageMoved.add(h.record.id);
+    }
     showing ??= setTimeout(() => {
       showing = null;
       const took = usageSaid ? takeUsage() : Promise.resolve();
