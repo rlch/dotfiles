@@ -1,0 +1,36 @@
+#!/bin/sh
+# Stops the Mac's shared sccache server when it has stalled (the trigger sccache-watch, dot_config/abyme/triggers.ts):
+# a client of it older than 5 minutes while the server has had no rustc child for 5 minutes. Its jobserver pool
+# runs dry whenever a rustc it started is SIGKILLed (mozilla/sccache#2874; abyme:documents/abyme/sccache-stall),
+# and every cargo build then hangs. `sccache --stop-server`, never a kill; the next build starts a fresh server.
+# Then a health item to lead@abyme. Drop this once an sccache release ships PR #3047.
+set -eu
+STATE="$HOME/.cache/abyme/sccache-watch"
+mkdir -p "$STATE"
+LAST="$STATE/last-rustc"
+now=$(date +%s)
+ps -axo pid=,ppid=,etime=,command= > "$STATE/ps"
+# The server: the sccache binary run with no arguments.
+set -- $(awk 'NF == 4 && $4 ~ /(^|\/)sccache$/ { print $1, $4; exit }' "$STATE/ps")
+if [ $# -lt 2 ]; then rm -f "$LAST"; exit 0; fi
+srv=$1 bin=$2
+if awk -v s="$srv" '$2 == s && $4 ~ /(^|\/)rustc$/ { f = 1 } END { exit !f }' "$STATE/ps"; then
+  echo "$now" > "$LAST"; exit 0
+fi
+[ -f "$LAST" ] || { echo "$now" > "$LAST"; exit 0; }
+idle=$((now - $(cat "$LAST")))
+[ "$idle" -ge 300 ] || exit 0
+# Its clients: sccache run with arguments, not by the server; the oldest's age from etime ([[dd-]hh:]mm:ss).
+old=$(awk -v s="$srv" 'NF > 4 && $4 ~ /(^|\/)sccache$/ && $2 != s {
+  n = split($3, t, /[-:]/); secs = t[n] + 60 * t[n-1]
+  if (n >= 3) secs += 3600 * t[n-2]
+  if (n == 4) secs += 86400 * t[1]
+  if (secs > max) max = secs
+} END { print max + 0 }' "$STATE/ps")
+[ "$old" -ge 300 ] || exit 0
+"$bin" --stop-server
+echo "$now" > "$LAST"
+echo "stopped sccache server $srv: no rustc child for ${idle}s, oldest client ${old}s"
+abyme call work give to=lead@abyme summary="sccache stalled: its server was stopped" \
+  body="scripts/sccache-watch in ~/dev/dotfiles ran \`sccache --stop-server\` on server $srv: no rustc child for ${idle}s while a client had waited ${old}s (mozilla/sccache#2874, jobserver pool run dry after a SIGKILLed rustc). The next build starts a fresh server. Nothing to do unless this repeats often; drop the trigger once a release ships PR #3047." \
+  key="sccache-watch-$now" || true
