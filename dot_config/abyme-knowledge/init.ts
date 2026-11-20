@@ -122,7 +122,7 @@ loading.setup();
 // Driving it: commands, keys, quick open, menus, gestures (vim is common's).
 commands.setup();
 keys.setup();
-palette.setup({ titlebar: "none" });
+palette.setup();
 menus.setup();
 gestures.setup();
 // Telling me things, Settings, what runs, and the colours (every scheme, as each device chose one).
