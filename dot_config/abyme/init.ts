@@ -21,7 +21,7 @@ import warm from "@abyme/warm";
 import { common } from "../abyme-common/index.ts";
 import { TUTERO_MOVED } from "../abyme-common/tutero.ts";
 import { tuteroRoles } from "../abyme-common/tutero-roles.ts";
-import { CLOUDFLARE, CODE, LEAD, MOBILE, NO_CODE, full, lead, role } from "../abyme-common/roles.ts";
+import { CLOUDFLARE, CODE, LEAD, MOBILE, NO_CODE, SHELL, full, lead, role } from "../abyme-common/roles.ts";
 import replay from "../abyme-common/replay";
 import addTriggers from "./triggers";
 import addTuteroTriggers from "../abyme-common/tutero-triggers.ts";
@@ -177,7 +177,7 @@ tuteroRoles();
 agents.presets.add({ id: "home-lead", title: "home · lead", provider: "acp", harness: "claude", model: "opus", without: full(LEAD) });
 // land's fix agents (code.given's land.fix): one started when a full run finds a repository's base red
 // and nobody else is on it, its brief saying what. Opus, no repository's role (operator, 2026-10-23).
-agents.presets.add({ id: "fix", title: "Fix", provider: "acp", harness: "claude", model: "opus", without: full(CODE) });
+agents.presets.add({ id: "fix", title: "Fix", provider: "acp", harness: "claude", model: "opus", instructions: SHELL.trim(), without: full(CODE) });
 // Workers and Cloudflare deploy work, in whichever repository it is (operator, 2026-10-25): the one
 // role that keeps the cloudflare plugin. Opus.
 agents.presets.add({

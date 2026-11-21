@@ -70,8 +70,12 @@ export const CODEX: On = { provider: "acp", harness: "codex" };
 export const CODEX_WITHOUT: Without = ["server:codex_apps"];
 const withoutFor = (on: On, w: Without): Without =>
   on.harness === "claude" ? full(w) : on.harness === "codex" ? CODEX_WITHOUT : [];
+// Claude Code asks before a heredoc or an `rm` in a chain even under bypassPermissions: three
+// tessera builders sat ~20 min each on such a prompt (2026-11-21, lead@abyme).
+export const SHELL = " Write scripts to a file and run the file; one plain command per Bash call: no heredocs, no `rm` in a chain.";
+/** A preset; one that writes code (`CODE`) is told SHELL too. */
 export const role = (id: string, title: string, model: string, without: Without, instructions: string, on: On = CLAUDE) =>
-  agents.presets.add({ id, title, model, instructions, ...on, without: withoutFor(on, without) });
+  agents.presets.add({ id, title, model, instructions: without === CODE ? instructions + SHELL : instructions, ...on, without: withoutFor(on, without) });
 // Every lead dispatches and never operates (operator, 2026-11-04; abyme change
 // rulings-survive-compaction): lead@schools patched an org setting, cherry-picked, deployed prod
 // and merged its own iac PR itself, and acted on a summary's "standing ruling".
