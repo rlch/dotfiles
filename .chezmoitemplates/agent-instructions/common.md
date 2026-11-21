@@ -59,9 +59,10 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   `abyme call land add` (the `land` skill), no gate or suite first; run a specific
   test only when you judge it worth it. Scheduled full runs on the check node, off
   the laptop, are allowed (operator, 2026-11-10).
-- Parallel edit agents get isolated worktrees, made under
-  `~/.local/share/abyme/worktrees/<repo>/<branch>` (abyme's), never `~/.herdr` or
-  beside the repo; never revert another agent's work.
+- Parallel edit agents get isolated worktrees, made with `abyme call git addWorktree
+  dir=<repo> branch=<branch> folder=~/.local/share/abyme/worktrees` (abyme's, with a
+  warm build), never `git worktree add`, `~/.herdr` or beside the repo; never revert
+  another agent's work.
 
 # abyme
 
