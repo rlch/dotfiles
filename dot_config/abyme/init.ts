@@ -41,8 +41,9 @@ records.setup({ rehome: true, held: ["richards-macbook-pro-3971"] });
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
-// The phone and iPad keep this address; the gateway routes it to Coding over Tailscale.
-abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
+// The phone and iPad reach Coding at its front host (machine-relay-off-tailscale 7.1); the tailnet
+// address it replaced was https://richards-macbook-pro-2.tail21822e.ts.net:4443.
+abyme.server({ url: "https://coding--rjm.abyme.dev" });
 // A slice of the profile tutero, by its hub (abyme agents-across-abymes, live step c; the
 // operator's go, shared-agents-live/go-hub-init-sharing): its records read here, its writes sent there.
 // Paired: the peer key is in the state folder's peers/tutero.key. Peers are read at start alone.
