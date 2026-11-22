@@ -14,7 +14,7 @@
 # /bin/bash 3.2 on purpose: its start is a fifth of Homebrew bash's under load.
 
 IFS= read -r -d '' input
-risky='stash|verify|push|commit|kill|playwright'
+risky='stash|verify|push|commit|kill|playwright|worktree'
 broad='(^|[[:space:]"'\''=\\])(/|/\*|~|\$HOME|\$\{HOME\}|/Users|'"$HOME"'|/Volumes|/System|/Library|/private|/private/var|/private/tmp/\.\.|~/Library|\$HOME/Library|'"$HOME"'/Library)/?([[:space:]"'\'';|&)\\]|$)'
 if [[ $input =~ \"tool_name\":[[:space:]]*\"Bash\" ]] && ! [[ $input =~ $risky ]] && ! [[ $input =~ $broad ]]; then
   [ -n "$PRETOOL_ROUTE" ] && { echo pass; exit 0; }

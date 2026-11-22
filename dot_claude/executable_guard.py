@@ -21,6 +21,8 @@ import sys
 
 HOME = os.path.expanduser("~")
 PROTECTED = ("main", "master")
+# abyme's worktrees folder: one made there by hand misses the warm build and the target link.
+ABYME_WORKTREES = os.path.join(os.path.expanduser("~"), ".local/share/abyme/worktrees")
 WRAPPERS = {"rtk", "proxy", "command", "env", "time", "noglob", "sudo", "exec"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 SEARCHERS = {"find", "fd", "du", "rg", "grep", "egrep", "ag", "tree", "ls", "gfind", "gdu"}
@@ -109,6 +111,14 @@ def check_git(argv, cwd):
         if verb not in ("list", "show"):
             return ("git stash is banned: refs/stash is shared by every worktree and agent. "
                     "Park the work in a commit instead.")
+    if sub == "worktree" and args[:1] == ["add"]:
+        base = os.path.join(cwd, os.path.expanduser(cdir)) if cdir else cwd
+        for a in args[1:]:
+            p = os.path.abspath(os.path.join(base, os.path.expanduser(os.path.expandvars(a))))
+            if p == ABYME_WORKTREES or p.startswith(ABYME_WORKTREES + "/"):
+                return ("git worktree add under abyme's worktrees is banned: it misses the warm build "
+                        "and the target link. Use `abyme call git addWorktree dir=<repo> branch=<branch> "
+                        "folder=~/.local/share/abyme/worktrees`.")
     if "--no-verify" in args or (sub == "commit" and short_flag(args, "n")):
         return "--no-verify is banned: fix what the hook reports, or tell the user why it cannot pass."
     if sub == "push":
@@ -228,6 +238,9 @@ def selftest():
         "find / -maxdepth 6 -name x", "rtk find / -name x", "find ~ -name x", "fd x /",
         "du -sh ~", "rg foo ~/", "grep -rn foo /", "find $HOME -name x", "find ~/Library -name x",
         "find /Users -name x", "rm -rf /", "rm -rf /*", "cd x && rm -fr /",
+        "git worktree add ~/.local/share/abyme/worktrees/abyme/x -b x",
+        "git -C ~/dev/abyme worktree add -b x $HOME/.local/share/abyme/worktrees/abyme/x origin/main",
+        "cd ~/dev/abyme && git worktree add /Users/rjm/.local/share/abyme/worktrees/abyme/y",
     ]
     allow = [
         "git stash list", "git stash show -p stash@{0}", "git status", "git commit -m 'never git stash'",
@@ -239,6 +252,7 @@ def selftest():
         "find ~/dev/abyme -name x", "find . -name x", "fd x ~/dev", "du -sh ~/dev/abyme",
         "rg foo web/", "grep foo /etc/hosts", "ls /", "ls ~", "mdfind -name x",
         "rm -rf /tmp/x /tmp/y", "rm -rf /Users/rjm/dev/x/build",
+        "git worktree add /tmp/wt -b x", "git worktree list", "git worktree remove ~/.local/share/abyme/worktrees/abyme/x",
     ]
     bad = [c for c in block if not check_bash(c, "/")] + ["ALLOWED? " + c for c in allow if check_bash(c, "/")]
     if decide({"tool_name": "Agent", "tool_input": {"model": "haiku"}}) is None:
