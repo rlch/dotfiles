@@ -10,3 +10,8 @@
 # Open Ollama.app once to grant permissions, then see ~/.config/ollama/notes.md
 # for env vars and model pulls.
 cask "ollama-app"
+
+# abyme's `youtube` skill: agents read a video's transcript and frames.
+brew "yt-dlp"
+brew "ffmpeg"
+brew "whisper.cpp"   # local speech-to-text when a video has no captions
