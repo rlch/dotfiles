@@ -41,10 +41,11 @@ records.setup({ rehome: true, held: ["richards-macbook-pro-3971"] });
 
 // The profile, as the app's start window and the phone list it under this Mac.
 abyme.server({ name: "Coding", color: "blue", icon: "code" });
-// The phone and iPad keep this address; the gateway routes it to Coding over Tailscale. The front
-// host (https://coding--rjm.abyme.dev, machine-relay-off-tailscale 7.1) answered no_such_profile on
-// 2026-11-22, and the phone keeps this one: switch only once the front serves Coding.
-abyme.server({ url: "https://richards-macbook-pro-2.tail21822e.ts.net:4443" });
+// The phone and iPad reach Coding at its front host (machine-relay-off-tailscale 7.1). The tailnet
+// address it replaced, https://richards-macbook-pro-2.tail21822e.ts.net:4443, still answers as a
+// former address (abyme c49f6d4f3). Tried once and reverted (d392a1b): the front then answered a
+// phone's keyless /api/server 404; since Worker dfe4dfabb it answers 401 device_not_allowed.
+abyme.server({ url: "https://coding--rjm.abyme.dev" });
 // A slice of the profile tutero, by its hub (abyme agents-across-abymes, live step c; the
 // operator's go, shared-agents-live/go-hub-init-sharing): its records read here, its writes sent there.
 // Paired: the peer key is in the state folder's peers/tutero.key. Peers are read at start alone.
