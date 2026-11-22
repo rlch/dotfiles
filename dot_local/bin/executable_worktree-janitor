@@ -33,7 +33,14 @@
 # runs on purpose (2026-10-23: pruned and cleaned from under a running land).
 #
 # Under pressure (free < FLOOR GB) the thresholds fall to 1 h / 6 h and it
-# works oldest-first until free >= GOAL GB.
+# works oldest-first until free >= GOAL GB (FLOOR + 50). A pressure pass that
+# frees nothing is not run again until free falls below what it left: on
+# 2026-11-23 one swept hourly toward 400 GB it could never reach, 714-824 file
+# deletes a second, 56% of the Mac's file events (mac-overload).
+#
+# No target under abyme's worktrees folder is pruned or cleaned: abyme's git
+# cell caps those and deletes them through its paced drainer, the one owner of
+# that job (mac-overload, 2026-11-23).
 #
 # A cargo target is found by what cargo writes into every one: CACHEDIR.TAG and
 # .rustc_info.json. Nothing is touched while a process has its cwd inside the
@@ -77,7 +84,9 @@ PRUNE_H=${JANITOR_PRUNE_HOURS:-6}
 CLEAN_H=${JANITOR_CLEAN_HOURS:-12}
 LANDED_H=${JANITOR_LANDED_HOURS:-24}
 FLOOR_GB=${JANITOR_FLOOR_GB:-200}
-GOAL_GB=${JANITOR_GOAL_GB:-400}
+GOAL_GB=${JANITOR_GOAL_GB:-$((FLOOR_GB + 50))}
+# The free GB a pressure pass that freed nothing left: none is run again while free stays at or above it.
+FRUITLESS=${JANITOR_STATE:-$HOME/.local/state/worktree-janitor}/pressure-fruitless
 # ~/.herdr/worktrees: worktrees from before abyme (herdr is retired, 2026-11-05), swept until the last is gone.
 # ~/.local/share/abyme/worktrees: abyme's; ~/dev still holds those it made beside the repo before.
 ABYME_WORKTREES="$HOME/.local/share/abyme/worktrees"
@@ -267,11 +276,12 @@ targets() {
   # A subagent worktree sits too deep for the root walk below (it found none of
   # the 40-day-old targets under <repo>/.claude/worktrees, 207 GB, 2026-10-07).
   while IFS=$'\t' read -r _ wt _; do
+    [[ "$wt" == "$ABYME_WORKTREES"/* ]] && continue
     [[ -d "$wt" ]] && find "$wt" -maxdepth 3 \( -name node_modules -o -name .git -o -name incremental \
       -o -name deps -o -name .fingerprint \) -prune -o -name CACHEDIR.TAG -print 2>/dev/null
   done <<<"$worktree_list"
   for root in "${ROOTS[@]}"; do
-    [[ -d "$root" ]] || continue
+    [[ -d "$root" && "$root" != "$ABYME_WORKTREES" ]] || continue
     # Read-only clones and forks hold no build of ours; walking them was most
     # of an 18-minute scan of ~/dev (2026-09-30).
     find "$root" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" \
@@ -281,6 +291,7 @@ targets() {
   } | sort -u | while IFS= read -r tag; do
     t=$(dirname "$tag")
     is_land "$t" && continue
+    [[ "$t" == "$ABYME_WORKTREES"/* ]] && continue
     [[ -f "$t/.rustc_info.json" ]] && echo "$(idle_hours "$t") $t"
   done | sort -rn # oldest first
 }
@@ -379,8 +390,19 @@ worktree_list=$(all_worktrees)
 before=$(free_gb)
 $remove_landed && remove_landed_worktrees
 sweep "$PRUNE_H" "$CLEAN_H" 0
-if (( $(free_gb) < FLOOR_GB )); then
-  log "pressure: $(free_gb) GB free < ${FLOOR_GB} GB, sweeping at 1 h / 6 h to ${GOAL_GB} GB"
-  sweep 1 6 "$GOAL_GB"
+now_gb=$(free_gb)
+if (( now_gb < FLOOR_GB )); then
+  left=$(cat "$FRUITLESS" 2>/dev/null || echo "")
+  if [[ "$left" =~ ^[0-9]+$ ]] && (( now_gb >= left )); then
+    log "pressure: ${now_gb} GB free < ${FLOOR_GB} GB, but the last pressure pass freed nothing at ${left} GB; not swept again until free falls below it"
+  else
+    log "pressure: ${now_gb} GB free < ${FLOOR_GB} GB, sweeping at 1 h / 6 h to ${GOAL_GB} GB"
+    sweep 1 6 "$GOAL_GB"
+    after=$(free_gb)
+    if ! $dry; then
+      mkdir -p "$(dirname "$FRUITLESS")"
+      if (( after > now_gb )); then rm -f -- "$FRUITLESS"; else echo "$after" >"$FRUITLESS"; fi
+    fi
+  fi
 fi
 log "free ${before} GB -> $(free_gb) GB"
