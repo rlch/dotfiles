@@ -31,8 +31,8 @@ invariants (stack, keymaps, multi-host, the init.ts parse-check). This skill hol
      the file itself.
    - Karabiner: picks it up itself.
    - Ghostty: ⌘⇧, (keybinds need it).
-   - abyme (`dot_config/abyme/`): parse-check with `npx -y esbuild` before applying; abymed
-     reloads, then `curl -s http://coding.localhost:4477/api/config` (each profile at `<name>.localhost:4477`; bare localhost is the gateway, 404) shows `problems` and `threw`.
+   - abyme (`dot_config/abyme/`): parse-check with `npx -y esbuild` before applying; `chezmoi apply` runs `abyme reload` itself (`.chezmoiscripts/run_after_abyme-reload.sh`:
+     abyme watches nothing), then `curl -s http://coding.localhost:4477/api/config` (each profile at `<name>.localhost:4477`; bare localhost is the gateway, 404) shows `problems` and `threw`.
    - Claude Code `settings.json`: next turn or restart, by setting.
 5. Commit and push when stable: `type(scope): subject`.
 
