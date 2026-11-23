@@ -70,7 +70,7 @@ Be blunt and short. Jargon and bloat are the failure mode, not terseness.
   a shell, `abyme call <service> <function> key=value` (`key:=<json>`); exit 3
   means it is not running.
 - A long-running server, watcher, build or test run is an abyme process (`abyme
-  call processes start name=<name>`, from the repo's `.abyme/processes.ts`),
+  call processes start name=<name>`, one `abyme call processes list` names),
   never your shell. End your turn; abyme tells you when it exits.
 - Nothing you run appears on my screen: headless or a tart VM, or say what is
   unverified.
