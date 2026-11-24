@@ -169,11 +169,17 @@ if (agentRecords) recordLists.informers.add(agentRecords.item);
 type Joined = { id: string; name: string; busy: boolean; closed: unknown; account: string | null; usage_limits?: Pushed[] | null };
 const joined = async (): Promise<Joined[]> => !agents ? [] : Object.values((await agents.index()) as unknown as Record<string, Joined | undefined>).filter((x): x is Joined => !!x);
 
+/** How long a pick waits for the agents' records to sync before it counts what it has. */
+const SYNC_WAIT_MS = 3000;
+
 /** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
 async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
   const out = new Map<string, { id: string; name: string }[]>();
   if (!agentRecords) return out;
-  await agentRecords.synced();
+  // Never wait long on records: picks are serial, so one feed that does not sync held every Claude
+  // launch and resume, and the operator's sends timed out at 60 s (records wedged, 2026-11-24).
+  // Unsynced, the busy counts read what the feed has so far and the last minute's picks.
+  await Promise.race([agentRecords.synced(), new Promise((r) => setTimeout(r, SYNC_WAIT_MS))]);
   return onAccounts(agentRecords.list(), open);
 }
 
