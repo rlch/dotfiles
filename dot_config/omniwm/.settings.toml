@@ -244,6 +244,27 @@ gridRow = 0
 monitorDisplayUUID = "C88BDABC-0A6D-43A7-88B7-F32A6FBB0095"
 monitorName = "HP 25x"
 
+[[routing.arrangements]]
+id = "5BA8CD35-A172-46C3-9D85-4463BDCE566D"
+
+[[routing.arrangements.monitors]]
+gridColumn = 0
+gridRow = 1
+monitorDisplayUUID = "37D8832A-2D66-02CA-B9F7-8F30A301B230"
+monitorName = "Built-in Retina Display"
+
+[[routing.arrangements.monitors]]
+gridColumn = 0
+gridRow = 0
+monitorDisplayUUID = "87A363EB-F382-410B-A2F7-237E8EA18C97"
+monitorName = "L27e-40 (2)"
+
+[[routing.arrangements.monitors]]
+gridColumn = 1
+gridRow = 0
+monitorDisplayUUID = "22ACD147-7EA8-4BCD-8510-A45FEB3B6E10"
+monitorName = "L27e-40 (1)"
+
 [scratchpads]
 
 [scratchpads.labels]
@@ -672,7 +693,7 @@ binding = "Unassigned"
 id = "moveToWorkspaceSlot.9"
 
 [[hotkeys]]
-binding = "Option+Tab"
+binding = "Unassigned"
 id = "workspaceBackAndForth"
 
 [[hotkeys]]
@@ -700,7 +721,7 @@ binding = "Option+L"
 id = "focus.right"
 
 [[hotkeys]]
-binding = "Unassigned"
+binding = "Option+Tab"
 id = "focusPrevious"
 
 [[hotkeys]]
@@ -1305,8 +1326,8 @@ name = "1"
 type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
-displayUUID = "C88BDABC-0A6D-43A7-88B7-F32A6FBB0095"
-name = "HP 25x"
+displayUUID = "87A363EB-F382-410B-A2F7-237E8EA18C97"
+name = "L27e-40 (2)"
 
 [[workspaces]]
 displayName = "comms"
@@ -1318,8 +1339,8 @@ name = "2"
 type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
-displayUUID = "37D8832A-2D66-02CA-B9F7-8F30A301B230"
-name = "Built-in Retina Display"
+displayUUID = "22ACD147-7EA8-4BCD-8510-A45FEB3B6E10"
+name = "L27e-40 (1)"
 
 [[workspaces]]
 displayName = "abyme"
