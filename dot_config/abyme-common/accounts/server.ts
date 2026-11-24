@@ -171,8 +171,8 @@ const joined = async (): Promise<Joined[]> => !agents ? [] : Object.values((awai
 
 /** How long a pick waits for the agents' records to sync before it counts what it has. */
 const SYNC_WAIT_MS = 3000;
-/** A feed's `synced()`, but at most [`SYNC_WAIT_MS`]: a feed that never syncs must not hold a serial pass (records wedged, 2026-11-24). */
-const syncedSoon = (feed: { synced(): Promise<unknown> }) => Promise.race([feed.synced(), new Promise((r) => setTimeout(r, SYNC_WAIT_MS))]);
+/** A feed's `synced`, but at most [`SYNC_WAIT_MS`], going on unsynced past it (`NotSynced`): a feed that never syncs must not hold a serial pass (records wedged, 2026-11-24). */
+const syncedSoon = (feed: { synced(o: { within?: number }): Promise<unknown> }) => feed.synced({ within: SYNC_WAIT_MS }).catch(() => {});
 
 /** abyme's agents per account: busy as agents says it, the one rule; with `open`, every agent not closed. */
 async function agentsByAccount(open = false): Promise<Map<string, { id: string; name: string }[]>> {
