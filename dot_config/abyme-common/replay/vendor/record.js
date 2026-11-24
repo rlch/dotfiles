@@ -1,4 +1,4 @@
-// Patched for the replay plugin: mutations serialised in slices after paint (vendor/README.md).
+// Patched for the replay plugin: mutations serialised in slices after paint, and no iframe left behind where it has no window (vendor/README.md).
 const __BUDGET = 4;
 // A checkout's walk while it runs (takeFullSnapshotSliced), what its last step waits for, and each
 // element ever seen scrolled: the walk reads no scroll position (each read lays the page out, which a
@@ -148,7 +148,11 @@ function getUntaintedPrototype(key) {
     iframeEl.style.display = "none";
     document.body.appendChild(iframeEl);
     const win = iframeEl.contentWindow;
-    if (!win) return defaultObj.prototype;
+    // Patched: an iframe with no window (the Mac app's) is removed and the fallback kept (vendor/README.md).
+    if (!win) {
+      iframeEl.remove();
+      return untaintedBasePrototype[key] = defaultObj.prototype;
+    }
     const untaintedObject = win[key].prototype;
     if (!untaintedObject) {
       iframeEl.remove();

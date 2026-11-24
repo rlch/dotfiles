@@ -56,3 +56,9 @@ in every run, and failed without the skips.
 
 To update: `npm pack @rrweb/record@<v> @rrweb/replay@<v>` in an empty folder, copy the
 same files, and write the new integrity here. The `.d.ts` files are the little the plugin uses.
+
+record.js carries a third patch (2026-11-25): `getUntaintedPrototype` adds a hidden iframe to read
+clean prototypes from, and where the iframe has no `contentWindow` (the Mac app's engine) it returned
+without removing it or keeping the answer, so every node it read added another iframe and the app
+redrew forever. Now it removes the iframe and keeps the fallback. `record.js.orig` is the file before
+this patch.
