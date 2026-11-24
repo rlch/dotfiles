@@ -258,7 +258,9 @@ idle_hours() {
 all_worktrees() {
   local root
   for root in "${ROOTS[@]}"; do
-    [[ -d "$root" ]] || continue
+    # abyme's own folder is not walked: nothing below acts on a worktree there (its worktree pass
+    # is their one owner), and the walk ran 45+ min at load 45 (mac-overload, 2026-11-24).
+    [[ -d "$root" && "$root" != "$ABYME_WORKTREES" ]] || continue
     find "$root" -maxdepth 7 \( -path "$HOME/dev/refs" -o -path "$HOME/dev/forks" -o -name node_modules \
       -o -name target -o \( -name .git -type d \) \) -prune -o -name .git -type f -print 2>/dev/null
   done | while IFS= read -r g; do
