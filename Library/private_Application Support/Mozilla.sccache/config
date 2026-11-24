@@ -5,5 +5,14 @@
 # the server ran at the 10 GiB default, full, 49% Rust hits, 2026-09-30).
 # 50 GiB holds the registry crates of every workspace on this machine once,
 # in place of each worktree building its own.
+# The roots a path is cut at before it is hashed, so one crate built in two worktrees (or
+# against two targets) is one cache entry, as Zed's CI does (script/setup-sccache:97). Here, in
+# the config, for the same reason as the cap: SCCACHE_BASEDIRS is read only by the server's starter.
+basedirs = [
+  "/Users/rjm/.local/share/abyme/worktrees",
+  "/Users/rjm/.cache/abyme/target",
+  "/Users/rjm/dev",
+]
+
 [cache.disk]
 size = 53687091200
