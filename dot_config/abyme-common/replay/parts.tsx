@@ -95,9 +95,10 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     recordCanvas: false,
     collectFonts: false,
   });
-  // rrweb starts with a full snapshot, at once on a loaded page. None means it did not start (the
-  // Mac app's page, whose document never says it loaded): this page records nothing, said once.
-  if (!began) {
+  // rrweb starts with a full snapshot, at once on a loaded page, and answers how to stop. No snapshot,
+  // or no answer (it threw and warned), means it did not start, as in the Mac app: this page records
+  // nothing, said once.
+  if (!began || !stopRecord) {
     stopRecord?.();
     console.info("replay: rrweb did not start on this page, so it records nothing here");
     return { stop() {}, flush() {}, snapshot() {} };
