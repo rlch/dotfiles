@@ -73,10 +73,12 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     }, SEND_MS);
   };
   const followed = new Map<string, Followed>();
+  let began = false;
   const stopRecord = record({
     emit(event) {
       // A Meta event begins every full snapshot, the first and each checkout.
       if (event.type === 4) {
+        began = true;
         batches.push({ checkout: true, events: [] });
         for (const t of followed.values()) t.store.retry();
       }
@@ -93,6 +95,13 @@ export function recording(o: { checkout: number; terminals: boolean; stall: numb
     recordCanvas: false,
     collectFonts: false,
   });
+  // rrweb starts with a full snapshot, at once on a loaded page. None means it did not start (the
+  // Mac app's page, whose document never says it loaded): this page records nothing, said once.
+  if (!began) {
+    stopRecord?.();
+    console.info("replay: rrweb did not start on this page, so it records nothing here");
+    return { stop() {}, flush() {}, snapshot() {} };
+  }
   recordingNow = true;
   const chats = scrolls(mark);
 
