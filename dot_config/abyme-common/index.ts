@@ -9,7 +9,6 @@ import agents from "@abyme/agents/inventory";
 import theme from "@abyme/theme";
 import vim from "@abyme/vim";
 import status from "@abyme/status";
-// import sentry from "@abyme/sentry";
 import spaces from "@abyme/spaces/inventory";
 import accounts from "./accounts";
 import publish from "./publish";
@@ -38,9 +37,6 @@ export function common() {
   agents.prepare.add({ prepare: (l) => (l.kind === "claude" ? { env: { CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1" } } : {}) });
   // "Publish document to the web" and "Unpublish document": a document as a page on artifacts.rjmath.com; agents ask the operator in its chat to run `publish share` themselves (publish/).
   publish.setup();
-  // Sentry is off (operator, 2026-10-22): 25 issues filed, none fixed from it. Uncomment to turn it back on.
-  // Every page's errors, faults and failed plugins to Sentry (abyme.sentry.io, project abyme), tagged by plugin and device.
-  // sentry.setup({ dsn: "https://39bd07b80cf1e53066b9da857178643e@o4512167308820480.ingest.us.sentry.io/4512230761758720" });
   // Where agents are listed in Spaces, first answer wins (docs/cells.md, Spaces): after-land's
   // fix agents in "Fixes", and an idle agent whose branch is on main folded away in "Done".
   spaces.rules.add({ id: "fixes", place: (a) => (a.name.startsWith("fix-") ? { group: "Fixes" } : undefined) });
