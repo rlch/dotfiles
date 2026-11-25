@@ -257,13 +257,13 @@ monitorName = "Built-in Retina Display"
 gridColumn = 0
 gridRow = 0
 monitorDisplayUUID = "87A363EB-F382-410B-A2F7-237E8EA18C97"
-monitorName = "L27e-40 (2)"
+monitorName = "L27e-40 (1)"
 
 [[routing.arrangements.monitors]]
 gridColumn = 1
 gridRow = 0
-monitorDisplayUUID = "22ACD147-7EA8-4BCD-8510-A45FEB3B6E10"
-monitorName = "L27e-40 (1)"
+monitorDisplayUUID = "AF61033B-D734-4184-B1ED-AC10B03FFE79"
+monitorName = "L27e-40 (2)"
 
 [scratchpads]
 
@@ -1327,7 +1327,7 @@ type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
 displayUUID = "87A363EB-F382-410B-A2F7-237E8EA18C97"
-name = "L27e-40 (2)"
+name = "L27e-40 (1)"
 
 [[workspaces]]
 displayName = "comms"
@@ -1339,8 +1339,8 @@ name = "2"
 type = "specificDisplay"
 
 [workspaces.monitorAssignment.output]
-displayUUID = "22ACD147-7EA8-4BCD-8510-A45FEB3B6E10"
-name = "L27e-40 (1)"
+displayUUID = "AF61033B-D734-4184-B1ED-AC10B03FFE79"
+name = "L27e-40 (2)"
 
 [[workspaces]]
 displayName = "abyme"
