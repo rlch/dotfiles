@@ -12,4 +12,7 @@ export default {
   "MathGaps/schools": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
   // main takes a pull request (ruleset); CI applies each stack on merge.
   "MathGaps/iac": { mode: "pr" },
+  // As schools: squash-merged pull requests, --admin once Build and Vet and Schema Check pass (the
+  // ruleset wants a review; its PRs merge without one).
+  "MathGaps/tutoring": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
 } satisfies LandFiles;

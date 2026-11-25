@@ -12,6 +12,9 @@ export default {
   "MathGaps/schools": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
   // main takes a pull request (ruleset); CI applies each stack on merge.
   "MathGaps/iac": { mode: "pr" },
+  // As schools: squash-merged pull requests, --admin once Build and Vet and Schema Check pass (the
+  // ruleset wants a review; its PRs merge without one).
+  "MathGaps/tutoring": { mode: "pr", pr: { admin: true, ignore: ["CodeRabbit"] } },
   // A push to main is an apply (its CLAUDE.md, CI applies): squash-merged pull requests, applied
   // and planned to no changes from a laptop first (operator, 2026-11-04).
   "abyme-studio/iac": { mode: "pr" },
