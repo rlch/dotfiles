@@ -8,7 +8,6 @@ import abyme from "@abyme/cell";
 import hooks from "@abyme/hooks/inventory";
 import fs from "@abyme/fs";
 import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
 
 const home = fs.home.replace(/\/+$/, "");
 // Where chezmoi deploys, as guard.py's MANAGED_ROOTS; a session's transcripts are not.
@@ -29,8 +28,10 @@ async function sourceOf(path: string): Promise<string | null> {
   return r.code === 0 ? r.stdout.trim() || null : null;
 }
 
-// The kernel names a machine by its id: `local` resolves to the control plane's.
-if (abyme.machine === abyme.machines.resolve(LOCAL)) {
+// On the app server's machine alone. `control()` is abymed's since `local` went (2026-11-27); an
+// older build has only `local`, which resolves to the same machine.
+const control = "control" in abyme.machines ? abyme.machines.control() : abyme.machines.resolve("local");
+if (abyme.machine === control) {
   // Editing a chezmoi-deployed file: the next `chezmoi apply` overwrites it.
   hooks.items.add({
     id: "bans.chezmoi-deployed",

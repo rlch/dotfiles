@@ -11,7 +11,6 @@ import { implement } from "@abyme/schema";
 import { HttpError, respond } from "@abyme/server";
 import fs from "@abyme/fs";
 import process from "@abyme/process";
-import { LOCAL } from "@abyme/machines/label";
 import options from "./options";
 import { parseSave, SAVE } from "./format";
 import { Ring } from "./ring.ts";
@@ -89,7 +88,7 @@ const swept = (sweep = true) => {
   if (at !== null) timer = setTimeout(swept, Math.max(0, at - Date.now()));
 };
 // What an earlier version kept on disk as it recorded (its ring and its stylesheets) goes once.
-if (abyme.machine === LOCAL) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
+if ("control" in abyme.machines && abyme.machine === abyme.machines.control()) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
 
 async function list(): Promise<Save[]> {
   const saves: Save[] = [];
