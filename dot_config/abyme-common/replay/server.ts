@@ -88,7 +88,7 @@ const swept = (sweep = true) => {
   if (at !== null) timer = setTimeout(swept, Math.max(0, at - Date.now()));
 };
 // What an earlier version kept on disk as it recorded (its ring and its stylesheets) goes once.
-if ("control" in abyme.machines && abyme.machine === abyme.machines.control()) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
+if (abyme.machine === abyme.machines.control()) void Promise.all([fs.remove(`${DIR}/ring`), fs.remove(`${DIR}/css`)]).catch(() => {});
 
 async function list(): Promise<Save[]> {
   const saves: Save[] = [];

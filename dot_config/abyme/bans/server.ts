@@ -28,10 +28,8 @@ async function sourceOf(path: string): Promise<string | null> {
   return r.code === 0 ? r.stdout.trim() || null : null;
 }
 
-// On the app server's machine alone. `control()` is abymed's since `local` went (2026-11-27); an
-// older build has only `local`, which resolves to the same machine.
-const control = "control" in abyme.machines ? abyme.machines.control() : abyme.machines.resolve("local");
-if (abyme.machine === control) {
+// On the app server's machine alone.
+if (abyme.machine === abyme.machines.control()) {
   // Editing a chezmoi-deployed file: the next `chezmoi apply` overwrites it.
   hooks.items.add({
     id: "bans.chezmoi-deployed",

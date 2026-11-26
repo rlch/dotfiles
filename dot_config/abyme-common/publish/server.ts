@@ -174,8 +174,8 @@ const SKILL = `Publish a document to the web, on the operator's go: \`publish sh
 
 Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
 `;
-// On the app server's machine alone: `control()` since `local` went (2026-11-27); an older build has only `local`.
-if (abyme.machine === ("control" in abyme.machines ? abyme.machines.control() : abyme.machines.resolve("local"))) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
+// On the app server's machine alone.
+if (abyme.machine === abyme.machines.control()) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
 
 export default implement(publish, {
   prepare,
