@@ -17,8 +17,6 @@ export function common() {
   // The built client abymed serves: a stable copy, so a build in ~/dev/abyme never changes what an
   // open page is running. `scripts/promote` in ~/dev/abyme copies a finished build here.
   abyme.server({ clientDir: "~/.local/share/abyme/client" });
-  // The names abyme answers for besides IP addresses and localhost: the phone's address.
-  abyme.server({ hosts: ["richards-macbook-pro-2.tail21822e.ts.net"] });
 
   // The mono font Ghostty uses here, in the editor, code blocks and terminals.
   theme.setup({ mono: "JetBrainsMono Nerd Font" });
