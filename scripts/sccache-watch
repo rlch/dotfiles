@@ -1,7 +1,7 @@
 #!/bin/sh
 # Stops the Mac's shared sccache server when it has stalled (the trigger sccache-watch, dot_config/abyme/triggers.ts):
 # a client of it older than 5 minutes while the server has had no rustc child for 5 minutes. Its jobserver pool
-# runs dry whenever a rustc it started is SIGKILLed (mozilla/sccache#2874; abyme:documents/abyme/sccache-stall),
+# runs dry whenever a rustc it started is SIGKILLed (mozilla/sccache#2874; abyme:document/abyme/sccache-stall),
 # and every cargo build then hangs. `sccache --stop-server`, never a kill; the next build starts a fresh server.
 # Then a health item to lead@abyme. Drop this once an sccache release ships PR #3047.
 set -eu

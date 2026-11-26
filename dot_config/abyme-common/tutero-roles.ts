@@ -13,7 +13,7 @@ import { TUTERO_DIR } from "./tutero.ts";
  * Codex preset needs Codex's ids. `dir` is where Tutero's repositories are checked out on the machine.
  * `rules`, appended to every preset's text: the operator's rules (agent-instructions/common.md) on a
  * machine whose home holds no CLAUDE.md or AGENTS.md of theirs, the node tutero-agents (option C,
- * abyme:documents/abyme/agent-instructions-bootstrap); on the Mac chezmoi's files give them, so none. */
+ * abyme:document/abyme/agent-instructions-bootstrap); on the Mac chezmoi's files give them, so none. */
 export function tuteroRoles(on: On = CLAUDE, models: Partial<Record<string, string>> = {}, dir: string = TUTERO_DIR, rules = ""): void {
   const tail = rules ? `\n\n${rules}` : "";
   const role = (id: string, title: string, model: string, without: Without, instructions: string) =>

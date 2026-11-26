@@ -19,7 +19,7 @@ jobs = 4
 # No rustc-wrapper. sccache was it (schools local-gates D6, 2026-09-30), but measured
 # across abyme worktrees it got 0 Rust hits of 980, wrote ~12 GB/h toward a 50 GiB cap,
 # and warm clones already cut a clean build 398 s -> 67 s (research@blaze-everywhere,
-# abyme:documents/abyme/blaze-everywhere; dropped 2026-11-25). The schools gates still
+# abyme:document/abyme/blaze-everywhere; dropped 2026-11-25). The schools gates still
 # wrap their own cargo in it (scripts/cargo.mjs).
 
 # ---------------------------------------------------------------------------
