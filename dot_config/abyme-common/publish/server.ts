@@ -89,7 +89,7 @@ function run(id: string, action: Job["action"], slug: string, work: () => Promis
 // It runs on every machine (abymed refuses a half that imports a capability only as optional), but
 // its functions are not marked `machine`, so they run on the control plane, the operator's Mac, where
 // the artifacts repository is; the skill is added there alone, one copy as before. A half names
-// machines by id: `local` is resolved to the control plane's, never compared as a string.
+// machines by id: the app server's is `control()`, never a name compared as a string.
 /** The control plane's files, where the artifacts repository is. */
 const files = () => fs;
 /** The control plane's processes, to run the artifact CLI. */
@@ -174,7 +174,8 @@ const SKILL = `Publish a document to the web, on the operator's go: \`publish sh
 
 Take a page down with \`abyme call publish unpublish path=<abs .md>\`: it answers at once, and \`abyme call publish state\` drops the document once the URL answers not found.
 `;
-if (abyme.machine === abyme.machines.resolve("local")) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
+// On the app server's machine alone: `control()` since `local` went (2026-11-27); an older build has only `local`.
+if (abyme.machine === ("control" in abyme.machines ? abyme.machines.control() : abyme.machines.resolve("local"))) agents?.skills.add({ name: "publish", description: "Publish an abyme document to the web as a public page, and get its URL.", body: SKILL });
 
 export default implement(publish, {
   prepare,

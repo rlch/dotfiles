@@ -26,7 +26,7 @@ const under = (dir: string) => dir === TUTERO_DIR || dir.startsWith(`${TUTERO_DI
  * (git.origin throws) is not. `machine` is the launch's: git.origin runs on a machine, and a call
  * from init.ts that names none is refused, which read every team's worktree as not Tutero's
  * (tutero-pr-agents, 2026-11-16). A refusal is logged, so the next one is not silent. */
-export async function inTutero(dir: string, machine = "local"): Promise<boolean> {
+export async function inTutero(dir: string, machine: string): Promise<boolean> {
   if (under(dir)) return true;
   const held = await git.origin({ dir, machine }).catch((e) => {
     console.warn(`inTutero: git.origin of ${dir} on ${machine}: ${e instanceof Error ? e.message : e}`);
